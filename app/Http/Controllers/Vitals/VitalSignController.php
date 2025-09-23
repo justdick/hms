@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Vitals;
 
+use App\Http\Controllers\Controller;
 use App\Models\VitalSign;
 use App\Models\PatientCheckin;
 use Illuminate\Http\Request;
