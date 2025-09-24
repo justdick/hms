@@ -1,0 +1,387 @@
+<?php
+
+use App\Models\BillingService;
+use App\Models\Consultation;
+use App\Models\Department;
+use App\Models\LabService;
+use App\Models\Patient;
+use App\Models\PatientCheckin;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->doctor = User::factory()->create();
+    $this->department = Department::factory()->create();
+    $this->patient = Patient::factory()->create();
+
+    // Associate doctor with department
+    $this->department->users()->attach($this->doctor->id);
+
+    $this->patientCheckin = PatientCheckin::factory()->create([
+        'patient_id' => $this->patient->id,
+        'department_id' => $this->department->id,
+        'status' => 'awaiting_consultation',
+        'checked_in_at' => now()->subHours(2), // Explicitly set to today, 2 hours ago
+    ]);
+});
+
+describe('Consultation Dashboard', function () {
+    it('shows patients awaiting consultation for doctor\'s department', function () {
+        $response = $this->actingAs($this->doctor)->get('/consultation');
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Consultation/Index')
+                ->has('awaitingConsultation', 1)
+                ->where('awaitingConsultation.0.id', $this->patientCheckin->id)
+            );
+    });
+
+    it('does not show patients from other departments', function () {
+        $otherDepartment = Department::factory()->create();
+        $otherPatient = Patient::factory()->create();
+        PatientCheckin::factory()->create([
+            'patient_id' => $otherPatient->id,
+            'department_id' => $otherDepartment->id,
+            'status' => 'awaiting_consultation',
+            'checked_in_at' => now()->subHours(1), // Explicitly set to today, 1 hour ago
+        ]);
+
+        $response = $this->actingAs($this->doctor)->get('/consultation');
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('awaitingConsultation', 1) // Only shows our department's patient
+                ->where('awaitingConsultation.0.patient.id', $this->patient->id)
+            );
+    });
+
+    it('shows active consultations for the doctor', function () {
+        $consultation = Consultation::factory()->create([
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($this->doctor)->get('/consultation');
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('activeConsultations', 1)
+                ->where('activeConsultations.0.id', $consultation->id)
+            );
+    });
+});
+
+describe('Starting Consultation', function () {
+    it('can start a consultation for a patient in doctor\'s department', function () {
+        $response = $this->actingAs($this->doctor)->post('/consultation', [
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'chief_complaint' => 'Chest pain and shortness of breath',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('consultations', [
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+            'chief_complaint' => 'Chest pain and shortness of breath',
+        ]);
+
+        // Should update patient check-in status
+        $this->patientCheckin->refresh();
+        expect($this->patientCheckin->status)->toBe('in_consultation');
+        expect($this->patientCheckin->consultation_started_at)->not->toBeNull();
+    });
+
+    it('cannot start consultation for patient in different department', function () {
+        $otherDepartment = Department::factory()->create();
+        $otherPatientCheckin = PatientCheckin::factory()->create([
+            'patient_id' => Patient::factory()->create()->id,
+            'department_id' => $otherDepartment->id,
+            'status' => 'awaiting_consultation',
+        ]);
+
+        $response = $this->actingAs($this->doctor)->post('/consultation', [
+            'patient_checkin_id' => $otherPatientCheckin->id,
+        ]);
+
+        $response->assertForbidden();
+    });
+});
+
+describe('Updating Consultation', function () {
+    beforeEach(function () {
+        $this->consultation = Consultation::factory()->create([
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+        ]);
+    });
+
+    it('can update SOAP notes', function () {
+        $response = $this->actingAs($this->doctor)->patch("/consultation/{$this->consultation->id}", [
+            'subjective_notes' => 'Patient reports chest pain for 2 hours',
+            'objective_notes' => 'BP 140/90, HR 85, no acute distress',
+            'assessment_notes' => 'Possible angina, rule out MI',
+            'plan_notes' => 'ECG, cardiac enzymes, aspirin 325mg',
+            'follow_up_date' => '2025-10-01',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->consultation->refresh();
+        expect($this->consultation->subjective_notes)->toBe('Patient reports chest pain for 2 hours');
+        expect($this->consultation->objective_notes)->toBe('BP 140/90, HR 85, no acute distress');
+        expect($this->consultation->assessment_notes)->toBe('Possible angina, rule out MI');
+        expect($this->consultation->plan_notes)->toBe('ECG, cardiac enzymes, aspirin 325mg');
+        expect($this->consultation->follow_up_date->format('Y-m-d'))->toBe('2025-10-01');
+    });
+
+    it('allows other doctors in same department to update consultation', function () {
+        $anotherDoctor = User::factory()->create();
+        $this->department->users()->attach($anotherDoctor->id);
+
+        $response = $this->actingAs($anotherDoctor)->patch("/consultation/{$this->consultation->id}", [
+            'subjective_notes' => 'Updated by another doctor',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->consultation->refresh();
+        expect($this->consultation->subjective_notes)->toBe('Updated by another doctor');
+    });
+
+    it('prevents doctors from other departments from updating consultation', function () {
+        $otherDoctor = User::factory()->create();
+
+        $response = $this->actingAs($otherDoctor)->patch("/consultation/{$this->consultation->id}", [
+            'subjective_notes' => 'Should not be allowed',
+        ]);
+
+        $response->assertForbidden();
+    });
+});
+
+describe('Completing Consultation', function () {
+    beforeEach(function () {
+        $this->consultation = Consultation::factory()->create([
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+        ]);
+    });
+
+    it('can complete a consultation and generate billing', function () {
+        // Create billing service for consultation
+        BillingService::factory()->create([
+            'service_type' => 'consultation',
+            'service_code' => 'CONSULT_GENERAL',
+            'service_name' => 'General Consultation',
+            'base_price' => 100.00,
+        ]);
+
+        $response = $this->actingAs($this->doctor)->post("/consultation/{$this->consultation->id}/complete");
+
+        $response->assertRedirect()
+            ->assertSessionHas('success', 'Consultation completed successfully.');
+
+        // Should update consultation status
+        $this->consultation->refresh();
+        expect($this->consultation->status)->toBe('completed');
+        expect($this->consultation->completed_at)->not->toBeNull();
+
+        // Should update patient check-in status
+        $this->patientCheckin->refresh();
+        expect($this->patientCheckin->status)->toBe('completed');
+        expect($this->patientCheckin->consultation_completed_at)->not->toBeNull();
+
+        // Should generate patient bill
+        $this->assertDatabaseHas('patient_bills', [
+            'patient_id' => $this->patient->id,
+            'consultation_id' => $this->consultation->id,
+            'status' => 'pending',
+            'total_amount' => 100.00,
+        ]);
+    });
+
+    it('includes lab orders in billing when completing consultation', function () {
+        // Create billing services
+        BillingService::factory()->create([
+            'service_type' => 'consultation',
+            'service_code' => 'CONSULT_GENERAL',
+            'base_price' => 100.00,
+        ]);
+
+        $labService = LabService::factory()->create([
+            'name' => 'Complete Blood Count (CBC)',
+            'price' => 150.00,
+        ]);
+
+        BillingService::factory()->create([
+            'service_type' => 'lab_test',
+            'service_name' => 'Complete Blood Count (CBC)',
+            'base_price' => 150.00,
+        ]);
+
+        // Add lab order to consultation
+        $this->consultation->labOrders()->create([
+            'lab_service_id' => $labService->id,
+            'ordered_by' => $this->doctor->id,
+            'ordered_at' => now(),
+            'status' => 'ordered',
+        ]);
+
+        $response = $this->actingAs($this->doctor)->post("/consultation/{$this->consultation->id}/complete");
+
+        $response->assertRedirect();
+
+        // Should create bill with consultation + lab charges
+        $this->assertDatabaseHas('patient_bills', [
+            'patient_id' => $this->patient->id,
+            'consultation_id' => $this->consultation->id,
+            'total_amount' => 250.00, // 100 consultation + 150 lab
+        ]);
+    });
+});
+
+describe('Adding Diagnoses', function () {
+    beforeEach(function () {
+        $this->consultation = Consultation::factory()->create([
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+        ]);
+    });
+
+    it('can add a diagnosis to consultation', function () {
+        $response = $this->actingAs($this->doctor)
+            ->postJson("/consultation/{$this->consultation->id}/diagnoses", [
+                'icd_code' => 'I10',
+                'diagnosis_description' => 'Essential hypertension',
+                'is_primary' => true,
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => 'Diagnosis added successfully.',
+            ]);
+
+        $this->assertDatabaseHas('consultation_diagnoses', [
+            'consultation_id' => $this->consultation->id,
+            'icd_code' => 'I10',
+            'diagnosis_description' => 'Essential hypertension',
+            'is_primary' => true,
+        ]);
+    });
+
+    it('ensures only one primary diagnosis per consultation', function () {
+        // Add first primary diagnosis
+        $this->consultation->diagnoses()->create([
+            'icd_code' => 'I20.9',
+            'diagnosis_description' => 'Angina pectoris, unspecified',
+            'is_primary' => true,
+        ]);
+
+        // Add second primary diagnosis
+        $response = $this->actingAs($this->doctor)
+            ->postJson("/consultation/{$this->consultation->id}/diagnoses", [
+                'icd_code' => 'I10',
+                'diagnosis_description' => 'Essential hypertension',
+                'is_primary' => true,
+            ]);
+
+        $response->assertOk();
+
+        // Should have unmarked the previous primary diagnosis
+        $this->assertDatabaseMissing('consultation_diagnoses', [
+            'consultation_id' => $this->consultation->id,
+            'icd_code' => 'I20.9',
+            'is_primary' => true,
+        ]);
+
+        // New diagnosis should be primary
+        $this->assertDatabaseHas('consultation_diagnoses', [
+            'consultation_id' => $this->consultation->id,
+            'icd_code' => 'I10',
+            'is_primary' => true,
+        ]);
+    });
+});
+
+describe('Ordering Lab Tests', function () {
+    beforeEach(function () {
+        $this->consultation = Consultation::factory()->create([
+            'patient_checkin_id' => $this->patientCheckin->id,
+            'doctor_id' => $this->doctor->id,
+            'status' => 'in_progress',
+        ]);
+
+        $this->labService = LabService::factory()->create([
+            'name' => 'Complete Blood Count (CBC)',
+            'code' => 'CBC001',
+            'price' => 150.00,
+            'is_active' => true,
+        ]);
+    });
+
+    it('can order a lab test', function () {
+        $response = $this->actingAs($this->doctor)
+            ->postJson("/consultation/{$this->consultation->id}/lab-orders", [
+                'lab_service_id' => $this->labService->id,
+                'priority' => 'urgent',
+                'special_instructions' => 'Fasting sample required',
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => 'Lab test ordered successfully.',
+            ]);
+
+        $this->assertDatabaseHas('lab_orders', [
+            'consultation_id' => $this->consultation->id,
+            'lab_service_id' => $this->labService->id,
+            'ordered_by' => $this->doctor->id,
+            'priority' => 'urgent',
+            'special_instructions' => 'Fasting sample required',
+            'status' => 'ordered',
+        ]);
+    });
+
+    it('prevents duplicate lab orders for same test', function () {
+        // Create existing order
+        $this->consultation->labOrders()->create([
+            'lab_service_id' => $this->labService->id,
+            'ordered_by' => $this->doctor->id,
+            'ordered_at' => now(),
+            'status' => 'ordered',
+        ]);
+
+        $response = $this->actingAs($this->doctor)
+            ->postJson("/consultation/{$this->consultation->id}/lab-orders", [
+                'lab_service_id' => $this->labService->id,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'message' => 'This lab test has already been ordered for this consultation.',
+            ]);
+    });
+
+    it('prevents ordering inactive lab services', function () {
+        $this->labService->update(['is_active' => false]);
+
+        $response = $this->actingAs($this->doctor)
+            ->postJson("/consultation/{$this->consultation->id}/lab-orders", [
+                'lab_service_id' => $this->labService->id,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'message' => 'This lab service is not currently available.',
+            ]);
+    });
+});

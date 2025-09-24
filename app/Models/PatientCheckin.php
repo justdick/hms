@@ -71,18 +71,34 @@ class PatientCheckin extends Model
         $query->where('status', $status);
     }
 
+    public function scopeAccessibleTo($query, User $user): void
+    {
+        // Admin can see all
+        if ($user->hasRole('Admin') || $user->can('checkins.view-all')) {
+            return;
+        }
+
+        // Department-based access
+        if ($user->can('checkins.view-dept')) {
+            $query->whereIn('department_id', $user->departments->pluck('id'));
+        } else {
+            // No access
+            $query->whereRaw('1 = 0');
+        }
+    }
+
     public function markVitalsTaken(): void
     {
         $this->update([
             'vitals_taken_at' => now(),
-            'status' => 'vitals_taken'
+            'status' => 'vitals_taken',
         ]);
     }
 
     public function markAwaitingConsultation(): void
     {
         $this->update([
-            'status' => 'awaiting_consultation'
+            'status' => 'awaiting_consultation',
         ]);
     }
 }

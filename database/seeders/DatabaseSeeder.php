@@ -14,8 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create default user
         User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -24,5 +23,14 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Seed consultation module data
+        $this->call([
+            PermissionSeeder::class,
+            DepartmentSeeder::class,
+            TestDataSeeder::class,
+            LabServiceSeeder::class,
+            BillingServiceSeeder::class,
+        ]);
     }
 }

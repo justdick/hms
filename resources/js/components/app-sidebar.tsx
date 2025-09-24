@@ -27,6 +27,11 @@ const mainNavItems: NavItem[] = [
         href: '/checkin',
         icon: Stethoscope,
     },
+    {
+        title: 'Consultation',
+        href: '/consultation',
+        icon: Stethoscope,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

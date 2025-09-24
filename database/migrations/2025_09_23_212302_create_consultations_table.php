@@ -13,25 +13,21 @@ return new class extends Migration
     {
         Schema::create('consultations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('patient_id')->constrained()->onDelete('cascade');
-            $table->foreignId('patient_checkin_id')->constrained()->onDelete('cascade');
-            $table->foreignId('department_id')->constrained()->onDelete('cascade');
-            $table->foreignId('doctor_id')->constrained('users')->onDelete('cascade');
-            $table->string('consultation_number')->unique();
+            $table->foreignId('patient_checkin_id')->constrained('patient_checkins')->cascadeOnDelete();
+            $table->foreignId('doctor_id')->constrained('users');
+            $table->timestamp('started_at');
+            $table->timestamp('completed_at')->nullable();
+            $table->enum('status', ['in_progress', 'completed', 'paused'])->default('in_progress');
             $table->text('chief_complaint')->nullable();
-            $table->text('history_present_illness')->nullable();
-            $table->text('examination_findings')->nullable();
-            $table->text('diagnosis')->nullable();
-            $table->text('treatment_plan')->nullable();
-            $table->text('prescriptions')->nullable();
-            $table->text('follow_up_instructions')->nullable();
-            $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled'])->default('scheduled');
-            $table->timestamp('consultation_date');
+            $table->text('subjective_notes')->nullable();
+            $table->text('objective_notes')->nullable();
+            $table->text('assessment_notes')->nullable();
+            $table->text('plan_notes')->nullable();
+            $table->date('follow_up_date')->nullable();
             $table->timestamps();
 
-            $table->index(['patient_id', 'consultation_date']);
-            $table->index('consultation_date');
-            $table->index('status');
+            $table->index(['doctor_id', 'status']);
+            $table->index(['started_at']);
         });
     }
 

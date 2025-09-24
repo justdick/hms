@@ -5,7 +5,12 @@
       "mcp__sequential-thinking__sequentialthinking",
       "mcp__laravel-boost__application-info",
       "mcp__laravel-boost__database-schema",
-      "mcp__laravel-boost__get-config"
+      "mcp__laravel-boost__get-config",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__laravel-boost__last-error",
+      "mcp__playwright__browser_network_requests",
+      "mcp__laravel-boost__read-log-entries"
     ]
   },
   "enableAllProjectMcpServers": true,

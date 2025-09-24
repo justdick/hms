@@ -49,6 +49,11 @@ class Patient extends Model
         return $this->hasMany(VitalSign::class);
     }
 
+    public function bills(): HasMany
+    {
+        return $this->hasMany(PatientBill::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
@@ -63,9 +68,9 @@ class Patient extends Model
     {
         $query->where(function ($q) use ($search) {
             $q->where('first_name', 'like', "%{$search}%")
-              ->orWhere('last_name', 'like', "%{$search}%")
-              ->orWhere('patient_number', 'like', "%{$search}%")
-              ->orWhere('phone_number', 'like', "%{$search}%");
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('patient_number', 'like', "%{$search}%")
+                ->orWhere('phone_number', 'like', "%{$search}%");
         });
     }
 }
