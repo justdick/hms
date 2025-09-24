@@ -11,6 +11,7 @@ Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultat
     Route::get('/', [ConsultationController::class, 'index'])->name('index');
     Route::post('/', [ConsultationController::class, 'store'])->name('store');
     Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('show');
+    Route::get('/{consultation}/enhanced', [ConsultationController::class, 'showEnhanced'])->name('show.enhanced');
     Route::patch('/{consultation}', [ConsultationController::class, 'update'])->name('update');
     Route::post('/{consultation}/complete', [ConsultationController::class, 'complete'])->name('complete');
 

@@ -225,13 +225,24 @@ export default function ConsultationShow({ consultation, labServices }: Props) {
         </div>
 
         {/* Quick Actions */}
-        {consultation.status === 'in_progress' && (
-          <div className="mb-6 flex gap-4">
-            <Button onClick={completeConsultation} variant="outline">
-              Complete Consultation
-            </Button>
+        <div className="mb-6 flex gap-4 justify-between items-center">
+          <div className="flex gap-4">
+            {consultation.status === 'in_progress' && (
+              <Button onClick={completeConsultation} variant="outline">
+                Complete Consultation
+              </Button>
+            )}
           </div>
-        )}
+
+          <Button
+            onClick={() => window.location.href = `/consultation/${consultation.id}/enhanced`}
+            variant="default"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Try Enhanced UI
+          </Button>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
