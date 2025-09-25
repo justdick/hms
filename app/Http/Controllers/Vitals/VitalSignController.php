@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Vitals;
 
 use App\Http\Controllers\Controller;
-use App\Models\VitalSign;
 use App\Models\PatientCheckin;
+use App\Models\VitalSign;
 use Illuminate\Http\Request;
 
 class VitalSignController extends Controller
 {
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->can('opd.vitals.record'), 403);
+        $this->authorize('create', VitalSign::class);
 
         $validated = $request->validate([
             'patient_checkin_id' => 'required|exists:patient_checkins,id',
@@ -49,15 +49,12 @@ class VitalSignController extends Controller
 
         $vitalSign->load(['recordedBy']);
 
-        return response()->json([
-            'vital_sign' => $vitalSign,
-            'message' => 'Vital signs recorded successfully'
-        ]);
+        return redirect()->back()->with('success', 'Vital signs recorded successfully');
     }
 
     public function show(VitalSign $vitalSign)
     {
-        abort_unless(auth()->user()->can('opd.vitals.view'), 403);
+        $this->authorize('view', $vitalSign);
 
         $vitalSign->load(['patient', 'patientCheckin', 'recordedBy']);
 
@@ -66,7 +63,7 @@ class VitalSignController extends Controller
 
     public function update(VitalSign $vitalSign, Request $request)
     {
-        abort_unless(auth()->user()->can('opd.vitals.edit'), 403);
+        $this->authorize('update', $vitalSign);
 
         $validated = $request->validate([
             'blood_pressure_systolic' => 'nullable|numeric|min:0|max:300',
@@ -82,15 +79,12 @@ class VitalSignController extends Controller
 
         $vitalSign->update($validated);
 
-        return response()->json([
-            'vital_sign' => $vitalSign->fresh(['recordedBy']),
-            'message' => 'Vital signs updated successfully'
-        ]);
+        return redirect()->back()->with('success', 'Vital signs updated successfully');
     }
 
     public function patientHistory(int $patientId)
     {
-        abort_unless(auth()->user()->can('opd.vitals.view'), 403);
+        $this->authorize('viewAny', VitalSign::class);
 
         $vitalSigns = VitalSign::where('patient_id', $patientId)
             ->with(['recordedBy', 'patientCheckin.department'])

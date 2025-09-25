@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admission\AdmissionController;
 use App\Http\Controllers\Consultation\ConsultationController;
 use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
@@ -14,6 +15,13 @@ Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultat
     Route::get('/{consultation}/enhanced', [ConsultationController::class, 'showEnhanced'])->name('show.enhanced');
     Route::patch('/{consultation}', [ConsultationController::class, 'update'])->name('update');
     Route::post('/{consultation}/complete', [ConsultationController::class, 'complete'])->name('complete');
+
+    // Prescription management
+    Route::post('/{consultation}/prescriptions', [ConsultationController::class, 'storePrescription'])->name('prescriptions.store');
+
+    // Admission management
+    Route::post('/{consultation}/admit', [AdmissionController::class, 'store'])->name('admit');
+    Route::get('/wards/available', [AdmissionController::class, 'getAvailableWards'])->name('wards.available');
 
     // Diagnosis management
     Route::prefix('/{consultation}/diagnoses')->name('diagnoses.')->group(function () {

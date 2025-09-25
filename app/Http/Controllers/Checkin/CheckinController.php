@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Checkin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Department;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
-use App\Models\Department;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CheckinController extends Controller
 {
     public function index()
     {
-        // Check permission
-        abort_unless(auth()->user()->can('opd.access'), 403);
+        // Check permission using policy
+        $this->authorize('viewAny', PatientCheckin::class);
 
         $todayCheckins = PatientCheckin::with(['patient', 'department'])
             ->today()
@@ -32,14 +31,14 @@ class CheckinController extends Controller
 
     public function dashboard()
     {
-        abort_unless(auth()->user()->can('opd.access'), 403);
+        $this->authorize('viewAny', PatientCheckin::class);
 
         return $this->index();
     }
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->can('opd.checkin.create'), 403);
+        $this->authorize('create', PatientCheckin::class);
 
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
@@ -54,7 +53,7 @@ class CheckinController extends Controller
 
         if ($existingCheckin) {
             return response()->json([
-                'error' => 'Patient is already checked in today'
+                'error' => 'Patient is already checked in today',
             ], 422);
         }
 
@@ -69,22 +68,19 @@ class CheckinController extends Controller
 
         $checkin->load(['patient', 'department', 'checkedInBy']);
 
-        return response()->json([
-            'checkin' => $checkin,
-            'message' => 'Patient checked in successfully'
-        ]);
+        return redirect()->back()->with('success', 'Patient checked in successfully');
     }
 
     public function show(PatientCheckin $checkin)
     {
-        abort_unless(auth()->user()->can('opd.checkin.view'), 403);
+        $this->authorize('view', $checkin);
 
         $checkin->load([
             'patient',
             'department',
             'checkedInBy',
             'vitalSigns.recordedBy',
-            'consultation.doctor'
+            'consultation.doctor',
         ]);
 
         return response()->json(['checkin' => $checkin]);
@@ -92,7 +88,7 @@ class CheckinController extends Controller
 
     public function updateStatus(PatientCheckin $checkin, Request $request)
     {
-        abort_unless(auth()->user()->can('opd.checkin.manage'), 403);
+        $this->authorize('update', $checkin);
 
         $validated = $request->validate([
             'status' => 'required|in:checked_in,vitals_taken,awaiting_consultation,in_consultation,completed,cancelled',
@@ -103,13 +99,13 @@ class CheckinController extends Controller
 
         return response()->json([
             'checkin' => $checkin->fresh(['patient', 'department']),
-            'message' => 'Check-in status updated successfully'
+            'message' => 'Check-in status updated successfully',
         ]);
     }
 
     public function todayCheckins()
     {
-        abort_unless(auth()->user()->can('opd.checkin.view'), 403);
+        $this->authorize('viewAny', PatientCheckin::class);
 
         $checkins = PatientCheckin::with(['patient', 'department', 'checkedInBy'])
             ->today()
@@ -121,7 +117,7 @@ class CheckinController extends Controller
 
     public function departmentQueue(Department $department)
     {
-        abort_unless(auth()->user()->can('opd.checkin.view'), 403);
+        $this->authorize('viewAny', PatientCheckin::class);
 
         $checkins = PatientCheckin::with(['patient', 'vitalSigns'])
             ->where('department_id', $department->id)
@@ -132,7 +128,7 @@ class CheckinController extends Controller
 
         return response()->json([
             'department' => $department,
-            'queue' => $checkins
+            'queue' => $checkins,
         ]);
     }
 }

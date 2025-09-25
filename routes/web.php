@@ -17,3 +17,4 @@ require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/checkin.php';
 require __DIR__.'/consultation.php';
+require __DIR__.'/wards.php';

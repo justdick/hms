@@ -7,6 +7,7 @@ use App\Models\BillingService;
 use App\Models\Consultation;
 use App\Models\LabService;
 use App\Models\PatientCheckin;
+use App\Models\Prescription;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -67,9 +68,41 @@ class ConsultationController extends Controller
             'labOrders.labService',
         ]);
 
+        // Get patient history
+        $patient = $consultation->patientCheckin->patient;
+
+        $patientHistory = [
+            'previousConsultations' => Consultation::with([
+                'doctor:id,name',
+                'patientCheckin.department:id,name',
+                'diagnoses:id,consultation_id,diagnosis_description,icd_code',
+                'prescriptions:id,consultation_id,medication_name,dosage,frequency,duration',
+            ])
+                ->whereHas('patientCheckin', function ($query) use ($patient) {
+                    $query->where('patient_id', $patient->id);
+                })
+                ->where('id', '!=', $consultation->id)
+                ->where('status', 'completed')
+                ->orderBy('started_at', 'desc')
+                ->limit(10)
+                ->get(),
+            'previousPrescriptions' => Prescription::with('consultation.doctor:id,name')
+                ->whereHas('consultation.patientCheckin', function ($query) use ($patient) {
+                    $query->where('patient_id', $patient->id);
+                })
+                ->whereHas('consultation', function ($query) use ($consultation) {
+                    $query->where('id', '!=', $consultation->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get(),
+            'allergies' => [], // Could be extended with actual allergy data
+        ];
+
         return Inertia::render('Consultation/Show', [
             'consultation' => $consultation,
             'labServices' => LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
+            'patientHistory' => $patientHistory,
         ]);
     }
 
@@ -93,7 +126,7 @@ class ConsultationController extends Controller
         $labServices = LabService::active()->get([
             'id', 'name', 'code', 'category', 'price', 'sample_type',
             'turnaround_time', 'description', 'preparation_instructions',
-            'normal_range', 'clinical_significance'
+            'normal_range', 'clinical_significance',
         ]);
 
         // Mock data for demonstration - in real implementation, these would be actual database queries
@@ -105,7 +138,7 @@ class ConsultationController extends Controller
                 'doctor' => 'Dr. Smith',
                 'chief_complaint' => 'Annual physical examination',
                 'diagnosis' => 'Healthy adult, routine screening',
-                'status' => 'completed'
+                'status' => 'completed',
             ],
             [
                 'id' => 2,
@@ -114,8 +147,8 @@ class ConsultationController extends Controller
                 'doctor' => 'Dr. Johnson',
                 'chief_complaint' => 'Chest pain evaluation',
                 'diagnosis' => 'Atypical chest pain, rule out cardiac cause',
-                'status' => 'completed'
-            ]
+                'status' => 'completed',
+            ],
         ];
 
         $medications = [
@@ -125,7 +158,7 @@ class ConsultationController extends Controller
                 'dosage' => '10mg daily',
                 'prescribed_date' => '2024-01-15',
                 'status' => 'active',
-                'prescribing_doctor' => 'Dr. Smith'
+                'prescribing_doctor' => 'Dr. Smith',
             ],
             [
                 'id' => 2,
@@ -133,8 +166,8 @@ class ConsultationController extends Controller
                 'dosage' => '500mg twice daily',
                 'prescribed_date' => '2023-08-10',
                 'status' => 'discontinued',
-                'prescribing_doctor' => 'Dr. Brown'
-            ]
+                'prescribing_doctor' => 'Dr. Brown',
+            ],
         ];
 
         $allergies = [
@@ -143,8 +176,8 @@ class ConsultationController extends Controller
                 'allergen' => 'Penicillin',
                 'reaction' => 'Rash and hives',
                 'severity' => 'moderate',
-                'date_noted' => '2020-05-15'
-            ]
+                'date_noted' => '2020-05-15',
+            ],
         ];
 
         $familyHistory = [
@@ -153,15 +186,15 @@ class ConsultationController extends Controller
                 'relationship' => 'Father',
                 'condition' => 'Hypertension',
                 'age_of_onset' => 45,
-                'notes' => 'Well controlled with medication'
+                'notes' => 'Well controlled with medication',
             ],
             [
                 'id' => 2,
                 'relationship' => 'Mother',
                 'condition' => 'Type 2 Diabetes',
                 'age_of_onset' => 52,
-                'notes' => null
-            ]
+                'notes' => null,
+            ],
         ];
 
         return Inertia::render('Consultation/ShowEnhanced', [
@@ -228,6 +261,31 @@ class ConsultationController extends Controller
         ]));
 
         return redirect()->back()->with('success', 'Consultation updated successfully.');
+    }
+
+    public function storePrescription(Request $request, Consultation $consultation)
+    {
+        $this->authorize('update', $consultation);
+
+        $request->validate([
+            'medication_name' => 'required|string|max:255',
+            'dosage' => 'required|string|max:100',
+            'frequency' => 'required|string|max:100',
+            'duration' => 'required|string|max:100',
+            'instructions' => 'nullable|string|max:1000',
+        ]);
+
+        Prescription::create([
+            'consultation_id' => $consultation->id,
+            'medication_name' => $request->medication_name,
+            'dosage' => $request->dosage,
+            'frequency' => $request->frequency,
+            'duration' => $request->duration,
+            'instructions' => $request->instructions,
+            'status' => 'prescribed',
+        ]);
+
+        return redirect()->back()->with('success', 'Prescription added successfully.');
     }
 
     public function complete(Request $request, Consultation $consultation)

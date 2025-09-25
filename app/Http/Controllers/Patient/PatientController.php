@@ -5,14 +5,12 @@ namespace App\Http\Controllers\Patient;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
 
 class PatientController extends Controller
 {
     public function search(Request $request)
     {
-        abort_unless(auth()->user()->can('opd.patient.search'), 403);
+        $this->authorize('viewAny', Patient::class);
 
         $search = $request->get('search');
 
@@ -45,7 +43,7 @@ class PatientController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->can('opd.patient.register'), 403);
+        $this->authorize('create', Patient::class);
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -74,19 +72,19 @@ class PatientController extends Controller
                 'phone_number' => $patient->phone_number,
                 'has_checkin_today' => false,
             ],
-            'message' => 'Patient registered successfully'
+            'message' => 'Patient registered successfully',
         ]);
     }
 
     public function show(Patient $patient)
     {
-        abort_unless(auth()->user()->can('opd.patient.view'), 403);
+        $this->authorize('view', $patient);
 
         $patient->load([
             'checkins.department',
             'vitalSigns' => function ($query) {
                 $query->latest()->limit(5);
-            }
+            },
         ]);
 
         return response()->json(['patient' => $patient]);
@@ -108,6 +106,6 @@ class PatientController extends Controller
             $newNumber = 1;
         }
 
-        return $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($newNumber, 6, '0', STR_PAD_LEFT);
     }
 }

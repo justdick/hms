@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import { Link } from '@inertiajs/react'
 import AppLayout from '@/layouts/app-layout'
 import { Button } from '@/components/ui/button'
@@ -54,9 +54,7 @@ interface Props {
 
 export default function ConsultationIndex({ awaitingConsultation, activeConsultations }: Props) {
   const [selectedPatient, setSelectedPatient] = useState<number | null>(null)
-  const { data, setData, post, processing } = useForm({
-    patient_checkin_id: 0,
-  })
+  const [processing, setProcessing] = useState(false)
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {
@@ -93,8 +91,11 @@ export default function ConsultationIndex({ awaitingConsultation, activeConsulta
   }
 
   const startConsultation = (patientCheckinId: number) => {
-    post('/consultation', {
+    setProcessing(true)
+    router.post('/consultation', {
       patient_checkin_id: patientCheckinId,
+    }, {
+      onFinish: () => setProcessing(false)
     })
   }
 
