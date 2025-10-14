@@ -61,6 +61,16 @@ class PatientCheckin extends Model
         return $this->hasOne(Consultation::class);
     }
 
+    public function consultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class);
+    }
+
     public function scopeToday($query): void
     {
         $query->whereDate('checked_in_at', today());
@@ -100,5 +110,37 @@ class PatientCheckin extends Model
         $this->update([
             'status' => 'awaiting_consultation',
         ]);
+    }
+
+    public function cancel(?string $reason = null): void
+    {
+        // Update check-in status
+        $this->update([
+            'status' => 'cancelled',
+            'notes' => $reason ? "{$this->notes}\nCancelled: {$reason}" : "{$this->notes}\nCancelled",
+        ]);
+
+        // Void all pending charges (unpaid charges are forgiven)
+        // Keep paid charges as-is (no refund policy)
+        $this->charges()
+            ->where('status', 'pending')
+            ->each(function ($charge) use ($reason) {
+                $charge->markAsVoided($reason);
+            });
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    public function isIncomplete(): bool
+    {
+        return in_array($this->status, ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation']);
     }
 }

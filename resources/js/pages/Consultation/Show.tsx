@@ -1,1067 +1,1508 @@
-import { Head, useForm } from '@inertiajs/react'
-import AppLayout from '@/layouts/app-layout'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { User, Building, Clock, Activity, FileText, TestTube, Pill, History, Plus, Trash2, Search, X, UserPlus } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
+import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
+import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
+import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
+import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
+import { Head, router, useForm } from '@inertiajs/react';
+import {
+    Activity,
+    ArrowRightLeft,
+    Building,
+    Clock,
+    FileText,
+    Pill,
+    Plus,
+    TestTube,
+    User,
+    UserPlus,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Patient {
-  id: number
-  first_name: string
-  last_name: string
-  date_of_birth: string
-  phone_number: string
-  email?: string
+    id: number;
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    gender: string;
+    phone_number: string;
+    email?: string;
 }
 
 interface Department {
-  id: number
-  name: string
+    id: number;
+    name: string;
 }
 
 interface VitalSigns {
-  id: number
-  temperature: number
-  blood_pressure_systolic: number
-  blood_pressure_diastolic: number
-  heart_rate: number
-  respiratory_rate: number
-  recorded_at: string
+    id: number;
+    temperature: number;
+    blood_pressure_systolic: number;
+    blood_pressure_diastolic: number;
+    pulse_rate: number; // Note: Database uses pulse_rate, not heart_rate
+    respiratory_rate: number;
+    recorded_at: string;
 }
 
 interface Doctor {
-  id: number
-  name: string
+    id: number;
+    name: string;
 }
 
 interface Diagnosis {
-  id: number
-  icd_code: string
-  diagnosis_description: string
-  is_primary: boolean
+    id: number;
+    diagnosis: string;
+    code: string;
+    g_drg: string;
+    icd_10: string;
+}
+
+interface ConsultationDiagnosis {
+    id: number;
+    diagnosis: Diagnosis;
+    type: 'provisional' | 'principal';
+}
+
+interface Drug {
+    id: number;
+    name: string;
+    generic_name?: string;
+    brand_name?: string;
+    drug_code: string;
+    form: string;
+    strength?: string;
+    unit_price: number;
+    unit_type: string;
 }
 
 interface Prescription {
-  id: number
-  medication_name: string
-  dosage: string
-  frequency: string
-  duration: string
-  instructions?: string
-  status: string
+    id: number;
+    medication_name: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
+    status: string;
+    drug?: Drug;
 }
 
 interface LabService {
-  id: number
-  name: string
-  code: string
-  category: string
-  price: number
-  sample_type: string
+    id: number;
+    name: string;
+    code: string;
+    category: string;
+    price: number;
+    sample_type: string;
 }
 
 interface LabOrder {
-  id: number
-  lab_service: LabService
-  status: string
-  priority: string
-  special_instructions?: string
-  ordered_at: string
+    id: number;
+    lab_service: LabService;
+    status:
+        | 'ordered'
+        | 'sample_collected'
+        | 'in_progress'
+        | 'completed'
+        | 'cancelled';
+    priority: 'routine' | 'urgent' | 'stat';
+    special_instructions?: string;
+    ordered_at: string;
+    sample_collected_at?: string;
+    result_entered_at?: string;
+    result_values?: any;
+    result_notes?: string;
+    ordered_by?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface Consultation {
-  id: number
-  started_at: string
-  completed_at?: string
-  status: string
-  chief_complaint?: string
-  subjective_notes?: string
-  objective_notes?: string
-  assessment_notes?: string
-  plan_notes?: string
-  follow_up_date?: string
-  patient_checkin: {
-    id: number
-    patient: Patient
-    department: Department
-    checked_in_at: string
-    vital_signs: VitalSigns[]
-  }
-  doctor: Doctor
-  diagnoses: Diagnosis[]
-  prescriptions: Prescription[]
-  lab_orders: LabOrder[]
+    id: number;
+    started_at: string;
+    completed_at?: string;
+    status: string;
+    presenting_complaint?: string;
+    history_presenting_complaint?: string;
+    on_direct_questioning?: string;
+    examination_findings?: string;
+    assessment_notes?: string;
+    plan_notes?: string;
+    follow_up_date?: string;
+    patient_checkin: {
+        id: number;
+        patient: Patient;
+        department: Department;
+        checked_in_at: string;
+        vital_signs?: VitalSigns[]; // Note: Laravel serializes vitalSigns relationship as vital_signs in JSON
+    };
+    doctor: Doctor;
+    diagnoses: ConsultationDiagnosis[];
+    prescriptions: Prescription[];
+    lab_orders: LabOrder[];
+}
+
+interface Ward {
+    id: number;
+    name: string;
+    code: string;
+    available_beds: number;
+}
+
+interface Department {
+    id: number;
+    name: string;
+    code: string;
 }
 
 interface Props {
-  consultation: Consultation
-  labServices: LabService[]
-  patientHistory?: {
-    previousConsultations: Consultation[]
-    previousPrescriptions: Prescription[]
-    allergies: string[]
-  }
+    consultation: Consultation;
+    labServices: LabService[];
+    patientHistory?: {
+        previousConsultations: Consultation[];
+        previousPrescriptions: Prescription[];
+        allergies: string[];
+    };
+    patientHistories: {
+        past_medical_surgical_history: string;
+        drug_history: string;
+        family_history: string;
+        social_history: string;
+    };
+    availableWards: Ward[];
+    availableDrugs?: Drug[];
+    availableDepartments?: Department[];
+    availableDiagnoses?: Diagnosis[];
 }
 
-export default function ConsultationShow({ consultation, labServices, patientHistory }: Props) {
-  const [activeTab, setActiveTab] = useState('soap')
+export default function ConsultationShow({
+    consultation,
+    labServices,
+    patientHistory,
+    patientHistories,
+    availableWards,
+    availableDrugs = [],
+    availableDepartments = [],
+    availableDiagnoses = [],
+}: Props) {
+    const [activeTab, setActiveTab] = useState('notes');
+    const [isSaving, setIsSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const { data, setData, patch, processing } = useForm({
-    chief_complaint: consultation.chief_complaint || '',
-    subjective_notes: consultation.subjective_notes || '',
-    objective_notes: consultation.objective_notes || '',
-    assessment_notes: consultation.assessment_notes || '',
-    plan_notes: consultation.plan_notes || '',
-    follow_up_date: consultation.follow_up_date || '',
-  })
+    // Lab order state
+    const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
+    const {
+        data: labOrderData,
+        setData: setLabOrderData,
+        post: postLabOrder,
+        processing: labOrderProcessing,
+        reset: resetLabOrder,
+    } = useForm({
+        lab_service_id: '',
+        priority: 'routine',
+        special_instructions: '',
+    });
 
-  const { data: prescriptionData, setData: setPrescriptionData, post: postPrescription, processing: prescriptionProcessing, reset: resetPrescription } = useForm({
-    medication_name: '',
-    dosage: '',
-    frequency: '',
-    duration: '',
-    instructions: '',
-  })
+    const { data, setData, patch, processing } = useForm({
+        presenting_complaint: consultation.presenting_complaint || '',
+        history_presenting_complaint:
+            consultation.history_presenting_complaint || '',
+        on_direct_questioning: consultation.on_direct_questioning || '',
+        examination_findings: consultation.examination_findings || '',
+        assessment_notes: consultation.assessment_notes || '',
+        plan_notes: consultation.plan_notes || '',
+        follow_up_date: consultation.follow_up_date || '',
+        past_medical_surgical_history:
+            patientHistories.past_medical_surgical_history,
+        drug_history: patientHistories.drug_history,
+        family_history: patientHistories.family_history,
+        social_history: patientHistories.social_history,
+    });
 
-  const { data: diagnosisData, setData: setDiagnosisData, post: postDiagnosis, processing: diagnosisProcessing, reset: resetDiagnosis } = useForm({
-    icd_code: '',
-    diagnosis_description: '',
-    is_primary: false,
-  })
+    const {
+        data: prescriptionData,
+        setData: setPrescriptionData,
+        post: postPrescription,
+        processing: prescriptionProcessing,
+        reset: resetPrescription,
+    } = useForm({
+        medication_name: '',
+        drug_id: null as number | null,
+        frequency: '',
+        duration: '',
+        instructions: '',
+    });
 
-  const [icdSearchResults, setIcdSearchResults] = useState<{code: string, description: string}[]>([])
-  const [showIcdResults, setShowIcdResults] = useState(false)
-  const [icdSearchQuery, setIcdSearchQuery] = useState('')
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null)
+    const {
+        data: diagnosisData,
+        setData: setDiagnosisData,
+        post: postDiagnosis,
+        processing: diagnosisProcessing,
+        reset: resetDiagnosis,
+    } = useForm({
+        diagnosis_id: null as number | null,
+        type: 'provisional' as 'provisional' | 'principal',
+    });
 
-  const [availableWards, setAvailableWards] = useState<any[]>([])
-  const [showAdmissionModal, setShowAdmissionModal] = useState(false)
+    const [showAdmissionModal, setShowAdmissionModal] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+    const [deleteDialogState, setDeleteDialogState] = useState<{
+        open: boolean;
+        type: 'diagnosis' | 'prescription';
+        id: number | null;
+    }>({ open: false, type: 'diagnosis', id: null });
 
-  const { data: admissionData, setData: setAdmissionData, post: postAdmission, processing: admissionProcessing, reset: resetAdmission } = useForm({
-    ward_id: '',
-    admission_reason: '',
-    admission_notes: '',
-  })
+    const {
+        data: admissionData,
+        setData: setAdmissionData,
+        post: postAdmission,
+        processing: admissionProcessing,
+        reset: resetAdmission,
+    } = useForm({
+        ward_id: '',
+        admission_reason: '',
+        admission_notes: '',
+    });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    patch(`/consultation/${consultation.id}`)
-  }
+    const {
+        data: transferData,
+        setData: setTransferData,
+        post: postTransfer,
+        processing: transferProcessing,
+        reset: resetTransfer,
+    } = useForm({
+        department_id: '',
+        reason: '',
+    });
 
-  const handlePrescriptionSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    postPrescription(`/consultation/${consultation.id}/prescriptions`, {
-      onSuccess: () => {
-        resetPrescription()
-      }
-    })
-  }
+    // Auto-save function
+    const autoSave = useCallback(() => {
+        if (!hasUnsavedChanges || consultation.status !== 'in_progress') {
+            return;
+        }
 
-  const handleDiagnosisSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    postDiagnosis(`/consultation/${consultation.id}/diagnoses`, {
-      onSuccess: () => {
-        resetDiagnosis()
-        setIcdSearchQuery('')
-        setShowIcdResults(false)
-      }
-    })
-  }
+        setIsSaving(true);
+        patch(`/consultation/${consultation.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsSaving(false);
+                setHasUnsavedChanges(false);
+                setLastSaved(new Date());
+            },
+            onError: () => {
+                setIsSaving(false);
+            },
+        });
+    }, [hasUnsavedChanges, consultation.id, consultation.status, patch]);
 
-  const searchIcdCodes = async (query: string) => {
-    if (query.length < 3) {
-      setIcdSearchResults([])
-      setShowIcdResults(false)
-      return
-    }
+    // Track changes and trigger auto-save
+    useEffect(() => {
+        if (hasUnsavedChanges) {
+            // Clear existing timeout
+            if (autoSaveTimeout.current) {
+                clearTimeout(autoSaveTimeout.current);
+            }
 
-    try {
-      const response = await fetch(`/consultation/diagnoses/search?query=${encodeURIComponent(query)}`)
-      const data = await response.json()
-      setIcdSearchResults(data.icd_codes || [])
-      setShowIcdResults(true)
-    } catch (error) {
-      console.error('Failed to search ICD codes:', error)
-    }
-  }
+            // Set new timeout for auto-save (3 seconds after last change)
+            autoSaveTimeout.current = setTimeout(() => {
+                autoSave();
+            }, 3000);
+        }
 
-  const handleIcdSearch = (query: string) => {
-    setIcdSearchQuery(query)
+        return () => {
+            if (autoSaveTimeout.current) {
+                clearTimeout(autoSaveTimeout.current);
+            }
+        };
+    }, [hasUnsavedChanges, autoSave]);
 
-    if (searchTimeout.current) {
-      clearTimeout(searchTimeout.current)
-    }
+    // Warn before leaving with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
 
-    searchTimeout.current = setTimeout(() => {
-      searchIcdCodes(query)
-    }, 300)
-  }
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () =>
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
-  const selectIcdCode = (code: {code: string, description: string}) => {
-    setDiagnosisData('icd_code', code.code)
-    setDiagnosisData('diagnosis_description', code.description)
-    setIcdSearchQuery(`${code.code} - ${code.description}`)
-    setShowIcdResults(false)
-  }
+    // Custom setData wrapper to track changes
+    const handleDataChange = (field: string, value: string) => {
+        setData(field as any, value);
+        setHasUnsavedChanges(true);
+    };
 
-  const handleAdmissionSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    postAdmission(`/consultation/${consultation.id}/admit`, {
-      onSuccess: () => {
-        resetAdmission()
-        setShowAdmissionModal(false)
-      }
-    })
-  }
+    const handlePatientHistoryUpdate = (field: string, value: string) => {
+        setData(field as any, value);
+        setHasUnsavedChanges(true);
+    };
 
-  const loadAvailableWards = async () => {
-    try {
-      const response = await fetch('/consultation/wards/available')
-      const data = await response.json()
-      setAvailableWards(data.wards || [])
-    } catch (error) {
-      console.error('Failed to load available wards:', error)
-    }
-  }
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        patch(`/consultation/${consultation.id}`, {
+            onSuccess: () => {
+                setIsSaving(false);
+                setHasUnsavedChanges(false);
+                setLastSaved(new Date());
+            },
+            onError: () => {
+                setIsSaving(false);
+            },
+        });
+    };
 
+    const handlePrescriptionSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        postPrescription(`/consultation/${consultation.id}/prescriptions`, {
+            onSuccess: () => {
+                resetPrescription();
+            },
+        });
+    };
 
-  const handleWardChange = (wardId: string) => {
-    setAdmissionData('ward_id', wardId)
-  }
+    const handleDiagnosisAdd = (
+        diagnosisId: number,
+        type: 'provisional' | 'principal',
+    ) => {
+        router.post(
+            `/consultation/${consultation.id}/diagnoses`,
+            {
+                diagnosis_id: diagnosisId,
+                type: type,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    resetDiagnosis();
+                },
+            },
+        );
+    };
 
-  const openAdmissionModal = () => {
-    setShowAdmissionModal(true)
-    loadAvailableWards()
-  }
+    // Lab order functionality
+    const handleLabOrderSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        postLabOrder(`/consultation/${consultation.id}/lab-orders`, {
+            onSuccess: () => {
+                resetLabOrder();
+                setShowLabOrderDialog(false);
+            },
+        });
+    };
 
-  useEffect(() => {
-    return () => {
-      if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current)
-      }
-    }
-  }, [])
+    const handleAdmissionSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        postAdmission(`/consultation/${consultation.id}/admit`, {
+            onSuccess: () => {
+                resetAdmission();
+                setShowAdmissionModal(false);
+            },
+        });
+    };
 
-  const completeConsultation = () => {
-    if (confirm('Are you sure you want to complete this consultation?')) {
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = `/consultation/${consultation.id}/complete`
+    const handleTransferSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        postTransfer(`/consultation/${consultation.id}/transfer`, {
+            onSuccess: () => {
+                resetTransfer();
+                setShowTransferModal(false);
+            },
+        });
+    };
 
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-      if (csrfToken) {
-        const csrfInput = document.createElement('input')
-        csrfInput.type = 'hidden'
-        csrfInput.name = '_token'
-        csrfInput.value = csrfToken
-        form.appendChild(csrfInput)
-      }
+    const handleWardChange = (wardId: string) => {
+        setAdmissionData('ward_id', wardId);
+    };
 
-      document.body.appendChild(form)
-      form.submit()
-    }
-  }
+    const handleTransferDepartmentChange = (departmentId: string) => {
+        setTransferData('department_id', departmentId);
+    };
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    const handleCompleteConsultation = () => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/consultation/${consultation.id}/complete`;
 
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date()
-    const birth = new Date(dateOfBirth)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+        }
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
+        document.body.appendChild(form);
+        form.submit();
+    };
 
-    return age
-  }
+    const handleDelete = () => {
+        if (!deleteDialogState.id) {
+            return;
+        }
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'in_progress': 'default',
-      'completed': 'outline',
-      'paused': 'secondary',
-    } as const
+        if (deleteDialogState.type === 'diagnosis') {
+            router.delete(
+                `/consultation/${consultation.id}/diagnoses/${deleteDialogState.id}`,
+                {
+                    onSuccess: () => {
+                        setDeleteDialogState({
+                            open: false,
+                            type: 'diagnosis',
+                            id: null,
+                        });
+                    },
+                },
+            );
+        } else {
+            router.delete(
+                `/consultation/${consultation.id}/prescriptions/${deleteDialogState.id}`,
+                {
+                    onSuccess: () => {
+                        setDeleteDialogState({
+                            open: false,
+                            type: 'diagnosis',
+                            id: null,
+                        });
+                    },
+                },
+            );
+        }
+    };
+
+    const formatDateTime = (dateString: string) => {
+        return new Date(dateString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    const calculateAge = (dateOfBirth: string) => {
+        const today = new Date();
+        const birth = new Date(dateOfBirth);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+
+        if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birth.getDate())
+        ) {
+            age--;
+        }
+
+        return age;
+    };
+
+    const formatTimeSince = (date: Date) => {
+        const seconds = Math.floor(
+            (new Date().getTime() - date.getTime()) / 1000,
+        );
+
+        if (seconds < 60) return 'just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return 'today';
+    };
+
+    const getStatusBadge = (status: string) => {
+        const variants = {
+            in_progress: 'default',
+            completed: 'outline',
+            paused: 'secondary',
+        } as const;
+
+        return (
+            <Badge
+                variant={
+                    variants[status as keyof typeof variants] || 'secondary'
+                }
+            >
+                {status.replace('_', ' ').toUpperCase()}
+            </Badge>
+        );
+    };
+
+    const vitalSigns = consultation.patient_checkin.vital_signs || [];
+    const latestVitals = vitalSigns[0];
 
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-        {status.replace('_', ' ').toUpperCase()}
-      </Badge>
-    )
-  }
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Consultation', href: '/consultation' },
+                {
+                    title: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`,
+                    href: '',
+                },
+            ]}
+        >
+            <Head
+                title={`Consultation - ${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`}
+            />
 
-  const latestVitals = consultation.patient_checkin.vital_signs?.[0]
-
-  return (
-    <AppLayout breadcrumbs={[
-      { title: 'Consultation', href: '/consultation' },
-      { title: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`, href: '' }
-    ]}>
-      <Head title={`Consultation - ${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`} />
-
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {consultation.patient_checkin.patient.first_name} {consultation.patient_checkin.patient.last_name}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Age: {calculateAge(consultation.patient_checkin.patient.date_of_birth)} •
-                Phone: {consultation.patient_checkin.patient.phone_number}
-              </p>
-            </div>
-            <div className="text-right">
-              {getStatusBadge(consultation.status)}
-              <p className="text-sm text-gray-600 mt-2">
-                Started: {formatDateTime(consultation.started_at)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6 mt-4 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              {consultation.patient_checkin.department.name}
-            </div>
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Dr. {consultation.doctor.name}
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Checked in: {formatDateTime(consultation.patient_checkin.checked_in_at)}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-6 flex gap-4 justify-between items-center">
-          <div className="flex gap-4">
-            {consultation.status === 'in_progress' && (
-              <>
-                <Button onClick={completeConsultation} variant="outline">
-                  Complete Consultation
-                </Button>
-                <Dialog open={showAdmissionModal} onOpenChange={setShowAdmissionModal}>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={openAdmissionModal}
-                      variant="outline"
-                      className="text-green-600 border-green-600 hover:bg-green-50"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Admit Patient
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Admit Patient</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleAdmissionSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="ward_id">Select Ward</Label>
-                        <Select value={admissionData.ward_id} onValueChange={handleWardChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a ward" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableWards.map((ward) => (
-                              <SelectItem key={ward.id} value={ward.id.toString()}>
-                                {ward.name} ({ward.available_beds} beds available)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-
-                      <div>
-                        <Label htmlFor="admission_reason">Admission Reason</Label>
-                        <Textarea
-                          id="admission_reason"
-                          placeholder="Reason for admission..."
-                          value={admissionData.admission_reason}
-                          onChange={(e) => setAdmissionData('admission_reason', e.target.value)}
-                          required
-                          rows={3}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="admission_notes">Admission Notes (Optional)</Label>
-                        <Textarea
-                          id="admission_notes"
-                          placeholder="Additional notes..."
-                          value={admissionData.admission_notes}
-                          onChange={(e) => setAdmissionData('admission_notes', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-
-
-                      <div className="flex gap-2 pt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowAdmissionModal(false)}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={admissionProcessing || !admissionData.ward_id || !admissionData.admission_reason}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                        >
-                          {admissionProcessing ? 'Admitting...' : 'Admit Patient'}
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </>
-            )}
-          </div>
-
-          <Button
-            onClick={() => window.location.href = `/consultation/${consultation.id}/enhanced`}
-            variant="default"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            Try Enhanced UI
-          </Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="soap" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              SOAP Notes
-            </TabsTrigger>
-            <TabsTrigger value="vitals" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Vitals
-            </TabsTrigger>
-            <TabsTrigger value="diagnosis" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Diagnosis
-            </TabsTrigger>
-            <TabsTrigger value="prescriptions" className="flex items-center gap-2">
-              <Pill className="h-4 w-4" />
-              Prescriptions
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <TestTube className="h-4 w-4" />
-              Lab Orders
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History className="h-4 w-4" />
-              History
-            </TabsTrigger>
-          </TabsList>
-
-          {/* SOAP Notes Tab */}
-          <TabsContent value="soap">
-            <Card>
-              <CardHeader>
-                <CardTitle>SOAP Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <Label htmlFor="chief_complaint">Chief Complaint</Label>
-                    <Textarea
-                      id="chief_complaint"
-                      placeholder="Primary reason for the patient's visit..."
-                      value={data.chief_complaint}
-                      onChange={(e) => setData('chief_complaint', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <Label htmlFor="subjective_notes">Subjective (S)</Label>
-                    <Textarea
-                      id="subjective_notes"
-                      placeholder="Patient's description of symptoms, history..."
-                      value={data.subjective_notes}
-                      onChange={(e) => setData('subjective_notes', e.target.value)}
-                      className="mt-1"
-                      rows={4}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="objective_notes">Objective (O)</Label>
-                    <Textarea
-                      id="objective_notes"
-                      placeholder="Physical examination findings, vital signs..."
-                      value={data.objective_notes}
-                      onChange={(e) => setData('objective_notes', e.target.value)}
-                      className="mt-1"
-                      rows={4}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="assessment_notes">Assessment (A)</Label>
-                    <Textarea
-                      id="assessment_notes"
-                      placeholder="Clinical judgment, differential diagnosis..."
-                      value={data.assessment_notes}
-                      onChange={(e) => setData('assessment_notes', e.target.value)}
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="plan_notes">Plan (P)</Label>
-                    <Textarea
-                      id="plan_notes"
-                      placeholder="Treatment plan, medications, follow-up..."
-                      value={data.plan_notes}
-                      onChange={(e) => setData('plan_notes', e.target.value)}
-                      className="mt-1"
-                      rows={4}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="follow_up_date">Follow-up Date (Optional)</Label>
-                    <Input
-                      id="follow_up_date"
-                      type="date"
-                      value={data.follow_up_date}
-                      onChange={(e) => setData('follow_up_date', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  {consultation.status === 'in_progress' && (
-                    <Button type="submit" disabled={processing}>
-                      {processing ? 'Saving...' : 'Save Notes'}
-                    </Button>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Vitals Tab */}
-          <TabsContent value="vitals">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vital Signs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {latestVitals ? (
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Temperature</p>
-                      <p className="text-2xl font-bold text-blue-600">{latestVitals.temperature}°F</p>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Blood Pressure</p>
-                      <p className="text-2xl font-bold text-red-600">
-                        {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
-                      </p>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Heart Rate</p>
-                      <p className="text-2xl font-bold text-green-600">{latestVitals.heart_rate} bpm</p>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Respiratory Rate</p>
-                      <p className="text-2xl font-bold text-purple-600">{latestVitals.respiratory_rate}/min</p>
-                    </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Recorded</p>
-                      <p className="text-sm font-medium text-gray-700">
-                        {formatDateTime(latestVitals.recorded_at)}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No vital signs recorded</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Diagnosis Tab */}
-          <TabsContent value="diagnosis">
-            <Card>
-              <CardHeader>
-                <CardTitle>Diagnoses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Add New Diagnosis Form */}
-                {consultation.status === 'in_progress' && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-4">Add New Diagnosis</h3>
-                    <form onSubmit={handleDiagnosisSubmit} className="space-y-4">
-                      {/* ICD Code Search */}
-                      <div className="relative">
-                        <Label htmlFor="icd_search">Search ICD Code</Label>
-                        <div className="relative">
-                          <Input
-                            id="icd_search"
-                            placeholder="Search by ICD code or description..."
-                            value={icdSearchQuery}
-                            onChange={(e) => handleIcdSearch(e.target.value)}
-                            className="mt-1 pr-10"
-                          />
-                          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
-
-                        {/* Search Results Dropdown */}
-                        {showIcdResults && icdSearchResults.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                            {icdSearchResults.map((code, index) => (
-                              <div
-                                key={index}
-                                className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                onClick={() => selectIcdCode(code)}
-                              >
-                                <div className="font-medium text-sm text-gray-900">{code.code}</div>
-                                <div className="text-sm text-gray-600">{code.description}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Selected Diagnosis Details */}
-                      {diagnosisData.icd_code && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-medium text-blue-900">Selected: {diagnosisData.icd_code}</div>
-                              <div className="text-sm text-blue-700">{diagnosisData.diagnosis_description}</div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setDiagnosisData('icd_code', '')
-                                setDiagnosisData('diagnosis_description', '')
-                                setIcdSearchQuery('')
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Primary Diagnosis Checkbox */}
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="is_primary"
-                          checked={diagnosisData.is_primary}
-                          onCheckedChange={(checked) => setDiagnosisData('is_primary', !!checked)}
-                        />
-                        <Label htmlFor="is_primary" className="text-sm font-medium">
-                          Primary Diagnosis
-                        </Label>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={diagnosisProcessing || !diagnosisData.icd_code}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {diagnosisProcessing ? 'Adding...' : 'Add Diagnosis'}
-                      </Button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Existing Diagnoses List */}
-                {consultation.diagnoses.length > 0 ? (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Current Diagnoses</h3>
-                    {consultation.diagnoses.map((diagnosis) => (
-                      <div key={diagnosis.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{diagnosis.diagnosis_description}</h4>
-                            <p className="text-sm text-gray-600">ICD Code: {diagnosis.icd_code}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {diagnosis.is_primary && (
-                              <Badge variant="default">Primary</Badge>
-                            )}
-                            {consultation.status === 'in_progress' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  if (confirm('Are you sure you want to remove this diagnosis?')) {
-                                    // Handle delete diagnosis
-                                  }
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No diagnoses recorded</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Prescriptions Tab */}
-          <TabsContent value="prescriptions">
-            <Card>
-              <CardHeader>
-                <CardTitle>Prescriptions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Add New Prescription Form */}
-                {consultation.status === 'in_progress' && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-4">Add New Prescription</h3>
-                    <form onSubmit={handlePrescriptionSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="medication_name">Medication Name</Label>
-                          <Input
-                            id="medication_name"
-                            placeholder="e.g., Amoxicillin"
-                            value={prescriptionData.medication_name}
-                            onChange={(e) => setPrescriptionData('medication_name', e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="dosage">Dosage</Label>
-                          <Input
-                            id="dosage"
-                            placeholder="e.g., 500mg"
-                            value={prescriptionData.dosage}
-                            onChange={(e) => setPrescriptionData('dosage', e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="frequency">Frequency</Label>
-                          <Input
-                            id="frequency"
-                            placeholder="e.g., 3 times daily"
-                            value={prescriptionData.frequency}
-                            onChange={(e) => setPrescriptionData('frequency', e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="duration">Duration</Label>
-                          <Input
-                            id="duration"
-                            placeholder="e.g., 7 days"
-                            value={prescriptionData.duration}
-                            onChange={(e) => setPrescriptionData('duration', e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="instructions">Instructions (Optional)</Label>
-                        <Textarea
-                          id="instructions"
-                          placeholder="Special instructions for the patient..."
-                          value={prescriptionData.instructions}
-                          onChange={(e) => setPrescriptionData('instructions', e.target.value)}
-                          rows={3}
-                        />
-                      </div>
-                      <Button type="submit" disabled={prescriptionProcessing}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        {prescriptionProcessing ? 'Adding...' : 'Add Prescription'}
-                      </Button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Existing Prescriptions List */}
-                {consultation.prescriptions.length > 0 ? (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Current Prescriptions</h3>
-                    {consultation.prescriptions.map((prescription) => (
-                      <div key={prescription.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{prescription.medication_name}</h4>
-                            <p className="text-sm text-gray-600">
-                              {prescription.dosage} • {prescription.frequency} • {prescription.duration}
-                            </p>
-                            {prescription.instructions && (
-                              <p className="text-sm text-gray-700 mt-2 bg-blue-50 p-2 rounded">
-                                <strong>Instructions:</strong> {prescription.instructions}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={
-                              prescription.status === 'prescribed' ? 'default' :
-                              prescription.status === 'dispensed' ? 'outline' : 'destructive'
-                            }>
-                              {prescription.status.toUpperCase()}
-                            </Badge>
-                            {consultation.status === 'in_progress' && prescription.status === 'prescribed' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  if (confirm('Are you sure you want to cancel this prescription?')) {
-                                    // Handle cancel prescription
-                                  }
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Pill className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No prescriptions recorded</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Lab Orders Tab */}
-          <TabsContent value="orders">
-            <Card>
-              <CardHeader>
-                <CardTitle>Laboratory Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {consultation.lab_orders.length > 0 ? (
-                  <div className="space-y-4">
-                    {consultation.lab_orders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{order.lab_service.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {order.lab_service.code} • {order.lab_service.category} • ${order.lab_service.price}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <Badge variant={order.status === 'completed' ? 'outline' : 'default'}>
-                              {order.status.toUpperCase()}
-                            </Badge>
-                            {order.priority !== 'routine' && (
-                              <Badge variant="destructive" className="ml-2">
-                                {order.priority.toUpperCase()}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          Ordered: {formatDateTime(order.ordered_at)}
-                        </p>
-                        {order.special_instructions && (
-                          <p className="text-sm text-gray-700 mt-2 bg-yellow-50 p-2 rounded">
-                            <strong>Instructions:</strong> {order.special_instructions}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <TestTube className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No lab orders placed</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Patient History Tab */}
-          <TabsContent value="history">
             <div className="space-y-6">
-              {/* Allergies & Medical Alerts */}
-              {patientHistory?.allergies && patientHistory.allergies.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-red-600 flex items-center gap-2">
-                      <Activity className="h-5 w-5" />
-                      Medical Alerts & Allergies
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {patientHistory.allergies.map((allergy, index) => (
-                        <Badge key={index} variant="destructive">
-                          {allergy}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Previous Consultations */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Previous Consultations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {patientHistory?.previousConsultations && patientHistory.previousConsultations.length > 0 ? (
-                    <div className="space-y-4">
-                      {patientHistory.previousConsultations.slice(0, 5).map((prevConsultation) => (
-                        <div key={prevConsultation.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
+                {/* Header - Compact */}
+                <div className="rounded-lg border bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6">
                             <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {formatDateTime(prevConsultation.started_at)}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                Dr. {prevConsultation.doctor.name} • {prevConsultation.patient_checkin.department.name}
-                              </p>
+                                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                    {
+                                        consultation.patient_checkin.patient
+                                            .first_name
+                                    }{' '}
+                                    {
+                                        consultation.patient_checkin.patient
+                                            .last_name
+                                    }
+                                </h1>
+                                <div className="mt-1 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                    <span>
+                                        Age:{' '}
+                                        {calculateAge(
+                                            consultation.patient_checkin.patient
+                                                .date_of_birth,
+                                        )}
+                                    </span>
+                                    <span>•</span>
+                                    <span className="capitalize">
+                                        {
+                                            consultation.patient_checkin.patient
+                                                .gender
+                                        }
+                                    </span>
+                                </div>
                             </div>
-                            <Badge variant={prevConsultation.status === 'completed' ? 'outline' : 'default'}>
-                              {prevConsultation.status.toUpperCase()}
-                            </Badge>
-                          </div>
 
-                          {prevConsultation.chief_complaint && (
-                            <div className="mt-3">
-                              <p className="text-sm font-medium text-gray-700">Chief Complaint:</p>
-                              <p className="text-sm text-gray-600">{prevConsultation.chief_complaint}</p>
+                            <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        {
+                                            consultation.patient_checkin
+                                                .department.name
+                                        }
+                                    </span>
+                                </div>
+                                <Separator
+                                    orientation="vertical"
+                                    className="h-4"
+                                />
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        Dr. {consultation.doctor.name}
+                                    </span>
+                                </div>
+                                <Separator
+                                    orientation="vertical"
+                                    className="h-4"
+                                />
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        {formatDateTime(
+                                            consultation.patient_checkin
+                                                .checked_in_at,
+                                        )}
+                                    </span>
+                                </div>
                             </div>
-                          )}
-
-                          {prevConsultation.diagnoses.length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-sm font-medium text-gray-700">Diagnoses:</p>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {prevConsultation.diagnoses.map((diagnosis) => (
-                                  <Badge key={diagnosis.id} variant="secondary" className="text-xs">
-                                    {diagnosis.diagnosis_description}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {prevConsultation.prescriptions.length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-sm font-medium text-gray-700">Medications Prescribed:</p>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {prevConsultation.prescriptions.map((prescription) => (
-                                  <Badge key={prescription.id} variant="outline" className="text-xs">
-                                    {prescription.medication_name}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
-                      ))}
-                      {patientHistory.previousConsultations.length > 5 && (
-                        <p className="text-sm text-gray-500 text-center">
-                          ... and {patientHistory.previousConsultations.length - 5} more consultations
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <History className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No previous consultations found</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* Medication History */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Medication History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {patientHistory?.previousPrescriptions && patientHistory.previousPrescriptions.length > 0 ? (
-                    <div className="space-y-3">
-                      {patientHistory.previousPrescriptions.slice(0, 10).map((prescription) => (
-                        <div key={prescription.id} className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <div>
-                            <p className="font-medium text-gray-900">{prescription.medication_name}</p>
-                            <p className="text-sm text-gray-600">
-                              {prescription.dosage} • {prescription.frequency} • {prescription.duration}
-                            </p>
-                          </div>
-                          <Badge variant={
-                            prescription.status === 'prescribed' ? 'default' :
-                            prescription.status === 'dispensed' ? 'outline' : 'secondary'
-                          } className="text-xs">
-                            {prescription.status.toUpperCase()}
-                          </Badge>
+                        <div className="flex items-center gap-3">
+                            {getStatusBadge(consultation.status)}
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Started:{' '}
+                                {formatDateTime(consultation.started_at)}
+                            </div>
                         </div>
-                      ))}
-                      {patientHistory.previousPrescriptions.length > 10 && (
-                        <p className="text-sm text-gray-500 text-center">
-                          ... and {patientHistory.previousPrescriptions.length - 10} more prescriptions
-                        </p>
-                      )}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Pill className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No previous medications found</p>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="mb-6 flex items-center justify-between gap-4">
+                    <div className="flex gap-4">
+                        <PatientHistorySidebar
+                            previousConsultations={
+                                patientHistory?.previousConsultations || []
+                            }
+                            allergies={patientHistory?.allergies || []}
+                        />
+                        {consultation.status === 'in_progress' && (
+                            <>
+                                <Button
+                                    onClick={() => setShowCompleteDialog(true)}
+                                    variant="outline"
+                                >
+                                    Complete Consultation
+                                </Button>
+                                <Dialog
+                                    open={showAdmissionModal}
+                                    onOpenChange={setShowAdmissionModal}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="border-green-600 text-green-600 hover:bg-green-50"
+                                        >
+                                            <UserPlus className="mr-2 h-4 w-4" />
+                                            Admit Patient
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Admit Patient
+                                            </DialogTitle>
+                                        </DialogHeader>
+                                        <form
+                                            onSubmit={handleAdmissionSubmit}
+                                            className="space-y-4"
+                                        >
+                                            <div>
+                                                <Label htmlFor="ward_id">
+                                                    Select Ward
+                                                </Label>
+                                                <Select
+                                                    value={
+                                                        admissionData.ward_id
+                                                    }
+                                                    onValueChange={
+                                                        handleWardChange
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Choose a ward" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableWards.map(
+                                                            (ward) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        ward.id
+                                                                    }
+                                                                    value={ward.id.toString()}
+                                                                >
+                                                                    {ward.name}{' '}
+                                                                    (
+                                                                    {
+                                                                        ward.available_beds
+                                                                    }{' '}
+                                                                    beds
+                                                                    available)
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="admission_reason">
+                                                    Admission Reason
+                                                </Label>
+                                                <Textarea
+                                                    id="admission_reason"
+                                                    placeholder="Reason for admission..."
+                                                    value={
+                                                        admissionData.admission_reason
+                                                    }
+                                                    onChange={(e) =>
+                                                        setAdmissionData(
+                                                            'admission_reason',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    required
+                                                    rows={3}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="admission_notes">
+                                                    Admission Notes (Optional)
+                                                </Label>
+                                                <Textarea
+                                                    id="admission_notes"
+                                                    placeholder="Additional notes..."
+                                                    value={
+                                                        admissionData.admission_notes
+                                                    }
+                                                    onChange={(e) =>
+                                                        setAdmissionData(
+                                                            'admission_notes',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    rows={2}
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2 pt-4">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setShowAdmissionModal(
+                                                            false,
+                                                        )
+                                                    }
+                                                    className="flex-1"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        admissionProcessing ||
+                                                        !admissionData.ward_id ||
+                                                        !admissionData.admission_reason
+                                                    }
+                                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                                >
+                                                    {admissionProcessing
+                                                        ? 'Admitting...'
+                                                        : 'Admit Patient'}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+
+                                <Dialog
+                                    open={showTransferModal}
+                                    onOpenChange={setShowTransferModal}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                                        >
+                                            <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                            Transfer Patient
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Transfer Patient to Another
+                                                Department
+                                            </DialogTitle>
+                                        </DialogHeader>
+                                        <form
+                                            onSubmit={handleTransferSubmit}
+                                            className="space-y-4"
+                                        >
+                                            <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
+                                                <p className="text-sm text-blue-900">
+                                                    <strong>
+                                                        Current Department:
+                                                    </strong>{' '}
+                                                    {
+                                                        consultation
+                                                            .patient_checkin
+                                                            .department.name
+                                                    }
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="transfer_department_id">
+                                                    Select New Department
+                                                </Label>
+                                                <Select
+                                                    value={
+                                                        transferData.department_id
+                                                    }
+                                                    onValueChange={
+                                                        handleTransferDepartmentChange
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Choose destination department" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableDepartments
+                                                            .filter(
+                                                                (dept) =>
+                                                                    dept.id !==
+                                                                    consultation
+                                                                        .patient_checkin
+                                                                        .department
+                                                                        .id,
+                                                            )
+                                                            .map(
+                                                                (
+                                                                    department,
+                                                                ) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            department.id
+                                                                        }
+                                                                        value={department.id.toString()}
+                                                                    >
+                                                                        {
+                                                                            department.name
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="transfer_reason">
+                                                    Reason for Transfer
+                                                    (Optional)
+                                                </Label>
+                                                <Textarea
+                                                    id="transfer_reason"
+                                                    placeholder="Reason for department transfer..."
+                                                    value={transferData.reason}
+                                                    onChange={(e) =>
+                                                        setTransferData(
+                                                            'reason',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    rows={3}
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2 pt-4">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setShowTransferModal(
+                                                            false,
+                                                        )
+                                                    }
+                                                    className="flex-1"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        transferProcessing ||
+                                                        !transferData.department_id
+                                                    }
+                                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                                >
+                                                    {transferProcessing
+                                                        ? 'Transferring...'
+                                                        : 'Transfer Patient'}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                            </>
+                        )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+
+                    <Button
+                        onClick={() =>
+                            (window.location.href = `/consultation/${consultation.id}/enhanced`)
+                        }
+                        variant="default"
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        <Activity className="mr-2 h-4 w-4" />
+                        Try Enhanced UI
+                    </Button>
+                </div>
+
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="w-full"
+                >
+                    <TabsList className="grid w-full grid-cols-5">
+                        <TabsTrigger
+                            value="notes"
+                            className="flex items-center gap-2"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Consultation Notes
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="vitals"
+                            className="flex items-center gap-2"
+                        >
+                            <Activity className="h-4 w-4" />
+                            Vitals
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="diagnosis"
+                            className="flex items-center gap-2"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Diagnosis
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="prescriptions"
+                            className="flex items-center gap-2"
+                        >
+                            <Pill className="h-4 w-4" />
+                            Prescriptions
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="orders"
+                            className="flex items-center gap-2"
+                        >
+                            <TestTube className="h-4 w-4" />
+                            Lab Orders
+                        </TabsTrigger>
+                    </TabsList>
+
+                    {/* Medical History & Consultation Notes Tab */}
+                    <TabsContent value="notes">
+                        <MedicalHistoryNotes
+                            initialData={{
+                                presenting_complaint: data.presenting_complaint,
+                                history_presenting_complaint:
+                                    data.history_presenting_complaint,
+                                on_direct_questioning:
+                                    data.on_direct_questioning,
+                                examination_findings: data.examination_findings,
+                                assessment_notes: data.assessment_notes,
+                                plan_notes: data.plan_notes,
+                                follow_up_date: data.follow_up_date,
+                            }}
+                            patientHistories={{
+                                past_medical_surgical_history:
+                                    data.past_medical_surgical_history,
+                                drug_history: data.drug_history,
+                                family_history: data.family_history,
+                                social_history: data.social_history,
+                            }}
+                            onDataChange={(newData) => {
+                                Object.keys(newData).forEach((key) => {
+                                    handleDataChange(key, newData[key]);
+                                });
+                            }}
+                            onPatientHistoryUpdate={handlePatientHistoryUpdate}
+                            onSubmit={handleSubmit}
+                            processing={processing || isSaving}
+                            status={consultation.status}
+                        />
+                    </TabsContent>
+
+                    {/* Vitals Tab */}
+                    <TabsContent value="vitals">
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Current Vital Signs</CardTitle>
+                                    {latestVitals && (
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Recorded on{' '}
+                                            {formatDateTime(
+                                                latestVitals.recorded_at,
+                                            )}
+                                        </p>
+                                    )}
+                                </CardHeader>
+                                <CardContent>
+                                    {latestVitals ? (
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 transition-all hover:shadow-md">
+                                                <div className="mb-3 flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-blue-900">
+                                                        Temperature
+                                                    </p>
+                                                    <Activity className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <p className="text-3xl font-bold text-blue-600">
+                                                    {latestVitals.temperature}°F
+                                                </p>
+                                                <p className="mt-2 text-xs text-blue-700">
+                                                    Normal: 97-99°F
+                                                </p>
+                                            </div>
+                                            <div className="rounded-lg border border-red-200 bg-red-50 p-6 transition-all hover:shadow-md">
+                                                <div className="mb-3 flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-red-900">
+                                                        Blood Pressure
+                                                    </p>
+                                                    <Activity className="h-5 w-5 text-red-600" />
+                                                </div>
+                                                <p className="text-3xl font-bold text-red-600">
+                                                    {
+                                                        latestVitals.blood_pressure_systolic
+                                                    }
+                                                    /
+                                                    {
+                                                        latestVitals.blood_pressure_diastolic
+                                                    }
+                                                </p>
+                                                <p className="mt-2 text-xs text-red-700">
+                                                    Normal: 90-120/60-80 mmHg
+                                                </p>
+                                            </div>
+                                            <div className="rounded-lg border border-green-200 bg-green-50 p-6 transition-all hover:shadow-md">
+                                                <div className="mb-3 flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-green-900">
+                                                        Heart Rate
+                                                    </p>
+                                                    <Activity className="h-5 w-5 text-green-600" />
+                                                </div>
+                                                <p className="text-3xl font-bold text-green-600">
+                                                    {latestVitals.pulse_rate}
+                                                </p>
+                                                <p className="mt-2 text-xs text-green-700">
+                                                    bpm • Normal: 60-100
+                                                </p>
+                                            </div>
+                                            <div className="rounded-lg border border-purple-200 bg-purple-50 p-6 transition-all hover:shadow-md">
+                                                <div className="mb-3 flex items-center justify-between">
+                                                    <p className="text-sm font-medium text-purple-900">
+                                                        Respiratory Rate
+                                                    </p>
+                                                    <Activity className="h-5 w-5 text-purple-600" />
+                                                </div>
+                                                <p className="text-3xl font-bold text-purple-600">
+                                                    {
+                                                        latestVitals.respiratory_rate
+                                                    }
+                                                </p>
+                                                <p className="mt-2 text-xs text-purple-700">
+                                                    /min • Normal: 12-20
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="py-16 text-center text-gray-500">
+                                            <Activity className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+                                            <p className="text-lg font-medium">
+                                                No vital signs recorded
+                                            </p>
+                                            <p className="mt-2 text-sm">
+                                                Vital signs will appear here
+                                                once recorded by nursing staff
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Previous Vitals History */}
+                            {vitalSigns.length > 1 && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Vitals History</CardTitle>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Previous {vitalSigns.length - 1}{' '}
+                                            recording(s)
+                                        </p>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            {vitalSigns
+                                                .slice(1)
+                                                .map((vitals, index) => (
+                                                    <div
+                                                        key={vitals.id}
+                                                        className="rounded-lg border bg-gray-50 p-4"
+                                                    >
+                                                        <div className="mb-3 flex items-center justify-between">
+                                                            <h4 className="font-semibold text-gray-900">
+                                                                Recording #
+                                                                {index + 2}
+                                                            </h4>
+                                                            <p className="text-sm text-gray-500">
+                                                                {formatDateTime(
+                                                                    vitals.recorded_at,
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                                                            <div>
+                                                                <p className="text-gray-500">
+                                                                    Temperature
+                                                                </p>
+                                                                <p className="font-medium text-gray-900">
+                                                                    {
+                                                                        vitals.temperature
+                                                                    }
+                                                                    °F
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">
+                                                                    Blood
+                                                                    Pressure
+                                                                </p>
+                                                                <p className="font-medium text-gray-900">
+                                                                    {
+                                                                        vitals.blood_pressure_systolic
+                                                                    }
+                                                                    /
+                                                                    {
+                                                                        vitals.blood_pressure_diastolic
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">
+                                                                    Heart Rate
+                                                                </p>
+                                                                <p className="font-medium text-gray-900">
+                                                                    {
+                                                                        vitals.pulse_rate
+                                                                    }{' '}
+                                                                    bpm
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500">
+                                                                    Respiratory
+                                                                </p>
+                                                                <p className="font-medium text-gray-900">
+                                                                    {
+                                                                        vitals.respiratory_rate
+                                                                    }
+                                                                    /min
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    {/* Diagnosis Tab */}
+                    <TabsContent value="diagnosis">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Diagnoses</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <DiagnosisFormSection
+                                    diagnoses={availableDiagnoses}
+                                    consultationDiagnoses={
+                                        consultation.diagnoses
+                                    }
+                                    onAdd={handleDiagnosisAdd}
+                                    onDelete={(id) =>
+                                        setDeleteDialogState({
+                                            open: true,
+                                            type: 'diagnosis',
+                                            id,
+                                        })
+                                    }
+                                    processing={diagnosisProcessing}
+                                    consultationStatus={consultation.status}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Prescriptions Tab */}
+                    <TabsContent value="prescriptions">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Prescriptions</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <PrescriptionFormSection
+                                    drugs={availableDrugs}
+                                    prescriptions={consultation.prescriptions}
+                                    prescriptionData={prescriptionData}
+                                    setPrescriptionData={setPrescriptionData}
+                                    onSubmit={handlePrescriptionSubmit}
+                                    onDelete={(id) =>
+                                        setDeleteDialogState({
+                                            open: true,
+                                            type: 'prescription',
+                                            id,
+                                        })
+                                    }
+                                    processing={prescriptionProcessing}
+                                    consultationStatus={consultation.status}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Lab Orders Tab */}
+                    <TabsContent value="orders">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                <CardTitle>Laboratory Orders</CardTitle>
+                                {consultation.status === 'in_progress' && (
+                                    <Dialog
+                                        open={showLabOrderDialog}
+                                        onOpenChange={setShowLabOrderDialog}
+                                    >
+                                        <DialogTrigger asChild>
+                                            <Button>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Order Lab Test
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>
+                                                    Order Laboratory Test
+                                                </DialogTitle>
+                                            </DialogHeader>
+                                            <form
+                                                onSubmit={handleLabOrderSubmit}
+                                                className="space-y-4"
+                                            >
+                                                <div>
+                                                    <Label htmlFor="lab_service">
+                                                        Select Lab Test
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            labOrderData.lab_service_id
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setLabOrderData(
+                                                                'lab_service_id',
+                                                                value,
+                                                            )
+                                                        }
+                                                        required
+                                                    >
+                                                        <SelectTrigger id="lab_service">
+                                                            <SelectValue placeholder="Choose a lab test" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {labServices.map(
+                                                                (service) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            service.id
+                                                                        }
+                                                                        value={service.id.toString()}
+                                                                    >
+                                                                        {
+                                                                            service.name
+                                                                        }{' '}
+                                                                        - $
+                                                                        {
+                                                                            service.price
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor="priority">
+                                                        Priority
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            labOrderData.priority
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setLabOrderData(
+                                                                'priority',
+                                                                value,
+                                                            )
+                                                        }
+                                                        required
+                                                    >
+                                                        <SelectTrigger id="priority">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="routine">
+                                                                Routine
+                                                            </SelectItem>
+                                                            <SelectItem value="urgent">
+                                                                Urgent
+                                                            </SelectItem>
+                                                            <SelectItem value="stat">
+                                                                STAT (Immediate)
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor="special_instructions">
+                                                        Special Instructions
+                                                        (Optional)
+                                                    </Label>
+                                                    <Textarea
+                                                        id="special_instructions"
+                                                        placeholder="Any special instructions for the lab..."
+                                                        value={
+                                                            labOrderData.special_instructions
+                                                        }
+                                                        onChange={(e) =>
+                                                            setLabOrderData(
+                                                                'special_instructions',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        rows={3}
+                                                    />
+                                                </div>
+
+                                                <div className="flex gap-2 pt-4">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setShowLabOrderDialog(
+                                                                false,
+                                                            )
+                                                        }
+                                                        className="flex-1"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={
+                                                            labOrderProcessing ||
+                                                            !labOrderData.lab_service_id
+                                                        }
+                                                        className="flex-1"
+                                                    >
+                                                        {labOrderProcessing
+                                                            ? 'Ordering...'
+                                                            : 'Order Test'}
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
+                            </CardHeader>
+                            <CardContent>
+                                <ConsultationLabOrdersTable
+                                    labOrders={consultation.lab_orders}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AppLayout>
-  )
+
+            {/* Complete Consultation Dialog */}
+            <AlertDialog
+                open={showCompleteDialog}
+                onOpenChange={setShowCompleteDialog}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Complete Consultation
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to complete this consultation?
+                            This action will mark the consultation as finished
+                            and the patient will be able to proceed to billing.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCompleteConsultation}>
+                            Complete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete/Cancel Dialog */}
+            <AlertDialog
+                open={deleteDialogState.open}
+                onOpenChange={(open) =>
+                    setDeleteDialogState({ ...deleteDialogState, open })
+                }
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {deleteDialogState.type === 'diagnosis'
+                                ? 'Delete Diagnosis'
+                                : 'Cancel Prescription'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {deleteDialogState.type === 'diagnosis'
+                                ? 'Are you sure you want to delete this diagnosis? This action cannot be undone.'
+                                : 'Are you sure you want to cancel this prescription? This action cannot be undone.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {deleteDialogState.type === 'diagnosis'
+                                ? 'Delete'
+                                : 'Cancel Prescription'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </AppLayout>
+    );
 }

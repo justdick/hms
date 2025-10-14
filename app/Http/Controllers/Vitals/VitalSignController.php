@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vitals;
 
 use App\Http\Controllers\Controller;
+use App\Models\PatientAdmission;
 use App\Models\PatientCheckin;
 use App\Models\VitalSign;
 use Illuminate\Http\Request;
@@ -93,5 +94,41 @@ class VitalSignController extends Controller
             ->get();
 
         return response()->json(['vital_signs' => $vitalSigns]);
+    }
+
+    public function storeForAdmission(Request $request, PatientAdmission $admission)
+    {
+        $this->authorize('create', VitalSign::class);
+
+        $validated = $request->validate([
+            'temperature' => 'required|numeric|min:35|max:45',
+            'blood_pressure_systolic' => 'required|integer|min:60|max:250',
+            'blood_pressure_diastolic' => 'required|integer|min:40|max:150',
+            'pulse_rate' => 'required|integer|min:40|max:200',
+            'respiratory_rate' => 'required|integer|min:8|max:60',
+            'oxygen_saturation' => 'nullable|integer|min:70|max:100',
+            'weight' => 'nullable|numeric|min:0|max:500',
+            'height' => 'nullable|numeric|min:20|max:300',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $vitalSign = VitalSign::create([
+            'patient_id' => $admission->patient_id,
+            'patient_admission_id' => $admission->id,
+            'patient_checkin_id' => $admission->consultation->patient_checkin_id ?? null,
+            'recorded_by' => auth()->id(),
+            'blood_pressure_systolic' => $validated['blood_pressure_systolic'],
+            'blood_pressure_diastolic' => $validated['blood_pressure_diastolic'],
+            'temperature' => $validated['temperature'],
+            'pulse_rate' => $validated['pulse_rate'],
+            'respiratory_rate' => $validated['respiratory_rate'],
+            'weight' => $validated['weight'] ?? null,
+            'height' => $validated['height'] ?? null,
+            'oxygen_saturation' => $validated['oxygen_saturation'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+            'recorded_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Vital signs recorded successfully.');
     }
 }

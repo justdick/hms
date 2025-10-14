@@ -21,11 +21,15 @@ class PatientController extends Controller
         $patients = Patient::search($search)
             ->where('status', 'active')
             ->with(['checkins' => function ($query) {
-                $query->today()->latest();
+                // Show incomplete check-ins regardless of date
+                $query->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
+                    ->latest();
             }])
             ->limit(10)
             ->get()
             ->map(function ($patient) {
+                $incompleteCheckin = $patient->checkins->first();
+
                 return [
                     'id' => $patient->id,
                     'patient_number' => $patient->patient_number,
@@ -33,8 +37,9 @@ class PatientController extends Controller
                     'age' => $patient->age,
                     'gender' => $patient->gender,
                     'phone_number' => $patient->phone_number,
-                    'last_visit' => $patient->checkins->first()?->checked_in_at,
-                    'has_checkin_today' => $patient->checkins->isNotEmpty(),
+                    'last_visit' => $incompleteCheckin?->checked_in_at,
+                    'has_incomplete_checkin' => $incompleteCheckin !== null,
+                    'incomplete_checkin_status' => $incompleteCheckin?->status,
                 ];
             });
 
@@ -92,20 +97,37 @@ class PatientController extends Controller
 
     private function generatePatientNumber(): string
     {
-        $year = date('Y');
-        $prefix = "PAT{$year}";
+        // Get configuration from system settings
+        $prefix = \App\Models\SystemConfiguration::get('patient_number_prefix', 'PAT');
+        $yearFormat = \App\Models\SystemConfiguration::get('patient_number_year_format', 'YYYY');
+        $separator = \App\Models\SystemConfiguration::get('patient_number_separator', '');
+        $padding = \App\Models\SystemConfiguration::get('patient_number_padding', 6);
+        $resetPolicy = \App\Models\SystemConfiguration::get('patient_number_reset', 'never');
 
-        $lastPatient = Patient::where('patient_number', 'like', "{$prefix}%")
-            ->orderBy('patient_number', 'desc')
+        // Generate year based on format
+        $year = $yearFormat === 'YYYY' ? date('Y') : date('y');
+
+        // Build the prefix pattern based on reset policy
+        $basePattern = $prefix.$separator.$year.$separator;
+
+        // For reset policies, we need to check monthly or yearly
+        if ($resetPolicy === 'monthly') {
+            $basePattern .= date('m').$separator;
+        }
+
+        // Find the last patient number with this pattern
+        $lastPatient = Patient::where('patient_number', 'like', "{$basePattern}%")
+            ->orderBy('id', 'desc')
             ->first();
 
         if ($lastPatient) {
-            $lastNumber = (int) substr($lastPatient->patient_number, -6);
+            // Extract the numeric part from the end
+            $lastNumber = (int) substr($lastPatient->patient_number, -$padding);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
-        return $prefix.str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        return $basePattern.str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
     }
 }

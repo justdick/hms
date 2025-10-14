@@ -24,6 +24,13 @@ return new class extends Migration
             $table->string('emergency_contact_phone')->nullable();
             $table->string('national_id')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
+
+            // Patient-level Medical History (relatively static)
+            $table->text('past_medical_surgical_history')->nullable();
+            $table->text('drug_history')->nullable();
+            $table->text('family_history')->nullable();
+            $table->text('social_history')->nullable();
+
             $table->timestamps();
 
             $table->index('first_name');

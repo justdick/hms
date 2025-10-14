@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Drug;
+use App\Models\Prescription;
+use App\Observers\DrugObserver;
+use App\Observers\PrescriptionObserver;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        Drug::observe(DrugObserver::class);
+        Prescription::observe(PrescriptionObserver::class);
     }
 }

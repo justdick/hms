@@ -19,9 +19,10 @@ class Consultation extends Model
         'started_at',
         'completed_at',
         'status',
-        'chief_complaint',
-        'subjective_notes',
-        'objective_notes',
+        'presenting_complaint',
+        'history_presenting_complaint',
+        'on_direct_questioning',
+        'examination_findings',
         'assessment_notes',
         'plan_notes',
         'follow_up_date',
@@ -52,6 +53,16 @@ class Consultation extends Model
         return $this->hasMany(ConsultationDiagnosis::class);
     }
 
+    public function provisionalDiagnoses(): HasMany
+    {
+        return $this->hasMany(ConsultationDiagnosis::class)->where('type', 'provisional')->with('diagnosis');
+    }
+
+    public function principalDiagnoses(): HasMany
+    {
+        return $this->hasMany(ConsultationDiagnosis::class)->where('type', 'principal')->with('diagnosis');
+    }
+
     public function prescriptions(): HasMany
     {
         return $this->hasMany(Prescription::class);
@@ -62,9 +73,9 @@ class Consultation extends Model
         return $this->hasMany(LabOrder::class);
     }
 
-    public function bill(): HasOne
+    public function patientAdmission(): HasOne
     {
-        return $this->hasOne(PatientBill::class);
+        return $this->hasOne(PatientAdmission::class);
     }
 
     public function scopeToday($query): void

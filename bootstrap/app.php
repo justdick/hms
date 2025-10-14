@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnforceBillingPayment;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\HideLabTestDetails;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        $middleware->alias([
+            'billing.enforce' => EnforceBillingPayment::class,
+            'lab.hide_details' => HideLabTestDetails::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

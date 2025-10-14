@@ -14,6 +14,7 @@ class VitalSign extends Model
     protected $fillable = [
         'patient_id',
         'patient_checkin_id',
+        'patient_admission_id',
         'recorded_by',
         'blood_pressure_systolic',
         'blood_pressure_diastolic',
@@ -54,6 +55,11 @@ class VitalSign extends Model
         return $this->belongsTo(PatientCheckin::class);
     }
 
+    public function patientAdmission(): BelongsTo
+    {
+        return $this->belongsTo(PatientAdmission::class);
+    }
+
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
@@ -64,22 +70,30 @@ class VitalSign extends Model
         if ($this->blood_pressure_systolic && $this->blood_pressure_diastolic) {
             return "{$this->blood_pressure_systolic}/{$this->blood_pressure_diastolic}";
         }
+
         return 'N/A';
+    }
+
+    public function getHeartRateAttribute(): ?int
+    {
+        return $this->pulse_rate;
     }
 
     public function calculateBmi(): ?float
     {
         if ($this->weight && $this->height) {
             $heightInMeters = $this->height / 100;
+
             return round($this->weight / ($heightInMeters * $heightInMeters), 2);
         }
+
         return null;
     }
 
     protected static function booted(): void
     {
         static::saving(function (VitalSign $vitalSign) {
-            if ($vitalSign->weight && $vitalSign->height && !$vitalSign->bmi) {
+            if ($vitalSign->weight && $vitalSign->height && ! $vitalSign->bmi) {
                 $vitalSign->bmi = $vitalSign->calculateBmi();
             }
         });

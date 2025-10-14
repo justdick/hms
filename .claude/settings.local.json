@@ -11,7 +11,11 @@
       "mcp__laravel-boost__last-error",
       "mcp__playwright__browser_network_requests",
       "mcp__laravel-boost__read-log-entries",
-      "mcp__laravel-boost__list-routes"
+      "mcp__laravel-boost__list-routes",
+      "mcp__laravel-boost__browser-logs",
+      "mcp__playwright__browser_navigate",
+      "mcp__laravel-boost__tinker",
+      "mcp__laravel-boost__get-absolute-url"
     ]
   },
   "enableAllProjectMcpServers": true,

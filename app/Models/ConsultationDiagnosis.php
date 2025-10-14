@@ -13,30 +13,27 @@ class ConsultationDiagnosis extends Model
 
     protected $fillable = [
         'consultation_id',
-        'icd_code',
-        'diagnosis_description',
-        'is_primary',
+        'diagnosis_id',
+        'type',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'is_primary' => 'boolean',
-        ];
-    }
 
     public function consultation(): BelongsTo
     {
         return $this->belongsTo(Consultation::class);
     }
 
-    public function scopePrimary($query): void
+    public function diagnosis(): BelongsTo
     {
-        $query->where('is_primary', true);
+        return $this->belongsTo(Diagnosis::class);
     }
 
-    public function scopeSecondary($query): void
+    public function scopeProvisional($query): void
     {
-        $query->where('is_primary', false);
+        $query->where('type', 'provisional');
+    }
+
+    public function scopePrincipal($query): void
+    {
+        $query->where('type', 'principal');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Consultation;
 
+use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\LabOrder;
@@ -12,10 +13,7 @@ class LabOrderController extends Controller
 {
     public function store(Request $request, Consultation $consultation)
     {
-        // Ensure this doctor has access to the patient's department
-        if (! $consultation->patientCheckin->department->users()->where('users.id', $request->user()->id)->exists()) {
-            abort(403, 'You do not have access to patients in this department.');
-        }
+        $this->authorize('create', [LabOrder::class, $consultation]);
 
         $request->validate([
             'lab_service_id' => 'required|exists:lab_services,id',
@@ -26,9 +24,9 @@ class LabOrderController extends Controller
         $labService = LabService::findOrFail($request->lab_service_id);
 
         if (! $labService->is_active) {
-            return response()->json([
-                'message' => 'This lab service is not currently available.',
-            ], 422);
+            return back()->withErrors([
+                'lab_service_id' => 'This lab service is not currently available.',
+            ]);
         }
 
         // Check if this lab is already ordered for this consultation
@@ -38,9 +36,9 @@ class LabOrderController extends Controller
             ->first();
 
         if ($existingOrder) {
-            return response()->json([
-                'message' => 'This lab test has already been ordered for this consultation.',
-            ], 422);
+            return back()->withErrors([
+                'lab_service_id' => 'This lab test has already been ordered for this consultation.',
+            ]);
         }
 
         $labOrder = $consultation->labOrders()->create([
@@ -54,24 +52,21 @@ class LabOrderController extends Controller
 
         $labOrder->load('labService');
 
-        return response()->json([
-            'lab_order' => $labOrder,
-            'message' => 'Lab test ordered successfully.',
-        ]);
+        // Fire lab test ordered event for billing
+        event(new LabTestOrdered($labOrder));
+
+        return back()->with('success', 'Lab test ordered successfully.');
     }
 
     public function update(Request $request, Consultation $consultation, LabOrder $labOrder)
     {
-        // Ensure this doctor has access to the patient's department
-        if (! $consultation->patientCheckin->department->users()->where('users.id', $request->user()->id)->exists()) {
-            abort(403, 'You do not have access to patients in this department.');
-        }
+        $this->authorize('update', $labOrder);
 
         // Only allow updates to orders that are still in ordered status
         if (! in_array($labOrder->status, ['ordered'])) {
-            return response()->json([
-                'message' => 'This lab order can no longer be modified.',
-            ], 422);
+            return back()->withErrors([
+                'status' => 'This lab order can no longer be modified.',
+            ]);
         }
 
         $request->validate([
@@ -81,33 +76,23 @@ class LabOrderController extends Controller
 
         $labOrder->update($request->only(['priority', 'special_instructions']));
 
-        $labOrder->load('labService');
-
-        return response()->json([
-            'lab_order' => $labOrder,
-            'message' => 'Lab order updated successfully.',
-        ]);
+        return back()->with('success', 'Lab order updated successfully.');
     }
 
     public function cancel(Request $request, Consultation $consultation, LabOrder $labOrder)
     {
-        // Ensure this doctor has access to the patient's department
-        if (! $consultation->patientCheckin->department->users()->where('users.id', $request->user()->id)->exists()) {
-            abort(403, 'You do not have access to patients in this department.');
-        }
+        $this->authorize('delete', $labOrder);
 
         // Only allow cancellation of orders that haven't been processed
         if (! in_array($labOrder->status, ['ordered'])) {
-            return response()->json([
-                'message' => 'This lab order can no longer be cancelled.',
-            ], 422);
+            return back()->withErrors([
+                'status' => 'This lab order can no longer be cancelled.',
+            ]);
         }
 
         $labOrder->update(['status' => 'cancelled']);
 
-        return response()->json([
-            'message' => 'Lab order cancelled successfully.',
-        ]);
+        return back()->with('success', 'Lab order cancelled successfully.');
     }
 
     public function index(Request $request)

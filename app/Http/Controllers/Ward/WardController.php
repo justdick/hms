@@ -17,7 +17,7 @@ class WardController extends Controller
             ->get();
 
         return Inertia::render('Ward/Index', [
-            'wards' => $wards
+            'wards' => $wards,
         ]);
     }
 
@@ -56,7 +56,7 @@ class WardController extends Controller
         }
 
         return redirect()->route('wards.index')
-            ->with('success', 'Ward created successfully with ' . $request->bed_count . ' beds.');
+            ->with('success', 'Ward created successfully with '.$request->bed_count.' beds.');
     }
 
     public function show(Ward $ward)
@@ -65,20 +65,52 @@ class WardController extends Controller
             'beds:id,ward_id,bed_number,status,type,is_active',
             'admissions' => function ($query) {
                 $query->where('status', 'admitted')
-                    ->with(['patient:id,first_name,last_name', 'attendingDoctor:id,name'])
+                    ->with([
+                        'patient:id,first_name,last_name,date_of_birth,gender',
+                        'bed:id,bed_number',
+                        'consultation.doctor:id,name',
+                        'latestVitalSigns' => function ($q) {
+                            $q->latest('recorded_at')
+                                ->limit(1)
+                                ->with('recordedBy:id,name');
+                        },
+                        'pendingMedications' => function ($q) {
+                            $q->where('status', 'scheduled')
+                                ->where('scheduled_time', '<=', now()->addHours(2))
+                                ->with('prescription.drug');
+                        },
+                    ])
+                    ->withCount(['wardRounds', 'nursingNotes'])
                     ->orderBy('admitted_at', 'desc');
-            }
+            },
         ]);
 
+        // Calculate ward statistics
+        $stats = [
+            'total_patients' => $ward->admissions->count(),
+            'pending_meds_count' => $ward->admissions->sum(function ($admission) {
+                return $admission->pendingMedications->count();
+            }),
+            'patients_needing_vitals' => $ward->admissions->filter(function ($admission) {
+                if ($admission->latestVitalSigns->isEmpty()) {
+                    return true;
+                }
+                $latestVital = $admission->latestVitalSigns->first();
+
+                return $latestVital->recorded_at < now()->subHours(4);
+            })->count(),
+        ];
+
         return Inertia::render('Ward/Show', [
-            'ward' => $ward
+            'ward' => $ward,
+            'stats' => $stats,
         ]);
     }
 
     public function edit(Ward $ward)
     {
         return Inertia::render('Ward/Edit', [
-            'ward' => $ward
+            'ward' => $ward,
         ]);
     }
 
@@ -86,7 +118,7 @@ class WardController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:wards,code,' . $ward->id,
+            'code' => 'required|string|max:10|unique:wards,code,'.$ward->id,
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
         ]);
@@ -124,7 +156,7 @@ class WardController extends Controller
 
     public function toggleStatus(Ward $ward)
     {
-        $ward->update(['is_active' => !$ward->is_active]);
+        $ward->update(['is_active' => ! $ward->is_active]);
 
         $status = $ward->is_active ? 'activated' : 'deactivated';
 

@@ -3,16 +3,23 @@
 use App\Models\BillingService;
 use App\Models\Consultation;
 use App\Models\Department;
+use App\Models\Diagnosis;
 use App\Models\LabService;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->doctor = User::factory()->create();
+
+    // Create admin role and assign it to doctor
+    $adminRole = Role::create(['name' => 'Admin']);
+    $this->doctor->assignRole($adminRole);
+
     $this->department = Department::factory()->create();
     $this->patient = Patient::factory()->create();
 
@@ -258,56 +265,64 @@ describe('Adding Diagnoses', function () {
     });
 
     it('can add a diagnosis to consultation', function () {
+        $diagnosis = Diagnosis::factory()->create([
+            'code' => 'I10',
+            'diagnosis' => 'Essential hypertension',
+        ]);
+
         $response = $this->actingAs($this->doctor)
-            ->postJson("/consultation/{$this->consultation->id}/diagnoses", [
-                'icd_code' => 'I10',
-                'diagnosis_description' => 'Essential hypertension',
-                'is_primary' => true,
+            ->post("/consultation/{$this->consultation->id}/diagnoses", [
+                'diagnosis_id' => $diagnosis->id,
+                'type' => 'principal',
             ]);
 
-        $response->assertOk()
-            ->assertJson([
-                'message' => 'Diagnosis added successfully.',
-            ]);
+        $response->assertRedirect()
+            ->assertSessionHas('success', 'Diagnosis added successfully.');
 
         $this->assertDatabaseHas('consultation_diagnoses', [
             'consultation_id' => $this->consultation->id,
-            'icd_code' => 'I10',
-            'diagnosis_description' => 'Essential hypertension',
-            'is_primary' => true,
+            'diagnosis_id' => $diagnosis->id,
+            'type' => 'principal',
         ]);
     });
 
-    it('ensures only one primary diagnosis per consultation', function () {
-        // Add first primary diagnosis
-        $this->consultation->diagnoses()->create([
-            'icd_code' => 'I20.9',
-            'diagnosis_description' => 'Angina pectoris, unspecified',
-            'is_primary' => true,
+    it('can add multiple diagnoses with different types', function () {
+        $diagnosis1 = Diagnosis::factory()->create([
+            'code' => 'I20.9',
+            'diagnosis' => 'Angina pectoris, unspecified',
         ]);
 
-        // Add second primary diagnosis
+        $diagnosis2 = Diagnosis::factory()->create([
+            'code' => 'I10',
+            'diagnosis' => 'Essential hypertension',
+        ]);
+
+        // Add first principal diagnosis
+        $this->consultation->diagnoses()->create([
+            'diagnosis_id' => $diagnosis1->id,
+            'type' => 'principal',
+        ]);
+
+        // Add second provisional diagnosis
         $response = $this->actingAs($this->doctor)
-            ->postJson("/consultation/{$this->consultation->id}/diagnoses", [
-                'icd_code' => 'I10',
-                'diagnosis_description' => 'Essential hypertension',
-                'is_primary' => true,
+            ->post("/consultation/{$this->consultation->id}/diagnoses", [
+                'diagnosis_id' => $diagnosis2->id,
+                'type' => 'provisional',
             ]);
 
-        $response->assertOk();
+        $response->assertRedirect();
 
-        // Should have unmarked the previous primary diagnosis
-        $this->assertDatabaseMissing('consultation_diagnoses', [
-            'consultation_id' => $this->consultation->id,
-            'icd_code' => 'I20.9',
-            'is_primary' => true,
-        ]);
-
-        // New diagnosis should be primary
+        // Should have both diagnoses
         $this->assertDatabaseHas('consultation_diagnoses', [
             'consultation_id' => $this->consultation->id,
-            'icd_code' => 'I10',
-            'is_primary' => true,
+            'diagnosis_id' => $diagnosis1->id,
+            'type' => 'principal',
+        ]);
+
+        $this->assertDatabaseHas('consultation_diagnoses', [
+            'consultation_id' => $this->consultation->id,
+            'diagnosis_id' => $diagnosis2->id,
+            'type' => 'provisional',
         ]);
     });
 });

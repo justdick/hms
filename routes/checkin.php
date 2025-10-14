@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Patient\PatientController;
 use App\Http\Controllers\Checkin\CheckinController;
+use App\Http\Controllers\Patient\PatientController;
 use App\Http\Controllers\Vitals\VitalSignController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,9 +22,13 @@ Route::middleware(['auth', 'verified'])->prefix('checkin')->name('checkin.')->gr
     // Patient Check-ins
     Route::prefix('checkins')->name('checkins.')->group(function () {
         Route::get('/today', [CheckinController::class, 'todayCheckins'])->name('today');
+        Route::get('/search', [CheckinController::class, 'search'])->name('search');
         Route::post('/', [CheckinController::class, 'store'])->name('store');
         Route::get('/{checkin}', [CheckinController::class, 'show'])->name('show');
         Route::patch('/{checkin}/status', [CheckinController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{checkin}/department', [CheckinController::class, 'updateDepartment'])->name('update-department');
+        Route::patch('/{checkin}/date', [CheckinController::class, 'updateDate'])->name('update-date');
+        Route::post('/{checkin}/cancel', [CheckinController::class, 'cancel'])->name('cancel');
         Route::get('/department/{department}/queue', [CheckinController::class, 'departmentQueue'])->name('department-queue');
     });
 

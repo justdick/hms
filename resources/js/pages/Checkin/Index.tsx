@@ -1,166 +1,491 @@
-import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { Search, UserPlus } from 'lucide-react';
 import CheckinModal from '@/components/Checkin/CheckinModal';
-import VitalsModal from '@/components/Checkin/VitalsModal';
-import PatientSearchForm from '@/components/Patient/SearchForm';
-import PatientRegistrationForm from '@/components/Patient/RegistrationForm';
 import TodaysList from '@/components/Checkin/TodaysList';
+import VitalsModal from '@/components/Checkin/VitalsModal';
+import PatientRegistrationForm from '@/components/Patient/RegistrationForm';
+import PatientSearchForm from '@/components/Patient/SearchForm';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AppLayout from '@/layouts/app-layout';
+import patientNumbering from '@/routes/patient-numbering';
+import { Head, Link, router } from '@inertiajs/react';
+import { CalendarIcon, Search, Settings, UserPlus } from 'lucide-react';
+import { useState } from 'react';
 
 interface Patient {
-  id: number;
-  patient_number: string;
-  full_name: string;
-  age: number;
-  gender: string;
-  phone_number: string | null;
-  has_checkin_today: boolean;
+    id: number;
+    patient_number: string;
+    full_name: string;
+    age: number;
+    gender: string;
+    phone_number: string | null;
+    has_checkin_today: boolean;
 }
 
 interface Department {
-  id: number;
-  name: string;
-  code: string;
-  description: string;
+    id: number;
+    name: string;
+    code: string;
+    description: string;
 }
 
 interface Checkin {
-  id: number;
-  patient: Patient;
-  department: Department;
-  status: string;
-  checked_in_at: string;
-  vitals_taken_at: string | null;
+    id: number;
+    patient: Patient;
+    department: Department;
+    status: string;
+    checked_in_at: string;
+    vitals_taken_at: string | null;
 }
 
 interface Props {
-  todayCheckins: Checkin[];
-  departments: Department[];
+    todayCheckins: Checkin[];
+    departments: Department[];
+    permissions: {
+        canViewAnyDate: boolean;
+        canViewAnyDepartment: boolean;
+        canUpdateDate: boolean;
+    };
 }
 
-export default function CheckinIndex({ todayCheckins, departments }: Props) {
-  const [checkinModalOpen, setCheckinModalOpen] = useState(false);
-  const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [selectedCheckin, setSelectedCheckin] = useState<Checkin | null>(null);
+export default function CheckinIndex({
+    todayCheckins,
+    departments,
+    permissions,
+}: Props) {
+    const [checkinModalOpen, setCheckinModalOpen] = useState(false);
+    const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
+        null,
+    );
+    const [selectedCheckin, setSelectedCheckin] = useState<Checkin | null>(
+        null,
+    );
 
-  const handlePatientSelected = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setCheckinModalOpen(true);
-  };
+    // Search state
+    const [searchDate, setSearchDate] = useState<string>(
+        new Date().toISOString().split('T')[0],
+    );
+    const [searchDepartment, setSearchDepartment] = useState<string>('');
+    const [searchResults, setSearchResults] = useState<Checkin[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
 
-  const handlePatientRegistered = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setCheckinModalOpen(true);
-  };
+    const handlePatientSelected = (patient: Patient) => {
+        setSelectedPatient(patient);
+        setCheckinModalOpen(true);
+    };
 
-  const handleCheckinSuccess = () => {
-    setCheckinModalOpen(false);
-    setSelectedPatient(null);
-    // Refresh the page to show updated data
-    router.visit('/checkin', { preserveState: false });
-  };
+    const handlePatientRegistered = (patient: Patient) => {
+        setSelectedPatient(patient);
+        setCheckinModalOpen(true);
+    };
 
-  const handleRecordVitals = (checkin: Checkin) => {
-    setSelectedCheckin(checkin);
-    setVitalsModalOpen(true);
-  };
+    const handleCheckinSuccess = () => {
+        setCheckinModalOpen(false);
+        setSelectedPatient(null);
+        // Refresh the page to show updated data
+        router.reload({ only: ['todayCheckins'] });
+    };
 
-  const handleVitalsSuccess = () => {
-    setVitalsModalOpen(false);
-    setSelectedCheckin(null);
-    // Refresh the page to show updated data
-    router.visit('/checkin', { preserveState: false });
-  };
+    const handleRecordVitals = (checkin: Checkin) => {
+        setSelectedCheckin(checkin);
+        setVitalsModalOpen(true);
+    };
 
-  return (
-    <AppLayout>
-      <Head title="Check-in Dashboard" />
+    const handleVitalsSuccess = () => {
+        setVitalsModalOpen(false);
+        setSelectedCheckin(null);
+        // Refresh the page to show updated data
+        router.reload({ only: ['todayCheckins'] });
+    };
 
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Patient Check-in</h1>
-          <p className="text-muted-foreground">
-            Search or register patients and manage check-ins
-          </p>
-        </div>
+    const handleDateUpdated = (checkinId: number, newDate: string) => {
+        // Update the check-in date in search results without refetching
+        setSearchResults((prev) =>
+            prev.map((checkin) =>
+                checkin.id === checkinId
+                    ? { ...checkin, checked_in_at: newDate }
+                    : checkin,
+            ),
+        );
+    };
 
-        {/* Main Content - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Patient Search & Registration */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Find or Register Patient</CardTitle>
-              <CardDescription>
-                Search for existing patients or register a new patient for check-in.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="search" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="search" className="gap-2">
-                    <Search className="h-4 w-4" />
-                    Search Patient
-                  </TabsTrigger>
-                  <TabsTrigger value="register" className="gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Register New
-                  </TabsTrigger>
-                </TabsList>
+    const handleDepartmentUpdated = (
+        checkinId: number,
+        departmentId: number,
+    ) => {
+        // Update the check-in department in search results without refetching
+        const department = departments.find((d) => d.id === departmentId);
+        if (department) {
+            setSearchResults((prev) =>
+                prev.map((checkin) =>
+                    checkin.id === checkinId
+                        ? { ...checkin, department }
+                        : checkin,
+                ),
+            );
+        }
+    };
 
-                <TabsContent value="search" className="space-y-4">
-                  <PatientSearchForm onPatientSelected={handlePatientSelected} />
-                </TabsContent>
+    const handleSearch = async () => {
+        if (!searchDate) {
+            setSearchError('Please select a date');
+            return;
+        }
 
-                <TabsContent value="register" className="space-y-4">
-                  <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+        setIsSearching(true);
+        setSearchError(null);
 
-          {/* Right Column - Today's Check-ins */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Today's Check-ins</CardTitle>
-              <CardDescription>
-                Patients checked in today - {new Date().toLocaleDateString()}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TodaysList
-                checkins={todayCheckins}
-                onRecordVitals={handleRecordVitals}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        try {
+            const params = new URLSearchParams({
+                date: searchDate,
+                ...(searchDepartment && { department_id: searchDepartment }),
+            });
 
-      {/* Modals */}
-      <CheckinModal
-        open={checkinModalOpen}
-        onClose={() => setCheckinModalOpen(false)}
-        patient={selectedPatient}
-        departments={departments}
-        onSuccess={handleCheckinSuccess}
-      />
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
 
-      <VitalsModal
-        open={vitalsModalOpen}
-        onClose={() => setVitalsModalOpen(false)}
-        checkin={selectedCheckin}
-        onSuccess={handleVitalsSuccess}
-      />
-    </AppLayout>
-  );
+            const response = await fetch(
+                `/checkin/checkins/search?${params.toString()}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                    },
+                    credentials: 'same-origin',
+                },
+            );
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || 'Failed to search check-ins');
+            }
+
+            const data = await response.json();
+            setSearchResults(data.checkins);
+        } catch (error) {
+            setSearchError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to search check-ins',
+            );
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    return (
+        <AppLayout>
+            <Head title="Check-in Dashboard" />
+
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Patient Check-in
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Search or register patients and manage check-ins
+                        </p>
+                    </div>
+                    <Link href={patientNumbering.index.url()}>
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            Patient Configuration
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Main Content - Two Column Layout */}
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    {/* Left Column - Patient Search & Registration */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Find or Register Patient</CardTitle>
+                            <CardDescription>
+                                Search for existing patients or register a new
+                                patient for check-in.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs defaultValue="search" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger
+                                        value="search"
+                                        className="gap-2"
+                                    >
+                                        <Search className="h-4 w-4" />
+                                        Search Patient
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="register"
+                                        className="gap-2"
+                                    >
+                                        <UserPlus className="h-4 w-4" />
+                                        Register New
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent
+                                    value="search"
+                                    className="space-y-4"
+                                >
+                                    <PatientSearchForm
+                                        onPatientSelected={
+                                            handlePatientSelected
+                                        }
+                                    />
+                                </TabsContent>
+
+                                <TabsContent
+                                    value="register"
+                                    className="space-y-4"
+                                >
+                                    <PatientRegistrationForm
+                                        onPatientRegistered={
+                                            handlePatientRegistered
+                                        }
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+
+                    {/* Right Column - Check-ins List with Tabs */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Check-ins Management</CardTitle>
+                            <CardDescription>
+                                View today's check-ins or search by date and
+                                department
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs defaultValue="today" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="today">
+                                        Today's List
+                                    </TabsTrigger>
+                                    {permissions.canViewAnyDate && (
+                                        <TabsTrigger
+                                            value="search"
+                                            className="gap-2"
+                                        >
+                                            <CalendarIcon className="h-4 w-4" />
+                                            Search by Date
+                                        </TabsTrigger>
+                                    )}
+                                </TabsList>
+
+                                <TabsContent
+                                    value="today"
+                                    className="space-y-4"
+                                >
+                                    <div className="mb-2 text-sm text-muted-foreground">
+                                        {new Date().toLocaleDateString(
+                                            'en-US',
+                                            {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            },
+                                        )}
+                                    </div>
+                                    <TodaysList
+                                        checkins={todayCheckins}
+                                        departments={departments}
+                                        onRecordVitals={handleRecordVitals}
+                                    />
+                                </TabsContent>
+
+                                {permissions.canViewAnyDate && (
+                                    <TabsContent
+                                        value="search"
+                                        className="space-y-4"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="search-date">
+                                                        Date
+                                                    </Label>
+                                                    <Input
+                                                        id="search-date"
+                                                        type="date"
+                                                        value={searchDate}
+                                                        onChange={(e) =>
+                                                            setSearchDate(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        max={
+                                                            new Date()
+                                                                .toISOString()
+                                                                .split('T')[0]
+                                                        }
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="search-department">
+                                                        Department (Optional)
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            searchDepartment ||
+                                                            'all'
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setSearchDepartment(
+                                                                value === 'all'
+                                                                    ? ''
+                                                                    : value,
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger id="search-department">
+                                                            <SelectValue placeholder="All Departments" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">
+                                                                All Departments
+                                                            </SelectItem>
+                                                            {departments.map(
+                                                                (dept) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            dept.id
+                                                                        }
+                                                                        value={dept.id.toString()}
+                                                                    >
+                                                                        {
+                                                                            dept.name
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                onClick={handleSearch}
+                                                disabled={isSearching}
+                                                className="w-full"
+                                            >
+                                                {isSearching
+                                                    ? 'Searching...'
+                                                    : 'Search Check-ins'}
+                                            </Button>
+
+                                            {searchError && (
+                                                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                                                    {searchError}
+                                                </div>
+                                            )}
+
+                                            {searchResults.length > 0 && (
+                                                <div>
+                                                    <div className="mb-2 text-sm text-muted-foreground">
+                                                        Found{' '}
+                                                        {searchResults.length}{' '}
+                                                        check-in
+                                                        {searchResults.length !==
+                                                            1 && 's'}{' '}
+                                                        on{' '}
+                                                        {new Date(
+                                                            searchDate,
+                                                        ).toLocaleDateString(
+                                                            'en-US',
+                                                            {
+                                                                weekday: 'long',
+                                                                year: 'numeric',
+                                                                month: 'long',
+                                                                day: 'numeric',
+                                                            },
+                                                        )}
+                                                    </div>
+                                                    <TodaysList
+                                                        checkins={searchResults}
+                                                        departments={
+                                                            departments
+                                                        }
+                                                        onRecordVitals={
+                                                            handleRecordVitals
+                                                        }
+                                                        canUpdateDate={
+                                                            permissions.canUpdateDate
+                                                        }
+                                                        isSearchResults={true}
+                                                        onDateUpdated={
+                                                            handleDateUpdated
+                                                        }
+                                                        onDepartmentUpdated={
+                                                            handleDepartmentUpdated
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {!isSearching &&
+                                                searchResults.length === 0 &&
+                                                !searchError &&
+                                                searchDate && (
+                                                    <div className="rounded-md bg-muted p-6 text-center text-sm text-muted-foreground">
+                                                        No check-ins found for
+                                                        the selected date
+                                                        {searchDepartment &&
+                                                            ' and department'}
+                                                        .
+                                                    </div>
+                                                )}
+                                        </div>
+                                    </TabsContent>
+                                )}
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Modals */}
+            <CheckinModal
+                open={checkinModalOpen}
+                onClose={() => setCheckinModalOpen(false)}
+                patient={selectedPatient}
+                departments={departments}
+                onSuccess={handleCheckinSuccess}
+            />
+
+            <VitalsModal
+                open={vitalsModalOpen}
+                onClose={() => setVitalsModalOpen(false)}
+                checkin={selectedCheckin}
+                onSuccess={handleVitalsSuccess}
+            />
+        </AppLayout>
+    );
 }

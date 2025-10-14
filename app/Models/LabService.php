@@ -16,9 +16,13 @@ class LabService extends Model
         'code',
         'category',
         'description',
+        'preparation_instructions',
         'price',
         'sample_type',
         'turnaround_time',
+        'normal_range',
+        'clinical_significance',
+        'test_parameters',
         'is_active',
     ];
 
@@ -27,6 +31,7 @@ class LabService extends Model
         return [
             'price' => 'decimal:2',
             'is_active' => 'boolean',
+            'test_parameters' => 'array',
         ];
     }
 

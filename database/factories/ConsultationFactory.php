@@ -21,8 +21,8 @@ class ConsultationFactory extends Factory
             'doctor_id' => \App\Models\User::factory(),
             'started_at' => $this->faker->dateTimeBetween('-2 hours', 'now'),
             'completed_at' => $this->faker->optional(0.7)->dateTimeBetween('now', '+1 hour'),
-            'status' => $this->faker->randomElement(['in_progress', 'completed', 'paused']),
-            'chief_complaint' => $this->faker->randomElement([
+            'status' => $this->faker->randomElement(['in_progress', 'completed']),
+            'presenting_complaint' => $this->faker->randomElement([
                 'Chest pain and shortness of breath',
                 'Persistent cough for 2 weeks',
                 'Abdominal pain and nausea',
@@ -32,8 +32,9 @@ class ConsultationFactory extends Factory
                 'Skin rash on arms',
                 'Back pain radiating to leg',
             ]),
-            'subjective_notes' => $this->faker->paragraph(3),
-            'objective_notes' => $this->faker->paragraph(2),
+            'history_presenting_complaint' => $this->faker->paragraph(3),
+            'on_direct_questioning' => $this->faker->paragraph(2),
+            'examination_findings' => $this->faker->paragraph(2),
             'assessment_notes' => $this->faker->paragraph(2),
             'plan_notes' => $this->faker->paragraph(2),
             'follow_up_date' => $this->faker->optional(0.5)->dateTimeBetween('+1 week', '+1 month'),

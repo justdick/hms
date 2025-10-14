@@ -17,7 +17,7 @@ return new class extends Migration
                 'in_consultation',
                 'completed',
                 'admitted',  // New status for admitted patients
-                'cancelled'
+                'cancelled',
             ])->change();
         });
     }
@@ -32,7 +32,7 @@ return new class extends Migration
                 'awaiting_consultation',
                 'in_consultation',
                 'completed',
-                'cancelled'
+                'cancelled',
             ])->change();
         });
     }

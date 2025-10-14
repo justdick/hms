@@ -22,9 +22,13 @@ class PermissionSeeder extends Seeder
             // Patient Check-in Management
             'checkins.view-all' => 'View all patient check-ins',
             'checkins.view-dept' => 'View check-ins in assigned departments',
+            'checkins.view-any-date' => 'View check-ins from any date (historical)',
+            'checkins.view-any-department' => 'View check-ins from other departments',
             'checkins.create' => 'Check-in patients',
             'checkins.update' => 'Update check-in status',
-            'checkins.delete' => 'Cancel check-ins',
+            'checkins.update-date' => 'Update check-in date (including completed check-ins)',
+            'checkins.cancel' => 'Cancel check-ins and void unpaid charges',
+            'checkins.delete' => 'Delete check-in records',
 
             // Vital Signs Management
             'vitals.view-all' => 'View all patient vitals',
@@ -62,12 +66,20 @@ class PermissionSeeder extends Seeder
             'lab-orders.update' => 'Update lab orders',
             'lab-orders.delete' => 'Delete lab orders',
 
+            // Lab Service Management
+            'lab-services.view' => 'View lab services',
+            'lab-services.create' => 'Create new lab services',
+            'lab-services.update' => 'Update lab services',
+            'lab-services.delete' => 'Delete lab services',
+            'configure lab parameters' => 'Configure dynamic test parameters for lab services',
+
             // Billing Management
             'billing.view-all' => 'View all patient bills',
             'billing.view-dept' => 'View bills for assigned departments',
             'billing.create' => 'Generate patient bills',
             'billing.update' => 'Update billing information',
             'billing.delete' => 'Delete bills',
+            'billing.configure' => 'Configure billing settings and rules',
 
             // Department Management
             'departments.view' => 'View departments',
@@ -82,6 +94,69 @@ class PermissionSeeder extends Seeder
             'users.update' => 'Update user information',
             'users.delete' => 'Delete users',
             'users.manage-permissions' => 'Manage user permissions',
+
+            // Pharmacy Management
+            'pharmacy.view' => 'View pharmacy dashboard',
+            'pharmacy.manage' => 'Manage pharmacy operations',
+
+            // Drug Management
+            'drugs.view' => 'View drugs and inventory',
+            'drugs.create' => 'Add new drugs',
+            'drugs.update' => 'Update drug information',
+            'drugs.delete' => 'Delete drugs',
+            'drugs.manage-batches' => 'Manage drug batches',
+
+            // Dispensing Management
+            'dispensing.view' => 'View dispensing records',
+            'dispensing.view-all' => 'View all dispensing records',
+            'dispensing.review' => 'Review prescriptions (Touchpoint 1)',
+            'dispensing.adjust-quantity' => 'Adjust prescription quantities during review',
+            'dispensing.mark-external' => 'Mark prescriptions as externally dispensed',
+            'dispensing.process' => 'Process drug dispensing (Touchpoint 2)',
+            'dispensing.partial' => 'Process partial dispensing',
+            'dispensing.override-payment' => 'Override payment requirements for emergency dispensing',
+            'dispensing.history' => 'View dispensing history',
+            'dispensing.reports' => 'Generate dispensing reports',
+
+            // Inventory Management
+            'inventory.view' => 'View inventory levels',
+            'inventory.manage' => 'Manage inventory stock',
+            'inventory.reports' => 'Generate inventory reports',
+
+            // Ward Management
+            'wards.view' => 'View wards',
+            'wards.create' => 'Create wards',
+            'wards.update' => 'Update ward information',
+            'wards.delete' => 'Delete wards',
+            'wards.manage-beds' => 'Manage ward beds',
+
+            // Patient Admission Management
+            'admissions.view' => 'View patient admissions',
+            'admissions.create' => 'Admit patients',
+            'admissions.update' => 'Update admission information',
+            'admissions.discharge' => 'Discharge patients',
+            'admissions.transfer' => 'Transfer patients between wards',
+
+            // Nursing Notes Management
+            'nursing-notes.view' => 'View nursing notes',
+            'nursing-notes.create' => 'Create nursing notes',
+            'nursing-notes.update' => 'Update own nursing notes (within 24 hours)',
+            'nursing-notes.delete' => 'Delete own nursing notes (within 2 hours)',
+
+            // Ward Rounds Management
+            'ward_rounds.view' => 'View ward rounds',
+            'ward_rounds.create' => 'Record ward rounds',
+            'ward_rounds.update' => 'Update own ward rounds (within 24 hours)',
+            'ward_rounds.delete' => 'Delete ward rounds (admin only)',
+            'ward_rounds.restore' => 'Restore deleted ward rounds',
+            'ward_rounds.force_delete' => 'Permanently delete ward rounds',
+
+            // Medication Administration Management
+            'medications.view' => 'View medication schedules',
+            'medications.administer' => 'Administer medications',
+            'medications.hold' => 'Hold medication administration',
+            'medications.refuse' => 'Mark medication as refused',
+            'medications.omit' => 'Omit medication administration',
 
             // System Administration
             'system.admin' => 'Full system administration access',
@@ -125,6 +200,7 @@ class PermissionSeeder extends Seeder
             'checkins.view-dept',
             'checkins.create',
             'checkins.update',
+            'checkins.cancel', // Receptionists can cancel check-ins
         ]);
 
         $nurse->syncPermissions([
@@ -132,10 +208,23 @@ class PermissionSeeder extends Seeder
             'patients.update',
             'checkins.view-dept',
             'checkins.update',
+            'checkins.cancel', // Nurses can cancel check-ins
             'vitals.view-dept',
             'vitals.create',
             'vitals.update',
             'consultations.view-dept',
+            'wards.view',
+            'admissions.view',
+            'nursing-notes.view',
+            'nursing-notes.create',
+            'nursing-notes.update',
+            'nursing-notes.delete',
+            'ward_rounds.view',
+            'medications.view',
+            'medications.administer',
+            'medications.hold',
+            'medications.refuse',
+            'medications.omit',
         ]);
 
         $doctor->syncPermissions([
@@ -159,6 +248,62 @@ class PermissionSeeder extends Seeder
             'lab-orders.create',
             'lab-orders.update',
             'billing.view-dept',
+            'pharmacy.view',
+            'drugs.view',
+            'wards.view',
+            'admissions.view',
+            'admissions.create',
+            'admissions.update',
+            'admissions.discharge',
+            'admissions.transfer',
+            'nursing-notes.view',
+            'ward_rounds.view',
+            'ward_rounds.create',
+            'ward_rounds.update',
+            'medications.view',
+        ]);
+
+        // Create Pharmacist role
+        $pharmacist = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Pharmacist',
+            'guard_name' => 'web',
+        ]);
+
+        $pharmacist->syncPermissions([
+            'patients.view-dept',
+            'pharmacy.view',
+            'pharmacy.manage',
+            'drugs.view',
+            'drugs.create',
+            'drugs.update',
+            'drugs.manage-batches',
+            'dispensing.view',
+            'dispensing.view-all',
+            'dispensing.review',
+            'dispensing.adjust-quantity',
+            'dispensing.mark-external',
+            'dispensing.process',
+            'dispensing.partial',
+            'dispensing.history',
+            'dispensing.reports',
+            'inventory.view',
+            'inventory.manage',
+            'inventory.reports',
+            'prescriptions.view',
+        ]);
+
+        // Create Cashier role
+        $cashier = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Cashier',
+            'guard_name' => 'web',
+        ]);
+
+        $cashier->syncPermissions([
+            'patients.view-all',
+            'checkins.view-all',
+            'billing.view-all',
+            'billing.create',
+            'billing.update',
         ]);
 
         // Admin gets ALL permissions automatically

@@ -18,3 +18,6 @@ require __DIR__.'/auth.php';
 require __DIR__.'/checkin.php';
 require __DIR__.'/consultation.php';
 require __DIR__.'/wards.php';
+require __DIR__.'/lab.php';
+require __DIR__.'/pharmacy.php';
+require __DIR__.'/billing.php';

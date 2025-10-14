@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\PasswordController;
+use App\Http\Controllers\Settings\PatientNumberingController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
@@ -25,4 +26,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    // Patient Numbering Configuration
+    Route::get('settings/patient-numbering', [PatientNumberingController::class, 'index'])
+        ->name('patient-numbering.index');
+    Route::post('settings/patient-numbering', [PatientNumberingController::class, 'update'])
+        ->name('patient-numbering.update');
+    Route::post('settings/patient-numbering/preview', [PatientNumberingController::class, 'preview'])
+        ->name('patient-numbering.preview');
 });

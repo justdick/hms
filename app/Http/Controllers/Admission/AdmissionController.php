@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admission;
 
+use App\Events\PatientAdmitted;
 use App\Http\Controllers\Controller;
 use App\Models\Bed;
 use App\Models\Consultation;
@@ -51,6 +52,13 @@ class AdmissionController extends Controller
             'status' => 'admitted',
         ]);
 
+        // Fire admission event for billing
+        event(new PatientAdmitted(
+            checkin: $consultation->patientCheckin,
+            wardType: $ward->name, // Use ward name instead of type
+            bedNumber: null
+        ));
+
         return redirect()->route('consultation.index')
             ->with('success', "Patient admitted successfully. Admission Number: {$admission->admission_number}");
     }
@@ -65,5 +73,4 @@ class AdmissionController extends Controller
             'wards' => $wards,
         ]);
     }
-
 }

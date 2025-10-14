@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admission\AdmissionController;
 use App\Http\Controllers\Consultation\ConsultationController;
+use App\Http\Controllers\Consultation\ConsultationTransferController;
 use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
 use Illuminate\Support\Facades\Route;
@@ -10,14 +11,16 @@ Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultat
 
     // Consultation management
     Route::get('/', [ConsultationController::class, 'index'])->name('index');
-    Route::post('/', [ConsultationController::class, 'store'])->name('store');
+    Route::post('/', [ConsultationController::class, 'store'])->middleware('billing.enforce:consultation')->name('store');
     Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('show');
     Route::get('/{consultation}/enhanced', [ConsultationController::class, 'showEnhanced'])->name('show.enhanced');
     Route::patch('/{consultation}', [ConsultationController::class, 'update'])->name('update');
     Route::post('/{consultation}/complete', [ConsultationController::class, 'complete'])->name('complete');
+    Route::post('/{consultation}/transfer', [ConsultationTransferController::class, 'store'])->name('transfer');
 
     // Prescription management
     Route::post('/{consultation}/prescriptions', [ConsultationController::class, 'storePrescription'])->name('prescriptions.store');
+    Route::delete('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'destroyPrescription'])->name('prescriptions.destroy');
 
     // Admission management
     Route::post('/{consultation}/admit', [AdmissionController::class, 'store'])->name('admit');

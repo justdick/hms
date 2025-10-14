@@ -29,8 +29,14 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             DepartmentSeeder::class,
             TestDataSeeder::class,
+            PaymentMethodSeeder::class,
             LabServiceSeeder::class,
+            PharmacySeeder::class,
             BillingServiceSeeder::class,
+            BillingSeeder::class,
+            PreviousConsultationsSeeder::class,
+            WardSeeder::class,
+            SystemConfigurationSeeder::class,
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Ward;
 use App\Models\Bed;
+use App\Models\Ward;
 use Illuminate\Database\Seeder;
 
 class WardSeeder extends Seeder
@@ -81,7 +81,7 @@ class WardSeeder extends Seeder
             ]);
 
             // Create realistic occupancy patterns based on ward function
-            $occupancyRate = match($ward->code) {
+            $occupancyRate = match ($ward->code) {
                 'ICU1', 'NICU' => 0.8, // ICUs typically higher occupancy
                 'ER' => 0.3, // Emergency has lower occupancy
                 'MAT1' => 0.6, // Maternity variable

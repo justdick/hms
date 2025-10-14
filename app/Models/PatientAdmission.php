@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PatientAdmission extends Model
 {
@@ -17,7 +18,6 @@ class PatientAdmission extends Model
         'consultation_id',
         'bed_id',
         'ward_id',
-        'attending_doctor_id',
         'status',
         'admission_reason',
         'admission_notes',
@@ -58,14 +58,41 @@ class PatientAdmission extends Model
         return $this->belongsTo(Ward::class);
     }
 
-    public function attendingDoctor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'attending_doctor_id');
-    }
-
     public function dischargedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'discharged_by_id');
+    }
+
+    public function vitalSigns(): HasMany
+    {
+        return $this->hasMany(VitalSign::class);
+    }
+
+    public function latestVitalSigns(): HasMany
+    {
+        return $this->vitalSigns()->latest('recorded_at')->limit(1);
+    }
+
+    public function medicationAdministrations(): HasMany
+    {
+        return $this->hasMany(MedicationAdministration::class);
+    }
+
+    public function pendingMedications(): HasMany
+    {
+        return $this->medicationAdministrations()
+            ->where('status', 'scheduled')
+            ->where('scheduled_time', '<=', now()->addHours(2));
+    }
+
+    public function wardRounds(): HasMany
+    {
+        return $this->hasMany(WardRound::class);
+    }
+
+    public function nursingNotes(): HasMany
+    {
+        return $this->hasMany(NursingNote::class);
     }
 
     public function scopeActive($query): void
