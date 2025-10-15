@@ -14,10 +14,15 @@ class WardRound extends Model
     protected $fillable = [
         'patient_admission_id',
         'doctor_id',
-        'progress_note',
+        'day_number',
+        'round_type',
+        'presenting_complaint',
+        'history_presenting_complaint',
+        'on_direct_questioning',
+        'examination_findings',
+        'assessment_notes',
+        'plan_notes',
         'patient_status',
-        'clinical_impression',
-        'plan',
         'round_datetime',
     ];
 
@@ -36,6 +41,21 @@ class WardRound extends Model
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'doctor_id');
+    }
+
+    public function labOrders()
+    {
+        return $this->morphMany(LabOrder::class, 'orderable');
+    }
+
+    public function prescriptions()
+    {
+        return $this->morphMany(Prescription::class, 'prescribable');
+    }
+
+    public function diagnoses()
+    {
+        return $this->morphMany(AdmissionDiagnosis::class, 'source');
     }
 
     public function isImproving(): bool

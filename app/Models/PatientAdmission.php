@@ -100,6 +100,21 @@ class PatientAdmission extends Model
         return $this->hasMany(NursingNote::class);
     }
 
+    public function diagnoses(): HasMany
+    {
+        return $this->hasMany(AdmissionDiagnosis::class);
+    }
+
+    public function activeDiagnoses(): HasMany
+    {
+        return $this->diagnoses()->where('is_active', true);
+    }
+
+    public function admissionConsultation(): BelongsTo
+    {
+        return $this->consultation();
+    }
+
     public function scopeActive($query): void
     {
         $query->where('status', 'admitted');

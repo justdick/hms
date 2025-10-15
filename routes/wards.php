@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.
 
     // Ward Rounds
     Route::get('/{admission}/ward-rounds', [WardRoundController::class, 'index'])->name('ward-rounds.index');
+    Route::get('/{admission}/ward-rounds/create', [WardRoundController::class, 'create'])->name('ward-rounds.create');
     Route::post('/{admission}/ward-rounds', [WardRoundController::class, 'store'])->name('ward-rounds.store');
     Route::put('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'update'])->name('ward-rounds.update');
     Route::delete('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'destroy'])->name('ward-rounds.destroy');

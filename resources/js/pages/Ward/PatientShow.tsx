@@ -8,6 +8,7 @@ import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
+import admissions from '@/routes/admissions';
 import {
     Activity,
     AlertCircle,
@@ -618,15 +619,12 @@ export default function WardPatientShow({ admission }: Props) {
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <CardTitle>Recent Ward Rounds</CardTitle>
-                                    <Button
-                                        size="sm"
-                                        onClick={() =>
-                                            setWardRoundModalOpen(true)
-                                        }
-                                    >
-                                        <Stethoscope className="mr-2 h-4 w-4" />
-                                        Record Round
-                                    </Button>
+                                    <Link href={admissions.wardRounds.create.url(admission)}>
+                                        <Button size="sm">
+                                            <Stethoscope className="mr-2 h-4 w-4" />
+                                            Start Ward Round
+                                        </Button>
+                                    </Link>
                                 </CardHeader>
                                 <CardContent>
                                     {admission.ward_rounds &&
@@ -967,12 +965,12 @@ export default function WardPatientShow({ admission }: Props) {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Ward Rounds</CardTitle>
-                                <Button
-                                    onClick={() => setWardRoundModalOpen(true)}
-                                >
-                                    <Stethoscope className="mr-2 h-4 w-4" />
-                                    Record Round
-                                </Button>
+                                <Link href={admissions.wardRounds.create.url(admission)}>
+                                    <Button>
+                                        <Stethoscope className="mr-2 h-4 w-4" />
+                                        Start Ward Round
+                                    </Button>
+                                </Link>
                             </CardHeader>
                             <CardContent>
                                 {admission.ward_rounds &&
