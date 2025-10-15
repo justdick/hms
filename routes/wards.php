@@ -4,6 +4,7 @@ use App\Http\Controllers\Vitals\VitalSignController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
 use App\Http\Controllers\Ward\NursingNoteController;
 use App\Http\Controllers\Ward\WardController;
+use App\Http\Controllers\Ward\WardPatientController;
 use App\Http\Controllers\Ward\WardRoundController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,10 @@ Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(
     Route::get('/', [WardController::class, 'index'])->name('index');
     Route::get('/create', [WardController::class, 'create'])->name('create');
     Route::post('/', [WardController::class, 'store'])->name('store');
+
+    // Patient routes (must come before {ward} routes)
+    Route::get('/{ward}/patients/{admission}', [WardPatientController::class, 'show'])->name('patients.show');
+
     Route::get('/{ward}', [WardController::class, 'show'])->name('show');
     Route::get('/{ward}/edit', [WardController::class, 'edit'])->name('edit');
     Route::put('/{ward}', [WardController::class, 'update'])->name('update');

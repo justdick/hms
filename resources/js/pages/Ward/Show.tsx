@@ -2,32 +2,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MedicationAdministrationPanel } from '@/components/Ward/MedicationAdministrationPanel';
-import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
-import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
-import { WardRoundModal } from '@/components/Ward/WardRoundModal';
+import { CurrentPatientsTable } from '@/components/Ward/CurrentPatientsTable';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import {
     Activity,
-    AlertCircle,
     ArrowLeft,
     Bed,
-    Calendar,
     Clock,
     Edit,
-    FileText,
     Heart,
     Hospital,
     Pill,
     Settings,
-    Stethoscope,
     Thermometer,
     User,
     UserCheck,
     Users,
 } from 'lucide-react';
-import { useState } from 'react';
 
 interface Patient {
     id: number;
@@ -132,52 +124,6 @@ interface Props {
 }
 
 export default function WardShow({ ward, stats }: Props) {
-    const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
-    const [nursingNotesModalOpen, setNursingNotesModalOpen] = useState(false);
-    const [wardRoundModalOpen, setWardRoundModalOpen] = useState(false);
-    const [medicationPanelOpen, setMedicationPanelOpen] = useState(false);
-    const [selectedAdmission, setSelectedAdmission] =
-        useState<PatientAdmission | null>(null);
-
-    const openVitalsModal = (admission: PatientAdmission) => {
-        setSelectedAdmission(admission);
-        setVitalsModalOpen(true);
-    };
-
-    const closeVitalsModal = () => {
-        setVitalsModalOpen(false);
-        setSelectedAdmission(null);
-    };
-
-    const openNursingNotesModal = (admission: PatientAdmission) => {
-        setSelectedAdmission(admission);
-        setNursingNotesModalOpen(true);
-    };
-
-    const closeNursingNotesModal = () => {
-        setNursingNotesModalOpen(false);
-        setSelectedAdmission(null);
-    };
-
-    const openWardRoundModal = (admission: PatientAdmission) => {
-        setSelectedAdmission(admission);
-        setWardRoundModalOpen(true);
-    };
-
-    const closeWardRoundModal = () => {
-        setWardRoundModalOpen(false);
-        setSelectedAdmission(null);
-    };
-
-    const openMedicationPanel = (admission: PatientAdmission) => {
-        setSelectedAdmission(admission);
-        setMedicationPanelOpen(true);
-    };
-
-    const closeMedicationPanel = () => {
-        setMedicationPanelOpen(false);
-        setSelectedAdmission(null);
-    };
 
     const getBedStatusColor = (status: string) => {
         const colors = {
@@ -504,329 +450,10 @@ export default function WardShow({ ward, stats }: Props) {
                                 <CardTitle>Current Patients</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {ward.admissions.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {ward.admissions.map((admission) => {
-                                            const latestVital =
-                                                admission
-                                                    .latest_vital_signs?.[0];
-                                            const vitalsOverdue =
-                                                !latestVital ||
-                                                new Date(
-                                                    latestVital.recorded_at,
-                                                ) <
-                                                    new Date(
-                                                        Date.now() -
-                                                            4 * 60 * 60 * 1000,
-                                                    );
-
-                                            return (
-                                                <div
-                                                    key={admission.id}
-                                                    className="rounded-lg border p-4 dark:border-gray-700"
-                                                >
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-start gap-3">
-                                                                <div className="flex-1">
-                                                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                                                                        {
-                                                                            admission
-                                                                                .patient
-                                                                                .first_name
-                                                                        }{' '}
-                                                                        {
-                                                                            admission
-                                                                                .patient
-                                                                                .last_name
-                                                                        }
-                                                                    </h3>
-                                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                                        Admission:{' '}
-                                                                        {
-                                                                            admission.admission_number
-                                                                        }
-                                                                    </p>
-                                                                    {admission
-                                                                        .consultation
-                                                                        ?.doctor && (
-                                                                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                                            <Stethoscope className="h-4 w-4" />
-                                                                            <span>
-                                                                                Dr.{' '}
-                                                                                {
-                                                                                    admission
-                                                                                        .consultation
-                                                                                        .doctor
-                                                                                        .name
-                                                                                }
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Patient Metrics Row */}
-                                                            <div className="mt-3 flex flex-wrap gap-4">
-                                                                {admission.bed && (
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <Bed className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                            Bed{' '}
-                                                                            {
-                                                                                admission
-                                                                                    .bed
-                                                                                    .bed_number
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                {admission.pending_medications &&
-                                                                    admission
-                                                                        .pending_medications
-                                                                        .length >
-                                                                        0 && (
-                                                                        <div className="flex items-center gap-2 text-sm">
-                                                                            <Pill className="h-4 w-4 text-orange-500 dark:text-orange-400" />
-                                                                            <span className="font-medium text-orange-600 dark:text-orange-400">
-                                                                                {
-                                                                                    admission
-                                                                                        .pending_medications
-                                                                                        .length
-                                                                                }{' '}
-                                                                                pending
-                                                                                med
-                                                                                {admission
-                                                                                    .pending_medications
-                                                                                    .length !==
-                                                                                1
-                                                                                    ? 's'
-                                                                                    : ''}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-
-                                                                {vitalsOverdue && (
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <AlertCircle className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
-                                                                        <span className="font-medium text-yellow-600 dark:text-yellow-400">
-                                                                            Vitals
-                                                                            needed
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                {admission.ward_rounds_count !==
-                                                                    undefined && (
-                                                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                                        <FileText className="h-4 w-4" />
-                                                                        <span>
-                                                                            {
-                                                                                admission.ward_rounds_count
-                                                                            }{' '}
-                                                                            round
-                                                                            {admission.ward_rounds_count !==
-                                                                            1
-                                                                                ? 's'
-                                                                                : ''}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                {admission.nursing_notes_count !==
-                                                                    undefined && (
-                                                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                                        <FileText className="h-4 w-4" />
-                                                                        <span>
-                                                                            {
-                                                                                admission.nursing_notes_count
-                                                                            }{' '}
-                                                                            nursing
-                                                                            note
-                                                                            {admission.nursing_notes_count !==
-                                                                            1
-                                                                                ? 's'
-                                                                                : ''}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Latest Vital Signs */}
-                                                            {latestVital && (
-                                                                <div className="mt-3 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                                    <div className="mb-2 flex items-center justify-between">
-                                                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                                                            Latest
-                                                                            Vitals
-                                                                        </span>
-                                                                        <span className="text-xs text-gray-500 dark:text-gray-500">
-                                                                            {formatDateTime(
-                                                                                latestVital.recorded_at,
-                                                                            )}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3 lg:grid-cols-6">
-                                                                        {latestVital.temperature && (
-                                                                            <div>
-                                                                                <span className="text-gray-600 dark:text-gray-400">
-                                                                                    Temp:
-                                                                                </span>{' '}
-                                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                                    {
-                                                                                        latestVital.temperature
-                                                                                    }
-                                                                                    °C
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                        {latestVital.blood_pressure_systolic &&
-                                                                            latestVital.blood_pressure_diastolic && (
-                                                                                <div>
-                                                                                    <span className="text-gray-600 dark:text-gray-400">
-                                                                                        BP:
-                                                                                    </span>{' '}
-                                                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                                        {
-                                                                                            latestVital.blood_pressure_systolic
-                                                                                        }
-
-                                                                                        /
-                                                                                        {
-                                                                                            latestVital.blood_pressure_diastolic
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                            )}
-                                                                        {latestVital.pulse_rate && (
-                                                                            <div>
-                                                                                <span className="text-gray-600 dark:text-gray-400">
-                                                                                    Pulse:
-                                                                                </span>{' '}
-                                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                                    {
-                                                                                        latestVital.pulse_rate
-                                                                                    }{' '}
-                                                                                    bpm
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                        {latestVital.respiratory_rate && (
-                                                                            <div>
-                                                                                <span className="text-gray-600 dark:text-gray-400">
-                                                                                    RR:
-                                                                                </span>{' '}
-                                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                                    {
-                                                                                        latestVital.respiratory_rate
-                                                                                    }
-                                                                                    /min
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                        {latestVital.oxygen_saturation && (
-                                                                            <div>
-                                                                                <span className="text-gray-600 dark:text-gray-400">
-                                                                                    SpO₂:
-                                                                                </span>{' '}
-                                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                                    {
-                                                                                        latestVital.oxygen_saturation
-                                                                                    }
-
-                                                                                    %
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="ml-4 flex flex-col items-end gap-2">
-                                                            <Badge variant="default">
-                                                                {admission.status
-                                                                    .replace(
-                                                                        '_',
-                                                                        ' ',
-                                                                    )
-                                                                    .toUpperCase()}
-                                                            </Badge>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-500">
-                                                                <Calendar className="mr-1 inline h-3 w-3" />
-                                                                {formatDateTime(
-                                                                    admission.admitted_at,
-                                                                )}
-                                                            </p>
-                                                            <div className="flex flex-col gap-2">
-                                                                <div className="flex gap-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        onClick={() =>
-                                                                            openMedicationPanel(
-                                                                                admission,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Pill className="mr-2 h-4 w-4" />
-                                                                        Meds
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        onClick={() =>
-                                                                            openNursingNotesModal(
-                                                                                admission,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <FileText className="mr-2 h-4 w-4" />
-                                                                        Notes
-                                                                    </Button>
-                                                                </div>
-                                                                <div className="flex gap-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        onClick={() =>
-                                                                            openWardRoundModal(
-                                                                                admission,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Stethoscope className="mr-2 h-4 w-4" />
-                                                                        Rounds
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        onClick={() =>
-                                                                            openVitalsModal(
-                                                                                admission,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Activity className="mr-2 h-4 w-4" />
-                                                                        Vitals
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                                        <Users className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                        <p>
-                                            No patients currently admitted to
-                                            this ward
-                                        </p>
-                                    </div>
-                                )}
+                                <CurrentPatientsTable
+                                    admissions={ward.admissions}
+                                    wardId={ward.id}
+                                />
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -1029,22 +656,18 @@ export default function WardShow({ ward, stats }: Props) {
                                                                     variant="outline"
                                                                     className="border-yellow-500 text-yellow-700 dark:border-yellow-600 dark:text-yellow-400"
                                                                 >
-                                                                    <AlertCircle className="mr-1 h-3 w-3" />
+                                                                    <Thermometer className="mr-1 h-3 w-3" />
                                                                     Vitals
                                                                     Needed
                                                                 </Badge>
                                                             )}
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    openVitalsModal(
-                                                                        admission,
-                                                                    )
-                                                                }
+                                                            <Link
+                                                                href={`/wards/${ward.id}/patients/${admission.id}`}
                                                             >
-                                                                <Activity className="mr-2 h-4 w-4" />
-                                                                Record Vitals
-                                                            </Button>
+                                                                <Button size="sm">
+                                                                    View Patient
+                                                                </Button>
+                                                            </Link>
                                                         </div>
                                                     </div>
 
@@ -1178,35 +801,6 @@ export default function WardShow({ ward, stats }: Props) {
                         </Card>
                     </TabsContent>
                 </Tabs>
-
-                {/* Record Vitals Modal */}
-                <RecordVitalsModal
-                    open={vitalsModalOpen}
-                    onClose={closeVitalsModal}
-                    admission={selectedAdmission}
-                    onSuccess={closeVitalsModal}
-                />
-
-                {/* Nursing Notes Modal */}
-                <NursingNotesModal
-                    open={nursingNotesModalOpen}
-                    onClose={closeNursingNotesModal}
-                    admission={selectedAdmission}
-                />
-
-                {/* Ward Round Modal */}
-                <WardRoundModal
-                    open={wardRoundModalOpen}
-                    onClose={closeWardRoundModal}
-                    admission={selectedAdmission}
-                />
-
-                {/* Medication Administration Panel */}
-                <MedicationAdministrationPanel
-                    admission={selectedAdmission}
-                    open={medicationPanelOpen}
-                    onOpenChange={setMedicationPanelOpen}
-                />
             </div>
         </AppLayout>
     );

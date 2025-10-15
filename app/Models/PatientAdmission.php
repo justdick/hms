@@ -90,6 +90,11 @@ class PatientAdmission extends Model
         return $this->hasMany(WardRound::class);
     }
 
+    public function latestWardRound(): HasMany
+    {
+        return $this->wardRounds()->with('doctor')->latest('created_at')->limit(1);
+    }
+
     public function nursingNotes(): HasMany
     {
         return $this->hasMany(NursingNote::class);

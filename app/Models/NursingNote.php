@@ -36,6 +36,11 @@ class NursingNote extends Model
         return $this->belongsTo(User::class, 'nurse_id');
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'nurse_id');
+    }
+
     public function scopeByType($query, string $type): void
     {
         $query->where('type', $type);

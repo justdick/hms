@@ -38,12 +38,16 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     Activity,
+    AlertCircle,
     ArrowRightLeft,
+    Bed,
     Building,
     Clock,
     FileText,
+    Heart,
     Pill,
     Plus,
+    Stethoscope,
     TestTube,
     User,
     UserPlus,
@@ -148,6 +152,33 @@ interface LabOrder {
     };
 }
 
+interface AdmissionWardRound {
+    id: number;
+    doctor: {
+        id: number;
+        name: string;
+    };
+    notes: string;
+    created_at: string;
+}
+
+interface PatientAdmission {
+    id: number;
+    ward: Ward;
+    bed_number?: string;
+    admission_date: string;
+    discharge_date?: string;
+    admission_reason: string;
+    admission_notes?: string;
+    status: 'admitted' | 'discharged' | 'transferred';
+    latest_vital_signs?: VitalSigns[];
+    latest_ward_round?: AdmissionWardRound[];
+}
+
+interface PatientWithAdmission extends Patient {
+    active_admission?: PatientAdmission;
+}
+
 interface Consultation {
     id: number;
     started_at: string;
@@ -162,7 +193,7 @@ interface Consultation {
     follow_up_date?: string;
     patient_checkin: {
         id: number;
-        patient: Patient;
+        patient: PatientWithAdmission;
         department: Department;
         checked_in_at: string;
         vital_signs?: VitalSigns[]; // Note: Laravel serializes vitalSigns relationship as vital_signs in JSON
@@ -665,6 +696,207 @@ export default function ConsultationShow({
                     </div>
                 </div>
 
+                {/* Admission Context Banner */}
+                {consultation.patient_checkin.patient.active_admission && (
+                    <div className="rounded-lg border-l-4 border-blue-600 bg-blue-50 p-4 shadow-sm dark:border-blue-400 dark:bg-blue-950">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-3">
+                                <Bed className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                                            Currently Admitted Patient
+                                        </h3>
+                                        <Badge
+                                            variant="outline"
+                                            className="border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                                        >
+                                            {consultation.patient_checkin.patient.active_admission.status.toUpperCase()}
+                                        </Badge>
+                                    </div>
+                                    <div className="mt-2 grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                                        <div className="flex items-center gap-2">
+                                            <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            <div>
+                                                <span className="text-blue-700 dark:text-blue-300">
+                                                    Ward:{' '}
+                                                </span>
+                                                <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                    {
+                                                        consultation
+                                                            .patient_checkin
+                                                            .patient
+                                                            .active_admission.ward
+                                                            .name
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {consultation.patient_checkin.patient
+                                            .active_admission.bed_number && (
+                                            <div className="flex items-center gap-2">
+                                                <Bed className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                <div>
+                                                    <span className="text-blue-700 dark:text-blue-300">
+                                                        Bed:{' '}
+                                                    </span>
+                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_admission
+                                                                .bed_number
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                            <div>
+                                                <span className="text-blue-700 dark:text-blue-300">
+                                                    Admitted:{' '}
+                                                </span>
+                                                <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                    {formatDateTime(
+                                                        consultation
+                                                            .patient_checkin
+                                                            .patient
+                                                            .active_admission
+                                                            .admission_date,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {consultation.patient_checkin.patient
+                                        .active_admission.latest_ward_round?.[0] && (
+                                        <div className="mt-3 rounded border border-blue-200 bg-white p-3 dark:border-blue-800 dark:bg-blue-900">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                    Latest Ward Round
+                                                </span>
+                                                <span className="text-blue-600 dark:text-blue-400">
+                                                    by Dr.{' '}
+                                                    {
+                                                        consultation
+                                                            .patient_checkin
+                                                            .patient
+                                                            .active_admission
+                                                            .latest_ward_round[0]
+                                                            ?.doctor?.name
+                                                    }
+                                                </span>
+                                                <span className="text-xs text-blue-500 dark:text-blue-400">
+                                                    •{' '}
+                                                    {formatDateTime(
+                                                        consultation
+                                                            .patient_checkin
+                                                            .patient
+                                                            .active_admission
+                                                            .latest_ward_round[0]
+                                                            ?.created_at || '',
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
+                                                {
+                                                    consultation.patient_checkin
+                                                        .patient.active_admission
+                                                        .latest_ward_round[0]
+                                                        ?.notes
+                                                }
+                                            </p>
+                                        </div>
+                                    )}
+                                    {consultation.patient_checkin.patient
+                                        .active_admission.latest_vital_signs &&
+                                        consultation.patient_checkin.patient
+                                            .active_admission.latest_vital_signs
+                                            .length > 0 && (
+                                            <div className="mt-2 flex items-center gap-4 text-sm">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Heart className="h-4 w-4 text-red-500 dark:text-red-400" />
+                                                    <span className="text-blue-700 dark:text-blue-300">
+                                                        BP:{' '}
+                                                    </span>
+                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_admission
+                                                                .latest_vital_signs[0]
+                                                                .blood_pressure_systolic
+                                                        }
+                                                        /
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_admission
+                                                                .latest_vital_signs[0]
+                                                                .blood_pressure_diastolic
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Activity className="h-4 w-4 text-green-500 dark:text-green-400" />
+                                                    <span className="text-blue-700 dark:text-blue-300">
+                                                        HR:{' '}
+                                                    </span>
+                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_admission
+                                                                .latest_vital_signs[0]
+                                                                .pulse_rate
+                                                        }{' '}
+                                                        bpm
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Activity className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                                                    <span className="text-blue-700 dark:text-blue-300">
+                                                        Temp:{' '}
+                                                    </span>
+                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_admission
+                                                                .latest_vital_signs[0]
+                                                                .temperature
+                                                        }
+                                                        °F
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                </div>
+                            </div>
+                            <Button
+                                onClick={() =>
+                                    router.visit(
+                                        `/wards/${consultation.patient_checkin.patient.active_admission?.ward.id}`,
+                                    )
+                                }
+                                variant="outline"
+                                size="sm"
+                                className="border-blue-600 text-blue-600 hover:bg-blue-100 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900"
+                            >
+                                <Bed className="mr-2 h-4 w-4" />
+                                View Ward Details
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Quick Actions */}
                 <div className="mb-6 flex items-center justify-between gap-4">
                     <div className="flex gap-4">
@@ -682,20 +914,22 @@ export default function ConsultationShow({
                                 >
                                     Complete Consultation
                                 </Button>
-                                <Dialog
-                                    open={showAdmissionModal}
-                                    onOpenChange={setShowAdmissionModal}
-                                >
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="border-green-600 text-green-600 hover:bg-green-50"
-                                        >
-                                            <UserPlus className="mr-2 h-4 w-4" />
-                                            Admit Patient
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-md">
+                                {!consultation.patient_checkin.patient
+                                    .active_admission && (
+                                    <Dialog
+                                        open={showAdmissionModal}
+                                        onOpenChange={setShowAdmissionModal}
+                                    >
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                                            >
+                                                <UserPlus className="mr-2 h-4 w-4" />
+                                                Admit Patient
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
                                         <DialogHeader>
                                             <DialogTitle>
                                                 Admit Patient
@@ -814,6 +1048,7 @@ export default function ConsultationShow({
                                         </form>
                                     </DialogContent>
                                 </Dialog>
+                                )}
 
                                 <Dialog
                                     open={showTransferModal}

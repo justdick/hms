@@ -92,6 +92,9 @@ class ConsultationController extends Controller
 
         $consultation->load([
             'patientCheckin.patient',
+            'patientCheckin.patient.activeAdmission.ward',
+            'patientCheckin.patient.activeAdmission.latestVitalSigns',
+            'patientCheckin.patient.activeAdmission.latestWardRound.doctor',
             'patientCheckin.department',
             'patientCheckin.vitalSigns' => function ($query) {
                 $query->latest();
