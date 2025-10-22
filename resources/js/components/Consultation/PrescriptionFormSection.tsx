@@ -23,8 +23,15 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, Pill, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import {
+    Calculator,
+    Check,
+    ChevronsUpDown,
+    Pill,
+    Plus,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Drug {
     id: number;
@@ -34,14 +41,15 @@ interface Drug {
     generic_name?: string;
     brand_name?: string;
     unit_type: string;
+    bottle_size?: number;
 }
 
 interface Prescription {
     id: number;
     medication_name: string;
-    dosage: string;
     frequency: string;
     duration: string;
+    dose_quantity?: string;
     instructions?: string;
     status: string;
 }
@@ -57,6 +65,58 @@ interface Props {
     consultationStatus: string;
 }
 
+// Helper function to parse frequency to get daily count
+function parseFrequency(frequency: string): number | null {
+    const frequencyMap: { [key: string]: number } = {
+        'Once daily': 1,
+        'Twice daily (BID)': 2,
+        'Three times daily (TID)': 3,
+        'Four times daily (QID)': 4,
+        'Every 4 hours': 6,
+        'Every 6 hours': 4,
+        'Every 8 hours': 3,
+        'Every 12 hours': 2,
+        'At bedtime': 1,
+    };
+    return frequencyMap[frequency] || null;
+}
+
+// Helper function to parse duration to get number of days
+function parseDuration(duration: string): number | null {
+    const match = duration.match(/^(\d+)\s+days?$/i);
+    if (match) {
+        return parseInt(match[1], 10);
+    }
+    return null;
+}
+
+// Helper function to estimate bottles/vials needed for syrups
+function estimateBottlesNeeded(
+    frequency: string,
+    duration: string,
+    unitType: string,
+    doseQuantity?: string,
+    actualBottleSize?: number,
+): number {
+    const dailyCount = parseFrequency(frequency);
+    const days = parseDuration(duration);
+
+    if (!dailyCount || !days) {
+        return 1; // Default to 1 if can't calculate
+    }
+
+    // Parse dose quantity (e.g., "5ml", "10ml") or default to 5ml
+    const mlPerDose = doseQuantity ? parseFloat(doseQuantity) : 5;
+    const totalMlNeeded = dailyCount * days * mlPerDose;
+
+    // Use actual bottle size from drug data, or fallback to defaults
+    const bottleSize =
+        actualBottleSize || (unitType === 'bottle' ? 100 : 10);
+
+    // Calculate bottles needed (round up)
+    return Math.ceil(totalMlNeeded / bottleSize);
+}
+
 export default function PrescriptionFormSection({
     drugs,
     prescriptions,
@@ -68,8 +128,64 @@ export default function PrescriptionFormSection({
     consultationStatus,
 }: Props) {
     const [drugComboOpen, setDrugComboOpen] = useState(false);
+    const [manuallyEdited, setManuallyEdited] = useState(false);
 
     const selectedDrug = drugs.find((d) => d.id === prescriptionData.drug_id);
+
+    // Auto-calculate quantity based on frequency, duration, and dose_quantity
+    useEffect(() => {
+        if (
+            !selectedDrug ||
+            !prescriptionData.frequency ||
+            !prescriptionData.duration
+        ) {
+            return;
+        }
+
+        // Auto-calculate for piece-based drugs (tablets/capsules)
+        if (selectedDrug.unit_type === 'piece') {
+            const dailyCount = parseFrequency(prescriptionData.frequency);
+            const days = parseDuration(prescriptionData.duration);
+            const doseQuantity = prescriptionData.dose_quantity
+                ? parseInt(prescriptionData.dose_quantity)
+                : 1;
+
+            if (dailyCount && days) {
+                const calculatedQuantity = doseQuantity * dailyCount * days;
+                setPrescriptionData('quantity_to_dispense', calculatedQuantity);
+            }
+        }
+        // Auto-calculate for bottles/vials (no manual editing)
+        else if (
+            selectedDrug.unit_type === 'bottle' ||
+            selectedDrug.unit_type === 'vial'
+        ) {
+            const estimated = estimateBottlesNeeded(
+                prescriptionData.frequency,
+                prescriptionData.duration,
+                selectedDrug.unit_type,
+                prescriptionData.dose_quantity,
+                selectedDrug.bottle_size,
+            );
+            setPrescriptionData('quantity_to_dispense', estimated);
+        }
+        // For tubes and other types - default to 1
+        else if (!manuallyEdited) {
+            if (!prescriptionData.quantity_to_dispense) {
+                setPrescriptionData('quantity_to_dispense', 1);
+            }
+        }
+    }, [
+        prescriptionData.frequency,
+        prescriptionData.duration,
+        prescriptionData.dose_quantity,
+        selectedDrug,
+    ]);
+
+    // Reset manual edit flag when drug changes
+    useEffect(() => {
+        setManuallyEdited(false);
+    }, [selectedDrug?.id]);
 
     return (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -81,13 +197,15 @@ export default function PrescriptionFormSection({
                         Add New Prescription
                     </h3>
                     <form onSubmit={onSubmit} className="space-y-4">
-                        {/* Drug Selection with Combobox */}
-                        <div className="space-y-2">
-                            <Label>Drug *</Label>
-                            <Popover
-                                open={drugComboOpen}
-                                onOpenChange={setDrugComboOpen}
-                            >
+                        {/* Drug Selection and Dose Quantity in same row */}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            {/* Drug Selection with Combobox - Takes 2 columns */}
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Drug *</Label>
+                                <Popover
+                                    open={drugComboOpen}
+                                    onOpenChange={setDrugComboOpen}
+                                >
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
@@ -185,6 +303,68 @@ export default function PrescriptionFormSection({
                                     </Command>
                                 </PopoverContent>
                             </Popover>
+                        </div>
+
+                            {/* Dose Quantity Field - Takes 1 column */}
+                            {selectedDrug && (
+                                <div className="space-y-2">
+                                <Label htmlFor="dose_quantity">
+                                    Dose Quantity *
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        id="dose_quantity"
+                                        placeholder={
+                                            selectedDrug.unit_type === 'piece'
+                                                ? '1'
+                                                : selectedDrug.unit_type ===
+                                                      'bottle' ||
+                                                    selectedDrug.unit_type ===
+                                                        'vial'
+                                                  ? '5'
+                                                  : '1'
+                                        }
+                                        value={
+                                            prescriptionData.dose_quantity || ''
+                                        }
+                                        onChange={(e) =>
+                                            setPrescriptionData(
+                                                'dose_quantity',
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                        required
+                                    />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        {selectedDrug.unit_type === 'piece'
+                                            ? `${selectedDrug.form}(s) per dose`
+                                            : selectedDrug.unit_type ===
+                                                  'bottle' ||
+                                                selectedDrug.unit_type === 'vial'
+                                              ? 'ml per dose'
+                                              : 'per dose'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {selectedDrug.unit_type === 'piece' ? (
+                                        <>
+                                            e.g., "1" for one tablet, "2" for
+                                            two tablets per dose
+                                        </>
+                                    ) : selectedDrug.unit_type === 'bottle' ||
+                                      selectedDrug.unit_type === 'vial' ? (
+                                        <>
+                                            e.g., "5" for 5ml, "10" for 10ml per
+                                            dose
+                                        </>
+                                    ) : (
+                                        <>Enter dose quantity</>
+                                    )}
+                                </p>
+                            </div>
+                            )}
                         </div>
 
                         {/* Frequency and Duration in two columns */}
@@ -293,6 +473,130 @@ export default function PrescriptionFormSection({
                             </div>
                         </div>
 
+                        {/* Quantity Display - Auto-calculated for tablets, Manual for bottles */}
+                        {prescriptionData.quantity_to_dispense &&
+                            selectedDrug &&
+                            selectedDrug.unit_type === 'piece' && (
+                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
+                                    <div className="flex items-center gap-2">
+                                        <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                Calculated Quantity
+                                            </p>
+                                            <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                                {
+                                                    prescriptionData.quantity_to_dispense
+                                                }{' '}
+                                                {selectedDrug.form === 'tablet'
+                                                    ? 'tablets'
+                                                    : selectedDrug.form ===
+                                                        'capsule'
+                                                      ? 'capsules'
+                                                      : 'pieces'}
+                                            </p>
+                                            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                Auto-calculated from frequency ×
+                                                duration
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        {/* Calculated Quantity Display for bottles/vials/tubes */}
+                        {prescriptionData.quantity_to_dispense &&
+                            selectedDrug &&
+                            (selectedDrug.unit_type === 'bottle' ||
+                                selectedDrug.unit_type === 'vial') && (
+                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
+                                    <div className="flex items-center gap-2">
+                                        <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                Calculated Quantity
+                                            </p>
+                                            <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                                {
+                                                    prescriptionData.quantity_to_dispense
+                                                }{' '}
+                                                {selectedDrug.unit_type === 'bottle'
+                                                    ? prescriptionData.quantity_to_dispense ===
+                                                      1
+                                                        ? 'bottle'
+                                                        : 'bottles'
+                                                    : prescriptionData.quantity_to_dispense ===
+                                                        1
+                                                      ? 'vial'
+                                                      : 'vials'}
+                                            </p>
+                                            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                Based on{' '}
+                                                {prescriptionData.dose_quantity ||
+                                                    '5'}
+                                                ml per dose,{' '}
+                                                {selectedDrug.bottle_size ||
+                                                    (selectedDrug.unit_type ===
+                                                    'bottle'
+                                                        ? 100
+                                                        : 10)}
+                                                ml per {selectedDrug.unit_type}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        {/* Manual Quantity Input for tubes and other types */}
+                        {selectedDrug &&
+                            selectedDrug.unit_type !== 'piece' &&
+                            selectedDrug.unit_type !== 'bottle' &&
+                            selectedDrug.unit_type !== 'vial' &&
+                            prescriptionData.frequency &&
+                            prescriptionData.duration && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="quantity_to_dispense">
+                                        Quantity to Dispense *
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            id="quantity_to_dispense"
+                                            min="1"
+                                            value={
+                                                prescriptionData.quantity_to_dispense ||
+                                                1
+                                            }
+                                            onChange={(e) => {
+                                                setManuallyEdited(true);
+                                                setPrescriptionData(
+                                                    'quantity_to_dispense',
+                                                    parseInt(e.target.value) ||
+                                                        1,
+                                                );
+                                            }}
+                                            className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                            required
+                                        />
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {selectedDrug.unit_type === 'tube'
+                                                ? (prescriptionData.quantity_to_dispense ||
+                                                      1) === 1
+                                                    ? 'tube'
+                                                    : 'tubes'
+                                                : selectedDrug.unit_type}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Enter the number of{' '}
+                                        {selectedDrug.unit_type === 'tube'
+                                            ? 'tubes'
+                                            : 'units'}{' '}
+                                        needed for this prescription
+                                    </p>
+                                </div>
+                            )}
+
                         {/* Instructions */}
                         <div className="space-y-2">
                             <Label htmlFor="instructions">
@@ -352,6 +656,12 @@ export default function PrescriptionFormSection({
                                             {prescription.medication_name}
                                         </h4>
                                         <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                            {prescription.dose_quantity && (
+                                                <p>
+                                                    <strong>Dose:</strong>{' '}
+                                                    {prescription.dose_quantity}
+                                                </p>
+                                            )}
                                             <p>
                                                 <strong>Frequency:</strong>{' '}
                                                 {prescription.frequency}

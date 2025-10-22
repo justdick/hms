@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->prefix('lab')->name('lab.')->group(function () {
     Route::get('/', [LabController::class, 'index'])->middleware('lab.hide_details')->name('index');
     Route::get('/consultations/{consultation}', [LabController::class, 'showConsultation'])->middleware('lab.hide_details')->name('consultations.show');
+    Route::get('/ward-rounds/{wardRound}', [LabController::class, 'showWardRound'])->middleware('lab.hide_details')->name('ward-rounds.show');
     Route::get('/orders/{labOrder}', [LabController::class, 'show'])->middleware('lab.hide_details')->name('orders.show');
     Route::patch('/orders/{labOrder}/collect-sample', [LabController::class, 'collectSample'])->middleware('billing.enforce:laboratory')->name('orders.collect-sample');
     Route::patch('/orders/{labOrder}/start-processing', [LabController::class, 'startProcessing'])->middleware('billing.enforce:laboratory')->name('orders.start-processing');

@@ -31,10 +31,11 @@ interface Prescription {
     drug_id: number;
     drug: Drug;
     quantity: number;
-    dosage: string;
+    dose_quantity?: string;
     frequency: string;
     duration: string;
     status: string;
+    instructions?: string;
 }
 
 interface StockStatus {
@@ -139,7 +140,18 @@ export function PrescriptionReviewTable({
                                 {/* Instructions */}
                                 <TableCell>
                                     <div className="space-y-0.5 text-sm">
-                                        <div>{pd.prescription.dosage}</div>
+                                        {pd.prescription.dose_quantity && (
+                                            <div className="font-medium">
+                                                {pd.prescription.dose_quantity}{' '}
+                                                {pd.prescription.drug.unit_type === 'piece'
+                                                    ? pd.prescription.drug.form
+                                                    : pd.prescription.drug.unit_type === 'bottle' ||
+                                                      pd.prescription.drug.unit_type === 'vial'
+                                                    ? 'ml'
+                                                    : pd.prescription.drug.unit_type}
+                                                {' per dose'}
+                                            </div>
+                                        )}
                                         <div className="text-xs text-muted-foreground">
                                             {pd.prescription.frequency}
                                         </div>
@@ -333,7 +345,18 @@ export function MobileReviewCards({
                                 )}
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                                {pd.prescription.dosage} ·{' '}
+                                {pd.prescription.dose_quantity && (
+                                    <>
+                                        {pd.prescription.dose_quantity}{' '}
+                                        {pd.prescription.drug.unit_type === 'piece'
+                                            ? pd.prescription.drug.form
+                                            : pd.prescription.drug.unit_type === 'bottle' ||
+                                              pd.prescription.drug.unit_type === 'vial'
+                                            ? 'ml'
+                                            : pd.prescription.drug.unit_type}
+                                        {' per dose'} ·{' '}
+                                    </>
+                                )}
                                 {pd.prescription.frequency} ·{' '}
                                 {pd.prescription.duration}
                             </p>

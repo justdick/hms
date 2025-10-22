@@ -23,7 +23,6 @@ import {
     ArrowUpCircle,
     CheckCircle2,
     Edit2,
-    FileText,
     Loader2,
     MinusCircle,
     Plus,
@@ -54,7 +53,11 @@ interface Doctor {
 interface WardRound {
     id: number;
     progress_note: string;
-    patient_status: 'improving' | 'stable' | 'deteriorating' | 'discharge_ready';
+    patient_status:
+        | 'improving'
+        | 'stable'
+        | 'deteriorating'
+        | 'discharge_ready';
     clinical_impression?: string;
     plan?: string;
     round_datetime: string;

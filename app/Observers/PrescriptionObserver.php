@@ -16,8 +16,9 @@ class PrescriptionObserver
      */
     public function created(Prescription $prescription): void
     {
-        // Auto-create charge when prescription with drug is created
-        if ($prescription->drug_id && $prescription->isPrescribed()) {
+        // Auto-create charge when prescription with drug and quantity is created
+        // Skip if no quantity (ward rounds don't set quantity initially, it's set during pharmacy review)
+        if ($prescription->drug_id && $prescription->quantity && $prescription->isPrescribed()) {
             $this->billingService->createChargeForPrescription($prescription);
         }
     }

@@ -22,8 +22,8 @@ class WardRound extends Model
         'examination_findings',
         'assessment_notes',
         'plan_notes',
-        'patient_status',
         'round_datetime',
+        'status',
     ];
 
     protected function casts(): array
@@ -56,26 +56,6 @@ class WardRound extends Model
     public function diagnoses()
     {
         return $this->morphMany(AdmissionDiagnosis::class, 'source');
-    }
-
-    public function isImproving(): bool
-    {
-        return $this->patient_status === 'improving';
-    }
-
-    public function isStable(): bool
-    {
-        return $this->patient_status === 'stable';
-    }
-
-    public function isDeteriorating(): bool
-    {
-        return $this->patient_status === 'deteriorating';
-    }
-
-    public function isDischargeReady(): bool
-    {
-        return $this->patient_status === 'discharge_ready';
     }
 
     public function scopeRecent($query): void

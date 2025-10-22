@@ -45,10 +45,13 @@ interface Test {
 }
 
 export interface GroupedConsultation {
-    consultation_id: number;
+    orderable_type: 'consultation' | 'ward_round';
+    orderable_id: number;
+    consultation_id?: number; // For backward compatibility
     patient: Patient;
     patient_number: string;
-    chief_complaint: string;
+    context: string; // Presenting complaint or ward round context
+    chief_complaint?: string; // For backward compatibility
     ordered_at: string;
     test_count: number;
     tests: Test[];
@@ -309,13 +312,16 @@ export const groupedConsultationColumns: ColumnDef<GroupedConsultation>[] = [
         id: 'actions',
         enableHiding: false,
         cell: ({ row }) => {
-            const consultation = row.original;
+            const order = row.original;
+            // Link to the orderable-specific lab orders view
+            const href =
+                order.orderable_type === 'consultation'
+                    ? `/lab/consultations/${order.orderable_id}`
+                    : `/lab/ward-rounds/${order.orderable_id}`;
 
             return (
                 <Button size="sm" asChild>
-                    <Link
-                        href={`/lab/consultations/${consultation.consultation_id}`}
-                    >
+                    <Link href={href}>
                         <Eye className="mr-1 h-3 w-3" />
                         View All Tests
                     </Link>

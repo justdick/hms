@@ -8,14 +8,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Link } from '@inertiajs/react';
-import {
-    AlertCircle,
-    Bed,
-    Calendar,
-    FileText,
-    Pill,
-    Stethoscope,
-} from 'lucide-react';
+import { AlertCircle, Bed, Calendar, Pill, Stethoscope } from 'lucide-react';
 
 interface Patient {
     id: number;
@@ -165,7 +158,7 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                 <TableCell>
                                     <Link
                                         href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block text-sm font-mono text-gray-700 dark:text-gray-300"
+                                        className="block font-mono text-sm text-gray-700 dark:text-gray-300"
                                     >
                                         {admission.admission_number}
                                     </Link>
@@ -274,11 +267,12 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                                     </span>
                                                 </div>
                                             )}
-                                            {!vitalsOverdue && !hasPendingMeds && (
-                                                <span className="text-xs text-gray-400 dark:text-gray-600">
-                                                    -
-                                                </span>
-                                            )}
+                                            {!vitalsOverdue &&
+                                                !hasPendingMeds && (
+                                                    <span className="text-xs text-gray-400 dark:text-gray-600">
+                                                        -
+                                                    </span>
+                                                )}
                                         </div>
                                     </Link>
                                 </TableCell>

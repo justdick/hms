@@ -92,9 +92,6 @@ class ConsultationController extends Controller
 
         $consultation->load([
             'patientCheckin.patient',
-            'patientCheckin.patient.activeAdmission.ward',
-            'patientCheckin.patient.activeAdmission.latestVitalSigns',
-            'patientCheckin.patient.activeAdmission.latestWardRound.doctor',
             'patientCheckin.department',
             'patientCheckin.vitalSigns' => function ($query) {
                 $query->latest();
@@ -149,6 +146,8 @@ class ConsultationController extends Controller
             'family_history' => $patient->family_history ?? '',
             'social_history' => $patient->social_history ?? '',
         ];
+
+        // OPD consultations only - no admission context
 
         return Inertia::render('Consultation/Show', [
             'consultation' => $consultation,
@@ -348,9 +347,10 @@ class ConsultationController extends Controller
         $request->validate([
             'medication_name' => 'required|string|max:255',
             'drug_id' => 'nullable|exists:drugs,id',
-            'dosage' => 'nullable|string|max:100',
+            'dose_quantity' => 'nullable|string|max:50',
             'frequency' => 'required|string|max:100',
             'duration' => 'required|string|max:100',
+            'quantity_to_dispense' => 'nullable|integer|min:1',
             'instructions' => 'nullable|string|max:1000',
         ]);
 
@@ -358,9 +358,11 @@ class ConsultationController extends Controller
             'consultation_id' => $consultation->id,
             'medication_name' => $request->medication_name,
             'drug_id' => $request->drug_id,
-            'dosage' => $request->dosage ?? 'As directed',
+            'dose_quantity' => $request->dose_quantity,
             'frequency' => $request->frequency,
             'duration' => $request->duration,
+            'quantity' => $request->quantity_to_dispense, // Set for billing
+            'quantity_to_dispense' => $request->quantity_to_dispense, // Set for dispensing
             'instructions' => $request->instructions,
             'status' => 'prescribed',
         ]);

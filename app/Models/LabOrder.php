@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class LabOrder extends Model
 {
@@ -13,6 +14,8 @@ class LabOrder extends Model
 
     protected $fillable = [
         'consultation_id',
+        'orderable_type',
+        'orderable_id',
         'lab_service_id',
         'ordered_by',
         'ordered_at',
@@ -35,6 +38,11 @@ class LabOrder extends Model
             'status' => 'string',
             'priority' => 'string',
         ];
+    }
+
+    public function orderable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     public function consultation(): BelongsTo

@@ -52,7 +52,7 @@ export function StockIndicator({
                     {status.text}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                    {inStock} / {requested} available
+                    {inStock} in stock (need {requested})
                 </span>
             </div>
         </div>

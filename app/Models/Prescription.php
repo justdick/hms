@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Prescription extends Model
 {
@@ -15,11 +16,13 @@ class Prescription extends Model
 
     protected $fillable = [
         'consultation_id',
+        'prescribable_type',
+        'prescribable_id',
         'drug_id',
         'medication_name',
-        'dosage',
         'frequency',
         'duration',
+        'dose_quantity',
         'quantity',
         'quantity_to_dispense',
         'quantity_dispensed',
@@ -38,6 +41,11 @@ class Prescription extends Model
             'status' => 'string',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    public function prescribable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     public function consultation(): BelongsTo

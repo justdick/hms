@@ -12,7 +12,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { AlertCircle, Save } from 'lucide-react';
 import { useState } from 'react';
 
@@ -29,7 +29,7 @@ interface Prescription {
     drug_id: number;
     drug: Drug;
     quantity: number;
-    dosage: string;
+    dose_quantity?: string;
     frequency: string;
     duration: string;
     status: string;
@@ -79,9 +79,8 @@ export function ReviewPrescriptionsModal({
         })),
     );
 
-    const { data, setData, post, processing, errors } = useForm({
-        reviews: reviews,
-    });
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const updateReview = (
         index: number,
@@ -102,16 +101,50 @@ export function ReviewPrescriptionsModal({
         }
 
         setReviews(newReviews);
-        setData('reviews', newReviews);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/pharmacy/dispensing/patients/${patientId}/review`, {
-            onSuccess: () => {
-                onOpenChange(false);
-            },
+
+        // Clean up the data before submission - only include reason when needed
+        const cleanedReviews = reviews.map(review => {
+            const cleaned: any = {
+                prescription_id: review.prescription_id,
+                action: review.action,
+                quantity_to_dispense: review.quantity_to_dispense,
+            };
+
+            // Only include notes if not empty
+            if (review.notes) {
+                cleaned.notes = review.notes;
+            }
+
+            // Only include reason for external/cancel actions
+            if (review.action === 'external' || review.action === 'cancel') {
+                cleaned.reason = review.reason;
+            }
+
+            return cleaned;
         });
+
+        setProcessing(true);
+
+        // Submit with cleaned data using router
+        router.post(
+            `/pharmacy/dispensing/patients/${patientId}/review`,
+            { reviews: cleanedReviews },
+            {
+                onSuccess: () => {
+                    onOpenChange(false);
+                },
+                onError: (errors) => {
+                    setErrors(errors);
+                },
+                onFinish: () => {
+                    setProcessing(false);
+                },
+            }
+        );
     };
 
     return (

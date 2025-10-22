@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Vitals\VitalSignController;
+use App\Http\Controllers\Ward\BedAssignmentController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
 use App\Http\Controllers\Ward\NursingNoteController;
 use App\Http\Controllers\Ward\WardController;
@@ -25,6 +26,12 @@ Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(
 
 // Patient Admission Routes
 Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.')->group(function () {
+    // Bed Assignment
+    Route::get('/{admission}/bed-assignment', [BedAssignmentController::class, 'create'])->name('bed-assignment.create');
+    Route::post('/{admission}/bed-assignment', [BedAssignmentController::class, 'store'])->name('bed-assignment.store');
+    Route::put('/{admission}/bed-assignment', [BedAssignmentController::class, 'update'])->name('bed-assignment.update');
+    Route::delete('/{admission}/bed-assignment', [BedAssignmentController::class, 'destroy'])->name('bed-assignment.destroy');
+
     Route::post('/{admission}/vitals', [VitalSignController::class, 'storeForAdmission'])->name('vitals.store');
 
     // Nursing Notes
@@ -40,10 +47,28 @@ Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.
     Route::post('/{administration}/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
     Route::post('/{administration}/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
 
-    // Ward Rounds
+    // Ward Rounds (IPD Patient Reviews)
     Route::get('/{admission}/ward-rounds', [WardRoundController::class, 'index'])->name('ward-rounds.index');
     Route::get('/{admission}/ward-rounds/create', [WardRoundController::class, 'create'])->name('ward-rounds.create');
-    Route::post('/{admission}/ward-rounds', [WardRoundController::class, 'store'])->name('ward-rounds.store');
+    Route::get('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'show'])->name('ward-rounds.show');
+    Route::get('/{admission}/ward-rounds/{wardRound}/edit', [WardRoundController::class, 'edit'])->name('ward-rounds.edit');
+
+    // Auto-save consultation notes
+    Route::patch('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'autoSave'])->name('ward-rounds.auto-save');
+
+    // Immediately save diagnoses, prescriptions, and lab orders
+    Route::post('/{admission}/ward-rounds/{wardRound}/diagnoses', [WardRoundController::class, 'addDiagnosis'])->name('ward-rounds.diagnoses.store');
+    Route::delete('/{admission}/ward-rounds/{wardRound}/diagnoses/{diagnosis}', [WardRoundController::class, 'removeDiagnosis'])->name('ward-rounds.diagnoses.destroy');
+
+    Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions', [WardRoundController::class, 'addPrescription'])->name('ward-rounds.prescriptions.store');
+    Route::delete('/{admission}/ward-rounds/{wardRound}/prescriptions/{prescription}', [WardRoundController::class, 'removePrescription'])->name('ward-rounds.prescriptions.destroy');
+
+    Route::post('/{admission}/ward-rounds/{wardRound}/lab-orders', [WardRoundController::class, 'addLabOrder'])->name('ward-rounds.lab-orders.store');
+    Route::delete('/{admission}/ward-rounds/{wardRound}/lab-orders/{labOrder}', [WardRoundController::class, 'removeLabOrder'])->name('ward-rounds.lab-orders.destroy');
+
+    // Complete ward round (mark as completed)
+    Route::post('/{admission}/ward-rounds/{wardRound}/complete', [WardRoundController::class, 'complete'])->name('ward-rounds.complete');
+
     Route::put('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'update'])->name('ward-rounds.update');
     Route::delete('/{admission}/ward-rounds/{wardRound}', [WardRoundController::class, 'destroy'])->name('ward-rounds.destroy');
 });

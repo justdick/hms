@@ -8,7 +8,9 @@ class StoreWardRoundRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('ward_rounds.create');
+        // Authorization is handled by the controller's policy check
+        // Just verify user is authenticated
+        return $this->user() !== null;
     }
 
     public function rules(): array
@@ -23,22 +25,27 @@ class StoreWardRoundRequest extends FormRequest
             'history_presenting_complaint' => ['nullable', 'string', 'max:5000'],
             'on_direct_questioning' => ['nullable', 'string', 'max:2000'],
             'examination_findings' => ['nullable', 'string', 'max:5000'],
-            'assessment_notes' => ['required', 'string', 'min:10', 'max:5000'],
+            'assessment_notes' => ['nullable', 'string', 'max:5000'],
             'plan_notes' => ['nullable', 'string', 'max:5000'],
+            'follow_up_date' => ['nullable', 'date', 'after:today'],
 
-            // Patient status
-            'patient_status' => ['required', 'in:improving,stable,deteriorating,discharge_ready,critical'],
+            // Patient history fields
+            'past_medical_surgical_history' => ['nullable', 'string', 'max:10000'],
+            'drug_history' => ['nullable', 'string', 'max:10000'],
+            'family_history' => ['nullable', 'string', 'max:10000'],
+            'social_history' => ['nullable', 'string', 'max:10000'],
 
             // Lab orders
             'lab_orders' => ['nullable', 'array'],
-            'lab_orders.*.test_id' => ['required', 'exists:lab_tests,id'],
+            'lab_orders.*.test_id' => ['required', 'exists:lab_services,id'],
             'lab_orders.*.notes' => ['nullable', 'string', 'max:500'],
             'lab_orders.*.priority' => ['nullable', 'in:routine,urgent,stat'],
 
             // Prescriptions
             'prescriptions' => ['nullable', 'array'],
             'prescriptions.*.drug_id' => ['required', 'exists:drugs,id'],
-            'prescriptions.*.dosage' => ['required', 'string', 'max:100'],
+            'prescriptions.*.medication_name' => ['nullable', 'string', 'max:200'],
+            'prescriptions.*.dosage' => ['nullable', 'string', 'max:100'],
             'prescriptions.*.frequency' => ['required', 'string', 'max:100'],
             'prescriptions.*.route' => ['required', 'string', 'max:50'],
             'prescriptions.*.duration' => ['nullable', 'string', 'max:100'],
@@ -46,6 +53,7 @@ class StoreWardRoundRequest extends FormRequest
 
             // Diagnoses
             'diagnoses' => ['nullable', 'array'],
+            'diagnoses.*.diagnosis_id' => ['required', 'exists:diagnoses,id'],
             'diagnoses.*.icd_code' => ['required', 'string', 'max:20'],
             'diagnoses.*.icd_version' => ['required', 'in:10,11'],
             'diagnoses.*.diagnosis_name' => ['required', 'string', 'max:500'],
@@ -57,24 +65,19 @@ class StoreWardRoundRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'assessment_notes.required' => 'Clinical assessment is required.',
-            'assessment_notes.min' => 'Clinical assessment must be at least 10 characters.',
-            'assessment_notes.max' => 'Clinical assessment cannot exceed 5000 characters.',
-
-            'patient_status.required' => 'Patient status is required.',
-            'patient_status.in' => 'Invalid patient status.',
-
             'round_datetime.before_or_equal' => 'Ward round time cannot be in the future.',
+            'follow_up_date.after' => 'Follow-up date must be in the future.',
 
             'lab_orders.*.test_id.required' => 'Lab test is required.',
             'lab_orders.*.test_id.exists' => 'Invalid lab test selected.',
 
             'prescriptions.*.drug_id.required' => 'Drug is required.',
             'prescriptions.*.drug_id.exists' => 'Invalid drug selected.',
-            'prescriptions.*.dosage.required' => 'Dosage is required.',
             'prescriptions.*.frequency.required' => 'Frequency is required.',
             'prescriptions.*.route.required' => 'Route is required.',
 
+            'diagnoses.*.diagnosis_id.required' => 'Diagnosis is required.',
+            'diagnoses.*.diagnosis_id.exists' => 'Invalid diagnosis selected.',
             'diagnoses.*.icd_code.required' => 'ICD code is required.',
             'diagnoses.*.diagnosis_name.required' => 'Diagnosis name is required.',
             'diagnoses.*.icd_version.in' => 'ICD version must be 10 or 11.',

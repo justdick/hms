@@ -15,7 +15,7 @@ import {
 } from './grouped-consultations-columns';
 import { LabOrdersDataTable } from './lab-orders-data-table';
 
-interface PaginatedConsultations {
+interface PaginatedOrders {
     data: GroupedConsultation[];
     current_page: number;
     last_page: number;
@@ -31,11 +31,11 @@ interface Stats {
 }
 
 interface Props {
-    groupedConsultations: PaginatedConsultations;
+    groupedOrders: PaginatedOrders;
     stats: Stats;
 }
 
-export default function LabIndex({ groupedConsultations, stats }: Props) {
+export default function LabIndex({ groupedOrders, stats }: Props) {
     return (
         <AppLayout breadcrumbs={[{ title: 'Laboratory', href: '/lab' }]}>
             <Head title="Laboratory Dashboard" />
@@ -129,18 +129,17 @@ export default function LabIndex({ groupedConsultations, stats }: Props) {
                     </Card>
                 </div>
 
-                {/* Grouped Consultations DataTable */}
+                {/* Grouped Orders DataTable */}
                 <Card>
                     <CardHeader>
                         <CardTitle>
-                            Patient Lab Orders ({groupedConsultations.total}{' '}
-                            consultations)
+                            Patient Lab Orders ({groupedOrders.total} orders)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <LabOrdersDataTable
                             columns={groupedConsultationColumns}
-                            data={groupedConsultations.data}
+                            data={groupedOrders.data}
                         />
                     </CardContent>
                 </Card>

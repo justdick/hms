@@ -124,7 +124,6 @@ interface Props {
 }
 
 export default function WardShow({ ward, stats }: Props) {
-
     const getBedStatusColor = (status: string) => {
         const colors = {
             available:

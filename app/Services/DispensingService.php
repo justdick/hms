@@ -105,8 +105,12 @@ class DispensingService
             throw new \Exception('Payment required before dispensing. Please ensure the patient has paid for this medication.');
         }
 
-        // Eager load relationships
-        $prescription->load('consultation.patientCheckin');
+        // Eager load relationships based on prescription type
+        if ($prescription->consultation_id) {
+            $prescription->load('consultation.patientCheckin');
+        } else {
+            $prescription->load('prescribable.patientAdmission.patient');
+        }
 
         return DB::transaction(function () use ($prescription, $data, $dispenser) {
             $quantityToDispense = $prescription->quantity_to_dispense ?? $prescription->quantity;
@@ -118,10 +122,13 @@ class DispensingService
                 throw new \Exception("Insufficient stock. Still need {$stockResult['remaining_needed']} more units.");
             }
 
+            // Get patient ID based on prescription type
+            $patientId = $this->getPatientIdFromPrescription($prescription);
+
             // Create dispensing record
             $dispensing = Dispensing::create([
                 'prescription_id' => $prescription->id,
-                'patient_id' => $prescription->consultation->patientCheckin->patient_id,
+                'patient_id' => $patientId,
                 'drug_id' => $prescription->drug_id,
                 'quantity' => $quantityToDispense,
                 'batch_info' => json_encode($stockResult['deducted']),
@@ -150,8 +157,12 @@ class DispensingService
             throw new \Exception('Payment required before dispensing.');
         }
 
-        // Eager load relationships
-        $prescription->load('consultation.patientCheckin');
+        // Eager load relationships based on prescription type
+        if ($prescription->consultation_id) {
+            $prescription->load('consultation.patientCheckin');
+        } else {
+            $prescription->load('prescribable.patientAdmission.patient');
+        }
 
         return DB::transaction(function () use ($prescription, $quantity, $data, $dispenser) {
             // Deduct stock
@@ -161,10 +172,13 @@ class DispensingService
                 throw new \Exception("Insufficient stock. Still need {$stockResult['remaining_needed']} more units.");
             }
 
+            // Get patient ID based on prescription type
+            $patientId = $this->getPatientIdFromPrescription($prescription);
+
             // Create dispensing record
             $dispensing = Dispensing::create([
                 'prescription_id' => $prescription->id,
-                'patient_id' => $prescription->consultation->patientCheckin->patient_id,
+                'patient_id' => $patientId,
                 'drug_id' => $prescription->drug_id,
                 'quantity' => $quantity,
                 'batch_info' => json_encode($stockResult['deducted']),
@@ -187,6 +201,24 @@ class DispensingService
     }
 
     /**
+     * Get patient ID from prescription, handling both consultation and ward round prescriptions.
+     */
+    protected function getPatientIdFromPrescription(Prescription $prescription): int
+    {
+        // If prescription has a direct consultation relationship
+        if ($prescription->consultation_id && $prescription->consultation) {
+            return $prescription->consultation->patientCheckin->patient_id;
+        }
+
+        // If prescription belongs to a ward round (polymorphic relationship)
+        if ($prescription->prescribable_type === 'App\Models\WardRound' && $prescription->prescribable) {
+            return $prescription->prescribable->patientAdmission->patient_id;
+        }
+
+        throw new \Exception('Unable to determine patient ID for prescription');
+    }
+
+    /**
      * Validate if prescription can be dispensed based on payment status.
      */
     public function validatePaymentStatus(Prescription $prescription): bool
@@ -199,13 +231,28 @@ class DispensingService
      */
     public function getPrescriptionsForReview(int $patientCheckinId): array
     {
-        $prescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
+        // Get prescriptions from consultations
+        $consultationPrescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
             $query->where('patient_checkin_id', $patientCheckinId);
         })
             ->with(['drug', 'charge', 'consultation'])
             ->where('status', 'prescribed')
             ->whereNotNull('drug_id')
             ->get();
+
+        // Get prescriptions from ward rounds for the same patient
+        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientCheckinId) {
+            $query->whereHas('patientAdmission.consultation', function ($q) use ($patientCheckinId) {
+                $q->where('patient_checkin_id', $patientCheckinId);
+            });
+        })
+            ->with(['drug', 'charge', 'prescribable.patientAdmission.consultation'])
+            ->where('status', 'prescribed')
+            ->whereNotNull('drug_id')
+            ->get();
+
+        // Merge both collections
+        $prescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
 
         return $prescriptions->map(function ($prescription) {
             $stockStatus = $this->stockService->checkAvailability($prescription->drug, $prescription->quantity);
@@ -224,13 +271,28 @@ class DispensingService
      */
     public function getPrescriptionsForDispensing(int $patientCheckinId): array
     {
-        $prescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
+        // Get prescriptions from consultations
+        $consultationPrescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
             $query->where('patient_checkin_id', $patientCheckinId);
         })
             ->with(['drug', 'charge', 'reviewedBy', 'dispensing'])
             ->where('status', 'reviewed')
             ->whereNotNull('drug_id')
             ->get();
+
+        // Get prescriptions from ward rounds for the same patient
+        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientCheckinId) {
+            $query->whereHas('patientAdmission.consultation', function ($q) use ($patientCheckinId) {
+                $q->where('patient_checkin_id', $patientCheckinId);
+            });
+        })
+            ->with(['drug', 'charge', 'reviewedBy', 'dispensing', 'prescribable.patientAdmission.consultation'])
+            ->where('status', 'reviewed')
+            ->whereNotNull('drug_id')
+            ->get();
+
+        // Merge both collections
+        $prescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
 
         return $prescriptions->map(function ($prescription) {
             return [

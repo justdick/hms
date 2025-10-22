@@ -22,8 +22,11 @@ class PharmacyBillingService
 
         $user = Auth::user();
 
+        // Get patient_checkin_id based on prescription type
+        $patientCheckinId = $this->getPatientCheckinId($prescription);
+
         return Charge::create([
-            'patient_checkin_id' => $prescription->consultation->patient_checkin_id,
+            'patient_checkin_id' => $patientCheckinId,
             'prescription_id' => $prescription->id,
             'service_type' => 'pharmacy',
             'service_code' => $drug->code,
@@ -36,6 +39,24 @@ class PharmacyBillingService
             'created_by_id' => $user?->id,
             'notes' => "Auto-generated from prescription #{$prescription->id}",
         ]);
+    }
+
+    /**
+     * Get patient_checkin_id from prescription, handling both consultation and ward round prescriptions.
+     */
+    protected function getPatientCheckinId(Prescription $prescription): ?int
+    {
+        // If prescription has a direct consultation relationship
+        if ($prescription->consultation_id && $prescription->consultation) {
+            return $prescription->consultation->patient_checkin_id;
+        }
+
+        // If prescription belongs to a ward round (polymorphic relationship)
+        if ($prescription->prescribable_type === 'App\Models\WardRound' && $prescription->prescribable) {
+            return $prescription->prescribable->patientAdmission?->consultation?->patient_checkin_id;
+        }
+
+        return null;
     }
 
     /**

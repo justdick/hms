@@ -38,7 +38,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     Activity,
-    AlertCircle,
     ArrowRightLeft,
     Bed,
     Building,
@@ -113,7 +112,6 @@ interface Drug {
 interface Prescription {
     id: number;
     medication_name: string;
-    dosage: string;
     frequency: string;
     duration: string;
     instructions?: string;
@@ -249,7 +247,6 @@ export default function ConsultationShow({
 }: Props) {
     const [activeTab, setActiveTab] = useState('notes');
     const [isSaving, setIsSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -297,13 +294,7 @@ export default function ConsultationShow({
         instructions: '',
     });
 
-    const {
-        data: diagnosisData,
-        setData: setDiagnosisData,
-        post: postDiagnosis,
-        processing: diagnosisProcessing,
-        reset: resetDiagnosis,
-    } = useForm({
+    const { processing: diagnosisProcessing, reset: resetDiagnosis } = useForm({
         diagnosis_id: null as number | null,
         type: 'provisional' as 'provisional' | 'principal',
     });
@@ -352,7 +343,6 @@ export default function ConsultationShow({
             onSuccess: () => {
                 setIsSaving(false);
                 setHasUnsavedChanges(false);
-                setLastSaved(new Date());
             },
             onError: () => {
                 setIsSaving(false);
@@ -413,7 +403,6 @@ export default function ConsultationShow({
             onSuccess: () => {
                 setIsSaving(false);
                 setHasUnsavedChanges(false);
-                setLastSaved(new Date());
             },
             onError: () => {
                 setIsSaving(false);
@@ -568,19 +557,6 @@ export default function ConsultationShow({
         return age;
     };
 
-    const formatTimeSince = (date: Date) => {
-        const seconds = Math.floor(
-            (new Date().getTime() - date.getTime()) / 1000,
-        );
-
-        if (seconds < 60) return 'just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        return 'today';
-    };
-
     const getStatusBadge = (status: string) => {
         const variants = {
             in_progress: 'default',
@@ -602,19 +578,19 @@ export default function ConsultationShow({
     const vitalSigns = consultation.patient_checkin.vital_signs || [];
     const latestVitals = vitalSigns[0];
 
+    const breadcrumbs = [
+        { title: 'Consultation', href: '/consultation' },
+        {
+            title: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`,
+            href: '',
+        },
+    ];
+
+    const pageTitle = `Consultation - ${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`;
+
     return (
-        <AppLayout
-            breadcrumbs={[
-                { title: 'Consultation', href: '/consultation' },
-                {
-                    title: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`,
-                    href: '',
-                },
-            ]}
-        >
-            <Head
-                title={`Consultation - ${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`}
-            />
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title={pageTitle} />
 
             <div className="space-y-6">
                 {/* Header - Compact */}
@@ -726,8 +702,8 @@ export default function ConsultationShow({
                                                         consultation
                                                             .patient_checkin
                                                             .patient
-                                                            .active_admission.ward
-                                                            .name
+                                                            .active_admission
+                                                            .ward.name
                                                     }
                                                 </span>
                                             </div>
@@ -771,7 +747,8 @@ export default function ConsultationShow({
                                         </div>
                                     </div>
                                     {consultation.patient_checkin.patient
-                                        .active_admission.latest_ward_round?.[0] && (
+                                        .active_admission
+                                        .latest_ward_round?.[0] && (
                                         <div className="mt-3 rounded border border-blue-200 bg-white p-3 dark:border-blue-800 dark:bg-blue-900">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -804,7 +781,8 @@ export default function ConsultationShow({
                                             <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
                                                 {
                                                     consultation.patient_checkin
-                                                        .patient.active_admission
+                                                        .patient
+                                                        .active_admission
                                                         .latest_ward_round[0]
                                                         ?.notes
                                                 }
@@ -930,124 +908,127 @@ export default function ConsultationShow({
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-md">
-                                        <DialogHeader>
-                                            <DialogTitle>
-                                                Admit Patient
-                                            </DialogTitle>
-                                        </DialogHeader>
-                                        <form
-                                            onSubmit={handleAdmissionSubmit}
-                                            className="space-y-4"
-                                        >
-                                            <div>
-                                                <Label htmlFor="ward_id">
-                                                    Select Ward
-                                                </Label>
-                                                <Select
-                                                    value={
-                                                        admissionData.ward_id
-                                                    }
-                                                    onValueChange={
-                                                        handleWardChange
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Choose a ward" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableWards.map(
-                                                            (ward) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        ward.id
-                                                                    }
-                                                                    value={ward.id.toString()}
-                                                                >
-                                                                    {ward.name}{' '}
-                                                                    (
-                                                                    {
-                                                                        ward.available_beds
-                                                                    }{' '}
-                                                                    beds
-                                                                    available)
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                            <DialogHeader>
+                                                <DialogTitle>
+                                                    Admit Patient
+                                                </DialogTitle>
+                                            </DialogHeader>
+                                            <form
+                                                onSubmit={handleAdmissionSubmit}
+                                                className="space-y-4"
+                                            >
+                                                <div>
+                                                    <Label htmlFor="ward_id">
+                                                        Select Ward
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            admissionData.ward_id
+                                                        }
+                                                        onValueChange={
+                                                            handleWardChange
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Choose a ward" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {availableWards.map(
+                                                                (ward) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            ward.id
+                                                                        }
+                                                                        value={ward.id.toString()}
+                                                                    >
+                                                                        {
+                                                                            ward.name
+                                                                        }{' '}
+                                                                        (
+                                                                        {
+                                                                            ward.available_beds
+                                                                        }{' '}
+                                                                        beds
+                                                                        available)
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
 
-                                            <div>
-                                                <Label htmlFor="admission_reason">
-                                                    Admission Reason
-                                                </Label>
-                                                <Textarea
-                                                    id="admission_reason"
-                                                    placeholder="Reason for admission..."
-                                                    value={
-                                                        admissionData.admission_reason
-                                                    }
-                                                    onChange={(e) =>
-                                                        setAdmissionData(
-                                                            'admission_reason',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    required
-                                                    rows={3}
-                                                />
-                                            </div>
+                                                <div>
+                                                    <Label htmlFor="admission_reason">
+                                                        Admission Reason
+                                                    </Label>
+                                                    <Textarea
+                                                        id="admission_reason"
+                                                        placeholder="Reason for admission..."
+                                                        value={
+                                                            admissionData.admission_reason
+                                                        }
+                                                        onChange={(e) =>
+                                                            setAdmissionData(
+                                                                'admission_reason',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        required
+                                                        rows={3}
+                                                    />
+                                                </div>
 
-                                            <div>
-                                                <Label htmlFor="admission_notes">
-                                                    Admission Notes (Optional)
-                                                </Label>
-                                                <Textarea
-                                                    id="admission_notes"
-                                                    placeholder="Additional notes..."
-                                                    value={
-                                                        admissionData.admission_notes
-                                                    }
-                                                    onChange={(e) =>
-                                                        setAdmissionData(
-                                                            'admission_notes',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    rows={2}
-                                                />
-                                            </div>
+                                                <div>
+                                                    <Label htmlFor="admission_notes">
+                                                        Admission Notes
+                                                        (Optional)
+                                                    </Label>
+                                                    <Textarea
+                                                        id="admission_notes"
+                                                        placeholder="Additional notes..."
+                                                        value={
+                                                            admissionData.admission_notes
+                                                        }
+                                                        onChange={(e) =>
+                                                            setAdmissionData(
+                                                                'admission_notes',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        rows={2}
+                                                    />
+                                                </div>
 
-                                            <div className="flex gap-2 pt-4">
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        setShowAdmissionModal(
-                                                            false,
-                                                        )
-                                                    }
-                                                    className="flex-1"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    type="submit"
-                                                    disabled={
-                                                        admissionProcessing ||
-                                                        !admissionData.ward_id ||
-                                                        !admissionData.admission_reason
-                                                    }
-                                                    className="flex-1 bg-green-600 hover:bg-green-700"
-                                                >
-                                                    {admissionProcessing
-                                                        ? 'Admitting...'
-                                                        : 'Admit Patient'}
-                                                </Button>
-                                            </div>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
+                                                <div className="flex gap-2 pt-4">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setShowAdmissionModal(
+                                                                false,
+                                                            )
+                                                        }
+                                                        className="flex-1"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={
+                                                            admissionProcessing ||
+                                                            !admissionData.ward_id ||
+                                                            !admissionData.admission_reason
+                                                        }
+                                                        className="flex-1 bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        {admissionProcessing
+                                                            ? 'Admitting...'
+                                                            : 'Admit Patient'}
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
                                 )}
 
                                 <Dialog
@@ -1241,35 +1222,41 @@ export default function ConsultationShow({
 
                     {/* Medical History & Consultation Notes Tab */}
                     <TabsContent value="notes">
-                        <MedicalHistoryNotes
-                            initialData={{
-                                presenting_complaint: data.presenting_complaint,
-                                history_presenting_complaint:
-                                    data.history_presenting_complaint,
-                                on_direct_questioning:
-                                    data.on_direct_questioning,
-                                examination_findings: data.examination_findings,
-                                assessment_notes: data.assessment_notes,
-                                plan_notes: data.plan_notes,
-                                follow_up_date: data.follow_up_date,
-                            }}
-                            patientHistories={{
-                                past_medical_surgical_history:
-                                    data.past_medical_surgical_history,
-                                drug_history: data.drug_history,
-                                family_history: data.family_history,
-                                social_history: data.social_history,
-                            }}
-                            onDataChange={(newData) => {
-                                Object.keys(newData).forEach((key) => {
-                                    handleDataChange(key, newData[key]);
-                                });
-                            }}
-                            onPatientHistoryUpdate={handlePatientHistoryUpdate}
-                            onSubmit={handleSubmit}
-                            processing={processing || isSaving}
-                            status={consultation.status}
-                        />
+                        <div className="space-y-6">
+                            <MedicalHistoryNotes
+                                initialData={{
+                                    presenting_complaint:
+                                        data.presenting_complaint,
+                                    history_presenting_complaint:
+                                        data.history_presenting_complaint,
+                                    on_direct_questioning:
+                                        data.on_direct_questioning,
+                                    examination_findings:
+                                        data.examination_findings,
+                                    assessment_notes: data.assessment_notes,
+                                    plan_notes: data.plan_notes,
+                                    follow_up_date: data.follow_up_date,
+                                }}
+                                patientHistories={{
+                                    past_medical_surgical_history:
+                                        data.past_medical_surgical_history,
+                                    drug_history: data.drug_history,
+                                    family_history: data.family_history,
+                                    social_history: data.social_history,
+                                }}
+                                onDataChange={(newData) => {
+                                    Object.keys(newData).forEach((key) => {
+                                        handleDataChange(key, newData[key]);
+                                    });
+                                }}
+                                onPatientHistoryUpdate={
+                                    handlePatientHistoryUpdate
+                                }
+                                onSubmit={handleSubmit}
+                                processing={processing || isSaving}
+                                status={consultation.status}
+                            />
+                        </div>
                     </TabsContent>
 
                     {/* Vitals Tab */}
@@ -1461,221 +1448,237 @@ export default function ConsultationShow({
 
                     {/* Diagnosis Tab */}
                     <TabsContent value="diagnosis">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Diagnoses</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <DiagnosisFormSection
-                                    diagnoses={availableDiagnoses}
-                                    consultationDiagnoses={
-                                        consultation.diagnoses
-                                    }
-                                    onAdd={handleDiagnosisAdd}
-                                    onDelete={(id) =>
-                                        setDeleteDialogState({
-                                            open: true,
-                                            type: 'diagnosis',
-                                            id,
-                                        })
-                                    }
-                                    processing={diagnosisProcessing}
-                                    consultationStatus={consultation.status}
-                                />
-                            </CardContent>
-                        </Card>
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Diagnoses</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <DiagnosisFormSection
+                                        diagnoses={availableDiagnoses}
+                                        consultationDiagnoses={
+                                            consultation.diagnoses
+                                        }
+                                        onAdd={handleDiagnosisAdd}
+                                        onDelete={(id) =>
+                                            setDeleteDialogState({
+                                                open: true,
+                                                type: 'diagnosis',
+                                                id,
+                                            })
+                                        }
+                                        processing={diagnosisProcessing}
+                                        consultationStatus={consultation.status}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
 
                     {/* Prescriptions Tab */}
                     <TabsContent value="prescriptions">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Prescriptions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <PrescriptionFormSection
-                                    drugs={availableDrugs}
-                                    prescriptions={consultation.prescriptions}
-                                    prescriptionData={prescriptionData}
-                                    setPrescriptionData={setPrescriptionData}
-                                    onSubmit={handlePrescriptionSubmit}
-                                    onDelete={(id) =>
-                                        setDeleteDialogState({
-                                            open: true,
-                                            type: 'prescription',
-                                            id,
-                                        })
-                                    }
-                                    processing={prescriptionProcessing}
-                                    consultationStatus={consultation.status}
-                                />
-                            </CardContent>
-                        </Card>
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Prescriptions</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <PrescriptionFormSection
+                                        drugs={availableDrugs}
+                                        prescriptions={
+                                            consultation.prescriptions
+                                        }
+                                        prescriptionData={prescriptionData}
+                                        setPrescriptionData={
+                                            setPrescriptionData
+                                        }
+                                        onSubmit={handlePrescriptionSubmit}
+                                        onDelete={(id) =>
+                                            setDeleteDialogState({
+                                                open: true,
+                                                type: 'prescription',
+                                                id,
+                                            })
+                                        }
+                                        processing={prescriptionProcessing}
+                                        consultationStatus={consultation.status}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
 
                     {/* Lab Orders Tab */}
                     <TabsContent value="orders">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                <CardTitle>Laboratory Orders</CardTitle>
-                                {consultation.status === 'in_progress' && (
-                                    <Dialog
-                                        open={showLabOrderDialog}
-                                        onOpenChange={setShowLabOrderDialog}
-                                    >
-                                        <DialogTrigger asChild>
-                                            <Button>
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Order Lab Test
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-md">
-                                            <DialogHeader>
-                                                <DialogTitle>
-                                                    Order Laboratory Test
-                                                </DialogTitle>
-                                            </DialogHeader>
-                                            <form
-                                                onSubmit={handleLabOrderSubmit}
-                                                className="space-y-4"
-                                            >
-                                                <div>
-                                                    <Label htmlFor="lab_service">
-                                                        Select Lab Test
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            labOrderData.lab_service_id
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            setLabOrderData(
-                                                                'lab_service_id',
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                    <CardTitle>Laboratory Orders</CardTitle>
+                                    {consultation.status === 'in_progress' && (
+                                        <Dialog
+                                            open={showLabOrderDialog}
+                                            onOpenChange={setShowLabOrderDialog}
+                                        >
+                                            <DialogTrigger asChild>
+                                                <Button>
+                                                    <Plus className="mr-2 h-4 w-4" />
+                                                    Order Lab Test
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle>
+                                                        Order Laboratory Test
+                                                    </DialogTitle>
+                                                </DialogHeader>
+                                                <form
+                                                    onSubmit={
+                                                        handleLabOrderSubmit
+                                                    }
+                                                    className="space-y-4"
+                                                >
+                                                    <div>
+                                                        <Label htmlFor="lab_service">
+                                                            Select Lab Test
+                                                        </Label>
+                                                        <Select
+                                                            value={
+                                                                labOrderData.lab_service_id
+                                                            }
+                                                            onValueChange={(
                                                                 value,
-                                                            )
-                                                        }
-                                                        required
-                                                    >
-                                                        <SelectTrigger id="lab_service">
-                                                            <SelectValue placeholder="Choose a lab test" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {labServices.map(
-                                                                (service) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            service.id
-                                                                        }
-                                                                        value={service.id.toString()}
-                                                                    >
-                                                                        {
-                                                                            service.name
-                                                                        }{' '}
-                                                                        - $
-                                                                        {
-                                                                            service.price
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                                            ) =>
+                                                                setLabOrderData(
+                                                                    'lab_service_id',
+                                                                    value,
+                                                                )
+                                                            }
+                                                            required
+                                                        >
+                                                            <SelectTrigger id="lab_service">
+                                                                <SelectValue placeholder="Choose a lab test" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {labServices.map(
+                                                                    (
+                                                                        service,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                service.id
+                                                                            }
+                                                                            value={service.id.toString()}
+                                                                        >
+                                                                            {
+                                                                                service.name
+                                                                            }{' '}
+                                                                            - $
+                                                                            {
+                                                                                service.price
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
 
-                                                <div>
-                                                    <Label htmlFor="priority">
-                                                        Priority
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            labOrderData.priority
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            setLabOrderData(
-                                                                'priority',
+                                                    <div>
+                                                        <Label htmlFor="priority">
+                                                            Priority
+                                                        </Label>
+                                                        <Select
+                                                            value={
+                                                                labOrderData.priority
+                                                            }
+                                                            onValueChange={(
                                                                 value,
-                                                            )
-                                                        }
-                                                        required
-                                                    >
-                                                        <SelectTrigger id="priority">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="routine">
-                                                                Routine
-                                                            </SelectItem>
-                                                            <SelectItem value="urgent">
-                                                                Urgent
-                                                            </SelectItem>
-                                                            <SelectItem value="stat">
-                                                                STAT (Immediate)
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                                            ) =>
+                                                                setLabOrderData(
+                                                                    'priority',
+                                                                    value,
+                                                                )
+                                                            }
+                                                            required
+                                                        >
+                                                            <SelectTrigger id="priority">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="routine">
+                                                                    Routine
+                                                                </SelectItem>
+                                                                <SelectItem value="urgent">
+                                                                    Urgent
+                                                                </SelectItem>
+                                                                <SelectItem value="stat">
+                                                                    STAT
+                                                                    (Immediate)
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
 
-                                                <div>
-                                                    <Label htmlFor="special_instructions">
-                                                        Special Instructions
-                                                        (Optional)
-                                                    </Label>
-                                                    <Textarea
-                                                        id="special_instructions"
-                                                        placeholder="Any special instructions for the lab..."
-                                                        value={
-                                                            labOrderData.special_instructions
-                                                        }
-                                                        onChange={(e) =>
-                                                            setLabOrderData(
-                                                                'special_instructions',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        rows={3}
-                                                    />
-                                                </div>
+                                                    <div>
+                                                        <Label htmlFor="special_instructions">
+                                                            Special Instructions
+                                                            (Optional)
+                                                        </Label>
+                                                        <Textarea
+                                                            id="special_instructions"
+                                                            placeholder="Any special instructions for the lab..."
+                                                            value={
+                                                                labOrderData.special_instructions
+                                                            }
+                                                            onChange={(e) =>
+                                                                setLabOrderData(
+                                                                    'special_instructions',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            rows={3}
+                                                        />
+                                                    </div>
 
-                                                <div className="flex gap-2 pt-4">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            setShowLabOrderDialog(
-                                                                false,
-                                                            )
-                                                        }
-                                                        className="flex-1"
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={
-                                                            labOrderProcessing ||
-                                                            !labOrderData.lab_service_id
-                                                        }
-                                                        className="flex-1"
-                                                    >
-                                                        {labOrderProcessing
-                                                            ? 'Ordering...'
-                                                            : 'Order Test'}
-                                                    </Button>
-                                                </div>
-                                            </form>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
-                            </CardHeader>
-                            <CardContent>
-                                <ConsultationLabOrdersTable
-                                    labOrders={consultation.lab_orders}
-                                />
-                            </CardContent>
-                        </Card>
+                                                    <div className="flex gap-2 pt-4">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                setShowLabOrderDialog(
+                                                                    false,
+                                                                )
+                                                            }
+                                                            className="flex-1"
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                        <Button
+                                                            type="submit"
+                                                            disabled={
+                                                                labOrderProcessing ||
+                                                                !labOrderData.lab_service_id
+                                                            }
+                                                            className="flex-1"
+                                                        >
+                                                            {labOrderProcessing
+                                                                ? 'Ordering...'
+                                                                : 'Order Test'}
+                                                        </Button>
+                                                    </div>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
+                                </CardHeader>
+                                <CardContent>
+                                    <ConsultationLabOrdersTable
+                                        labOrders={consultation.lab_orders}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
                 </Tabs>
             </div>

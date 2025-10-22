@@ -3,48 +3,62 @@
 namespace App\Http\Controllers\Ward;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bed;
 use App\Models\PatientAdmission;
-use App\Models\Ward;
+use App\Models\Ward as WardModel;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class WardPatientController extends Controller
 {
-    public function show(Ward $ward, PatientAdmission $admission)
+    public function show(Request $request, WardModel $ward, PatientAdmission $admission)
     {
         // Ensure the admission belongs to this ward
         if ($admission->ward_id !== $ward->id && $admission->bed?->ward_id !== $ward->id) {
             abort(404);
         }
 
-        // Load all necessary relationships
+        // Load admission with all required relationships for PatientShow
         $admission->load([
-            'patient:id,patient_number,first_name,last_name,date_of_birth,gender,phone_number',
-            'bed:id,ward_id,bed_number,status,type',
-            'ward:id,name,code',
-            'consultation.doctor:id,name',
+            'patient',
+            'bed',
+            'ward',
+            'consultation.doctor',
             'vitalSigns' => function ($query) {
-                $query->latest('recorded_at')
-                    ->with('recordedBy:id,name');
+                $query->latest()->with('recordedBy:id,name');
             },
             'medicationAdministrations' => function ($query) {
-                $query->latest('scheduled_time')
-                    ->with([
-                        'prescription.drug:id,name,strength,form',
-                        'administeredBy:id,name',
-                    ]);
+                $query->with(['prescription.drug', 'administeredBy:id,name'])
+                    ->orderBy('scheduled_time', 'desc');
             },
             'nursingNotes' => function ($query) {
-                $query->latest('created_at')
-                    ->with('createdBy:id,name');
+                $query->with('nurse:id,name')->latest();
             },
             'wardRounds' => function ($query) {
-                $query->latest('created_at')
-                    ->with('doctor:id,name');
+                $query->with('doctor:id,name')
+                    ->orderBy('round_datetime', 'desc')
+                    ->orderBy('id', 'desc');
             },
         ]);
 
+        // Get available beds for bed assignment modal
+        $availableBeds = Bed::query()
+            ->where('ward_id', $ward->id)
+            ->available()
+            ->get();
+
+        $allBeds = Bed::query()
+            ->where('ward_id', $ward->id)
+            ->where('is_active', true)
+            ->with('currentAdmission.patient:id,first_name,last_name')
+            ->orderBy('bed_number')
+            ->get();
+
         return Inertia::render('Ward/PatientShow', [
             'admission' => $admission,
+            'availableBeds' => $availableBeds,
+            'allBeds' => $allBeds,
+            'hasAvailableBeds' => $availableBeds->isNotEmpty(),
         ]);
     }
 }

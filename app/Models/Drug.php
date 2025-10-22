@@ -22,6 +22,7 @@ class Drug extends Model
         'description',
         'unit_price',
         'unit_type',
+        'bottle_size',
         'minimum_stock_level',
         'maximum_stock_level',
         'is_active',

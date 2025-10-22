@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Consultation extends Model
 {
@@ -68,9 +69,9 @@ class Consultation extends Model
         return $this->hasMany(Prescription::class);
     }
 
-    public function labOrders(): HasMany
+    public function labOrders(): MorphMany
     {
-        return $this->hasMany(LabOrder::class);
+        return $this->morphMany(LabOrder::class, 'orderable');
     }
 
     public function patientAdmission(): HasOne

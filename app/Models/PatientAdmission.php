@@ -17,6 +17,10 @@ class PatientAdmission extends Model
         'patient_id',
         'consultation_id',
         'bed_id',
+        'bed_assigned_by_id',
+        'bed_assigned_at',
+        'is_overflow_patient',
+        'overflow_notes',
         'ward_id',
         'status',
         'admission_reason',
@@ -34,6 +38,8 @@ class PatientAdmission extends Model
             'expected_discharge_date' => 'date',
             'admitted_at' => 'datetime',
             'discharged_at' => 'datetime',
+            'bed_assigned_at' => 'datetime',
+            'is_overflow_patient' => 'boolean',
             'status' => 'string',
         ];
     }
@@ -61,6 +67,11 @@ class PatientAdmission extends Model
     public function dischargedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'discharged_by_id');
+    }
+
+    public function bedAssignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'bed_assigned_by_id');
     }
 
     public function vitalSigns(): HasMany
@@ -115,6 +126,11 @@ class PatientAdmission extends Model
         return $this->consultation();
     }
 
+    public function wardRoundConsultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class, 'admission_id');
+    }
+
     public function scopeActive($query): void
     {
         $query->where('status', 'admitted');
@@ -137,6 +153,48 @@ class PatientAdmission extends Model
         if ($this->bed) {
             $this->bed->markAsAvailable();
         }
+    }
+
+    public function assignBed(Bed $bed, User $assignedBy, ?string $notes = null): void
+    {
+        $this->update([
+            'bed_id' => $bed->id,
+            'bed_assigned_by_id' => $assignedBy->id,
+            'bed_assigned_at' => now(),
+            'is_overflow_patient' => false,
+            'overflow_notes' => $notes,
+        ]);
+
+        $bed->markAsOccupied();
+    }
+
+    public function changeBed(Bed $newBed, User $assignedBy, ?string $notes = null): void
+    {
+        // Free up the old bed
+        if ($this->bed) {
+            $this->bed->markAsAvailable();
+        }
+
+        // Assign the new bed
+        $this->assignBed($newBed, $assignedBy, $notes);
+    }
+
+    public function markAsOverflow(?string $notes = null): void
+    {
+        $this->update([
+            'is_overflow_patient' => true,
+            'overflow_notes' => $notes,
+        ]);
+    }
+
+    public function scopeOverflowPatients($query): void
+    {
+        $query->where('is_overflow_patient', true)->where('status', 'admitted');
+    }
+
+    public function scopeWithoutBed($query): void
+    {
+        $query->whereNull('bed_id')->where('status', 'admitted');
     }
 
     public static function generateAdmissionNumber(): string

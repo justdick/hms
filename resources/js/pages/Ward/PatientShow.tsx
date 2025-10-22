@@ -1,29 +1,47 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { MedicationAdministrationPanel } from '@/components/Ward/MedicationAdministrationPanel';
 import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
 import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
+import { VitalsChart } from '@/components/Ward/VitalsChart';
+import { VitalsTable } from '@/components/Ward/VitalsTable';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
+import { WardRoundsTable } from '@/components/Ward/WardRoundsTable';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
-import admissions from '@/routes/admissions';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     Activity,
     AlertCircle,
+    AlertTriangle,
     ArrowLeft,
-    Bed,
+    Bed as BedIcon,
     Calendar,
     ClipboardList,
+    Edit2,
+    Eye,
     FileText,
     Heart,
     Pill,
     Stethoscope,
-    Thermometer,
+    Trash2,
     User,
+    UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface Patient {
     id: number;
@@ -84,29 +102,54 @@ interface MedicationAdministration {
     notes?: string;
 }
 
+interface Nurse {
+    id: number;
+    name: string;
+}
+
 interface NursingNote {
     id: number;
+    type: 'assessment' | 'care' | 'observation' | 'incident' | 'handover';
     note: string;
-    note_type?: string;
+    noted_at: string;
+    nurse: Nurse;
     created_at: string;
-    created_by?: User;
 }
 
 interface WardRound {
     id: number;
+    patient_admission_id: number;
+    doctor_id: number;
+    doctor?: Doctor;
+    day_number: number;
+    round_type: string;
+    status: 'in_progress' | 'completed';
+    round_datetime: string;
+    presenting_complaint?: string;
+    history_presenting_complaint?: string;
+    on_direct_questioning?: string;
+    examination_findings?: string;
+    assessment_notes?: string;
+    plan_notes?: string;
     notes?: string;
     findings?: string;
     plan?: string;
     created_at: string;
-    doctor?: Doctor;
+    updated_at: string;
 }
 
-interface Bed {
+interface BedType {
     id: number;
     ward_id: number;
     bed_number: string;
     status: string;
     type: string;
+}
+
+interface BedAssignmentData {
+    availableBeds: BedType[];
+    allBeds: BedType[];
+    hasAvailableBeds: boolean;
 }
 
 interface Ward {
@@ -130,7 +173,9 @@ interface PatientAdmission {
     admitted_at: string;
     discharged_at?: string;
     bed_id?: number;
-    bed?: Bed;
+    bed?: BedType;
+    is_overflow_patient?: boolean;
+    overflow_notes?: string;
     ward?: Ward;
     consultation?: Consultation;
     vital_signs?: VitalSign[];
@@ -141,13 +186,39 @@ interface PatientAdmission {
 
 interface Props {
     admission: PatientAdmission;
+    availableBeds?: BedType[];
+    allBeds?: BedType[];
+    hasAvailableBeds?: boolean;
 }
 
-export default function WardPatientShow({ admission }: Props) {
+const NOTE_TYPES = [
+    { value: 'assessment', label: 'Assessment', icon: Stethoscope },
+    { value: 'care', label: 'Care', icon: UserCheck },
+    { value: 'observation', label: 'Observation', icon: Eye },
+    { value: 'incident', label: 'Incident', icon: AlertCircle },
+    { value: 'handover', label: 'Handover', icon: ClipboardList },
+];
+
+export default function WardPatientShow({
+    admission,
+    availableBeds = [],
+    allBeds = [],
+    hasAvailableBeds = false,
+}: Props) {
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
     const [nursingNotesModalOpen, setNursingNotesModalOpen] = useState(false);
     const [wardRoundModalOpen, setWardRoundModalOpen] = useState(false);
     const [medicationPanelOpen, setMedicationPanelOpen] = useState(false);
+    const [bedAssignmentModalOpen, setBedAssignmentModalOpen] = useState(false);
+    const [confirmNewRoundOpen, setConfirmNewRoundOpen] = useState(false);
+    const [noteToDelete, setNoteToDelete] = useState<NursingNote | null>(null);
+
+    const loadBedData = () => {
+        router.reload({
+            only: ['availableBeds', 'allBeds', 'hasAvailableBeds'],
+            onSuccess: () => setBedAssignmentModalOpen(true),
+        });
+    };
 
     const formatDateTime = (dateString: string) => {
         return new Date(dateString).toLocaleString('en-US', {
@@ -186,6 +257,87 @@ export default function WardPatientShow({ admission }: Props) {
     const pendingMeds = admission.medication_administrations?.filter(
         (med) => med.status === 'scheduled',
     );
+
+    // Check if there's an in-progress ward round
+    const inProgressRound = admission.ward_rounds?.find(
+        (round) => round.status === 'in_progress',
+    );
+
+    const handleStartNewWardRound = () => {
+        if (inProgressRound) {
+            setConfirmNewRoundOpen(true);
+        } else {
+            router.visit(`/admissions/${admission.id}/ward-rounds/create`);
+        }
+    };
+
+    const confirmStartNewRound = () => {
+        setConfirmNewRoundOpen(false);
+        router.visit(`/admissions/${admission.id}/ward-rounds/create`);
+    };
+
+    // Calculate next day number
+    const calculateAdmissionDays = () => {
+        const admissionDate = new Date(admission.admitted_at);
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - admissionDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    };
+
+    const getNoteTypeStyle = (
+        type: string,
+    ): { badge: string; icon: any; label: string } => {
+        const typeConfig = NOTE_TYPES.find((t) => t.value === type);
+        const colorMap = {
+            assessment:
+                'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            care: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            observation:
+                'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            incident:
+                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            handover:
+                'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+        };
+
+        return {
+            badge: colorMap[type as keyof typeof colorMap] || '',
+            icon: typeConfig?.icon || FileText,
+            label: typeConfig?.label || type,
+        };
+    };
+
+    const canEditNote = (note: NursingNote) => {
+        const createdAt = new Date(note.created_at);
+        const hoursSinceCreation =
+            (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+        return hoursSinceCreation < 24;
+    };
+
+    const canDeleteNote = (note: NursingNote) => {
+        const createdAt = new Date(note.created_at);
+        const hoursSinceCreation =
+            (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+        return hoursSinceCreation < 2;
+    };
+
+    const handleDeleteNote = () => {
+        if (!noteToDelete) return;
+
+        router.delete(
+            `/admissions/${admission.id}/nursing-notes/${noteToDelete.id}`,
+            {
+                onSuccess: () => {
+                    toast.success('Nursing note deleted successfully');
+                    setNoteToDelete(null);
+                },
+                onError: () => {
+                    toast.error('Failed to delete nursing note');
+                },
+            },
+        );
+    };
 
     return (
         <AppLayout
@@ -239,7 +391,9 @@ export default function WardPatientShow({ admission }: Props) {
                     </div>
 
                     {admission.consultation && (
-                        <Link href={`/consultation/${admission.consultation.id}`}>
+                        <Link
+                            href={`/consultation/${admission.consultation.id}`}
+                        >
                             <Button>
                                 <FileText className="mr-2 h-4 w-4" />
                                 View Consultation
@@ -259,7 +413,11 @@ export default function WardPatientShow({ admission }: Props) {
                                 <div className="space-y-1 text-sm">
                                     {admission.patient.date_of_birth && (
                                         <p className="text-gray-900 dark:text-gray-100">
-                                            Age: {calculateAge(admission.patient.date_of_birth)} years
+                                            Age:{' '}
+                                            {calculateAge(
+                                                admission.patient.date_of_birth,
+                                            )}{' '}
+                                            years
                                         </p>
                                     )}
                                     {admission.patient.gender && (
@@ -269,7 +427,8 @@ export default function WardPatientShow({ admission }: Props) {
                                     )}
                                     {admission.patient.phone_number && (
                                         <p className="text-gray-900 dark:text-gray-100">
-                                            Phone: {admission.patient.phone_number}
+                                            Phone:{' '}
+                                            {admission.patient.phone_number}
                                         </p>
                                     )}
                                 </div>
@@ -280,12 +439,28 @@ export default function WardPatientShow({ admission }: Props) {
                     <Card>
                         <CardContent className="p-6">
                             <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Ward & Bed
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Ward & Bed
+                                    </p>
+                                    <Button
+                                        size="sm"
+                                        variant={
+                                            admission.bed
+                                                ? 'outline'
+                                                : 'default'
+                                        }
+                                        onClick={loadBedData}
+                                    >
+                                        <BedIcon className="mr-2 h-3 w-3" />
+                                        {admission.bed
+                                            ? 'Change Bed'
+                                            : 'Assign Bed'}
+                                    </Button>
+                                </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                        <Bed className="h-4 w-4" />
+                                        <BedIcon className="h-4 w-4" />
                                         {admission.bed ? (
                                             <span>
                                                 Bed {admission.bed.bed_number}
@@ -317,7 +492,8 @@ export default function WardPatientShow({ admission }: Props) {
                                     <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
                                         <Stethoscope className="h-4 w-4" />
                                         <span>
-                                            Dr. {admission.consultation.doctor.name}
+                                            Dr.{' '}
+                                            {admission.consultation.doctor.name}
                                         </span>
                                     </div>
                                 ) : (
@@ -345,11 +521,31 @@ export default function WardPatientShow({ admission }: Props) {
                 </div>
 
                 {/* Alert Badges */}
-                {(pendingMeds && pendingMeds.length > 0) ||
-                    (!latestVital ||
-                        new Date(latestVital.recorded_at) <
-                            new Date(Date.now() - 4 * 60 * 60 * 1000)) ? (
-                    <div className="flex gap-2">
+                {(admission.is_overflow_patient ||
+                    !admission.bed ||
+                    (pendingMeds && pendingMeds.length > 0) ||
+                    !latestVital ||
+                    new Date(latestVital.recorded_at) <
+                        new Date(Date.now() - 4 * 60 * 60 * 1000)) && (
+                    <div className="flex flex-wrap gap-2">
+                        {admission.is_overflow_patient && (
+                            <Badge
+                                variant="outline"
+                                className="border-red-500 text-red-700 dark:border-red-600 dark:text-red-400"
+                            >
+                                <AlertTriangle className="mr-2 h-3 w-3" />
+                                Overflow Patient - No Bed
+                            </Badge>
+                        )}
+                        {!admission.bed && !admission.is_overflow_patient && (
+                            <Badge
+                                variant="outline"
+                                className="border-orange-500 text-orange-700 dark:border-orange-600 dark:text-orange-400"
+                            >
+                                <BedIcon className="mr-2 h-3 w-3" />
+                                No Bed Assigned
+                            </Badge>
+                        )}
                         {pendingMeds && pendingMeds.length > 0 && (
                             <Badge
                                 variant="outline"
@@ -372,18 +568,11 @@ export default function WardPatientShow({ admission }: Props) {
                             </Badge>
                         )}
                     </div>
-                ) : null}
+                )}
 
                 {/* Tabbed Content */}
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs defaultValue="vitals" className="w-full">
                     <TabsList>
-                        <TabsTrigger
-                            value="overview"
-                            className="flex items-center gap-2"
-                        >
-                            <ClipboardList className="h-4 w-4" />
-                            Overview
-                        </TabsTrigger>
                         <TabsTrigger
                             value="vitals"
                             className="flex items-center gap-2"
@@ -419,372 +608,46 @@ export default function WardPatientShow({ admission }: Props) {
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Overview Tab */}
-                    <TabsContent value="overview">
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            {/* Latest Vitals */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Latest Vital Signs</CardTitle>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => setVitalsModalOpen(true)}
-                                    >
-                                        <Activity className="mr-2 h-4 w-4" />
-                                        Record Vitals
-                                    </Button>
-                                </CardHeader>
-                                <CardContent>
-                                    {latestVital ? (
-                                        <div className="space-y-3">
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                Recorded:{' '}
-                                                {formatDateTime(
-                                                    latestVital.recorded_at,
-                                                )}
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {latestVital.temperature && (
-                                                    <div className="rounded-md border p-3 dark:border-gray-700">
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <Thermometer className="h-3 w-3" />
-                                                            Temperature
-                                                        </div>
-                                                        <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                            {latestVital.temperature}°C
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {latestVital.blood_pressure_systolic &&
-                                                    latestVital.blood_pressure_diastolic && (
-                                                        <div className="rounded-md border p-3 dark:border-gray-700">
-                                                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <Heart className="h-3 w-3" />
-                                                                Blood Pressure
-                                                            </div>
-                                                            <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                {
-                                                                    latestVital.blood_pressure_systolic
-                                                                }
-                                                                /
-                                                                {
-                                                                    latestVital.blood_pressure_diastolic
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                {latestVital.pulse_rate && (
-                                                    <div className="rounded-md border p-3 dark:border-gray-700">
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <Activity className="h-3 w-3" />
-                                                            Pulse
-                                                        </div>
-                                                        <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                            {latestVital.pulse_rate} bpm
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {latestVital.oxygen_saturation && (
-                                                    <div className="rounded-md border p-3 dark:border-gray-700">
-                                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                            SpO₂
-                                                        </div>
-                                                        <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                            {
-                                                                latestVital.oxygen_saturation
-                                                            }
-                                                            %
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="py-8 text-center">
-                                            <Thermometer className="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                No vital signs recorded yet
-                                            </p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Pending Medications */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Pending Medications</CardTitle>
-                                    <Button
-                                        size="sm"
-                                        onClick={() =>
-                                            setMedicationPanelOpen(true)
-                                        }
-                                    >
-                                        <Pill className="mr-2 h-4 w-4" />
-                                        Administer
-                                    </Button>
-                                </CardHeader>
-                                <CardContent>
-                                    {pendingMeds && pendingMeds.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {pendingMeds.map((med) => (
-                                                <div
-                                                    key={med.id}
-                                                    className="flex items-start justify-between rounded-md border p-3 dark:border-gray-700"
-                                                >
-                                                    <div>
-                                                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                            {med.prescription.drug.name}
-                                                        </p>
-                                                        {med.prescription
-                                                            .dosage && (
-                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                                {
-                                                                    med
-                                                                        .prescription
-                                                                        .dosage
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {formatDateTime(
-                                                            med.scheduled_time,
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="py-8 text-center">
-                                            <Pill className="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                No pending medications
-                                            </p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Recent Notes */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Recent Nursing Notes</CardTitle>
-                                    <Button
-                                        size="sm"
-                                        onClick={() =>
-                                            setNursingNotesModalOpen(true)
-                                        }
-                                    >
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        Add Note
-                                    </Button>
-                                </CardHeader>
-                                <CardContent>
-                                    {admission.nursing_notes &&
-                                    admission.nursing_notes.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {admission.nursing_notes
-                                                .slice(0, 3)
-                                                .map((note) => (
-                                                    <div
-                                                        key={note.id}
-                                                        className="border-l-2 border-blue-500 pl-3 dark:border-blue-400"
-                                                    >
-                                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {note.note}
-                                                        </p>
-                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                            {formatDateTime(
-                                                                note.created_at,
-                                                            )}
-                                                            {note.created_by &&
-                                                                ` by ${note.created_by.name}`}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    ) : (
-                                        <div className="py-8 text-center">
-                                            <FileText className="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                No nursing notes yet
-                                            </p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Recent Ward Rounds */}
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between">
-                                    <CardTitle>Recent Ward Rounds</CardTitle>
-                                    <Link href={admissions.wardRounds.create.url(admission)}>
-                                        <Button size="sm">
-                                            <Stethoscope className="mr-2 h-4 w-4" />
-                                            Start Ward Round
-                                        </Button>
-                                    </Link>
-                                </CardHeader>
-                                <CardContent>
-                                    {admission.ward_rounds &&
-                                    admission.ward_rounds.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {admission.ward_rounds
-                                                .slice(0, 3)
-                                                .map((round) => (
-                                                    <div
-                                                        key={round.id}
-                                                        className="rounded-md border p-3 dark:border-gray-700"
-                                                    >
-                                                        <div className="mb-2 flex items-center justify-between">
-                                                            {round.doctor && (
-                                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                                    Dr.{' '}
-                                                                    {
-                                                                        round
-                                                                            .doctor
-                                                                            .name
-                                                                    }
-                                                                </p>
-                                                            )}
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {formatDateTime(
-                                                                    round.created_at,
-                                                                )}
-                                                            </p>
-                                                        </div>
-                                                        {round.findings && (
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {round.findings}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    ) : (
-                                        <div className="py-8 text-center">
-                                            <Stethoscope className="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                No ward rounds yet
-                                            </p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </TabsContent>
-
                     {/* Vital Signs Tab */}
                     <TabsContent value="vitals">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Vital Signs History</CardTitle>
-                                <Button onClick={() => setVitalsModalOpen(true)}>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Vital Signs Monitoring
+                                </h3>
+                                <Button
+                                    onClick={() => setVitalsModalOpen(true)}
+                                >
                                     <Activity className="mr-2 h-4 w-4" />
                                     Record Vitals
                                 </Button>
-                            </CardHeader>
-                            <CardContent>
-                                {admission.vital_signs &&
-                                admission.vital_signs.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {admission.vital_signs.map((vital) => (
-                                            <div
-                                                key={vital.id}
-                                                className="rounded-lg border p-4 dark:border-gray-700"
-                                            >
-                                                <div className="mb-3 flex items-center justify-between border-b pb-2 dark:border-gray-700">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {formatDateTime(
-                                                            vital.recorded_at,
-                                                        )}
-                                                    </p>
-                                                    {vital.recorded_by && (
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                            by{' '}
-                                                            {vital.recorded_by.name}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-                                                    {vital.temperature && (
-                                                        <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <Thermometer className="h-3 w-3" />
-                                                                Temperature
-                                                            </div>
-                                                            <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                {vital.temperature}°C
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {vital.blood_pressure_systolic &&
-                                                        vital.blood_pressure_diastolic && (
-                                                            <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                    <Heart className="h-3 w-3" />
-                                                                    Blood Pressure
-                                                                </div>
-                                                                <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                    {
-                                                                        vital.blood_pressure_systolic
-                                                                    }
-                                                                    /
-                                                                    {
-                                                                        vital.blood_pressure_diastolic
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    {vital.pulse_rate && (
-                                                        <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <Activity className="h-3 w-3" />
-                                                                Pulse
-                                                            </div>
-                                                            <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                {vital.pulse_rate} bpm
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {vital.respiratory_rate && (
-                                                        <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                                Respiratory Rate
-                                                            </div>
-                                                            <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                {
-                                                                    vital.respiratory_rate
-                                                                }{' '}
-                                                                /min
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {vital.oxygen_saturation && (
-                                                        <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                                SpO₂
-                                                            </div>
-                                                            <div className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                                {vital.oxygen_saturation}%
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="py-12 text-center">
-                                        <Thermometer className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                        <p className="text-gray-500 dark:text-gray-400">
-                                            No vital signs recorded yet
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+                                {/* Vitals Table - Left Side (2/5 width) */}
+                                <Card className="lg:col-span-2">
+                                    <CardHeader>
+                                        <CardTitle>Vitals History</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="max-h-[800px] overflow-y-auto">
+                                        <VitalsTable
+                                            vitals={admission.vital_signs || []}
+                                        />
+                                    </CardContent>
+                                </Card>
+
+                                {/* Vitals Charts - Right Side (3/5 width) */}
+                                <Card className="lg:col-span-3">
+                                    <CardHeader>
+                                        <CardTitle>Vitals Trends</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="max-h-[800px] overflow-y-auto">
+                                        <VitalsChart
+                                            vitals={admission.vital_signs || []}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
                     </TabsContent>
 
                     {/* Medications Tab */}
@@ -809,7 +672,8 @@ export default function WardPatientShow({ admission }: Props) {
                                                 <div
                                                     key={med.id}
                                                     className={`rounded-lg border p-4 ${
-                                                        med.status === 'scheduled'
+                                                        med.status ===
+                                                        'scheduled'
                                                             ? 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/20'
                                                             : 'dark:border-gray-700'
                                                     }`}
@@ -826,7 +690,8 @@ export default function WardPatientShow({ admission }: Props) {
                                                                             .name
                                                                     }
                                                                 </span>
-                                                                {med.prescription
+                                                                {med
+                                                                    .prescription
                                                                     .drug
                                                                     .strength && (
                                                                     <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -903,7 +768,9 @@ export default function WardPatientShow({ admission }: Props) {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Nursing Notes</CardTitle>
                                 <Button
-                                    onClick={() => setNursingNotesModalOpen(true)}
+                                    onClick={() =>
+                                        setNursingNotesModalOpen(true)
+                                    }
                                 >
                                     <FileText className="mr-2 h-4 w-4" />
                                     Add Note
@@ -913,40 +780,83 @@ export default function WardPatientShow({ admission }: Props) {
                                 {admission.nursing_notes &&
                                 admission.nursing_notes.length > 0 ? (
                                     <div className="space-y-3">
-                                        {admission.nursing_notes.map((note) => (
-                                            <div
-                                                key={note.id}
-                                                className="rounded-lg border p-4 dark:border-gray-700"
-                                            >
-                                                <div className="mb-2 flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        {note.note_type && (
+                                        {admission.nursing_notes.map((note) => {
+                                            const typeStyle = getNoteTypeStyle(
+                                                note.type,
+                                            );
+                                            const Icon = typeStyle.icon;
+
+                                            return (
+                                                <div
+                                                    key={note.id}
+                                                    className="rounded-lg border p-4 dark:border-gray-700"
+                                                >
+                                                    <div className="mb-2 flex items-start justify-between">
+                                                        <div className="flex items-center gap-2">
                                                             <Badge
-                                                                variant="outline"
-                                                                className="mb-2"
+                                                                className={
+                                                                    typeStyle.badge
+                                                                }
                                                             >
-                                                                {note.note_type}
+                                                                <Icon className="mr-1 h-3 w-3" />
+                                                                {
+                                                                    typeStyle.label
+                                                                }
                                                             </Badge>
-                                                        )}
-                                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {note.note}
-                                                        </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            {canEditNote(
+                                                                note,
+                                                            ) && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        // TODO: Implement edit functionality
+                                                                        toast.info(
+                                                                            'Edit functionality coming soon',
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <Edit2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                            {canDeleteNote(
+                                                                note,
+                                                            ) && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        setNoteToDelete(
+                                                                            note,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                        {note.note}
+                                                    </p>
+
+                                                    <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                        <span className="flex items-center gap-1">
+                                                            <UserCheck className="h-3 w-3" />
+                                                            {note.nurse.name}
+                                                        </span>
+                                                        <span>
+                                                            {formatDateTime(
+                                                                note.noted_at,
+                                                            )}
+                                                        </span>
                                                     </div>
                                                 </div>
-                                                <div className="mt-3 flex items-center justify-between border-t pt-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                                                    <span>
-                                                        {formatDateTime(
-                                                            note.created_at,
-                                                        )}
-                                                    </span>
-                                                    {note.created_by && (
-                                                        <span>
-                                                            by {note.created_by.name}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <div className="py-12 text-center">
@@ -965,69 +875,18 @@ export default function WardPatientShow({ admission }: Props) {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Ward Rounds</CardTitle>
-                                <Link href={admissions.wardRounds.create.url(admission)}>
-                                    <Button>
-                                        <Stethoscope className="mr-2 h-4 w-4" />
-                                        Start Ward Round
-                                    </Button>
-                                </Link>
+                                <Button onClick={handleStartNewWardRound}>
+                                    <Stethoscope className="mr-2 h-4 w-4" />
+                                    Start New Ward Round
+                                </Button>
                             </CardHeader>
                             <CardContent>
                                 {admission.ward_rounds &&
                                 admission.ward_rounds.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {admission.ward_rounds.map((round) => (
-                                            <div
-                                                key={round.id}
-                                                className="rounded-lg border p-4 dark:border-gray-700"
-                                            >
-                                                <div className="mb-3 flex items-center justify-between border-b pb-2 dark:border-gray-700">
-                                                    <div>
-                                                        {round.doctor && (
-                                                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                                Dr. {round.doctor.name}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                            {formatDateTime(
-                                                                round.created_at,
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {round.findings && (
-                                                    <div className="mb-3">
-                                                        <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                            Findings:
-                                                        </p>
-                                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {round.findings}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                {round.plan && (
-                                                    <div className="mb-3">
-                                                        <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                            Plan:
-                                                        </p>
-                                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {round.plan}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                {round.notes && (
-                                                    <div>
-                                                        <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                            Notes:
-                                                        </p>
-                                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {round.notes}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <WardRoundsTable
+                                        admissionId={admission.id}
+                                        wardRounds={admission.ward_rounds}
+                                    />
                                 ) : (
                                     <div className="py-12 text-center">
                                         <Stethoscope className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
@@ -1066,6 +925,82 @@ export default function WardPatientShow({ admission }: Props) {
                     open={medicationPanelOpen}
                     onOpenChange={setMedicationPanelOpen}
                 />
+
+                <BedAssignmentModal
+                    open={bedAssignmentModalOpen}
+                    onClose={() => setBedAssignmentModalOpen(false)}
+                    admission={admission}
+                    availableBeds={availableBeds}
+                    allBeds={allBeds}
+                    hasAvailableBeds={hasAvailableBeds}
+                    isChangingBed={!!admission.bed}
+                />
+
+                {/* Confirmation Dialog for Starting New Ward Round */}
+                <AlertDialog
+                    open={confirmNewRoundOpen}
+                    onOpenChange={setConfirmNewRoundOpen}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Complete Current Round and Start New?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-2">
+                                <p>
+                                    This will complete{' '}
+                                    <strong>
+                                        Ward Round Day{' '}
+                                        {inProgressRound?.day_number}
+                                    </strong>{' '}
+                                    and create a new{' '}
+                                    <strong>
+                                        Ward Round Day{' '}
+                                        {calculateAdmissionDays()}
+                                    </strong>
+                                    .
+                                </p>
+                                <p className="text-muted-foreground">
+                                    All current data will be saved
+                                    automatically.
+                                </p>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmStartNewRound}>
+                                Start New Round
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Confirmation Dialog for Deleting Nursing Note */}
+                <AlertDialog
+                    open={!!noteToDelete}
+                    onOpenChange={(open) => !open && setNoteToDelete(null)}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Delete Nursing Note?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete this nursing
+                                note? This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDeleteNote}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                Delete Note
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </AppLayout>
     );

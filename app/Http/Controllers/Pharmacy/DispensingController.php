@@ -48,27 +48,52 @@ class DispensingController extends Controller
                     ->orWhere('patient_number', 'like', "%{$query}%")
                     ->orWhere('phone_number', 'like', "%{$query}%");
             })
-            ->whereHas('checkins.consultations.prescriptions', function ($q) {
-                $q->where('status', 'prescribed');
+            ->where(function ($q) {
+                // Has prescriptions from consultations OR ward rounds
+                $q->whereHas('checkins.consultations.prescriptions', function ($q) {
+                    $q->where('status', 'prescribed');
+                })->orWhereHas('admissions.wardRounds.prescriptions', function ($q) {
+                    $q->where('status', 'prescribed');
+                });
             })
-            ->with(['checkins' => function ($q) {
-                $q->latest()
-                    ->limit(1)
-                    ->with(['consultations' => function ($q) {
-                        $q->latest()
-                            ->limit(1)
-                            ->with(['prescriptions' => function ($q) {
-                                $q->where('status', 'prescribed')
-                                    ->with('drug:id,name,form,unit_type');
-                            }]);
-                    }]);
-            }])
+            ->with([
+                'checkins' => function ($q) {
+                    $q->latest()
+                        ->limit(1)
+                        ->with(['consultations' => function ($q) {
+                            $q->latest()
+                                ->limit(1)
+                                ->with(['prescriptions' => function ($q) {
+                                    $q->where('status', 'prescribed')
+                                        ->with('drug:id,name,form,unit_type');
+                                }]);
+                        }]);
+                },
+                'admissions' => function ($q) {
+                    $q->whereNull('discharged_at')
+                        ->with(['wardRounds.prescriptions' => function ($q) {
+                            $q->where('status', 'prescribed')
+                                ->with('drug:id,name,form,unit_type');
+                        }]);
+                },
+            ])
             ->limit(10)
             ->get()
             ->map(function ($patient) {
                 $latestCheckin = $patient->checkins->first();
                 $latestConsultation = $latestCheckin?->consultations->first();
-                $pendingPrescriptions = $latestConsultation?->prescriptions ?? collect();
+                $consultationPrescriptions = $latestConsultation?->prescriptions ?? collect();
+
+                // Get ward round prescriptions
+                $wardRoundPrescriptions = collect();
+                $activeAdmission = $patient->admissions->first();
+                if ($activeAdmission) {
+                    foreach ($activeAdmission->wardRounds as $wardRound) {
+                        $wardRoundPrescriptions = $wardRoundPrescriptions->merge($wardRound->prescriptions);
+                    }
+                }
+
+                $pendingPrescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
 
                 return [
                     'id' => $patient->id,
@@ -87,6 +112,7 @@ class DispensingController extends Controller
     {
         $this->authorize('viewAny', Dispensing::class);
 
+        // Load latest checkin with consultations and their prescriptions
         $patient->load([
             'checkins' => function ($q) {
                 $q->latest()
@@ -104,7 +130,28 @@ class DispensingController extends Controller
 
         $latestCheckin = $patient->checkins->first();
         $latestConsultation = $latestCheckin?->consultations->first();
-        $prescriptions = $latestConsultation?->prescriptions ?? collect();
+
+        // Get prescriptions from consultations
+        $consultationPrescriptions = $latestConsultation?->prescriptions ?? collect();
+
+        // Get prescriptions from ward rounds for admitted patients
+        $wardRoundPrescriptions = collect();
+        $activeAdmission = $patient->admissions()
+            ->whereNull('discharged_at')
+            ->with(['wardRounds.prescriptions' => function ($q) {
+                $q->where('status', 'prescribed')
+                    ->with('drug:id,name,form,unit_type,strength');
+            }])
+            ->first();
+
+        if ($activeAdmission) {
+            foreach ($activeAdmission->wardRounds as $wardRound) {
+                $wardRoundPrescriptions = $wardRoundPrescriptions->merge($wardRound->prescriptions);
+            }
+        }
+
+        // Combine all prescriptions
+        $prescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
 
         // Get prescription data with stock info for review modal
         $prescriptionsData = null;

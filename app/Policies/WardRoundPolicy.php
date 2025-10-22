@@ -40,8 +40,14 @@ class WardRoundPolicy
             return false;
         }
 
-        // Users can only update their own rounds within 24 hours
-        // This ensures medical records maintain integrity after initial recording period
+        // In-progress rounds can always be updated by their creator (no time limit)
+        // This allows for auto-save functionality and extended editing sessions
+        if ($wardRound->status === 'in_progress' && $wardRound->doctor_id === $user->id) {
+            return true;
+        }
+
+        // Completed rounds can only be updated by their creator within 24 hours
+        // This ensures medical records maintain integrity after completion
         return $wardRound->doctor_id === $user->id &&
                $wardRound->created_at->greaterThan(now()->subHours(24));
     }

@@ -42,9 +42,11 @@ export default function CreateDrug({ categories, suppliers }: Props) {
         drug_code: '',
         category: '',
         form: '',
+        strength: '',
         description: '',
         unit_price: '',
         unit_type: '',
+        bottle_size: '',
         minimum_stock_level: '',
         maximum_stock_level: '',
         is_active: true,
@@ -68,18 +70,14 @@ export default function CreateDrug({ categories, suppliers }: Props) {
     ];
 
     const unitTypes = [
-        'Piece',
-        'Bottle',
-        'Vial',
-        'Tube',
-        'Box',
-        'Strip',
-        'Sachet',
-        'ml',
-        'mg',
-        'g',
-        'kg',
-        'l',
+        {
+            value: 'piece',
+            label: 'Piece (for tablets, capsules - sold individually)',
+        },
+        { value: 'bottle', label: 'Bottle (for syrups, suspensions)' },
+        { value: 'vial', label: 'Vial (for injections)' },
+        { value: 'tube', label: 'Tube (for creams, ointments)' },
+        { value: 'box', label: 'Box (for sachets, patches)' },
     ];
 
     const submit: FormEventHandler = (e) => {
@@ -308,6 +306,35 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label htmlFor="strength">Strength</Label>
+                                    <Input
+                                        id="strength"
+                                        type="text"
+                                        value={data.strength}
+                                        onChange={(e) =>
+                                            setData('strength', e.target.value)
+                                        }
+                                        className={
+                                            errors.strength
+                                                ? 'border-red-500'
+                                                : ''
+                                        }
+                                        placeholder="e.g., 500mg, 250mg/5ml, 1g"
+                                    />
+                                    {errors.strength && (
+                                        <p className="flex items-center gap-1 text-sm text-red-500">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.strength}
+                                        </p>
+                                    )}
+                                    <p className="text-xs text-gray-500">
+                                        Examples: "500mg" for tablets,
+                                        "250mg/5ml" for syrups, "1g/10ml" for
+                                        injections
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
                                     <Label htmlFor="description">
                                         Description
                                     </Label>
@@ -400,10 +427,10 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                                         <SelectContent>
                                             {unitTypes.map((unit) => (
                                                 <SelectItem
-                                                    key={unit}
-                                                    value={unit}
+                                                    key={unit.value}
+                                                    value={unit.value}
                                                 >
-                                                    {unit}
+                                                    {unit.label}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -414,7 +441,55 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                                             {errors.unit_type}
                                         </p>
                                     )}
+                                    <p className="text-xs text-gray-500">
+                                        This determines how the drug is counted
+                                        for billing and inventory
+                                    </p>
                                 </div>
+
+                                {/* Bottle Size - Only show for bottles and vials */}
+                                {(data.unit_type === 'bottle' ||
+                                    data.unit_type === 'vial') && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bottle_size">
+                                            Bottle/Vial Size (ml) *
+                                        </Label>
+                                        <Input
+                                            id="bottle_size"
+                                            type="number"
+                                            min="1"
+                                            value={data.bottle_size}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'bottle_size',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className={
+                                                errors.bottle_size
+                                                    ? 'border-red-500'
+                                                    : ''
+                                            }
+                                            placeholder={
+                                                data.unit_type === 'bottle'
+                                                    ? 'e.g., 100'
+                                                    : 'e.g., 10'
+                                            }
+                                        />
+                                        {errors.bottle_size && (
+                                            <p className="flex items-center gap-1 text-sm text-red-500">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.bottle_size}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-gray-500">
+                                            Volume in milliliters (ml) per{' '}
+                                            {data.unit_type}. Common sizes: 50ml,
+                                            100ml, 200ml for bottles; 5ml, 10ml,
+                                            20ml for vials.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="minimum_stock_level">

@@ -63,7 +63,6 @@ interface Diagnosis {
 interface Prescription {
     id: number;
     medication_name: string;
-    dosage: string;
     frequency: string;
     duration: string;
     instructions?: string;
@@ -694,10 +693,6 @@ export default function ConsultationShowEnhanced({
                                                                 }
                                                             </h3>
                                                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                                {
-                                                                    prescription.dosage
-                                                                }{' '}
-                                                                •{' '}
                                                                 {
                                                                     prescription.frequency
                                                                 }{' '}
