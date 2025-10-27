@@ -14,12 +14,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { MedicationAdministrationPanel } from '@/components/Ward/MedicationAdministrationPanel';
+import { MedicationAdministrationRecord } from '@/components/Ward/MedicationAdministrationRecord';
 import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
 import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
 import { VitalsChart } from '@/components/Ward/VitalsChart';
 import { VitalsTable } from '@/components/Ward/VitalsTable';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
 import { WardRoundsTable } from '@/components/Ward/WardRoundsTable';
+import { WardRoundViewModal } from '@/components/Ward/WardRoundViewModal';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
@@ -73,8 +75,10 @@ interface Drug {
 interface Prescription {
     id: number;
     drug: Drug;
+    medication_name: string;
     dosage?: string;
     frequency?: string;
+    duration?: string;
     route?: string;
 }
 
@@ -96,10 +100,12 @@ interface MedicationAdministration {
     id: number;
     prescription: Prescription;
     scheduled_time: string;
-    administered_time?: string;
-    status: 'scheduled' | 'administered' | 'missed' | 'refused';
+    administered_at?: string;
+    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted';
     administered_by?: User;
     notes?: string;
+    dosage_given?: string;
+    route?: string;
 }
 
 interface Nurse {
@@ -114,6 +120,35 @@ interface NursingNote {
     noted_at: string;
     nurse: Nurse;
     created_at: string;
+}
+
+interface WardRoundDiagnosis {
+    id: number;
+    diagnosis_name: string;
+    icd_code: string;
+    diagnosis_type: string;
+    diagnosed_by?: {
+        id: number;
+        name: string;
+    };
+}
+
+interface LabService {
+    id: number;
+    name: string;
+    code: string;
+    price: number;
+}
+
+interface LabOrder {
+    id: number;
+    lab_service?: LabService;
+    status: string;
+    ordered_at: string;
+    priority?: string;
+    special_instructions?: string;
+    result_values?: any;
+    result_notes?: string;
 }
 
 interface WardRound {
@@ -136,6 +171,9 @@ interface WardRound {
     plan?: string;
     created_at: string;
     updated_at: string;
+    diagnoses?: WardRoundDiagnosis[];
+    prescriptions?: Prescription[];
+    lab_orders?: LabOrder[];
 }
 
 interface BedType {
@@ -144,12 +182,6 @@ interface BedType {
     bed_number: string;
     status: string;
     type: string;
-}
-
-interface BedAssignmentData {
-    availableBeds: BedType[];
-    allBeds: BedType[];
-    hasAvailableBeds: boolean;
 }
 
 interface Ward {
@@ -212,6 +244,9 @@ export default function WardPatientShow({
     const [bedAssignmentModalOpen, setBedAssignmentModalOpen] = useState(false);
     const [confirmNewRoundOpen, setConfirmNewRoundOpen] = useState(false);
     const [noteToDelete, setNoteToDelete] = useState<NursingNote | null>(null);
+    const [selectedWardRound, setSelectedWardRound] =
+        useState<WardRound | null>(null);
+    const [wardRoundViewModalOpen, setWardRoundViewModalOpen] = useState(false);
 
     const loadBedData = () => {
         router.reload({
@@ -227,14 +262,6 @@ export default function WardPatientShow({
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-        });
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
         });
     };
 
@@ -273,7 +300,14 @@ export default function WardPatientShow({
 
     const confirmStartNewRound = () => {
         setConfirmNewRoundOpen(false);
-        router.visit(`/admissions/${admission.id}/ward-rounds/create`);
+        router.visit(
+            `/admissions/${admission.id}/ward-rounds/create?force=true`,
+        );
+    };
+
+    const handleViewWardRound = (wardRound: WardRound) => {
+        setSelectedWardRound(wardRound);
+        setWardRoundViewModalOpen(true);
     };
 
     // Calculate next day number
@@ -652,114 +686,38 @@ export default function WardPatientShow({
 
                     {/* Medications Tab */}
                     <TabsContent value="medications">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Medication Administration</CardTitle>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Medication Administration
+                                </h3>
                                 <Button
                                     onClick={() => setMedicationPanelOpen(true)}
                                 >
                                     <Pill className="mr-2 h-4 w-4" />
-                                    Administer Medication
+                                    Quick View & Administer
                                 </Button>
-                            </CardHeader>
-                            <CardContent>
-                                {admission.medication_administrations &&
-                                admission.medication_administrations.length >
-                                    0 ? (
-                                    <div className="space-y-4">
-                                        {admission.medication_administrations.map(
-                                            (med) => (
-                                                <div
-                                                    key={med.id}
-                                                    className={`rounded-lg border p-4 ${
-                                                        med.status ===
-                                                        'scheduled'
-                                                            ? 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/20'
-                                                            : 'dark:border-gray-700'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <Pill className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                    {
-                                                                        med
-                                                                            .prescription
-                                                                            .drug
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                                {med
-                                                                    .prescription
-                                                                    .drug
-                                                                    .strength && (
-                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                                        {
-                                                                            med
-                                                                                .prescription
-                                                                                .drug
-                                                                                .strength
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            {med.prescription
-                                                                .dosage && (
-                                                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                                                    Dosage:{' '}
-                                                                    {
-                                                                        med
-                                                                            .prescription
-                                                                            .dosage
-                                                                    }
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <Badge
-                                                                variant={
-                                                                    med.status ===
-                                                                    'administered'
-                                                                        ? 'default'
-                                                                        : med.status ===
-                                                                            'scheduled'
-                                                                          ? 'outline'
-                                                                          : 'secondary'
-                                                                }
-                                                            >
-                                                                {med.status}
-                                                            </Badge>
-                                                            <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                Scheduled:{' '}
-                                                                {formatDateTime(
-                                                                    med.scheduled_time,
-                                                                )}
-                                                            </p>
-                                                            {med.administered_time && (
-                                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                                    Given:{' '}
-                                                                    {formatDateTime(
-                                                                        med.administered_time,
-                                                                    )}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="py-12 text-center">
-                                        <Pill className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                        <p className="text-gray-500 dark:text-gray-400">
-                                            No medication records
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                            </div>
+
+                            {/* MAR Chart */}
+                            <MedicationAdministrationRecord
+                                medications={
+                                    admission.medication_administrations || []
+                                }
+                                onAdminister={() => {
+                                    // Open the panel to administer
+                                    setMedicationPanelOpen(true);
+                                }}
+                                onHold={() => {
+                                    // Open the panel to hold
+                                    setMedicationPanelOpen(true);
+                                }}
+                                onRefuse={() => {
+                                    // Open the panel to refuse
+                                    setMedicationPanelOpen(true);
+                                }}
+                            />
+                        </div>
                     </TabsContent>
 
                     {/* Nursing Notes Tab */}
@@ -886,6 +844,7 @@ export default function WardPatientShow({
                                     <WardRoundsTable
                                         admissionId={admission.id}
                                         wardRounds={admission.ward_rounds}
+                                        onViewWardRound={handleViewWardRound}
                                     />
                                 ) : (
                                     <div className="py-12 text-center">
@@ -934,6 +893,16 @@ export default function WardPatientShow({
                     allBeds={allBeds}
                     hasAvailableBeds={hasAvailableBeds}
                     isChangingBed={!!admission.bed}
+                />
+
+                <WardRoundViewModal
+                    open={wardRoundViewModalOpen}
+                    onClose={() => {
+                        setWardRoundViewModalOpen(false);
+                        setSelectedWardRound(null);
+                    }}
+                    wardRound={selectedWardRound}
+                    patientName={`${admission.patient.first_name} ${admission.patient.last_name}`}
                 />
 
                 {/* Confirmation Dialog for Starting New Ward Round */}

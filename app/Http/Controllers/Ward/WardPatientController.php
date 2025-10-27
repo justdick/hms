@@ -29,13 +29,18 @@ class WardPatientController extends Controller
             },
             'medicationAdministrations' => function ($query) {
                 $query->with(['prescription.drug', 'administeredBy:id,name'])
-                    ->orderBy('scheduled_time', 'desc');
+                    ->orderBy('scheduled_time', 'asc');
             },
             'nursingNotes' => function ($query) {
                 $query->with('nurse:id,name')->latest();
             },
             'wardRounds' => function ($query) {
-                $query->with('doctor:id,name')
+                $query->with([
+                    'doctor:id,name',
+                    'diagnoses',
+                    'prescriptions.drug',
+                    'labOrders.labService',
+                ])
                     ->orderBy('round_datetime', 'desc')
                     ->orderBy('id', 'desc');
             },

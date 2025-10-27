@@ -10,8 +10,12 @@ class WardSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear existing data
-        Ward::query()->delete();
+        // Only clear existing data if database is empty (fresh migration)
+        // This prevents data loss when re-running seeders
+        if (Ward::count() > 0) {
+            return;
+        }
+
         Bed::query()->delete();
 
         $wards = [
@@ -80,33 +84,18 @@ class WardSeeder extends Seeder
                 'available_beds' => $bedCount,
             ]);
 
-            // Create realistic occupancy patterns based on ward function
-            $occupancyRate = match ($ward->code) {
-                'ICU1', 'NICU' => 0.8, // ICUs typically higher occupancy
-                'ER' => 0.3, // Emergency has lower occupancy
-                'MAT1' => 0.6, // Maternity variable
-                default => 0.65 // General wards
-            };
-
-            // Create beds for this ward
+            // Create beds for this ward - all available initially
             for ($i = 1; $i <= $bedCount; $i++) {
                 $bedNumber = str_pad($i, 2, '0', STR_PAD_LEFT);
-                $isOccupied = $i <= ($bedCount * $occupancyRate);
 
                 Bed::create([
                     'ward_id' => $ward->id,
                     'bed_number' => $bedNumber,
-                    'status' => $isOccupied ? 'occupied' : 'available',
+                    'status' => 'available',
                     'type' => $bedType,
                     'is_active' => true,
                 ]);
             }
-
-            // Update available beds count based on actual occupied beds
-            $occupiedCount = $ward->beds()->where('status', 'occupied')->count();
-            $ward->update([
-                'available_beds' => $bedCount - $occupiedCount,
-            ]);
         }
     }
 }

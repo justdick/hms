@@ -20,7 +20,7 @@ class PrescriptionFactory extends Factory
             'consultation_id' => \App\Models\Consultation::factory(),
             'drug_id' => \App\Models\Drug::factory(),
             'medication_name' => fake()->words(2, true),
-            'dosage' => fake()->randomElement(['5mg', '10mg', '25mg', '50mg', '100mg']),
+            'dose_quantity' => fake()->randomElement(['5mg', '10mg', '25mg', '50mg', '100mg']),
             'frequency' => fake()->randomElement(['Once daily', 'Twice daily', 'Three times daily', 'Every 6 hours']),
             'duration' => fake()->randomElement(['3 days', '5 days', '7 days', '14 days']),
             'quantity' => fake()->numberBetween(10, 100),

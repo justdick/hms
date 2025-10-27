@@ -29,7 +29,7 @@ import {
     Pill,
     X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 // Type definitions
@@ -63,9 +63,9 @@ interface Drug {
 interface Prescription {
     id: number;
     medication_name: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
+    dosage?: string;
+    frequency?: string;
+    duration?: string;
     route?: string;
     drug?: Drug;
 }
@@ -85,8 +85,12 @@ interface MedicationAdministration {
     };
 }
 
+interface PatientAdmissionWithMeds extends PatientAdmission {
+    medication_administrations?: MedicationAdministration[];
+}
+
 interface MedicationAdministrationPanelProps {
-    admission: PatientAdmission | null;
+    admission: PatientAdmissionWithMeds | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
@@ -96,38 +100,30 @@ export function MedicationAdministrationPanel({
     open,
     onOpenChange,
 }: MedicationAdministrationPanelProps) {
-    const [medications, setMedications] = useState<Record<
-        string,
-        MedicationAdministration[]
-    > | null>(null);
-    const [loading, setLoading] = useState(true);
     const [administerDialogOpen, setAdministerDialogOpen] = useState(false);
     const [holdDialogOpen, setHoldDialogOpen] = useState(false);
     const [selectedMed, setSelectedMed] =
         useState<MedicationAdministration | null>(null);
 
-    // Fetch medications when panel opens
-    useEffect(() => {
-        if (open && admission) {
-            setLoading(true);
-            fetch(`/admissions/${admission.id}/medications`)
-                .then((res) => res.json())
-                .then((data) => {
-                    setMedications(data);
-                    setLoading(false);
-                })
-                .catch((error) => {
-                    console.error('Error fetching medications:', error);
-                    toast.error('Failed to load medications');
-                    setLoading(false);
-                });
-        }
-    }, [open, admission]);
-
     if (!admission) return null;
 
+    // Group medications by date
+    const medicationsByDate = (
+        admission.medication_administrations || []
+    ).reduce(
+        (acc, med) => {
+            const date = format(new Date(med.scheduled_time), 'yyyy-MM-dd');
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(med);
+            return acc;
+        },
+        {} as Record<string, MedicationAdministration[]>,
+    );
+
     const today = format(new Date(), 'yyyy-MM-dd');
-    const todayMeds = medications?.[today] || [];
+    const todayMeds = medicationsByDate[today] || [];
 
     const dueNow = todayMeds.filter(
         (med) =>
@@ -190,18 +186,7 @@ export function MedicationAdministrationPanel({
                     </SheetHeader>
 
                     <div className="mt-6 space-y-6">
-                        {loading && (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="text-center">
-                                    <div className="mb-2 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Loading medications...
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {!loading && todayMeds.length === 0 && (
+                        {todayMeds.length === 0 && (
                             <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-center">
                                 <Pill className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
                                 <p className="text-sm text-muted-foreground">
@@ -210,7 +195,7 @@ export function MedicationAdministrationPanel({
                             </div>
                         )}
 
-                        {!loading && dueNow.length > 0 && (
+                        {dueNow.length > 0 && (
                             <div>
                                 <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold text-red-600 dark:text-red-500">
                                     <AlertCircle className="h-5 w-5" />
@@ -231,7 +216,7 @@ export function MedicationAdministrationPanel({
                             </div>
                         )}
 
-                        {!loading && upcoming.length > 0 && (
+                        {upcoming.length > 0 && (
                             <div>
                                 <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
                                     <Clock className="h-5 w-5" />
@@ -252,7 +237,7 @@ export function MedicationAdministrationPanel({
                             </div>
                         )}
 
-                        {!loading && administered.length > 0 && (
+                        {administered.length > 0 && (
                             <div>
                                 <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-500">
                                     <CheckCircle2 className="h-5 w-5" />

@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             PaymentMethodSeeder::class,
             LabServiceSeeder::class,
             PharmacySeeder::class,
+            DiagnosisSeeder::class,
             BillingServiceSeeder::class,
             BillingSeeder::class,
             PreviousConsultationsSeeder::class,

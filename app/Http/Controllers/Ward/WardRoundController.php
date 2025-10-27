@@ -39,13 +39,26 @@ class WardRoundController extends Controller
 
         $patient = $admission->patient;
 
-        // Auto-complete any existing in-progress ward rounds for this admission
+        // Check if there's already an in-progress ward round
         $existingInProgress = WardRound::where('patient_admission_id', $admission->id)
             ->where('status', 'in_progress')
-            ->get();
+            ->first();
 
-        foreach ($existingInProgress as $round) {
-            $round->update(['status' => 'completed']);
+        // If there's an existing in-progress ward round
+        if ($existingInProgress) {
+            // Check if user explicitly wants to start a new round (force=true in query params)
+            $forceNew = request()->query('force') === 'true';
+
+            if ($forceNew) {
+                // Auto-complete the existing in-progress ward round
+                $existingInProgress->update(['status' => 'completed']);
+            } else {
+                // Redirect to edit the existing ward round instead of creating a new one
+                return redirect()->route('admissions.ward-rounds.edit', [
+                    'admission' => $admission->id,
+                    'wardRound' => $existingInProgress->id,
+                ]);
+            }
         }
 
         // Calculate day number based on admission date
@@ -113,16 +126,10 @@ class WardRoundController extends Controller
     {
         $this->authorize('view', $wardRound);
 
-        $wardRound->load([
-            'doctor:id,name',
-            'labOrders.labTest',
-            'prescriptions.drug',
-            'diagnoses.diagnosedBy:id,name',
-        ]);
-
-        return Inertia::render('Ward/WardRoundShow', [
-            'admission' => $admission->load('patient', 'ward'),
-            'wardRound' => $wardRound,
+        // Redirect to patient page where ward round can be viewed in modal
+        return redirect()->route('wards.patients.show', [
+            'ward' => $admission->ward_id,
+            'admission' => $admission->id,
         ]);
     }
 

@@ -114,7 +114,7 @@ class ConsultationController extends Controller
                     $query->latest()->limit(1);
                 },
                 'diagnoses.diagnosis:id,diagnosis,code,icd_10,g_drg',
-                'prescriptions:id,consultation_id,medication_name,dosage,frequency,duration,instructions,status',
+                'prescriptions:id,consultation_id,medication_name,dose_quantity,frequency,duration,instructions,status',
                 'labOrders.labService:id,name,code,category,price,sample_type',
                 'labOrders.orderedBy:id,name',
             ])

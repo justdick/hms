@@ -21,11 +21,13 @@ import { Stethoscope } from 'lucide-react';
 interface WardRoundsTableProps {
     admissionId: number;
     wardRounds: WardRound[];
+    onViewWardRound?: (wardRound: WardRound) => void;
 }
 
 export function WardRoundsTable({
     admissionId,
     wardRounds,
+    onViewWardRound,
 }: WardRoundsTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         { id: 'round_datetime', desc: true },
@@ -33,7 +35,7 @@ export function WardRoundsTable({
 
     const table = useReactTable({
         data: wardRounds,
-        columns: wardRoundsColumns(admissionId),
+        columns: wardRoundsColumns(admissionId, onViewWardRound),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -86,7 +88,10 @@ export function WardRoundsTable({
                             <TableRow>
                                 <TableCell
                                     colSpan={
-                                        wardRoundsColumns(admissionId).length
+                                        wardRoundsColumns(
+                                            admissionId,
+                                            onViewWardRound,
+                                        ).length
                                     }
                                     className="h-24 text-center"
                                 >

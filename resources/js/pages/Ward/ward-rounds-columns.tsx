@@ -64,6 +64,7 @@ const formatDate = (dateString: string) => {
 
 export const wardRoundsColumns = (
     admissionId: number,
+    onViewWardRound?: (wardRound: WardRound) => void,
 ): ColumnDef<WardRound>[] => [
     {
         accessorKey: 'day_number',
@@ -168,17 +169,25 @@ export const wardRoundsColumns = (
             const wardRound = row.original;
             const isInProgress = wardRound.status === 'in_progress';
 
+            if (isInProgress) {
+                return (
+                    <Button size="sm" variant="outline" asChild>
+                        <Link
+                            href={`/admissions/${admissionId}/ward-rounds/${wardRound.id}/edit`}
+                        >
+                            Continue
+                        </Link>
+                    </Button>
+                );
+            }
+
             return (
-                <Button size="sm" variant="outline" asChild>
-                    <Link
-                        href={
-                            isInProgress
-                                ? `/admissions/${admissionId}/ward-rounds/${wardRound.id}/edit`
-                                : `/admissions/${admissionId}/ward-rounds/${wardRound.id}`
-                        }
-                    >
-                        {isInProgress ? 'Continue' : 'View'}
-                    </Link>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewWardRound?.(wardRound)}
+                >
+                    View
                 </Button>
             );
         },

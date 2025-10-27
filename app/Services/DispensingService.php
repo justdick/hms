@@ -229,26 +229,28 @@ class DispensingService
     /**
      * Get prescriptions ready for review.
      */
-    public function getPrescriptionsForReview(int $patientCheckinId): array
+    public function getPrescriptionsForReview(int $patientId, ?\Carbon\Carbon $dateConstraint = null): array
     {
-        // Get prescriptions from consultations
-        $consultationPrescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
-            $query->where('patient_checkin_id', $patientCheckinId);
+        // Get prescriptions from consultations (both prescribed and reviewed status for re-review)
+        $consultationPrescriptions = Prescription::whereHas('consultation.patientCheckin', function ($query) use ($patientId) {
+            $query->where('patient_id', $patientId);
         })
             ->with(['drug', 'charge', 'consultation'])
-            ->where('status', 'prescribed')
+            ->whereIn('status', ['prescribed', 'reviewed'])
             ->whereNotNull('drug_id')
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
-        // Get prescriptions from ward rounds for the same patient
-        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientCheckinId) {
-            $query->whereHas('patientAdmission.consultation', function ($q) use ($patientCheckinId) {
-                $q->where('patient_checkin_id', $patientCheckinId);
+        // Get prescriptions from ward rounds for the same patient (both prescribed and reviewed status for re-review)
+        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientId) {
+            $query->whereHas('patientAdmission', function ($q) use ($patientId) {
+                $q->where('patient_id', $patientId);
             });
         })
-            ->with(['drug', 'charge', 'prescribable.patientAdmission.consultation'])
-            ->where('status', 'prescribed')
+            ->with(['drug', 'charge', 'prescribable.patientAdmission'])
+            ->whereIn('status', ['prescribed', 'reviewed'])
             ->whereNotNull('drug_id')
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
         // Merge both collections
@@ -269,26 +271,28 @@ class DispensingService
     /**
      * Get prescriptions ready for dispensing.
      */
-    public function getPrescriptionsForDispensing(int $patientCheckinId): array
+    public function getPrescriptionsForDispensing(int $patientId, ?\Carbon\Carbon $dateConstraint = null): array
     {
         // Get prescriptions from consultations
-        $consultationPrescriptions = Prescription::whereHas('consultation', function ($query) use ($patientCheckinId) {
-            $query->where('patient_checkin_id', $patientCheckinId);
+        $consultationPrescriptions = Prescription::whereHas('consultation.patientCheckin', function ($query) use ($patientId) {
+            $query->where('patient_id', $patientId);
         })
             ->with(['drug', 'charge', 'reviewedBy', 'dispensing'])
             ->where('status', 'reviewed')
             ->whereNotNull('drug_id')
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
         // Get prescriptions from ward rounds for the same patient
-        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientCheckinId) {
-            $query->whereHas('patientAdmission.consultation', function ($q) use ($patientCheckinId) {
-                $q->where('patient_checkin_id', $patientCheckinId);
+        $wardRoundPrescriptions = Prescription::whereHasMorph('prescribable', ['App\Models\WardRound'], function ($query) use ($patientId) {
+            $query->whereHas('patientAdmission', function ($q) use ($patientId) {
+                $q->where('patient_id', $patientId);
             });
         })
-            ->with(['drug', 'charge', 'reviewedBy', 'dispensing', 'prescribable.patientAdmission.consultation'])
+            ->with(['drug', 'charge', 'reviewedBy', 'dispensing', 'prescribable.patientAdmission'])
             ->where('status', 'reviewed')
             ->whereNotNull('drug_id')
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
         // Merge both collections

@@ -143,12 +143,18 @@ export function PrescriptionReviewTable({
                                         {pd.prescription.dose_quantity && (
                                             <div className="font-medium">
                                                 {pd.prescription.dose_quantity}{' '}
-                                                {pd.prescription.drug.unit_type === 'piece'
+                                                {pd.prescription.drug
+                                                    .unit_type === 'piece'
                                                     ? pd.prescription.drug.form
-                                                    : pd.prescription.drug.unit_type === 'bottle' ||
-                                                      pd.prescription.drug.unit_type === 'vial'
-                                                    ? 'ml'
-                                                    : pd.prescription.drug.unit_type}
+                                                    : pd.prescription.drug
+                                                            .unit_type ===
+                                                            'bottle' ||
+                                                        pd.prescription.drug
+                                                            .unit_type ===
+                                                            'vial'
+                                                      ? 'ml'
+                                                      : pd.prescription.drug
+                                                            .unit_type}
                                                 {' per dose'}
                                             </div>
                                         )}
@@ -348,12 +354,15 @@ export function MobileReviewCards({
                                 {pd.prescription.dose_quantity && (
                                     <>
                                         {pd.prescription.dose_quantity}{' '}
-                                        {pd.prescription.drug.unit_type === 'piece'
+                                        {pd.prescription.drug.unit_type ===
+                                        'piece'
                                             ? pd.prescription.drug.form
-                                            : pd.prescription.drug.unit_type === 'bottle' ||
-                                              pd.prescription.drug.unit_type === 'vial'
-                                            ? 'ml'
-                                            : pd.prescription.drug.unit_type}
+                                            : pd.prescription.drug.unit_type ===
+                                                    'bottle' ||
+                                                pd.prescription.drug
+                                                    .unit_type === 'vial'
+                                              ? 'ml'
+                                              : pd.prescription.drug.unit_type}
                                         {' per dose'} ·{' '}
                                     </>
                                 )}

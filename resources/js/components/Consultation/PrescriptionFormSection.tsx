@@ -110,8 +110,7 @@ function estimateBottlesNeeded(
     const totalMlNeeded = dailyCount * days * mlPerDose;
 
     // Use actual bottle size from drug data, or fallback to defaults
-    const bottleSize =
-        actualBottleSize || (unitType === 'bottle' ? 100 : 10);
+    const bottleSize = actualBottleSize || (unitType === 'bottle' ? 100 : 10);
 
     // Calculate bottles needed (round up)
     return Math.ceil(totalMlNeeded / bottleSize);
@@ -206,164 +205,170 @@ export default function PrescriptionFormSection({
                                     open={drugComboOpen}
                                     onOpenChange={setDrugComboOpen}
                                 >
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={drugComboOpen}
-                                        className={cn(
-                                            'w-full justify-between',
-                                            !prescriptionData.drug_id &&
-                                                'text-muted-foreground',
-                                        )}
-                                    >
-                                        {selectedDrug ? (
-                                            <span className="flex items-center gap-2 truncate">
-                                                <span className="font-medium">
-                                                    {selectedDrug.name}
-                                                </span>
-                                                {selectedDrug.strength && (
-                                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {selectedDrug.strength}
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={drugComboOpen}
+                                            className={cn(
+                                                'w-full justify-between',
+                                                !prescriptionData.drug_id &&
+                                                    'text-muted-foreground',
+                                            )}
+                                        >
+                                            {selectedDrug ? (
+                                                <span className="flex items-center gap-2 truncate">
+                                                    <span className="font-medium">
+                                                        {selectedDrug.name}
                                                     </span>
-                                                )}
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="text-xs"
-                                                >
-                                                    {selectedDrug.form}
-                                                </Badge>
-                                            </span>
-                                        ) : (
-                                            'Select drug...'
-                                        )}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-[500px] p-0"
-                                    align="start"
-                                >
-                                    <Command>
-                                        <CommandInput placeholder="Search drugs..." />
-                                        <CommandList>
-                                            <CommandEmpty>
-                                                No drug found.
-                                            </CommandEmpty>
-                                            <CommandGroup>
-                                                {drugs.map((drug) => (
-                                                    <CommandItem
-                                                        key={drug.id}
-                                                        value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
-                                                        onSelect={() => {
-                                                            setPrescriptionData(
-                                                                'drug_id',
-                                                                drug.id,
-                                                            );
-                                                            setPrescriptionData(
-                                                                'medication_name',
-                                                                drug.name,
-                                                            );
-                                                            setDrugComboOpen(
-                                                                false,
-                                                            );
-                                                        }}
+                                                    {selectedDrug.strength && (
+                                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                            {
+                                                                selectedDrug.strength
+                                                            }
+                                                        </span>
+                                                    )}
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs"
                                                     >
-                                                        <Check
-                                                            className={cn(
-                                                                'mr-2 h-4 w-4',
-                                                                prescriptionData.drug_id ===
-                                                                    drug.id
-                                                                    ? 'opacity-100'
-                                                                    : 'opacity-0',
-                                                            )}
-                                                        />
-                                                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                            <span className="truncate font-medium">
-                                                                {drug.name}
-                                                            </span>
-                                                            {drug.strength && (
-                                                                <span className="shrink-0 text-sm text-gray-600 dark:text-gray-400">
-                                                                    {
-                                                                        drug.strength
-                                                                    }
+                                                        {selectedDrug.form}
+                                                    </Badge>
+                                                </span>
+                                            ) : (
+                                                'Select drug...'
+                                            )}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        className="w-[500px] p-0"
+                                        align="start"
+                                    >
+                                        <Command>
+                                            <CommandInput placeholder="Search drugs..." />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                    No drug found.
+                                                </CommandEmpty>
+                                                <CommandGroup>
+                                                    {drugs.map((drug) => (
+                                                        <CommandItem
+                                                            key={drug.id}
+                                                            value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
+                                                            onSelect={() => {
+                                                                setPrescriptionData(
+                                                                    'drug_id',
+                                                                    drug.id,
+                                                                );
+                                                                setPrescriptionData(
+                                                                    'medication_name',
+                                                                    drug.name,
+                                                                );
+                                                                setDrugComboOpen(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    'mr-2 h-4 w-4',
+                                                                    prescriptionData.drug_id ===
+                                                                        drug.id
+                                                                        ? 'opacity-100'
+                                                                        : 'opacity-0',
+                                                                )}
+                                                            />
+                                                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                                <span className="truncate font-medium">
+                                                                    {drug.name}
                                                                 </span>
-                                                            )}
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="shrink-0 text-xs"
-                                                            >
-                                                                {drug.form}
-                                                            </Badge>
-                                                        </div>
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                                                                {drug.strength && (
+                                                                    <span className="shrink-0 text-sm text-gray-600 dark:text-gray-400">
+                                                                        {
+                                                                            drug.strength
+                                                                        }
+                                                                    </span>
+                                                                )}
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="shrink-0 text-xs"
+                                                                >
+                                                                    {drug.form}
+                                                                </Badge>
+                                                            </div>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
                             {/* Dose Quantity Field - Takes 1 column */}
                             {selectedDrug && (
                                 <div className="space-y-2">
-                                <Label htmlFor="dose_quantity">
-                                    Dose Quantity *
-                                </Label>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        id="dose_quantity"
-                                        placeholder={
-                                            selectedDrug.unit_type === 'piece'
-                                                ? '1'
+                                    <Label htmlFor="dose_quantity">
+                                        Dose Quantity *
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            id="dose_quantity"
+                                            placeholder={
+                                                selectedDrug.unit_type ===
+                                                'piece'
+                                                    ? '1'
+                                                    : selectedDrug.unit_type ===
+                                                            'bottle' ||
+                                                        selectedDrug.unit_type ===
+                                                            'vial'
+                                                      ? '5'
+                                                      : '1'
+                                            }
+                                            value={
+                                                prescriptionData.dose_quantity ||
+                                                ''
+                                            }
+                                            onChange={(e) =>
+                                                setPrescriptionData(
+                                                    'dose_quantity',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                            required
+                                        />
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {selectedDrug.unit_type === 'piece'
+                                                ? `${selectedDrug.form}(s) per dose`
                                                 : selectedDrug.unit_type ===
-                                                      'bottle' ||
+                                                        'bottle' ||
                                                     selectedDrug.unit_type ===
                                                         'vial'
-                                                  ? '5'
-                                                  : '1'
-                                        }
-                                        value={
-                                            prescriptionData.dose_quantity || ''
-                                        }
-                                        onChange={(e) =>
-                                            setPrescriptionData(
-                                                'dose_quantity',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                        required
-                                    />
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {selectedDrug.unit_type === 'piece'
-                                            ? `${selectedDrug.form}(s) per dose`
-                                            : selectedDrug.unit_type ===
-                                                  'bottle' ||
-                                                selectedDrug.unit_type === 'vial'
-                                              ? 'ml per dose'
-                                              : 'per dose'}
-                                    </span>
+                                                  ? 'ml per dose'
+                                                  : 'per dose'}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {selectedDrug.unit_type === 'piece' ? (
+                                            <>
+                                                e.g., "1" for one tablet, "2"
+                                                for two tablets per dose
+                                            </>
+                                        ) : selectedDrug.unit_type ===
+                                              'bottle' ||
+                                          selectedDrug.unit_type === 'vial' ? (
+                                            <>
+                                                e.g., "5" for 5ml, "10" for 10ml
+                                                per dose
+                                            </>
+                                        ) : (
+                                            <>Enter dose quantity</>
+                                        )}
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {selectedDrug.unit_type === 'piece' ? (
-                                        <>
-                                            e.g., "1" for one tablet, "2" for
-                                            two tablets per dose
-                                        </>
-                                    ) : selectedDrug.unit_type === 'bottle' ||
-                                      selectedDrug.unit_type === 'vial' ? (
-                                        <>
-                                            e.g., "5" for 5ml, "10" for 10ml per
-                                            dose
-                                        </>
-                                    ) : (
-                                        <>Enter dose quantity</>
-                                    )}
-                                </p>
-                            </div>
                             )}
                         </div>
 
@@ -520,7 +525,8 @@ export default function PrescriptionFormSection({
                                                 {
                                                     prescriptionData.quantity_to_dispense
                                                 }{' '}
-                                                {selectedDrug.unit_type === 'bottle'
+                                                {selectedDrug.unit_type ===
+                                                'bottle'
                                                     ? prescriptionData.quantity_to_dispense ===
                                                       1
                                                         ? 'bottle'

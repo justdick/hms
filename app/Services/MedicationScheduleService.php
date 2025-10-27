@@ -13,8 +13,15 @@ class MedicationScheduleService
      */
     public function generateSchedule(Prescription $prescription): void
     {
-        // Only for admitted patients
-        if (! $prescription->consultation->patientAdmission) {
+        // Get patient admission - prescribable can be either WardRound or Consultation
+        $admission = $this->getPatientAdmission($prescription);
+
+        if (! $admission) {
+            return; // Only for admitted patients
+        }
+
+        // Skip PRN medications - they are administered on-demand
+        if (strtoupper(trim($prescription->frequency ?? '')) === 'PRN') {
             return;
         }
 
@@ -28,14 +35,32 @@ class MedicationScheduleService
             foreach ($schedules as $time) {
                 MedicationAdministration::create([
                     'prescription_id' => $prescription->id,
-                    'patient_admission_id' => $prescription->consultation->patientAdmission->id,
+                    'patient_admission_id' => $admission->id,
                     'scheduled_time' => Carbon::parse($date->format('Y-m-d').' '.$time),
                     'status' => 'scheduled',
-                    'dosage_given' => null,
-                    'route' => $prescription->route ?? 'oral',
+                    'dosage_given' => $prescription->dose_quantity,
+                    'route' => null, // Will be set during administration
                 ]);
             }
         }
+    }
+
+    /**
+     * Get patient admission from prescription.
+     */
+    private function getPatientAdmission(Prescription $prescription): ?\App\Models\PatientAdmission
+    {
+        // If prescribable is WardRound, get admission from ward round
+        if ($prescription->prescribable_type === 'App\Models\WardRound') {
+            return $prescription->prescribable->patientAdmission ?? null;
+        }
+
+        // If prescribable is Consultation, check if it has an admission
+        if ($prescription->prescribable_type === 'App\Models\Consultation') {
+            return $prescription->prescribable->patientAdmission ?? null;
+        }
+
+        return null;
     }
 
     /**

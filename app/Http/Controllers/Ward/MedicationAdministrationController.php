@@ -21,7 +21,7 @@ class MedicationAdministrationController extends Controller
                 'prescription.drug:id,name,strength',
                 'administeredBy:id,name',
             ])
-            ->orderBy('scheduled_time', 'desc')
+            ->orderBy('scheduled_time', 'asc')
             ->get()
             ->groupBy(function ($med) {
                 return $med->scheduled_time->format('Y-m-d');

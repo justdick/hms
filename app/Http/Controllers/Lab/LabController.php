@@ -85,17 +85,27 @@ class LabController extends Controller
             $firstOrder = $orders->first();
             $orderable = $firstOrder->orderable;
 
+            // Skip if orderable no longer exists (orphaned from seeder deleting wards/consultations)
+            if (! $orderable) {
+                return null;
+            }
+
             // Get patient based on orderable type
             if ($orderable instanceof \App\Models\Consultation) {
-                $patient = $orderable->patientCheckin->patient;
+                $patient = $orderable->patientCheckin?->patient;
                 $context = $orderable->presenting_complaint;
                 $orderableType = 'consultation';
                 $orderableId = $orderable->id;
             } else { // WardRound
-                $patient = $orderable->patientAdmission->patient;
+                $patient = $orderable->patientAdmission?->patient;
                 $context = $orderable->presenting_complaint ?? 'Ward Round - Day '.$orderable->day_number;
                 $orderableType = 'ward_round';
                 $orderableId = $orderable->id;
+            }
+
+            // Skip if patient data is missing
+            if (! $patient) {
+                return null;
             }
 
             // Calculate status summary
@@ -124,7 +134,7 @@ class LabController extends Controller
                 'priority' => $highestPriority,
                 'ordered_by' => $firstOrder->orderedBy->name,
             ];
-        })->values();
+        })->filter()->values();
 
         // Paginate the grouped results
         $perPage = 25;

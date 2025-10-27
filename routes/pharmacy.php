@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified', 'can:pharmacy.view'])->prefix('pharmacy')
     Route::get('dispensing', [DispensingController::class, 'index'])->name('dispensing.index')->middleware('can:dispensing.view');
     Route::get('dispensing/search', [DispensingController::class, 'search'])->name('dispensing.search')->middleware('can:dispensing.view');
     Route::get('dispensing/patients/{patient}', [DispensingController::class, 'show'])->name('dispensing.show')->middleware('can:dispensing.view');
+    Route::get('dispensing/patients/{patient}/prescriptions', [DispensingController::class, 'getPrescriptionsForDispensing'])->name('dispensing.prescriptions')->middleware('can:dispensing.view');
 
     // Touchpoint 1: Review (POST only - handled via modal)
     Route::post('dispensing/patients/{patient}/review', [DispensingController::class, 'updateReview'])->name('dispensing.review.update')->middleware('can:dispensing.review');

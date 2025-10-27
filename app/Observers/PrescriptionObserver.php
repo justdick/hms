@@ -3,12 +3,14 @@
 namespace App\Observers;
 
 use App\Models\Prescription;
+use App\Services\MedicationScheduleService;
 use App\Services\PharmacyBillingService;
 
 class PrescriptionObserver
 {
     public function __construct(
-        protected PharmacyBillingService $billingService
+        protected PharmacyBillingService $billingService,
+        protected MedicationScheduleService $scheduleService
     ) {}
 
     /**
@@ -21,6 +23,11 @@ class PrescriptionObserver
         if ($prescription->drug_id && $prescription->quantity && $prescription->isPrescribed()) {
             $this->billingService->createChargeForPrescription($prescription);
         }
+
+        // Generate medication administration schedule for admitted patients
+        if ($prescription->frequency && $prescription->duration) {
+            $this->scheduleService->generateSchedule($prescription);
+        }
     }
 
     /**
@@ -28,7 +35,12 @@ class PrescriptionObserver
      */
     public function updated(Prescription $prescription): void
     {
-        // Track status changes or other updates if needed
+        // Regenerate schedule if frequency or duration changed
+        if ($prescription->isDirty(['frequency', 'duration', 'dose_quantity'])) {
+            if ($prescription->frequency && $prescription->duration) {
+                $this->scheduleService->regenerateSchedule($prescription);
+            }
+        }
     }
 
     /**
@@ -43,6 +55,11 @@ class PrescriptionObserver
                 'notes' => 'Prescription deleted',
             ]);
         }
+
+        // Delete all scheduled medication administrations
+        $prescription->medicationAdministrations()
+            ->where('status', 'scheduled')
+            ->delete();
     }
 
     /**

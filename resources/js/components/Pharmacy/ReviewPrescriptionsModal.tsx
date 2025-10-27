@@ -29,10 +29,12 @@ interface Prescription {
     drug_id: number;
     drug: Drug;
     quantity: number;
+    quantity_to_dispense?: number;
     dose_quantity?: string;
     frequency: string;
     duration: string;
     status: string;
+    dispensing_notes?: string;
 }
 
 interface StockStatus {
@@ -70,13 +72,28 @@ export function ReviewPrescriptionsModal({
     prescriptionsData,
 }: Props) {
     const [reviews, setReviews] = useState<ReviewForm[]>(
-        prescriptionsData.map((pd) => ({
-            prescription_id: pd.prescription.id,
-            action: 'keep',
-            quantity_to_dispense: pd.prescription.quantity,
-            notes: '',
-            reason: '',
-        })),
+        prescriptionsData.map((pd) => {
+            // If prescription is already reviewed, determine the action based on quantity
+            const isReviewed = pd.prescription.status === 'reviewed';
+            const quantityToDispense = isReviewed
+                ? pd.prescription.quantity_to_dispense ||
+                  pd.prescription.quantity
+                : pd.prescription.quantity;
+
+            // Determine action based on current state
+            let action: 'keep' | 'partial' | 'external' | 'cancel' = 'keep';
+            if (isReviewed && quantityToDispense < pd.prescription.quantity) {
+                action = 'partial';
+            }
+
+            return {
+                prescription_id: pd.prescription.id,
+                action,
+                quantity_to_dispense: quantityToDispense,
+                notes: isReviewed ? pd.prescription.dispensing_notes || '' : '',
+                reason: '',
+            };
+        }),
     );
 
     const [processing, setProcessing] = useState(false);
@@ -95,8 +112,8 @@ export function ReviewPrescriptionsModal({
                 newReviews[index].quantity_to_dispense =
                     prescriptionsData[index].prescription.quantity;
             } else if (value === 'partial') {
-                newReviews[index].quantity_to_dispense =
-                    prescriptionsData[index].max_dispensable;
+                // Set to null so user must enter manually to avoid mistakes
+                newReviews[index].quantity_to_dispense = null;
             }
         }
 
@@ -107,7 +124,7 @@ export function ReviewPrescriptionsModal({
         e.preventDefault();
 
         // Clean up the data before submission - only include reason when needed
-        const cleanedReviews = reviews.map(review => {
+        const cleanedReviews = reviews.map((review) => {
             const cleaned: any = {
                 prescription_id: review.prescription_id,
                 action: review.action,
@@ -143,7 +160,7 @@ export function ReviewPrescriptionsModal({
                 onFinish: () => {
                     setProcessing(false);
                 },
-            }
+            },
         );
     };
 

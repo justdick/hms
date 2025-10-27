@@ -30,12 +30,20 @@ interface Stats {
     completed_today: number;
 }
 
+interface Filters {
+    status: string;
+    priority?: string;
+    category?: string;
+    search?: string;
+}
+
 interface Props {
     groupedOrders: PaginatedOrders;
     stats: Stats;
+    filters: Filters;
 }
 
-export default function LabIndex({ groupedOrders, stats }: Props) {
+export default function LabIndex({ groupedOrders, stats, filters }: Props) {
     return (
         <AppLayout breadcrumbs={[{ title: 'Laboratory', href: '/lab' }]}>
             <Head title="Laboratory Dashboard" />
@@ -140,6 +148,7 @@ export default function LabIndex({ groupedOrders, stats }: Props) {
                         <LabOrdersDataTable
                             columns={groupedConsultationColumns}
                             data={groupedOrders.data}
+                            filters={filters}
                         />
                     </CardContent>
                 </Card>

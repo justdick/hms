@@ -484,9 +484,9 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                                         )}
                                         <p className="text-xs text-gray-500">
                                             Volume in milliliters (ml) per{' '}
-                                            {data.unit_type}. Common sizes: 50ml,
-                                            100ml, 200ml for bottles; 5ml, 10ml,
-                                            20ml for vials.
+                                            {data.unit_type}. Common sizes:
+                                            50ml, 100ml, 200ml for bottles; 5ml,
+                                            10ml, 20ml for vials.
                                         </p>
                                     </div>
                                 )}

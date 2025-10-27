@@ -36,10 +36,18 @@ class DispensingController extends Controller
         $this->authorize('viewAny', Dispensing::class);
 
         $query = $request->input('query');
+        $dateFilter = $request->input('date_filter', 'today'); // today, week, all
 
         if (empty($query)) {
             return response()->json([]);
         }
+
+        // Determine date range based on filter
+        $dateConstraint = match ($dateFilter) {
+            'today' => now()->startOfDay(),
+            'week' => now()->subDays(7)->startOfDay(),
+            default => null, // 'all' - no date constraint
+        };
 
         $patients = Patient::query()
             ->where(function ($q) use ($query) {
@@ -48,122 +56,178 @@ class DispensingController extends Controller
                     ->orWhere('patient_number', 'like', "%{$query}%")
                     ->orWhere('phone_number', 'like', "%{$query}%");
             })
-            ->where(function ($q) {
-                // Has prescriptions from consultations OR ward rounds
-                $q->whereHas('checkins.consultations.prescriptions', function ($q) {
-                    $q->where('status', 'prescribed');
-                })->orWhereHas('admissions.wardRounds.prescriptions', function ($q) {
-                    $q->where('status', 'prescribed');
+            ->where(function ($q) use ($dateConstraint) {
+                // Has prescriptions from consultations OR ward rounds with any relevant status
+                $q->whereHas('checkins.consultations.prescriptions', function ($q) use ($dateConstraint) {
+                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed']);
+                    if ($dateConstraint) {
+                        $q->where('created_at', '>=', $dateConstraint);
+                    }
+                })->orWhereHas('admissions.wardRounds.prescriptions', function ($q) use ($dateConstraint) {
+                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed']);
+                    if ($dateConstraint) {
+                        $q->where('created_at', '>=', $dateConstraint);
+                    }
                 });
             })
             ->with([
-                'checkins' => function ($q) {
+                'checkins' => function ($q) use ($dateConstraint) {
+                    if ($dateConstraint) {
+                        $q->where('created_at', '>=', $dateConstraint);
+                    }
                     $q->latest()
-                        ->limit(1)
-                        ->with(['consultations' => function ($q) {
+                        ->with(['consultations' => function ($q) use ($dateConstraint) {
                             $q->latest()
-                                ->limit(1)
-                                ->with(['prescriptions' => function ($q) {
-                                    $q->where('status', 'prescribed')
+                                ->with(['prescriptions' => function ($q) use ($dateConstraint) {
+                                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
                                         ->with('drug:id,name,form,unit_type');
+                                    if ($dateConstraint) {
+                                        $q->where('created_at', '>=', $dateConstraint);
+                                    }
                                 }]);
                         }]);
                 },
-                'admissions' => function ($q) {
+                'admissions' => function ($q) use ($dateConstraint) {
                     $q->whereNull('discharged_at')
-                        ->with(['wardRounds.prescriptions' => function ($q) {
-                            $q->where('status', 'prescribed')
-                                ->with('drug:id,name,form,unit_type');
+                        ->with(['wardRounds' => function ($q) use ($dateConstraint) {
+                            if ($dateConstraint) {
+                                $q->where('created_at', '>=', $dateConstraint);
+                            }
+                            $q->with(['prescriptions' => function ($q) use ($dateConstraint) {
+                                $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
+                                    ->with('drug:id,name,form,unit_type');
+                                if ($dateConstraint) {
+                                    $q->where('created_at', '>=', $dateConstraint);
+                                }
+                            }]);
                         }]);
                 },
             ])
             ->limit(10)
             ->get()
             ->map(function ($patient) {
-                $latestCheckin = $patient->checkins->first();
-                $latestConsultation = $latestCheckin?->consultations->first();
-                $consultationPrescriptions = $latestConsultation?->prescriptions ?? collect();
+                // Collect all consultations and ward rounds with prescriptions
+                $visits = collect();
 
-                // Get ward round prescriptions
-                $wardRoundPrescriptions = collect();
-                $activeAdmission = $patient->admissions->first();
-                if ($activeAdmission) {
-                    foreach ($activeAdmission->wardRounds as $wardRound) {
-                        $wardRoundPrescriptions = $wardRoundPrescriptions->merge($wardRound->prescriptions);
+                // Add consultations from checkins
+                foreach ($patient->checkins as $checkin) {
+                    foreach ($checkin->consultations as $consultation) {
+                        $prescriptions = $consultation->prescriptions;
+                        if ($prescriptions->isNotEmpty()) {
+                            $visits->push([
+                                'type' => 'consultation',
+                                'date' => $consultation->started_at ?? $checkin->created_at,
+                                'prescriptions' => $prescriptions,
+                            ]);
+                        }
                     }
                 }
 
-                $pendingPrescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
+                // Add ward rounds from admissions
+                foreach ($patient->admissions as $admission) {
+                    foreach ($admission->wardRounds as $wardRound) {
+                        $prescriptions = $wardRound->prescriptions;
+                        if ($prescriptions->isNotEmpty()) {
+                            $visits->push([
+                                'type' => 'ward_round',
+                                'date' => $wardRound->created_at,
+                                'prescriptions' => $prescriptions,
+                            ]);
+                        }
+                    }
+                }
+
+                // Sort visits by date (most recent first)
+                $visits = $visits->sortByDesc('date')->values();
+
+                // Collect all prescriptions
+                $allPrescriptions = $visits->flatMap(fn ($visit) => $visit['prescriptions']);
+
+                // Determine the patient's status based on prescriptions
+                $prescribedCount = $allPrescriptions->where('status', 'prescribed')->count();
+                $reviewedCount = $allPrescriptions->where('status', 'reviewed')->count();
+                $dispensedCount = $allPrescriptions->where('status', 'dispensed')->count();
+
+                // Set primary status for the patient
+                $status = 'completed'; // default
+                if ($prescribedCount > 0) {
+                    $status = 'needs_review';
+                } elseif ($reviewedCount > 0) {
+                    $status = 'ready_to_dispense';
+                } elseif ($dispensedCount > 0 && $dispensedCount === $allPrescriptions->count()) {
+                    $status = 'completed';
+                }
+
+                $latestVisit = $visits->first();
 
                 return [
                     'id' => $patient->id,
                     'patient_number' => $patient->patient_number,
                     'full_name' => $patient->full_name,
                     'phone_number' => $patient->phone_number,
-                    'pending_prescriptions_count' => $pendingPrescriptions->count(),
-                    'last_visit' => $latestCheckin?->created_at?->diffForHumans(),
+                    'prescription_status' => $status,
+                    'prescribed_count' => $prescribedCount,
+                    'reviewed_count' => $reviewedCount,
+                    'dispensed_count' => $dispensedCount,
+                    'total_prescriptions' => $allPrescriptions->count(),
+                    'last_visit' => $latestVisit ? $latestVisit['date']->diffForHumans() : null,
+                    'last_visit_date' => $latestVisit ? $latestVisit['date']->format('Y-m-d') : null,
+                    'visit_count' => $visits->count(),
+                    'visits' => $visits->map(fn ($visit) => [
+                        'type' => $visit['type'],
+                        'date' => $visit['date']->format('Y-m-d H:i:s'),
+                        'date_formatted' => $visit['date']->format('M d, Y'),
+                        'date_relative' => $visit['date']->diffForHumans(),
+                        'is_today' => $visit['date']->isToday(),
+                        'prescription_count' => $visit['prescriptions']->count(),
+                        'prescribed_count' => $visit['prescriptions']->where('status', 'prescribed')->count(),
+                        'reviewed_count' => $visit['prescriptions']->where('status', 'reviewed')->count(),
+                        'dispensed_count' => $visit['prescriptions']->where('status', 'dispensed')->count(),
+                    ])->toArray(),
                 ];
-            });
+            })
+            ->filter(fn ($patient) => $patient['total_prescriptions'] > 0); // Only include patients with prescriptions
 
-        return response()->json($patients);
+        return response()->json($patients->values());
     }
 
-    public function show(Patient $patient): Response
+    public function show(Patient $patient, Request $request)
     {
         $this->authorize('viewAny', Dispensing::class);
 
-        // Load latest checkin with consultations and their prescriptions
-        $patient->load([
-            'checkins' => function ($q) {
-                $q->latest()
-                    ->limit(1)
-                    ->with(['consultations' => function ($q) {
-                        $q->latest()
-                            ->limit(1)
-                            ->with(['prescriptions' => function ($q) {
-                                $q->where('status', 'prescribed')
-                                    ->with('drug:id,name,form,unit_type,strength');
-                            }]);
-                    }]);
-            },
-        ]);
+        $dateFilter = $request->input('date_filter', 'today');
 
-        $latestCheckin = $patient->checkins->first();
-        $latestConsultation = $latestCheckin?->consultations->first();
+        // Determine date range based on filter
+        $dateConstraint = match ($dateFilter) {
+            'today' => now()->startOfDay(),
+            'week' => now()->subDays(7)->startOfDay(),
+            default => null, // 'all' - no date constraint
+        };
 
-        // Get prescriptions from consultations
-        $consultationPrescriptions = $latestConsultation?->prescriptions ?? collect();
+        $prescriptionsData = $this->dispensingService->getPrescriptionsForReview($patient->id, $dateConstraint);
 
-        // Get prescriptions from ward rounds for admitted patients
-        $wardRoundPrescriptions = collect();
-        $activeAdmission = $patient->admissions()
-            ->whereNull('discharged_at')
-            ->with(['wardRounds.prescriptions' => function ($q) {
-                $q->where('status', 'prescribed')
-                    ->with('drug:id,name,form,unit_type,strength');
-            }])
-            ->first();
+        return response()->json(['prescriptionsData' => $prescriptionsData]);
+    }
 
-        if ($activeAdmission) {
-            foreach ($activeAdmission->wardRounds as $wardRound) {
-                $wardRoundPrescriptions = $wardRoundPrescriptions->merge($wardRound->prescriptions);
-            }
-        }
+    /**
+     * Get prescriptions for dispensing modal
+     */
+    public function getPrescriptionsForDispensing(Patient $patient, Request $request)
+    {
+        $this->authorize('viewAny', Dispensing::class);
 
-        // Combine all prescriptions
-        $prescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
+        $dateFilter = $request->input('date_filter', 'today');
 
-        // Get prescription data with stock info for review modal
-        $prescriptionsData = null;
-        if ($latestCheckin && $prescriptions->isNotEmpty()) {
-            $prescriptionsData = $this->dispensingService->getPrescriptionsForReview($latestCheckin->id);
-        }
+        // Determine date range based on filter
+        $dateConstraint = match ($dateFilter) {
+            'today' => now()->startOfDay(),
+            'week' => now()->subDays(7)->startOfDay(),
+            default => null, // 'all' - no date constraint
+        };
 
-        return Inertia::render('Pharmacy/Dispensing/Show', [
-            'patient' => $patient,
-            'prescriptions' => $prescriptions,
-            'prescriptionsData' => $prescriptionsData,
-        ]);
+        $prescriptionsData = $this->dispensingService->getPrescriptionsForDispensing($patient->id, $dateConstraint);
+
+        return response()->json($prescriptionsData);
     }
 
     /**
@@ -191,8 +255,8 @@ class DispensingController extends Controller
         }
 
         return redirect()
-            ->route('pharmacy.dispensing.dispense.show', $patient)
-            ->with('success', 'Prescriptions reviewed successfully. Patient can now proceed to billing.');
+            ->route('pharmacy.dispensing.index')
+            ->with('success', 'Prescriptions reviewed successfully. Patient can now proceed to payment and dispensing.');
     }
 
     /**

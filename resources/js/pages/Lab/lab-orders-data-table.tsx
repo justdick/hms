@@ -34,15 +34,25 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { FlaskConical } from 'lucide-react';
+import { router } from '@inertiajs/react';
+
+interface Filters {
+    status: string;
+    priority?: string;
+    category?: string;
+    search?: string;
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    filters?: Filters;
 }
 
 export function LabOrdersDataTable<TData, TValue>({
     columns,
     data,
+    filters,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -51,23 +61,45 @@ export function LabOrdersDataTable<TData, TValue>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [globalFilter, setGlobalFilter] = React.useState('');
-    const [statusFilter, setStatusFilter] = React.useState<string>('all');
+
+    // Use server-side filters if provided, otherwise use local state
+    const currentStatus = filters?.status || 'pending';
     const [categoryFilter, setCategoryFilter] = React.useState<string>('all');
     const [priorityFilter, setPriorityFilter] = React.useState<string>('all');
 
-    // Client-side filtering (works with grouped consultations)
+    // All possible lab order statuses (hardcoded, not dynamic)
+    const allStatuses = [
+        { value: 'pending', label: 'Pending (All Active)' },
+        { value: 'ordered', label: 'Ordered' },
+        { value: 'sample_collected', label: 'Sample Collected' },
+        { value: 'in_progress', label: 'In Progress' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'all', label: 'All Statuses' },
+    ];
+
+    // Handler for status filter change (triggers server-side request)
+    const handleStatusChange = (status: string) => {
+        if (filters) {
+            // Server-side filtering via Inertia
+            router.get(
+                '/lab',
+                {
+                    ...filters,
+                    status,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    only: ['groupedOrders', 'stats', 'filters'],
+                },
+            );
+        }
+    };
+
+    // Client-side filtering for priority and category (status is server-side)
     const filteredData = React.useMemo(() => {
         return data.filter((item: any) => {
-            // Status filter - check if ANY test in the consultation matches the status
-            if (statusFilter !== 'all') {
-                if (item.tests && Array.isArray(item.tests)) {
-                    const hasMatchingStatus = item.tests.some(
-                        (test: any) => test.status === statusFilter,
-                    );
-                    if (!hasMatchingStatus) return false;
-                }
-            }
-
             // Priority filter - check consultation-level priority
             if (priorityFilter !== 'all' && item.priority !== priorityFilter) {
                 return false;
@@ -85,7 +117,7 @@ export function LabOrdersDataTable<TData, TValue>({
 
             return true;
         });
-    }, [data, statusFilter, priorityFilter, categoryFilter]);
+    }, [data, priorityFilter, categoryFilter]);
 
     const table = useReactTable({
         data: filteredData,
@@ -136,26 +168,7 @@ export function LabOrdersDataTable<TData, TValue>({
         },
     });
 
-    // Get unique values for filters from grouped consultation data
-    const statuses = React.useMemo(() => {
-        const statusSet = new Set<string>();
-        data.forEach((item: any) => {
-            // For grouped consultations, extract statuses from tests array
-            if (item.tests && Array.isArray(item.tests)) {
-                item.tests.forEach((test: any) => {
-                    if (test.status) {
-                        statusSet.add(test.status);
-                    }
-                });
-            }
-            // For individual lab orders (backward compatibility)
-            else if (item.status) {
-                statusSet.add(item.status);
-            }
-        });
-        return Array.from(statusSet);
-    }, [data]);
-
+    // Get unique values for priority and category filters from data
     const priorities = React.useMemo(() => {
         const prioritySet = new Set<string>();
         data.forEach((item: any) => {
@@ -204,7 +217,7 @@ export function LabOrdersDataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Status
+                            Status: {allStatuses.find((s) => s.value === currentStatus)?.label}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -214,17 +227,17 @@ export function LabOrdersDataTable<TData, TValue>({
                     >
                         <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        {statuses.map((status) => (
+                        {allStatuses.map((status) => (
                             <DropdownMenuCheckboxItem
-                                key={status}
-                                checked={statusFilter === status}
+                                key={status.value}
+                                checked={currentStatus === status.value}
                                 onCheckedChange={(checked) => {
-                                    setStatusFilter(checked ? status : 'all');
+                                    if (checked) {
+                                        handleStatusChange(status.value);
+                                    }
                                 }}
                             >
-                                {status
-                                    .replace('_', ' ')
-                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                                {status.label}
                             </DropdownMenuCheckboxItem>
                         ))}
                     </DropdownMenuContent>

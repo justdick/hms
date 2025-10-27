@@ -247,7 +247,10 @@ class PreviousConsultationsSeeder extends Seeder
                 // Find or create the diagnosis
                 $diagnosis = Diagnosis::firstOrCreate(
                     ['code' => $diagnosisData['code']],
-                    ['diagnosis' => $diagnosisData['description']]
+                    [
+                        'diagnosis' => $diagnosisData['description'],
+                        'icd_10' => $diagnosisData['code'], // Use the same code as ICD-10
+                    ]
                 );
 
                 ConsultationDiagnosis::create([
@@ -262,7 +265,7 @@ class PreviousConsultationsSeeder extends Seeder
                 Prescription::create([
                     'consultation_id' => $consultation->id,
                     'medication_name' => $prescription['medication'],
-                    'dosage' => $prescription['dosage'],
+                    'dose_quantity' => $prescription['dosage'],
                     'frequency' => $prescription['frequency'],
                     'duration' => $prescription['duration'],
                     'instructions' => $prescription['instructions'],
