@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class InsuranceClaimItem extends Model
+{
+    /** @use HasFactory<\Database\Factories\InsuranceClaimItemFactory> */
+    use HasFactory;
+
+    protected $fillable = [
+        'insurance_claim_id',
+        'charge_id',
+        'item_date',
+        'item_type',
+        'code',
+        'description',
+        'quantity',
+        'unit_tariff',
+        'subtotal',
+        'is_covered',
+        'coverage_percentage',
+        'insurance_pays',
+        'patient_pays',
+        'is_approved',
+        'rejection_reason',
+        'notes',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'item_date' => 'date',
+            'quantity' => 'integer',
+            'unit_tariff' => 'decimal:2',
+            'subtotal' => 'decimal:2',
+            'is_covered' => 'boolean',
+            'coverage_percentage' => 'decimal:2',
+            'insurance_pays' => 'decimal:2',
+            'patient_pays' => 'decimal:2',
+            'is_approved' => 'boolean',
+        ];
+    }
+
+    public function claim(): BelongsTo
+    {
+        return $this->belongsTo(InsuranceClaim::class, 'insurance_claim_id');
+    }
+
+    public function charge(): BelongsTo
+    {
+        return $this->belongsTo(Charge::class);
+    }
+}

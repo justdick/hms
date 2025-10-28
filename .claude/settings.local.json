@@ -15,7 +15,8 @@
       "mcp__laravel-boost__browser-logs",
       "mcp__playwright__browser_navigate",
       "mcp__laravel-boost__tinker",
-      "mcp__laravel-boost__get-absolute-url"
+      "mcp__laravel-boost__get-absolute-url",
+      "Bash(php artisan make:factory:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
