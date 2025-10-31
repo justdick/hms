@@ -30,6 +30,7 @@ Route::middleware(['auth', 'verified'])->prefix('checkin')->name('checkin.')->gr
         Route::patch('/{checkin}/date', [CheckinController::class, 'updateDate'])->name('update-date');
         Route::post('/{checkin}/cancel', [CheckinController::class, 'cancel'])->name('cancel');
         Route::get('/department/{department}/queue', [CheckinController::class, 'departmentQueue'])->name('department-queue');
+        Route::get('/patients/{patient}/insurance', [CheckinController::class, 'checkInsurance'])->name('patient-insurance');
     });
 
     // Vital Signs

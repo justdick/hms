@@ -8,7 +8,35 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Link } from '@inertiajs/react';
-import { AlertCircle, Bed, Calendar, Pill, Stethoscope } from 'lucide-react';
+import {
+    AlertCircle,
+    Bed,
+    Calendar,
+    Pill,
+    ShieldCheck,
+    Stethoscope,
+} from 'lucide-react';
+
+interface InsuranceProvider {
+    id: number;
+    name: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    plan_type: string;
+    insurance_provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    member_number: string;
+    status: string;
+    coverage_start_date: string;
+    coverage_end_date?: string;
+    insurance_plan: InsurancePlan;
+}
 
 interface Patient {
     id: number;
@@ -16,6 +44,7 @@ interface Patient {
     last_name: string;
     date_of_birth?: string;
     gender?: string;
+    active_insurance?: PatientInsurance;
 }
 
 interface Doctor {
@@ -111,6 +140,7 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                         <TableHead>Admission #</TableHead>
                         <TableHead>Bed</TableHead>
                         <TableHead>Doctor</TableHead>
+                        <TableHead>Insurance</TableHead>
                         <TableHead>Admitted</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-center">Alerts</TableHead>
@@ -203,6 +233,42 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                         ) : (
                                             <span className="text-sm text-gray-500 dark:text-gray-400">
                                                 Not assigned
+                                            </span>
+                                        )}
+                                    </Link>
+                                </TableCell>
+
+                                <TableCell>
+                                    <Link
+                                        href={`/wards/${wardId}/patients/${admission.id}`}
+                                        className="block"
+                                    >
+                                        {admission.patient.active_insurance ? (
+                                            <div className="flex items-center gap-1 text-sm">
+                                                <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {
+                                                            admission.patient
+                                                                .active_insurance
+                                                                .insurance_plan
+                                                                .insurance_provider
+                                                                .name
+                                                        }
+                                                    </span>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {
+                                                            admission.patient
+                                                                .active_insurance
+                                                                .insurance_plan
+                                                                .name
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                None
                                             </span>
                                         )}
                                     </Link>

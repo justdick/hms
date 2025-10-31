@@ -6,6 +6,8 @@ use App\Events\PatientCheckedIn;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Department;
+use App\Models\InsuranceClaim;
+use App\Models\InsurancePlan;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use Illuminate\Http\Request;
@@ -22,7 +24,7 @@ class CheckinController extends Controller
 
         // Show today's completed check-ins and all incomplete check-ins
         // FIFO ordering: oldest first (lower ID = checked in earlier)
-        $todayCheckins = PatientCheckin::with(['patient', 'department'])
+        $todayCheckins = PatientCheckin::with(['patient', 'department', 'insuranceClaim'])
             ->where(function ($query) {
                 $query->whereDate('checked_in_at', today())
                     ->orWhereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation']);
@@ -39,9 +41,26 @@ class CheckinController extends Controller
             ? Department::active()->opd()->get()
             : $user->departments()->active()->opd()->get();
 
+        // Get active insurance plans
+        $insurancePlans = InsurancePlan::with('provider')
+            ->active()
+            ->orderBy('plan_name')
+            ->get()
+            ->map(fn ($plan) => [
+                'id' => $plan->id,
+                'plan_name' => $plan->plan_name,
+                'plan_code' => $plan->plan_code,
+                'provider' => [
+                    'id' => $plan->provider->id,
+                    'name' => $plan->provider->name,
+                    'code' => $plan->provider->code,
+                ],
+            ]);
+
         return Inertia::render('Checkin/Index', [
             'todayCheckins' => $todayCheckins,
             'departments' => $departments,
+            'insurancePlans' => $insurancePlans,
             'permissions' => [
                 'canViewAnyDate' => $user->can('viewAnyDate', PatientCheckin::class),
                 'canViewAnyDepartment' => $user->can('viewAnyDepartment', PatientCheckin::class),
@@ -65,9 +84,11 @@ class CheckinController extends Controller
             'patient_id' => 'required|exists:patients,id',
             'department_id' => 'required|exists:departments,id',
             'notes' => 'nullable|string',
+            'has_insurance' => 'nullable|boolean',
+            'claim_check_code' => 'nullable|required_if:has_insurance,true|string|max:50|unique:patient_checkins,claim_check_code',
         ]);
 
-        $patient = Patient::find($validated['patient_id']);
+        $patient = Patient::with('activeInsurance.plan.provider')->find($validated['patient_id']);
 
         // Check if patient is currently admitted
         $activeAdmission = $patient->activeAdmission;
@@ -109,9 +130,38 @@ class CheckinController extends Controller
             'checked_in_at' => now(),
             'status' => 'checked_in',
             'notes' => $validated['notes'] ?? null,
+            'claim_check_code' => $validated['claim_check_code'] ?? null,
         ]);
 
         $checkin->load(['patient', 'department', 'checkedInBy']);
+
+        // Create insurance claim if patient has insurance and opted to use it
+        if (! empty($validated['has_insurance']) && ! empty($validated['claim_check_code'])) {
+            $activeInsurance = $patient->activeInsurance;
+
+            if ($activeInsurance) {
+                InsuranceClaim::create([
+                    'claim_check_code' => $validated['claim_check_code'],
+                    'folder_id' => $patient->patient_number,
+                    'patient_id' => $patient->id,
+                    'patient_insurance_id' => $activeInsurance->id,
+                    'patient_checkin_id' => $checkin->id,
+                    'patient_surname' => $patient->last_name,
+                    'patient_other_names' => $patient->first_name,
+                    'patient_dob' => $patient->date_of_birth,
+                    'patient_gender' => $patient->gender,
+                    'membership_id' => $activeInsurance->membership_id,
+                    'date_of_attendance' => $checkin->checked_in_at,
+                    'type_of_service' => 'outpatient',
+                    'type_of_attendance' => 'routine',
+                    'status' => 'draft',
+                    'total_claim_amount' => 0,
+                    'approved_amount' => 0,
+                    'patient_copay_amount' => 0,
+                    'insurance_covered_amount' => 0,
+                ]);
+            }
+        }
 
         // Fire check-in event for billing
         event(new PatientCheckedIn($checkin));
@@ -278,5 +328,41 @@ class CheckinController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Check-in date updated successfully.');
+    }
+
+    public function checkInsurance(Patient $patient)
+    {
+        $this->authorize('viewAny', PatientCheckin::class);
+
+        $activeInsurance = $patient->activeInsurance;
+
+        if (! $activeInsurance) {
+            return response()->json([
+                'has_insurance' => false,
+            ]);
+        }
+
+        $activeInsurance->load(['plan.provider']);
+
+        return response()->json([
+            'has_insurance' => true,
+            'insurance' => [
+                'id' => $activeInsurance->id,
+                'membership_id' => $activeInsurance->membership_id,
+                'policy_number' => $activeInsurance->policy_number,
+                'plan' => [
+                    'id' => $activeInsurance->plan->id,
+                    'plan_name' => $activeInsurance->plan->plan_name,
+                    'plan_code' => $activeInsurance->plan->plan_code,
+                    'provider' => [
+                        'id' => $activeInsurance->plan->provider->id,
+                        'name' => $activeInsurance->plan->provider->name,
+                        'code' => $activeInsurance->plan->provider->code,
+                    ],
+                ],
+                'coverage_start_date' => $activeInsurance->coverage_start_date,
+                'coverage_end_date' => $activeInsurance->coverage_end_date,
+            ],
+        ]);
     }
 }

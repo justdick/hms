@@ -23,6 +23,7 @@ class PatientCheckin extends Model
         'consultation_completed_at',
         'status',
         'notes',
+        'claim_check_code',
     ];
 
     protected function casts(): array
@@ -69,6 +70,11 @@ class PatientCheckin extends Model
     public function charges(): HasMany
     {
         return $this->hasMany(Charge::class);
+    }
+
+    public function insuranceClaim(): HasOne
+    {
+        return $this->hasOne(InsuranceClaim::class);
     }
 
     public function scopeToday($query): void

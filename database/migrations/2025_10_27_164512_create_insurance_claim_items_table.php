@@ -32,7 +32,7 @@ return new class extends Migration
             $table->decimal('patient_pays', 10, 2)->default(0.00);
 
             // Vetting
-            $table->boolean('is_approved')->default(false);
+            $table->boolean('is_approved')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->text('notes')->nullable();
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Charge extends Model
 {
@@ -14,13 +15,19 @@ class Charge extends Model
     protected $fillable = [
         'patient_checkin_id',
         'prescription_id',
+        'insurance_claim_id',
+        'insurance_claim_item_id',
         'service_type',
         'service_code',
         'description',
         'amount',
+        'insurance_tariff_amount',
         'charge_type',
         'status',
+        'is_insurance_claim',
         'paid_amount',
+        'insurance_covered_amount',
+        'patient_copay_amount',
         'charged_at',
         'due_date',
         'paid_at',
@@ -35,11 +42,15 @@ class Charge extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'insurance_tariff_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
+            'insurance_covered_amount' => 'decimal:2',
+            'patient_copay_amount' => 'decimal:2',
             'charged_at' => 'datetime',
             'due_date' => 'datetime',
             'paid_at' => 'datetime',
             'metadata' => 'json',
+            'is_insurance_claim' => 'boolean',
             'is_emergency_override' => 'boolean',
         ];
     }
@@ -52,6 +63,21 @@ class Charge extends Model
     public function prescription(): BelongsTo
     {
         return $this->belongsTo(Prescription::class);
+    }
+
+    public function insuranceClaim(): BelongsTo
+    {
+        return $this->belongsTo(InsuranceClaim::class);
+    }
+
+    public function insuranceClaimItem(): BelongsTo
+    {
+        return $this->belongsTo(InsuranceClaimItem::class);
+    }
+
+    public function claimItems(): HasMany
+    {
+        return $this->hasMany(InsuranceClaimItem::class);
     }
 
     public function isPending(): bool
@@ -136,5 +162,53 @@ class Charge extends Model
     public function scopeForPatient($query, int $patientCheckinId)
     {
         return $query->where('patient_checkin_id', $patientCheckinId);
+    }
+
+    public function isInsuranceClaim(): bool
+    {
+        return $this->is_insurance_claim === true;
+    }
+
+    public function hasInsuranceCoverage(): bool
+    {
+        return $this->is_insurance_claim && $this->insurance_covered_amount > 0;
+    }
+
+    public function getCoveragePercentage(): float
+    {
+        if (! $this->is_insurance_claim || $this->amount <= 0) {
+            return 0.0;
+        }
+
+        return round(($this->insurance_covered_amount / $this->amount) * 100, 2);
+    }
+
+    public function getInsuranceCoverageDisplay(): string
+    {
+        if (! $this->is_insurance_claim) {
+            return 'No Coverage';
+        }
+
+        $percentage = $this->getCoveragePercentage();
+
+        if ($percentage >= 100) {
+            return 'Fully Covered';
+        }
+
+        if ($percentage > 0) {
+            return "{$percentage}% Covered";
+        }
+
+        return 'Not Covered';
+    }
+
+    public function scopeWithInsurance($query)
+    {
+        return $query->where('is_insurance_claim', true);
+    }
+
+    public function scopeWithoutInsurance($query)
+    {
+        return $query->where('is_insurance_claim', false);
     }
 }

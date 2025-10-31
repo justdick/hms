@@ -1,3 +1,5 @@
+import { InlineCoverageDisplay } from '@/components/Insurance/InlineCoverageDisplay';
+import { InsuranceCoverageBadge } from '@/components/Insurance/InsuranceCoverageBadge';
 import { PrescriptionStatusBadge } from '@/components/Pharmacy/PrescriptionStatusBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -59,11 +61,20 @@ interface Batch {
     available_quantity: number;
 }
 
+interface InsuranceCoverage {
+    has_insurance: boolean;
+    coverage_percentage: number;
+    insurance_amount: number;
+    patient_amount: number;
+    total_amount: number;
+}
+
 interface PrescriptionData {
     prescription: Prescription;
     payment_status: string;
     can_dispense: boolean;
     available_batches: Batch[];
+    insurance_coverage: InsuranceCoverage | null;
 }
 
 interface Patient {
@@ -173,6 +184,9 @@ export function DispenseModal({
                                         </TableHead>
                                         <TableHead className="w-[100px]">
                                             Quantity
+                                        </TableHead>
+                                        <TableHead className="w-[150px]">
+                                            Amount
                                         </TableHead>
                                         <TableHead className="w-[120px]">
                                             Payment
@@ -285,6 +299,70 @@ export function DispenseModal({
                                                                 .unit_type
                                                         }
                                                     </span>
+                                                </div>
+                                            </TableCell>
+
+                                            {/* Amount with Insurance Coverage */}
+                                            <TableCell>
+                                                <div className="space-y-1.5">
+                                                    {pd.insurance_coverage ? (
+                                                        <>
+                                                            <InlineCoverageDisplay
+                                                                isInsuranceClaim={
+                                                                    pd
+                                                                        .insurance_coverage
+                                                                        .has_insurance
+                                                                }
+                                                                insuranceCoveredAmount={
+                                                                    pd
+                                                                        .insurance_coverage
+                                                                        .insurance_amount
+                                                                }
+                                                                patientCopayAmount={
+                                                                    pd
+                                                                        .insurance_coverage
+                                                                        .patient_amount
+                                                                }
+                                                                amount={
+                                                                    pd
+                                                                        .insurance_coverage
+                                                                        .total_amount
+                                                                }
+                                                                compact
+                                                            />
+                                                            {pd
+                                                                .insurance_coverage
+                                                                .has_insurance && (
+                                                                <InsuranceCoverageBadge
+                                                                    isInsuranceClaim={
+                                                                        pd
+                                                                            .insurance_coverage
+                                                                            .has_insurance
+                                                                    }
+                                                                    insuranceCoveredAmount={
+                                                                        pd
+                                                                            .insurance_coverage
+                                                                            .insurance_amount
+                                                                    }
+                                                                    patientCopayAmount={
+                                                                        pd
+                                                                            .insurance_coverage
+                                                                            .patient_amount
+                                                                    }
+                                                                    amount={
+                                                                        pd
+                                                                            .insurance_coverage
+                                                                            .total_amount
+                                                                    }
+                                                                    className="text-xs"
+                                                                />
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-sm text-muted-foreground">
+                                                            N/A
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </TableCell>
 

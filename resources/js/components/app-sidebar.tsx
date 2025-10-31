@@ -14,14 +14,19 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
+    BarChart3,
     BookOpen,
     CreditCard,
+    FileBarChart,
+    FileText,
     FlaskConical,
     Folder,
     Hospital,
     LayoutGrid,
     Pill,
+    Shield,
     Stethoscope,
+    TrendingUp,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -60,6 +65,43 @@ const mainNavItems: NavItem[] = [
         title: 'Billing',
         href: '/billing',
         icon: CreditCard,
+    },
+    {
+        title: 'Insurance',
+        href: '/admin/insurance',
+        icon: Shield,
+        items: [
+            {
+                title: 'Providers',
+                href: '/admin/insurance/providers',
+                icon: Hospital,
+            },
+            {
+                title: 'Plans',
+                href: '/admin/insurance/plans',
+                icon: FileText,
+            },
+            {
+                title: 'Claims',
+                href: '/admin/insurance/claims',
+                icon: CreditCard,
+            },
+            {
+                title: 'Coverage Rules',
+                href: '/admin/insurance/coverage-rules',
+                icon: FileBarChart,
+            },
+            {
+                title: 'Tariffs',
+                href: '/admin/insurance/tariffs',
+                icon: TrendingUp,
+            },
+            {
+                title: 'Reports',
+                href: '/admin/insurance/reports',
+                icon: BarChart3,
+            },
+        ],
     },
 ];
 

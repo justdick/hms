@@ -391,6 +391,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                                         {
                                                                                             visit.date_relative
                                                                                         }
+
                                                                                         )
                                                                                     </span>
                                                                                     <span className="text-muted-foreground">

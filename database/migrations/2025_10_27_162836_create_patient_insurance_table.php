@@ -28,8 +28,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->index('membership_id', 'idx_membership');
-            $table->index('status', 'idx_status');
+            $table->index('membership_id', 'idx_patient_insurance_membership');
+            $table->index('status', 'idx_patient_insurance_status');
         });
     }
 

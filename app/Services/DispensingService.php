@@ -299,14 +299,24 @@ class DispensingService
         $prescriptions = $consultationPrescriptions->merge($wardRoundPrescriptions);
 
         return $prescriptions->map(function ($prescription) {
+            $charge = $prescription->charge;
+
             return [
                 'prescription' => $prescription,
-                'payment_status' => $prescription->charge?->status,
+                'payment_status' => $charge?->status,
                 'can_dispense' => $this->billingService->canDispense($prescription),
                 'available_batches' => $this->stockService->getAvailableBatches(
                     $prescription->drug,
                     $prescription->quantity_to_dispense ?? $prescription->quantity
                 ),
+                // Insurance coverage information
+                'insurance_coverage' => $charge ? [
+                    'has_insurance' => $charge->isInsuranceClaim(),
+                    'coverage_percentage' => $charge->getCoveragePercentage(),
+                    'insurance_amount' => $charge->insurance_amount,
+                    'patient_amount' => $charge->patient_copay_amount,
+                    'total_amount' => $charge->amount,
+                ] : null,
             ];
         })->toArray();
     }

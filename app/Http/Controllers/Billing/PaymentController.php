@@ -65,6 +65,8 @@ class PaymentController extends Controller
             ->map(function ($patient) {
                 // Calculate total pending across all visits
                 $totalPending = 0;
+                $totalPatientOwes = 0; // Total copay amount patient needs to pay
+                $totalInsuranceCovered = 0;
                 $totalCharges = 0;
                 $visits = [];
 
@@ -72,7 +74,12 @@ class PaymentController extends Controller
                     $visitCharges = $checkin->charges->where('status', 'pending');
                     if ($visitCharges->count() > 0) {
                         $visitTotal = $visitCharges->sum('amount');
+                        $visitCopay = $visitCharges->sum('patient_copay_amount');
+                        $visitInsurance = $visitCharges->sum('insurance_covered_amount');
+
                         $totalPending += $visitTotal;
+                        $totalPatientOwes += $visitCopay;
+                        $totalInsuranceCovered += $visitInsurance;
                         $totalCharges += $visitCharges->count();
 
                         $visits[] = [
@@ -80,12 +87,17 @@ class PaymentController extends Controller
                             'department' => $checkin->department,
                             'checked_in_at' => $checkin->created_at->format('M j, Y'),
                             'total_pending' => $visitTotal,
+                            'patient_copay' => $visitCopay,
+                            'insurance_covered' => $visitInsurance,
                             'charges_count' => $visitCharges->count(),
                             'charges' => $visitCharges->map(function ($charge) {
                                 return [
                                     'id' => $charge->id,
                                     'description' => $charge->description,
                                     'amount' => $charge->amount,
+                                    'is_insurance_claim' => $charge->is_insurance_claim,
+                                    'insurance_covered_amount' => $charge->insurance_covered_amount,
+                                    'patient_copay_amount' => $charge->patient_copay_amount,
                                     'service_type' => $charge->service_type,
                                     'charged_at' => $charge->charged_at->format('M j, Y'),
                                 ];
@@ -109,6 +121,8 @@ class PaymentController extends Controller
                         'phone_number' => $patient->phone_number,
                     ],
                     'total_pending' => $totalPending,
+                    'total_patient_owes' => $totalPatientOwes,
+                    'total_insurance_covered' => $totalInsuranceCovered,
                     'total_charges' => $totalCharges,
                     'visits_with_charges' => count($visits),
                     'visits' => $visits,
@@ -125,11 +139,15 @@ class PaymentController extends Controller
     {
         $checkin->load([
             'patient:id,first_name,last_name,phone_number,date_of_birth',
+            'patient.activeInsurance.plan.provider',
             'department:id,name',
         ]);
 
         $charges = $this->billingService->getPendingCharges($checkin);
         $totalAmount = $charges->sum('amount');
+        $totalPatientOwes = $charges->sum('patient_copay_amount');
+        $totalInsuranceCovered = $charges->sum('insurance_covered_amount');
+
         $paidCharges = Charge::forPatient($checkin->id)->paid()->get();
 
         return Inertia::render('Billing/Payments/Show', [
@@ -137,6 +155,13 @@ class PaymentController extends Controller
             'charges' => $charges,
             'paidCharges' => $paidCharges,
             'totalAmount' => $totalAmount,
+            'totalPatientOwes' => $totalPatientOwes,
+            'totalInsuranceCovered' => $totalInsuranceCovered,
+            'patientInsurance' => $checkin->patient->activeInsurance ? [
+                'plan_name' => $checkin->patient->activeInsurance->plan->name ?? null,
+                'provider_name' => $checkin->patient->activeInsurance->plan->provider->name ?? null,
+                'policy_number' => $checkin->patient->activeInsurance->policy_number,
+            ] : null,
             'canProceedWithServices' => $this->getServiceStatus($checkin),
         ]);
     }
@@ -166,12 +191,20 @@ class PaymentController extends Controller
             ]);
         }
 
+        // For insurance claims, patient only needs to pay copay amount
+        // For non-insurance charges, patient pays full amount
+        $totalPatientOwes = $charges->sum(function ($charge) {
+            return $charge->is_insurance_claim
+                ? $charge->patient_copay_amount
+                : $charge->amount;
+        });
+
         $totalAmount = $charges->sum('amount');
         $amountPaid = $validated['amount_paid'];
 
-        if ($amountPaid > $totalAmount) {
+        if ($amountPaid > $totalPatientOwes) {
             return back()->withErrors([
-                'amount_paid' => 'Payment amount cannot exceed total charges',
+                'amount_paid' => 'Payment amount cannot exceed patient copay amount',
             ]);
         }
 
@@ -183,13 +216,17 @@ class PaymentController extends Controller
                 break;
             }
 
-            $chargeAmount = $charge->amount;
-            $paymentForCharge = min($remainingPayment, $chargeAmount);
+            // Determine amount due from patient for this charge
+            $amountDue = $charge->is_insurance_claim
+                ? $charge->patient_copay_amount
+                : $charge->amount;
+
+            $paymentForCharge = min($remainingPayment, $amountDue);
 
             $charge->update([
                 'paid_amount' => $paymentForCharge,
                 'paid_at' => now(),
-                'status' => $paymentForCharge >= $chargeAmount ? 'paid' : 'partial',
+                'status' => $paymentForCharge >= $amountDue ? 'paid' : 'partial',
                 'is_emergency_override' => $validated['emergency_override'] ?? false,
             ]);
 
@@ -199,8 +236,8 @@ class PaymentController extends Controller
         // Log payment
         $this->logPayment($checkin, $validated, $amountPaid);
 
-        $message = $amountPaid >= $totalAmount
-            ? 'Payment processed successfully. All charges cleared.'
+        $message = $amountPaid >= $totalPatientOwes
+            ? 'Payment processed successfully. All patient copays cleared.'
             : 'Partial payment processed successfully.';
 
         return back()->with('success', $message);

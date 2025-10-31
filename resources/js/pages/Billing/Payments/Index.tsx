@@ -1,3 +1,4 @@
+import { InsuranceCoverageBadge } from '@/components/Insurance/InsuranceCoverageBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import {
     Loader2,
     Search,
     Settings,
+    ShieldCheck,
     TrendingUp,
     User,
 } from 'lucide-react';
@@ -36,14 +38,29 @@ interface Visit {
     department: Department;
     checked_in_at: string;
     total_pending: number;
+    patient_copay: number;
+    insurance_covered: number;
     charges_count: number;
-    charges: any[];
+    charges: ChargeItem[];
+}
+
+interface ChargeItem {
+    id: number;
+    description: string;
+    amount: number;
+    is_insurance_claim: boolean;
+    insurance_covered_amount: number;
+    patient_copay_amount: number;
+    service_type: string;
+    charged_at: string;
 }
 
 interface PatientSearchResult {
     patient_id: number;
     patient: Patient;
     total_pending: number;
+    total_patient_owes: number;
+    total_insurance_covered: number;
     total_charges: number;
     visits_with_charges: number;
     visits: Visit[];
@@ -353,14 +370,27 @@ export default function PaymentIndex({ stats }: Props) {
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="font-medium text-red-600">
-                                                        {formatCurrency(
-                                                            patient.total_pending,
+                                                    <div className="space-y-1">
+                                                        <div className="font-medium text-orange-600">
+                                                            Patient Owes:{' '}
+                                                            {formatCurrency(
+                                                                patient.total_patient_owes,
+                                                            )}
+                                                        </div>
+                                                        {patient.total_insurance_covered >
+                                                            0 && (
+                                                            <div className="text-xs text-green-600">
+                                                                <ShieldCheck className="inline h-3 w-3" />{' '}
+                                                                Insurance:{' '}
+                                                                {formatCurrency(
+                                                                    patient.total_insurance_covered,
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
                                                     <Badge
                                                         variant="outline"
-                                                        className="text-xs"
+                                                        className="mt-1 text-xs"
                                                     >
                                                         {patient.total_charges}{' '}
                                                         charge
@@ -441,34 +471,74 @@ export default function PaymentIndex({ stats }: Props) {
                                         </p>
                                     </div>
 
-                                    {/* Total Outstanding Amount */}
-                                    <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="font-medium">
-                                                Total Outstanding (All Visits):
-                                            </span>
-                                            <span className="text-xl font-bold text-red-600">
-                                                {formatCurrency(
-                                                    selectedPatient.total_pending,
-                                                )}
-                                            </span>
+                                    {/* Total Outstanding Amount with Insurance Breakdown */}
+                                    <div className="space-y-3">
+                                        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium">
+                                                    Patient Owes (Copay):
+                                                </span>
+                                                <span className="text-xl font-bold text-orange-600">
+                                                    {formatCurrency(
+                                                        selectedPatient.total_patient_owes,
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                Amount to collect from patient
+                                            </p>
                                         </div>
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            {selectedPatient.total_charges}{' '}
-                                            charge
-                                            {selectedPatient.total_charges !== 1
-                                                ? 's'
-                                                : ''}{' '}
-                                            across{' '}
-                                            {
-                                                selectedPatient.visits_with_charges
-                                            }{' '}
-                                            visit
-                                            {selectedPatient.visits_with_charges !==
-                                            1
-                                                ? 's'
-                                                : ''}
-                                        </p>
+
+                                        {selectedPatient.total_insurance_covered >
+                                            0 && (
+                                            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="flex items-center gap-2 font-medium">
+                                                        <ShieldCheck className="h-4 w-4 text-green-600" />
+                                                        Insurance Covers:
+                                                    </span>
+                                                    <span className="text-xl font-bold text-green-600">
+                                                        {formatCurrency(
+                                                            selectedPatient.total_insurance_covered,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    Will be claimed from
+                                                    insurance
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium">
+                                                    Total Charges:
+                                                </span>
+                                                <span className="text-xl font-bold text-gray-700">
+                                                    {formatCurrency(
+                                                        selectedPatient.total_pending,
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {selectedPatient.total_charges}{' '}
+                                                charge
+                                                {selectedPatient.total_charges !==
+                                                1
+                                                    ? 's'
+                                                    : ''}{' '}
+                                                across{' '}
+                                                {
+                                                    selectedPatient.visits_with_charges
+                                                }{' '}
+                                                visit
+                                                {selectedPatient.visits_with_charges !==
+                                                1
+                                                    ? 's'
+                                                    : ''}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     {/* Visits Breakdown */}
@@ -506,12 +576,22 @@ export default function PaymentIndex({ stats }: Props) {
                                                                     : ''}
                                                             </p>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <span className="font-medium text-red-600">
+                                                        <div className="space-y-1 text-right">
+                                                            <div className="font-medium text-orange-600">
+                                                                Patient:{' '}
                                                                 {formatCurrency(
-                                                                    visit.total_pending,
+                                                                    visit.patient_copay,
                                                                 )}
-                                                            </span>
+                                                            </div>
+                                                            {visit.insurance_covered >
+                                                                0 && (
+                                                                <div className="text-xs text-green-600">
+                                                                    Insurance:{' '}
+                                                                    {formatCurrency(
+                                                                        visit.insurance_covered,
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -519,25 +599,62 @@ export default function PaymentIndex({ stats }: Props) {
                                                     <div className="space-y-1 border-l-2 border-gray-300 pl-3">
                                                         {visit.charges.map(
                                                             (
-                                                                charge: any,
+                                                                charge: ChargeItem,
                                                                 chargeIndex: number,
                                                             ) => (
                                                                 <div
                                                                     key={
                                                                         chargeIndex
                                                                     }
-                                                                    className="flex items-center justify-between text-xs"
+                                                                    className="flex items-center justify-between gap-2 text-xs"
                                                                 >
-                                                                    <span>
-                                                                        {
-                                                                            charge.description
-                                                                        }
-                                                                    </span>
-                                                                    <span className="font-medium">
-                                                                        {formatCurrency(
-                                                                            charge.amount,
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span>
+                                                                            {
+                                                                                charge.description
+                                                                            }
+                                                                        </span>
+                                                                        {charge.is_insurance_claim && (
+                                                                            <InsuranceCoverageBadge
+                                                                                isInsuranceClaim={
+                                                                                    charge.is_insurance_claim
+                                                                                }
+                                                                                insuranceCoveredAmount={
+                                                                                    charge.insurance_covered_amount
+                                                                                }
+                                                                                patientCopayAmount={
+                                                                                    charge.patient_copay_amount
+                                                                                }
+                                                                                amount={
+                                                                                    charge.amount
+                                                                                }
+                                                                                className="text-xs"
+                                                                            />
                                                                         )}
-                                                                    </span>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        {charge.is_insurance_claim ? (
+                                                                            <div className="space-y-0.5">
+                                                                                <div className="font-medium text-orange-600">
+                                                                                    {formatCurrency(
+                                                                                        charge.patient_copay_amount,
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="text-[10px] text-muted-foreground">
+                                                                                    of{' '}
+                                                                                    {formatCurrency(
+                                                                                        charge.amount,
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="font-medium">
+                                                                                {formatCurrency(
+                                                                                    charge.amount,
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             ),
                                                         )}
@@ -561,9 +678,9 @@ export default function PaymentIndex({ stats }: Props) {
                                             className="w-full bg-green-600 hover:bg-green-700"
                                         >
                                             <CreditCard className="mr-2 h-4 w-4" />
-                                            Pay All Visits (
+                                            Collect Payment (
                                             {formatCurrency(
-                                                selectedPatient.total_pending,
+                                                selectedPatient.total_patient_owes,
                                             )}
                                             )
                                         </Button>
@@ -599,7 +716,7 @@ export default function PaymentIndex({ stats }: Props) {
                                                             }{' '}
                                                             (
                                                             {formatCurrency(
-                                                                visit.total_pending,
+                                                                visit.patient_copay,
                                                             )}
                                                             )
                                                         </Button>

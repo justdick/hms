@@ -44,6 +44,17 @@ interface Department {
     description: string;
 }
 
+interface InsurancePlan {
+    id: number;
+    plan_name: string;
+    plan_code: string;
+    provider: {
+        id: number;
+        name: string;
+        code: string;
+    };
+}
+
 interface Checkin {
     id: number;
     patient: Patient;
@@ -56,6 +67,7 @@ interface Checkin {
 interface Props {
     todayCheckins: Checkin[];
     departments: Department[];
+    insurancePlans: InsurancePlan[];
     permissions: {
         canViewAnyDate: boolean;
         canViewAnyDepartment: boolean;
@@ -66,6 +78,7 @@ interface Props {
 export default function CheckinIndex({
     todayCheckins,
     departments,
+    insurancePlans,
     permissions,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
@@ -264,6 +277,7 @@ export default function CheckinIndex({
                                         onPatientRegistered={
                                             handlePatientRegistered
                                         }
+                                        insurancePlans={insurancePlans}
                                     />
                                 </TabsContent>
                             </Tabs>

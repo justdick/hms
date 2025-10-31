@@ -1,3 +1,4 @@
+import { InsuranceCoverageBadge } from '@/components/Insurance/InsuranceCoverageBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
     MapPin,
     Phone,
     Receipt,
+    ShieldCheck,
     User,
     XCircle,
 } from 'lucide-react';
@@ -54,11 +56,20 @@ interface Charge {
     id: number;
     description: string;
     amount: string; // Laravel casts decimal as string
+    is_insurance_claim: boolean;
+    insurance_covered_amount: string;
+    patient_copay_amount: string;
     service_type: string;
     service_code?: string;
     status: 'pending' | 'paid' | 'partial' | 'waived' | 'cancelled';
     charged_at: string;
     paid_amount: string; // Laravel casts decimal as string
+}
+
+interface PatientInsurance {
+    plan_name: string;
+    provider_name: string;
+    policy_number: string;
 }
 
 interface ServiceStatus {
@@ -73,6 +84,9 @@ interface Props {
     charges: Charge[];
     paidCharges: Charge[];
     totalAmount: number;
+    totalPatientOwes: number;
+    totalInsuranceCovered: number;
+    patientInsurance: PatientInsurance | null;
     canProceedWithServices: ServiceStatus;
 }
 
@@ -81,6 +95,9 @@ export default function PaymentShow({
     charges,
     paidCharges,
     totalAmount,
+    totalPatientOwes,
+    totalInsuranceCovered,
+    patientInsurance,
     canProceedWithServices,
 }: Props) {
     const [selectedCharges, setSelectedCharges] = useState<number[]>(
@@ -130,10 +147,22 @@ export default function PaymentShow({
         .filter((charge) => selectedCharges.includes(charge.id))
         .reduce((sum, charge) => sum + parseFloat(charge.amount), 0);
 
+    // Calculate patient copay for selected charges (what patient needs to pay)
+    const selectedChargesCopay = charges
+        .filter((charge) => selectedCharges.includes(charge.id))
+        .reduce(
+            (sum, charge) =>
+                sum +
+                (charge.is_insurance_claim
+                    ? parseFloat(charge.patient_copay_amount)
+                    : parseFloat(charge.amount)),
+            0,
+        );
+
     // Update amount paid when selected charges change
     React.useEffect(() => {
-        setData('amount_paid', selectedChargesTotal);
-    }, [selectedChargesTotal, setData]);
+        setData('amount_paid', selectedChargesCopay);
+    }, [selectedChargesCopay, setData]);
 
     const handlePayment = () => {
         if (selectedCharges.length === 0) {
@@ -335,25 +364,64 @@ export default function PaymentShow({
                                 <DollarSign className="h-5 w-5" />
                                 Payment Summary
                             </CardTitle>
+                            {patientInsurance && (
+                                <div className="mt-2 rounded-md bg-green-50 p-2 text-xs text-green-800 dark:bg-green-950/20 dark:text-green-200">
+                                    <div className="flex items-center gap-1">
+                                        <ShieldCheck className="h-3 w-3" />
+                                        <span className="font-medium">
+                                            {patientInsurance.provider_name} -{' '}
+                                            {patientInsurance.plan_name}
+                                        </span>
+                                    </div>
+                                    <div className="text-[10px]">
+                                        Policy: {patientInsurance.policy_number}
+                                    </div>
+                                </div>
+                            )}
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex justify-between">
                                 <span className="text-gray-600">
-                                    Total Pending:
+                                    Total Charges:
                                 </span>
                                 <span className="font-semibold">
                                     {formatCurrency(totalAmount)}
                                 </span>
                             </div>
+                            {totalInsuranceCovered > 0 && (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span className="flex items-center gap-1 text-gray-600">
+                                            <ShieldCheck className="h-3 w-3 text-green-600" />
+                                            Insurance Covers:
+                                        </span>
+                                        <span className="font-semibold text-green-600">
+                                            {formatCurrency(
+                                                totalInsuranceCovered,
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="border-t" />
+                                </>
+                            )}
+                            <div className="flex justify-between">
+                                <span className="font-medium text-gray-900">
+                                    Patient Owes:
+                                </span>
+                                <span className="font-bold text-orange-600">
+                                    {formatCurrency(totalPatientOwes)}
+                                </span>
+                            </div>
+                            <div className="border-t" />
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Selected:</span>
                                 <span className="font-semibold">
-                                    {formatCurrency(selectedChargesTotal)}
+                                    {formatCurrency(selectedChargesCopay)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">
-                                    Amount to Pay:
+                                    Amount to Collect:
                                 </span>
                                 <span className="font-semibold text-green-600">
                                     {formatCurrency(data.amount_paid || 0)}
@@ -413,17 +481,55 @@ export default function PaymentShow({
                                                 }
                                             />
                                             <div className="flex-1">
-                                                <div className="flex justify-between">
-                                                    <span className="font-medium">
-                                                        {charge.description}
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {formatCurrency(
-                                                            parseFloat(
-                                                                charge.amount,
-                                                            ),
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium">
+                                                            {charge.description}
+                                                        </div>
+                                                        {charge.is_insurance_claim && (
+                                                            <div className="mt-1 space-y-0.5 text-xs">
+                                                                <div className="flex items-center gap-1">
+                                                                    <ShieldCheck className="h-3 w-3 text-green-600" />
+                                                                    <span className="text-green-600">
+                                                                        Insurance:{' '}
+                                                                        {formatCurrency(
+                                                                            parseFloat(
+                                                                                charge.insurance_covered_amount,
+                                                                            ),
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-orange-600">
+                                                                    Patient
+                                                                    Copay:{' '}
+                                                                    {formatCurrency(
+                                                                        parseFloat(
+                                                                            charge.patient_copay_amount,
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         )}
-                                                    </span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-semibold">
+                                                            {formatCurrency(
+                                                                parseFloat(
+                                                                    charge.amount,
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                        {charge.is_insurance_claim && (
+                                                            <div className="mt-1 text-xs font-medium text-orange-600">
+                                                                Pay:{' '}
+                                                                {formatCurrency(
+                                                                    parseFloat(
+                                                                        charge.patient_copay_amount,
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="mt-1 flex items-center gap-2">
                                                     <Badge
@@ -432,6 +538,23 @@ export default function PaymentShow({
                                                     >
                                                         {charge.service_type}
                                                     </Badge>
+                                                    {charge.is_insurance_claim && (
+                                                        <InsuranceCoverageBadge
+                                                            isInsuranceClaim={
+                                                                charge.is_insurance_claim
+                                                            }
+                                                            insuranceCoveredAmount={parseFloat(
+                                                                charge.insurance_covered_amount,
+                                                            )}
+                                                            patientCopayAmount={parseFloat(
+                                                                charge.patient_copay_amount,
+                                                            )}
+                                                            amount={parseFloat(
+                                                                charge.amount,
+                                                            )}
+                                                            className="text-xs"
+                                                        />
+                                                    )}
                                                     <span className="text-xs text-gray-500">
                                                         {new Date(
                                                             charge.charged_at,
@@ -489,7 +612,9 @@ export default function PaymentShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="amount">Amount to Pay</Label>
+                                <Label htmlFor="amount">
+                                    Amount to Collect from Patient
+                                </Label>
                                 <Input
                                     id="amount"
                                     type="number"
@@ -503,8 +628,13 @@ export default function PaymentShow({
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
-                                    max={selectedChargesTotal}
+                                    max={selectedChargesCopay}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Patient owes:{' '}
+                                    {formatCurrency(selectedChargesCopay)}{' '}
+                                    (copay amount)
+                                </p>
                                 <div className="flex gap-2">
                                     <Button
                                         variant="outline"
@@ -512,11 +642,11 @@ export default function PaymentShow({
                                         onClick={() =>
                                             setData(
                                                 'amount_paid',
-                                                selectedChargesTotal,
+                                                selectedChargesCopay,
                                             )
                                         }
                                     >
-                                        Full Amount
+                                        Full Copay
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -526,7 +656,7 @@ export default function PaymentShow({
                                                 'amount_paid',
                                                 parseFloat(
                                                     (
-                                                        selectedChargesTotal / 2
+                                                        selectedChargesCopay / 2
                                                     ).toFixed(2),
                                                 ),
                                             )

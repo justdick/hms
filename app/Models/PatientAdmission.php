@@ -141,8 +141,62 @@ class PatientAdmission extends Model
         $query->where('ward_id', $wardId);
     }
 
+    public function hasUnpaidCopays(): bool
+    {
+        // Check if patient has active insurance
+        if (! $this->patient->activeInsurance) {
+            return false;
+        }
+
+        // Get all charges for this patient's checkin/consultation
+        $checkinId = $this->consultation?->patient_checkin_id;
+        if (! $checkinId) {
+            return false;
+        }
+
+        // Check for unpaid insurance-covered charges
+        return Charge::where('patient_checkin_id', $checkinId)
+            ->where('is_insurance_claim', true)
+            ->where(function ($query) {
+                $query->where('patient_copay_amount', '>', 0)
+                    ->whereNull('paid_at');
+            })
+            ->exists();
+    }
+
+    public function getUnpaidCopayAmount(): float
+    {
+        // Check if patient has active insurance
+        if (! $this->patient->activeInsurance) {
+            return 0;
+        }
+
+        // Get all charges for this patient's checkin/consultation
+        $checkinId = $this->consultation?->patient_checkin_id;
+        if (! $checkinId) {
+            return 0;
+        }
+
+        // Sum unpaid copay amounts
+        return (float) Charge::where('patient_checkin_id', $checkinId)
+            ->where('is_insurance_claim', true)
+            ->where(function ($query) {
+                $query->where('patient_copay_amount', '>', 0)
+                    ->whereNull('paid_at');
+            })
+            ->sum('patient_copay_amount');
+    }
+
     public function markAsDischarged(User $dischargedBy, ?string $notes = null): void
     {
+        // Check for unpaid copays before allowing discharge
+        if ($this->hasUnpaidCopays()) {
+            $unpaidAmount = $this->getUnpaidCopayAmount();
+            throw new \RuntimeException(
+                "Cannot discharge patient with unpaid copays. Outstanding amount: GHS {$unpaidAmount}. Please collect payment at billing before discharge."
+            );
+        }
+
         $this->update([
             'status' => 'discharged',
             'discharged_at' => now(),

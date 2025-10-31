@@ -38,6 +38,8 @@ class DatabaseSeeder extends Seeder
             PreviousConsultationsSeeder::class,
             WardSeeder::class,
             SystemConfigurationSeeder::class,
+            // InsuranceReportsSeeder::class,
+
         ]);
     }
 }

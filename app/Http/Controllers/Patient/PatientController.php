@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Patient;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePatientRequest;
 use App\Models\Patient;
+use App\Models\PatientInsurance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
@@ -46,39 +49,63 @@ class PatientController extends Controller
         return response()->json(['patients' => $patients]);
     }
 
-    public function store(Request $request)
+    public function store(StorePatientRequest $request)
     {
         $this->authorize('create', Patient::class);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'gender' => 'required|in:male,female',
-            'date_of_birth' => 'required|date|before:today',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
-            'national_id' => 'nullable|string|max:50',
-        ]);
+        return DB::transaction(function () use ($request) {
+            $validated = $request->validated();
 
-        // Generate patient number
-        $validated['patient_number'] = $this->generatePatientNumber();
+            // Separate patient data from insurance data
+            $patientData = [
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'gender' => $validated['gender'],
+                'date_of_birth' => $validated['date_of_birth'],
+                'phone_number' => $validated['phone_number'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'emergency_contact_name' => $validated['emergency_contact_name'] ?? null,
+                'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+                'national_id' => $validated['national_id'] ?? null,
+            ];
 
-        $patient = Patient::create($validated);
+            // Generate patient number
+            $patientData['patient_number'] = $this->generatePatientNumber();
 
-        return response()->json([
-            'patient' => [
-                'id' => $patient->id,
-                'patient_number' => $patient->patient_number,
-                'full_name' => $patient->full_name,
-                'age' => $patient->age,
-                'gender' => $patient->gender,
-                'phone_number' => $patient->phone_number,
-                'has_checkin_today' => false,
-            ],
-            'message' => 'Patient registered successfully',
-        ]);
+            // Create patient
+            $patient = Patient::create($patientData);
+
+            // Create insurance record if patient has insurance
+            if ($request->boolean('has_insurance')) {
+                $insuranceData = [
+                    'patient_id' => $patient->id,
+                    'insurance_plan_id' => $validated['insurance_plan_id'],
+                    'membership_id' => $validated['membership_id'],
+                    'policy_number' => $validated['policy_number'] ?? null,
+                    'card_number' => $validated['card_number'] ?? null,
+                    'is_dependent' => $request->boolean('is_dependent'),
+                    'principal_member_name' => $validated['principal_member_name'] ?? null,
+                    'relationship_to_principal' => $validated['relationship_to_principal'] ?? null,
+                    'coverage_start_date' => $validated['coverage_start_date'],
+                    'coverage_end_date' => $validated['coverage_end_date'] ?? null,
+                    'status' => 'active',
+                ];
+
+                PatientInsurance::create($insuranceData);
+            }
+
+            return back()->with([
+                'patient' => [
+                    'id' => $patient->id,
+                    'patient_number' => $patient->patient_number,
+                    'full_name' => $patient->full_name,
+                    'age' => $patient->age,
+                    'gender' => $patient->gender,
+                    'phone_number' => $patient->phone_number,
+                    'has_checkin_today' => false,
+                ],
+            ]);
+        });
     }
 
     public function show(Patient $patient)

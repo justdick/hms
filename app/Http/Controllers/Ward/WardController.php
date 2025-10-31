@@ -67,6 +67,7 @@ class WardController extends Controller
                 $query->where('status', 'admitted')
                     ->with([
                         'patient:id,first_name,last_name,date_of_birth,gender',
+                        'patient.activeInsurance.insurancePlan.insuranceProvider',
                         'bed:id,bed_number',
                         'consultation.doctor:id,name',
                         'latestVitalSigns' => function ($q) {

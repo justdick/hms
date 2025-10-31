@@ -65,9 +65,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index('claim_check_code', 'idx_claim_check_code');
-            $table->index('status', 'idx_status');
-            $table->index('date_of_attendance', 'idx_attendance_date');
+            $table->index('claim_check_code', 'idx_insurance_claim_check_code');
+            $table->index('status', 'idx_insurance_claim_status');
+            $table->index('date_of_attendance', 'idx_insurance_claim_attendance_date');
         });
     }
 

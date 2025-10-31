@@ -66,6 +66,22 @@ class Patient extends Model
         return $this->hasOne(PatientAdmission::class)->where('status', 'admitted');
     }
 
+    public function insurancePlans(): HasMany
+    {
+        return $this->hasMany(PatientInsurance::class);
+    }
+
+    public function activeInsurance(): HasOne
+    {
+        return $this->hasOne(PatientInsurance::class)
+            ->where('status', 'active')
+            ->where('coverage_start_date', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('coverage_end_date')
+                    ->orWhere('coverage_end_date', '>=', now());
+            });
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";

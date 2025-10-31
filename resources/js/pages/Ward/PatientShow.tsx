@@ -37,6 +37,7 @@ import {
     FileText,
     Heart,
     Pill,
+    ShieldCheck,
     Stethoscope,
     Trash2,
     User,
@@ -44,6 +45,27 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+
+interface InsuranceProvider {
+    id: number;
+    name: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    plan_type: string;
+    insurance_provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    member_number: string;
+    status: string;
+    coverage_start_date: string;
+    coverage_end_date?: string;
+    insurance_plan: InsurancePlan;
+}
 
 interface Patient {
     id: number;
@@ -53,6 +75,7 @@ interface Patient {
     date_of_birth?: string;
     gender?: string;
     phone_number?: string;
+    active_insurance?: PatientInsurance;
 }
 
 interface Doctor {
@@ -437,7 +460,7 @@ export default function WardPatientShow({
                 </div>
 
                 {/* Patient Info Cards */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <Card>
                         <CardContent className="p-6">
                             <div className="space-y-2">
@@ -549,6 +572,57 @@ export default function WardPatientShow({
                                     <Calendar className="h-4 w-4" />
                                     {formatDateTime(admission.admitted_at)}
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Insurance Coverage
+                                </p>
+                                {admission.patient.active_insurance ? (
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                            <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            <span className="font-medium">
+                                                {
+                                                    admission.patient
+                                                        .active_insurance
+                                                        .insurance_plan
+                                                        .insurance_provider.name
+                                                }
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            {
+                                                admission.patient
+                                                    .active_insurance
+                                                    .insurance_plan.name
+                                            }{' '}
+                                            (
+                                            {
+                                                admission.patient
+                                                    .active_insurance
+                                                    .insurance_plan.plan_type
+                                            }
+                                            )
+                                        </p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            Member:{' '}
+                                            {
+                                                admission.patient
+                                                    .active_insurance
+                                                    .member_number
+                                            }
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        No active insurance
+                                    </p>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

@@ -33,8 +33,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FlaskConical } from 'lucide-react';
 import { router } from '@inertiajs/react';
+import { FlaskConical } from 'lucide-react';
 
 interface Filters {
     status: string;
@@ -217,7 +217,12 @@ export function LabOrdersDataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Status: {allStatuses.find((s) => s.value === currentStatus)?.label}
+                            Status:{' '}
+                            {
+                                allStatuses.find(
+                                    (s) => s.value === currentStatus,
+                                )?.label
+                            }
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>

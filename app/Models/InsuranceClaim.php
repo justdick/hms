@@ -52,6 +52,16 @@ class InsuranceClaim extends Model
         'payment_date',
         'rejection_reason',
         'notes',
+        'payment_reference',
+        'payment_amount',
+        'payment_recorded_by',
+        'resubmission_count',
+        'last_resubmitted_at',
+        'batch_reference',
+        'batch_submitted_at',
+        'approved_by',
+        'rejected_by',
+        'rejected_at',
     ];
 
     protected function casts(): array
@@ -67,11 +77,15 @@ class InsuranceClaim extends Model
             'approved_amount' => 'decimal:2',
             'patient_copay_amount' => 'decimal:2',
             'insurance_covered_amount' => 'decimal:2',
+            'payment_amount' => 'decimal:2',
             'vetted_at' => 'datetime',
             'submitted_at' => 'datetime',
             'submission_date' => 'date',
             'approval_date' => 'date',
             'payment_date' => 'date',
+            'last_resubmitted_at' => 'datetime',
+            'batch_submitted_at' => 'datetime',
+            'rejected_at' => 'datetime',
         ];
     }
 
