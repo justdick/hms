@@ -1,3 +1,12 @@
 export { ChargeSplitDisplay } from './ChargeSplitDisplay';
 export { InlineCoverageDisplay } from './InlineCoverageDisplay';
 export { InsuranceCoverageBadge } from './InsuranceCoverageBadge';
+export { InlinePercentageEdit } from './InlinePercentageEdit';
+export { default as AddExceptionModal } from './AddExceptionModal';
+export { default as ExceptionList } from './ExceptionList';
+export { default as CoverageRuleHistory } from './CoverageRuleHistory';
+export { HelpTooltip } from './HelpTooltip';
+export { ValidationWarning } from './ValidationWarning';
+export { SuccessMessage } from './SuccessMessage';
+export { default as QuickActionsMenu } from './QuickActionsMenu';
+export { default as KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';

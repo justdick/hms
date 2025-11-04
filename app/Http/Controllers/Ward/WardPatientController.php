@@ -20,7 +20,7 @@ class WardPatientController extends Controller
 
         // Load admission with all required relationships for PatientShow
         $admission->load([
-            'patient.activeInsurance.insurancePlan.insuranceProvider',
+            'patient.activeInsurance.plan.provider',
             'bed',
             'ward',
             'consultation.doctor',

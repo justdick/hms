@@ -40,6 +40,14 @@ class InsurancePlanPolicy
     }
 
     /**
+     * Determine whether the user can manage the model (including coverage rules).
+     */
+    public function manage(User $user, InsurancePlan $insurancePlan): bool
+    {
+        return true;
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, InsurancePlan $insurancePlan): bool

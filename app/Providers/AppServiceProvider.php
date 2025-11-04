@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Models\Charge;
 use App\Models\Drug;
+use App\Models\LabService;
 use App\Models\Prescription;
 use App\Observers\ChargeObserver;
 use App\Observers\DrugObserver;
+use App\Observers\LabServiceObserver;
 use App\Observers\PrescriptionObserver;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
         Charge::observe(ChargeObserver::class);
         Drug::observe(DrugObserver::class);
+        LabService::observe(LabServiceObserver::class);
         Prescription::observe(PrescriptionObserver::class);
     }
 }

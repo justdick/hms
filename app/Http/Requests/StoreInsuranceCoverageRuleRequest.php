@@ -16,7 +16,23 @@ class StoreInsuranceCoverageRuleRequest extends FormRequest
         return [
             'insurance_plan_id' => ['required', 'exists:insurance_plans,id'],
             'coverage_category' => ['required', 'in:consultation,drug,lab,procedure,ward,nursing'],
-            'item_code' => ['nullable', 'string', 'max:191'],
+            'item_code' => [
+                'nullable',
+                'string',
+                'max:191',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $exists = \App\Models\InsuranceCoverageRule::where('insurance_plan_id', $this->insurance_plan_id)
+                            ->where('coverage_category', $this->coverage_category)
+                            ->where('item_code', $value)
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('This item already has a coverage exception. Please edit the existing exception instead.');
+                        }
+                    }
+                },
+            ],
             'item_description' => ['nullable', 'string', 'max:500'],
             'is_covered' => ['boolean'],
             'coverage_type' => ['required', 'in:percentage,fixed,full,excluded'],

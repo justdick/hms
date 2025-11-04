@@ -332,23 +332,41 @@ export default function ConsultationShow({
     });
 
     // Auto-save function
-    const autoSave = useCallback(() => {
+    const autoSave = useCallback(async () => {
         if (!hasUnsavedChanges || consultation.status !== 'in_progress') {
             return;
         }
 
         setIsSaving(true);
-        patch(`/consultation/${consultation.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
+        
+        try {
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
+            const response = await fetch(`/consultation/${consultation.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
                 setIsSaving(false);
                 setHasUnsavedChanges(false);
-            },
-            onError: () => {
+            } else {
                 setIsSaving(false);
-            },
-        });
-    }, [hasUnsavedChanges, consultation.id, consultation.status, patch]);
+                console.error('Autosave failed:', response.statusText);
+            }
+        } catch (error) {
+            setIsSaving(false);
+            console.error('Autosave error:', error);
+        }
+    }, [hasUnsavedChanges, consultation.id, consultation.status, data]);
 
     // Track changes and trigger auto-save
     useEffect(() => {

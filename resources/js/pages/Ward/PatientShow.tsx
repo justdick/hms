@@ -53,9 +53,9 @@ interface InsuranceProvider {
 
 interface InsurancePlan {
     id: number;
-    name: string;
+    plan_name: string;
     plan_type: string;
-    insurance_provider: InsuranceProvider;
+    provider: InsuranceProvider;
 }
 
 interface PatientInsurance {
@@ -64,7 +64,7 @@ interface PatientInsurance {
     status: string;
     coverage_start_date: string;
     coverage_end_date?: string;
-    insurance_plan: InsurancePlan;
+    plan: InsurancePlan;
 }
 
 interface Patient {
@@ -590,8 +590,8 @@ export default function WardPatientShow({
                                                 {
                                                     admission.patient
                                                         .active_insurance
-                                                        .insurance_plan
-                                                        .insurance_provider.name
+                                                        .plan
+                                                        .provider.name
                                                 }
                                             </span>
                                         </div>
@@ -599,13 +599,13 @@ export default function WardPatientShow({
                                             {
                                                 admission.patient
                                                     .active_insurance
-                                                    .insurance_plan.name
+                                                    .plan.plan_name
                                             }{' '}
                                             (
                                             {
                                                 admission.patient
                                                     .active_insurance
-                                                    .insurance_plan.plan_type
+                                                    .plan.plan_type
                                             }
                                             )
                                         </p>

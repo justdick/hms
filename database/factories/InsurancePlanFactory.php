@@ -30,6 +30,7 @@ class InsurancePlanFactory extends Factory
             'visit_limit' => fake()->optional()->numberBetween(10, 100),
             'default_copay_percentage' => fake()->randomFloat(2, 0, 30),
             'requires_referral' => fake()->boolean(30),
+            'require_explicit_approval_for_new_items' => fake()->boolean(20),
             'is_active' => fake()->boolean(90),
             'effective_from' => fake()->dateTimeBetween('-2 years', 'now'),
             'effective_to' => fake()->optional()->dateTimeBetween('now', '+3 years'),

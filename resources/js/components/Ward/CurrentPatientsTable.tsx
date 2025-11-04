@@ -26,7 +26,7 @@ interface InsurancePlan {
     id: number;
     name: string;
     plan_type: string;
-    insurance_provider: InsuranceProvider;
+    provider: InsuranceProvider;
 }
 
 interface PatientInsurance {
@@ -35,7 +35,7 @@ interface PatientInsurance {
     status: string;
     coverage_start_date: string;
     coverage_end_date?: string;
-    insurance_plan: InsurancePlan;
+    plan: InsurancePlan;
 }
 
 interface Patient {
@@ -251,8 +251,8 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                                         {
                                                             admission.patient
                                                                 .active_insurance
-                                                                .insurance_plan
-                                                                .insurance_provider
+                                                                .plan
+                                                                .provider
                                                                 .name
                                                         }
                                                     </span>
@@ -260,8 +260,8 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                                         {
                                                             admission.patient
                                                                 .active_insurance
-                                                                .insurance_plan
-                                                                .name
+                                                                .plan
+                                                                .plan_name
                                                         }
                                                     </span>
                                                 </div>

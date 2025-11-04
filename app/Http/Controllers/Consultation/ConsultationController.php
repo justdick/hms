@@ -337,6 +337,14 @@ class ConsultationController extends Controller
             $patient->update($historyFields);
         }
 
+        // Return JSON for AJAX requests (autosave)
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Consultation autosaved successfully.',
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Consultation updated successfully.');
     }
 

@@ -23,10 +23,14 @@ class StoreInsurancePlanRequest extends FormRequest
             'visit_limit' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'default_copay_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'requires_referral' => ['boolean'],
+            'require_explicit_approval_for_new_items' => ['boolean'],
             'is_active' => ['boolean'],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
             'description' => ['nullable', 'string', 'max:10000'],
+            'coverage_rules' => ['nullable', 'array'],
+            'coverage_rules.*.coverage_category' => ['required', 'in:consultation,drug,lab,procedure,ward,nursing'],
+            'coverage_rules.*.coverage_value' => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
 

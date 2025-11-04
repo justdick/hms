@@ -49,6 +49,11 @@ class InsuranceCoverageRule extends Model
         return $this->belongsTo(InsurancePlan::class, 'insurance_plan_id');
     }
 
+    public function history(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(InsuranceCoverageRuleHistory::class, 'insurance_coverage_rule_id');
+    }
+
     public function scopeActive($query): void
     {
         $query->where('is_active', true)
@@ -60,5 +65,88 @@ class InsuranceCoverageRule extends Model
                 $q->whereNull('effective_to')
                     ->orWhere('effective_to', '>=', now());
             });
+    }
+
+    public function scopeGeneral($query): void
+    {
+        $query->whereNull('item_code');
+    }
+
+    public function scopeSpecific($query): void
+    {
+        $query->whereNotNull('item_code');
+    }
+
+    public function scopeForCategory($query, string $category): void
+    {
+        $query->where('coverage_category', $category);
+    }
+
+    public function getIsGeneralAttribute(): bool
+    {
+        return is_null($this->item_code);
+    }
+
+    public function getIsSpecificAttribute(): bool
+    {
+        return ! is_null($this->item_code);
+    }
+
+    public function getRuleTypeAttribute(): string
+    {
+        return $this->is_general ? 'general' : 'specific';
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function ($rule) {
+            $rule->recordHistory('created', null, $rule->getAttributes());
+        });
+
+        static::updating(function ($rule) {
+            $rule->recordHistory('updated', $rule->getOriginal(), $rule->getAttributes());
+        });
+
+        static::saved(function ($rule) {
+            static::clearCacheForRule($rule);
+        });
+
+        static::deleting(function ($rule) {
+            $rule->recordHistory('deleted', $rule->getAttributes(), null);
+        });
+
+        static::deleted(function ($rule) {
+            static::clearCacheForRule($rule);
+        });
+    }
+
+    public function recordHistory(string $action, ?array $oldValues, ?array $newValues): void
+    {
+        // Get batch ID from session if exists (for grouping related changes)
+        $batchId = session('coverage_rule_batch_id');
+
+        InsuranceCoverageRuleHistory::create([
+            'insurance_coverage_rule_id' => $this->id,
+            'user_id' => auth()->id(),
+            'action' => $action,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+            'batch_id' => $batchId,
+        ]);
+    }
+
+    protected static function clearCacheForRule(self $rule): void
+    {
+        $categories = ['consultation', 'drug', 'lab', 'procedure', 'ward', 'nursing'];
+
+        // Clear general rule cache for this category
+        $generalCacheKey = "coverage_rule_general_{$rule->insurance_plan_id}_{$rule->coverage_category}";
+        \Illuminate\Support\Facades\Cache::forget($generalCacheKey);
+
+        // Clear specific rule cache if item_code exists
+        if ($rule->item_code) {
+            $specificCacheKey = "coverage_rule_specific_{$rule->insurance_plan_id}_{$rule->coverage_category}_{$rule->item_code}";
+            \Illuminate\Support\Facades\Cache::forget($specificCacheKey);
+        }
     }
 }

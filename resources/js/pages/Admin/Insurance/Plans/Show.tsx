@@ -67,10 +67,17 @@ interface InsurancePlan {
 }
 
 interface Props {
-    plan: InsurancePlan;
+    plan: {
+        data: InsurancePlan;
+    };
+    simplifiedUiEnabled?: boolean;
 }
 
-export default function InsurancePlanShow({ plan }: Props) {
+export default function InsurancePlanShow({
+    plan: planWrapper,
+    simplifiedUiEnabled = false,
+}: Props) {
+    const plan = planWrapper.data;
     return (
         <AppLayout
             breadcrumbs={[
@@ -269,14 +276,27 @@ export default function InsurancePlanShow({ plan }: Props) {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Coverage Rules</CardTitle>
-                        <Link
-                            href={`/admin/insurance/coverage-rules/create?plan=${plan.id}`}
-                        >
-                            <Button size="sm">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Rule
-                            </Button>
-                        </Link>
+                        <div className="flex gap-2">
+                            <Link
+                                href={
+                                    simplifiedUiEnabled
+                                        ? `/admin/insurance/plans/${plan.id}/coverage`
+                                        : `/admin/insurance/plans/${plan.id}/coverage-rules`
+                                }
+                            >
+                                <Button size="sm" variant="outline">
+                                    Manage Coverage
+                                </Button>
+                            </Link>
+                            <Link
+                                href={`/admin/insurance/coverage-rules/create?plan=${plan.id}`}
+                            >
+                                <Button size="sm">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Rule
+                                </Button>
+                            </Link>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         {plan.coverage_rules &&

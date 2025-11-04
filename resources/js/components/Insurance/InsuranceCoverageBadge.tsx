@@ -28,8 +28,13 @@ export function InsuranceCoverageBadge({
         return null;
     }
 
+    // Ensure all values are numbers
+    const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0;
+    const numInsuranceCovered = typeof insuranceCoveredAmount === 'number' ? insuranceCoveredAmount : parseFloat(String(insuranceCoveredAmount)) || 0;
+    const numPatientCopay = typeof patientCopayAmount === 'number' ? patientCopayAmount : parseFloat(String(patientCopayAmount)) || 0;
+
     const coveragePercentage =
-        amount > 0 ? Math.round((insuranceCoveredAmount / amount) * 100) : 0;
+        numAmount > 0 ? Math.round((numInsuranceCovered / numAmount) * 100) : 0;
 
     const getBadgeVariant = () => {
         if (coveragePercentage >= 100) return 'default';
@@ -75,7 +80,7 @@ export function InsuranceCoverageBadge({
                                 Total Amount:
                             </span>
                             <span className="font-medium">
-                                GHS {amount.toFixed(2)}
+                                GHS {numAmount.toFixed(2)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4">
@@ -83,7 +88,7 @@ export function InsuranceCoverageBadge({
                                 Insurance Pays:
                             </span>
                             <span className="font-medium text-green-600 dark:text-green-400">
-                                GHS {insuranceCoveredAmount.toFixed(2)}
+                                GHS {numInsuranceCovered.toFixed(2)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4">
@@ -91,7 +96,7 @@ export function InsuranceCoverageBadge({
                                 Patient Pays:
                             </span>
                             <span className="font-medium text-orange-600 dark:text-orange-400">
-                                GHS {patientCopayAmount.toFixed(2)}
+                                GHS {numPatientCopay.toFixed(2)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4 border-t pt-1">

@@ -63,12 +63,14 @@ export default function InsurancePlansIndex({ plans }: Props) {
                             Manage insurance plans and coverage details
                         </p>
                     </div>
-                    <Link href="/admin/insurance/plans/create">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Plan
-                        </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link href="/admin/insurance/plans/create">
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Plan
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Plans Table */}
