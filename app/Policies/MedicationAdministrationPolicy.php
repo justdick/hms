@@ -92,4 +92,18 @@ class MedicationAdministrationPolicy
         // Can delete scheduled medications
         return $medicationAdministration->status === 'scheduled';
     }
+
+    /**
+     * Determine whether the user can adjust medication schedule times.
+     */
+    public function adjustSchedule(User $user, MedicationAdministration $medicationAdministration): bool
+    {
+        // Must have permission to administer medications
+        if (! $user->can('administer medications')) {
+            return false;
+        }
+
+        // Can only adjust scheduled medications (not already given)
+        return $medicationAdministration->isScheduled();
+    }
 }

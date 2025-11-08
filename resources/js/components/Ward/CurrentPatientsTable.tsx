@@ -1,5 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import {
+    TooltipProvider,
+} from '@/components/ui/tooltip';
+import {
     Table,
     TableBody,
     TableCell,
@@ -7,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { VitalsStatusBadge } from '@/components/Ward/VitalsStatusBadge';
 import { Link } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -24,7 +28,7 @@ interface InsuranceProvider {
 
 interface InsurancePlan {
     id: number;
-    name: string;
+    plan_name: string;
     plan_type: string;
     provider: InsuranceProvider;
 }
@@ -79,6 +83,15 @@ interface Consultation {
     doctor: Doctor;
 }
 
+interface VitalsSchedule {
+    id: number;
+    patient_admission_id: number;
+    interval_minutes: number;
+    next_due_at: string;
+    last_recorded_at?: string;
+    is_active: boolean;
+}
+
 interface PatientAdmission {
     id: number;
     admission_number: string;
@@ -92,6 +105,7 @@ interface PatientAdmission {
     pending_medications?: any[];
     ward_rounds_count?: number;
     nursing_notes_count?: number;
+    vitals_schedule?: VitalsSchedule;
 }
 
 interface Props {
@@ -132,32 +146,37 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
     }
 
     return (
-        <div className="rounded-md border dark:border-gray-700">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Patient</TableHead>
-                        <TableHead>Admission #</TableHead>
-                        <TableHead>Bed</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Insurance</TableHead>
-                        <TableHead>Admitted</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-center">Alerts</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {admissions.map((admission) => {
-                        const vitalsOverdue = isVitalsOverdue(admission);
-                        const hasPendingMeds =
-                            admission.pending_medications &&
-                            admission.pending_medications.length > 0;
+        <TooltipProvider>
+            <div className="rounded-md border dark:border-gray-700">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Admission #</TableHead>
+                            <TableHead>Bed</TableHead>
+                            <TableHead>Doctor</TableHead>
+                            <TableHead>Insurance</TableHead>
+                            <TableHead>Admitted</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Vitals Status</TableHead>
+                            <TableHead className="text-center">Alerts</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {admissions.map((admission) => {
+                            const vitalsOverdue = isVitalsOverdue(admission);
+                            const hasPendingMeds =
+                                admission.pending_medications &&
+                                admission.pending_medications.length > 0;
+                            const hasOverdueVitals =
+                                admission.vitals_schedule &&
+                                calculateVitalsStatus(admission.vitals_schedule) === 'overdue';
 
-                        return (
-                            <TableRow
-                                key={admission.id}
-                                className="cursor-pointer"
-                            >
+                            return (
+                                <TableRow
+                                    key={admission.id}
+                                    className={`cursor-pointer ${hasOverdueVitals ? 'bg-red-50 dark:bg-red-950/20' : ''}`}
+                                >
                                 <TableCell>
                                     <Link
                                         href={`/wards/${wardId}/patients/${admission.id}`}
@@ -243,7 +262,7 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                         href={`/wards/${wardId}/patients/${admission.id}`}
                                         className="block"
                                     >
-                                        {admission.patient.active_insurance ? (
+                                        {admission.patient.active_insurance?.plan?.provider ? (
                                             <div className="flex items-center gap-1 text-sm">
                                                 <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
                                                 <div className="flex flex-col">
@@ -302,6 +321,20 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                 </TableCell>
 
                                 <TableCell>
+                                    {admission.vitals_schedule ? (
+                                        <VitalsStatusBadge
+                                            schedule={admission.vitals_schedule}
+                                            admissionId={admission.id}
+                                            wardId={wardId}
+                                        />
+                                    ) : (
+                                        <span className="text-sm text-gray-400 dark:text-gray-600">
+                                            No schedule
+                                        </span>
+                                    )}
+                                </TableCell>
+
+                                <TableCell>
                                     <Link
                                         href={`/wards/${wardId}/patients/${admission.id}`}
                                         className="block"
@@ -344,9 +377,33 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                 </TableCell>
                             </TableRow>
                         );
-                    })}
-                </TableBody>
-            </Table>
-        </div>
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+        </TooltipProvider>
     );
+}
+
+/**
+ * Calculate vitals status from schedule
+ */
+function calculateVitalsStatus(
+    schedule: VitalsSchedule,
+): 'upcoming' | 'due' | 'overdue' {
+    const now = new Date();
+    const nextDue = new Date(schedule.next_due_at);
+    const diffMinutes = Math.floor(
+        (nextDue.getTime() - now.getTime()) / (1000 * 60),
+    );
+
+    const GRACE_PERIOD_MINUTES = 15;
+
+    if (diffMinutes > GRACE_PERIOD_MINUTES) {
+        return 'upcoming';
+    } else if (diffMinutes >= -GRACE_PERIOD_MINUTES) {
+        return 'due';
+    } else {
+        return 'overdue';
+    }
 }

@@ -24,6 +24,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/appearance');
     })->name('appearance.edit');
 
+    Route::get('settings/vitals-alerts', function () {
+        return Inertia::render('settings/vitals-alerts');
+    })->name('vitals-alerts.edit');
+
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 

@@ -13,3 +13,6 @@ Schedule::command('checkins:cancel-old')->dailyAt('00:30');
 
 // Schedule auto-completion of consultations older than 24 hours
 Schedule::command('consultations:auto-complete')->hourly();
+
+// Check for due and overdue vitals every minute
+Schedule::command('vitals:check-due')->everyMinute();

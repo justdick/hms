@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MedicationAdministration extends Model
 {
@@ -21,6 +23,7 @@ class MedicationAdministration extends Model
         'dosage_given',
         'route',
         'notes',
+        'is_adjusted',
     ];
 
     protected function casts(): array
@@ -28,6 +31,7 @@ class MedicationAdministration extends Model
         return [
             'scheduled_time' => 'datetime',
             'administered_at' => 'datetime',
+            'is_adjusted' => 'boolean',
         ];
     }
 
@@ -44,6 +48,16 @@ class MedicationAdministration extends Model
     public function administeredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'administered_by_id');
+    }
+
+    public function scheduleAdjustments(): HasMany
+    {
+        return $this->hasMany(MedicationScheduleAdjustment::class);
+    }
+
+    public function latestAdjustment(): HasOne
+    {
+        return $this->hasOne(MedicationScheduleAdjustment::class)->latestOfMany();
     }
 
     public function isScheduled(): bool
@@ -80,5 +94,15 @@ class MedicationAdministration extends Model
     public function scopeGiven($query): void
     {
         $query->where('status', 'given');
+    }
+
+    public function isAdjusted(): bool
+    {
+        return (bool) $this->is_adjusted;
+    }
+
+    public function canBeAdjusted(): bool
+    {
+        return $this->isScheduled();
     }
 }

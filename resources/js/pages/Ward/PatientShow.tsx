@@ -13,15 +13,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
+import { ConfigureScheduleTimesModal } from '@/components/Ward/ConfigureScheduleTimesModal';
+import { ConsultationVitalsCard } from '@/components/Ward/ConsultationVitalsCard';
+import { DiscontinueMedicationModal } from '@/components/Ward/DiscontinueMedicationModal';
 import { MedicationAdministrationPanel } from '@/components/Ward/MedicationAdministrationPanel';
 import { MedicationAdministrationRecord } from '@/components/Ward/MedicationAdministrationRecord';
+import { MedicationHistoryTab } from '@/components/Ward/MedicationHistoryTab';
 import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
+import { PrescriptionScheduleModal } from '@/components/Ward/PrescriptionScheduleModal';
 import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
 import { VitalsChart } from '@/components/Ward/VitalsChart';
+import { VitalsScheduleModal } from '@/components/Ward/VitalsScheduleModal';
+import {
+    VitalsSchedule,
+    VitalsStatusBadge,
+} from '@/components/Ward/VitalsStatusBadge';
 import { VitalsTable } from '@/components/Ward/VitalsTable';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
 import { WardRoundsTable } from '@/components/Ward/WardRoundsTable';
 import { WardRoundViewModal } from '@/components/Ward/WardRoundViewModal';
+import { OverviewTab } from '@/components/Ward/OverviewTab';
+import { LabsTab } from '@/components/Ward/LabsTab';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
@@ -32,19 +44,24 @@ import {
     Bed as BedIcon,
     Calendar,
     ClipboardList,
+    Clock,
     Edit2,
     Eye,
     FileText,
+    FlaskConical,
     Heart,
+    LayoutDashboard,
     Pill,
+    Plus,
     ShieldCheck,
     Stethoscope,
     Trash2,
     User,
     UserCheck,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { isToday } from 'date-fns';
 
 interface InsuranceProvider {
     id: number;
@@ -95,6 +112,19 @@ interface Drug {
     form?: string;
 }
 
+interface ConsultationPrescription {
+    id: number;
+    drug?: Drug;
+    medication_name: string;
+    dosage?: string;
+    dosage_form?: string;
+    frequency: string;
+    duration: string;
+    route?: string;
+    dose_quantity?: string;
+    instructions?: string;
+}
+
 interface Prescription {
     id: number;
     drug: Drug;
@@ -124,11 +154,12 @@ interface MedicationAdministration {
     prescription: Prescription;
     scheduled_time: string;
     administered_at?: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted';
+    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
     administered_by?: User;
     notes?: string;
     dosage_given?: string;
     route?: string;
+    is_adjusted?: boolean;
 }
 
 interface Nurse {
@@ -168,10 +199,21 @@ interface LabOrder {
     lab_service?: LabService;
     status: string;
     ordered_at: string;
-    priority?: string;
+    priority: string;
     special_instructions?: string;
     result_values?: any;
     result_notes?: string;
+}
+
+interface WardRoundPrescription {
+    id: number;
+    medication_name: string;
+    drug?: Drug;
+    dose_quantity?: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
+    status: string;
 }
 
 interface WardRound {
@@ -195,7 +237,7 @@ interface WardRound {
     created_at: string;
     updated_at: string;
     diagnoses?: WardRoundDiagnosis[];
-    prescriptions?: Prescription[];
+    prescriptions?: WardRoundPrescription[];
     lab_orders?: LabOrder[];
 }
 
@@ -213,11 +255,18 @@ interface Ward {
     code: string;
 }
 
+interface PatientCheckin {
+    id: number;
+    vital_signs?: VitalSign[];
+}
+
 interface Consultation {
     id: number;
     doctor: Doctor;
     chief_complaint?: string;
     diagnosis?: string;
+    patient_checkin?: PatientCheckin;
+    prescriptions?: ConsultationPrescription[];
 }
 
 interface PatientAdmission {
@@ -237,6 +286,7 @@ interface PatientAdmission {
     medication_administrations?: MedicationAdministration[];
     nursing_notes?: NursingNote[];
     ward_rounds?: WardRound[];
+    vitals_schedule?: VitalsSchedule;
 }
 
 interface Props {
@@ -260,6 +310,7 @@ export default function WardPatientShow({
     allBeds = [],
     hasAvailableBeds = false,
 }: Props) {
+    const [activeTab, setActiveTab] = useState('overview');
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
     const [nursingNotesModalOpen, setNursingNotesModalOpen] = useState(false);
     const [wardRoundModalOpen, setWardRoundModalOpen] = useState(false);
@@ -270,6 +321,18 @@ export default function WardPatientShow({
     const [selectedWardRound, setSelectedWardRound] =
         useState<WardRound | null>(null);
     const [wardRoundViewModalOpen, setWardRoundViewModalOpen] = useState(false);
+    const [vitalsScheduleModalOpen, setVitalsScheduleModalOpen] =
+        useState(false);
+    
+    // Medication scheduling modals
+    const [configureTimesModalOpen, setConfigureTimesModalOpen] = useState(false);
+    const [reconfigureTimesModalOpen, setReconfigureTimesModalOpen] = useState(false);
+    const [viewScheduleModalOpen, setViewScheduleModalOpen] = useState(false);
+    const [discontinueModalOpen, setDiscontinueModalOpen] = useState(false);
+    const [selectedPrescription, setSelectedPrescription] = useState<ConsultationPrescription | WardRoundPrescription | null>(null);
+
+    // Note: Vitals alerts are now handled globally in AppLayout
+    // No need to fetch or show toasts here
 
     const loadBedData = () => {
         router.reload({
@@ -288,6 +351,18 @@ export default function WardPatientShow({
         });
     };
 
+    const formatInterval = (minutes: number): string => {
+        if (minutes < 60) {
+            return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        }
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        if (remainingMinutes === 0) {
+            return `${hours} hour${hours !== 1 ? 's' : ''}`;
+        }
+        return `${hours} hour${hours !== 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+    };
+
     const calculateAge = (dob?: string) => {
         if (!dob) return null;
         const birthDate = new Date(dob);
@@ -303,15 +378,63 @@ export default function WardPatientShow({
         return age;
     };
 
-    const latestVital = admission.vital_signs?.[0];
-    const pendingMeds = admission.medication_administrations?.filter(
+    // Merge consultation vitals with ward vitals
+    const allVitals = [
+        ...(admission.vital_signs || []),
+        ...(admission.consultation?.patient_checkin?.vital_signs || []),
+    ].sort(
+        (a, b) =>
+            new Date(b.recorded_at).getTime() -
+            new Date(a.recorded_at).getTime(),
+    );
+
+    // Merge consultation prescriptions with ward medication administrations
+    // Note: Consultation prescriptions would need to be converted to medication administration records
+    // For now, we'll just use the existing medication_administrations from the backend
+    const allMedications = admission.medication_administrations || [];
+
+    const latestVital = allVitals[0];
+    
+    // Calculate today's pending medications only (for badge display)
+    const todayPendingMeds = allMedications.filter(
+        (med) =>
+            med.status === 'scheduled' &&
+            isToday(new Date(med.scheduled_time)),
+    );
+    
+    // Keep all pending meds for other uses
+    const pendingMeds = allMedications.filter(
         (med) => med.status === 'scheduled',
     );
+
+    // Collect all prescriptions from consultation and ward rounds
+    const allPrescriptions = [
+        ...(admission.consultation?.prescriptions || []),
+        ...(admission.ward_rounds?.flatMap((round) => round.prescriptions || []) || []),
+    ];
+
+    // Collect all lab orders from ward rounds
+    const allLabOrders = useMemo(() => {
+        return (
+            admission.ward_rounds
+                ?.flatMap((round) => round.lab_orders || [])
+                .sort(
+                    (a, b) =>
+                        new Date(b.ordered_at).getTime() -
+                        new Date(a.ordered_at).getTime(),
+                ) || []
+        );
+    }, [admission]);
 
     // Check if there's an in-progress ward round
     const inProgressRound = admission.ward_rounds?.find(
         (round) => round.status === 'in_progress',
     );
+
+    // Tab navigation handler
+    const handleNavigateToTab = (tabValue: string) => {
+        setActiveTab(tabValue);
+    };
 
     const handleStartNewWardRound = () => {
         if (inProgressRound) {
@@ -631,7 +754,7 @@ export default function WardPatientShow({
                 {/* Alert Badges */}
                 {(admission.is_overflow_patient ||
                     !admission.bed ||
-                    (pendingMeds && pendingMeds.length > 0) ||
+                    (todayPendingMeds && todayPendingMeds.length > 0) ||
                     !latestVital ||
                     new Date(latestVital.recorded_at) <
                         new Date(Date.now() - 4 * 60 * 60 * 1000)) && (
@@ -654,14 +777,14 @@ export default function WardPatientShow({
                                 No Bed Assigned
                             </Badge>
                         )}
-                        {pendingMeds && pendingMeds.length > 0 && (
+                        {todayPendingMeds && todayPendingMeds.length > 0 && (
                             <Badge
                                 variant="outline"
                                 className="border-orange-500 text-orange-700 dark:border-orange-600 dark:text-orange-400"
                             >
                                 <Pill className="mr-2 h-3 w-3" />
-                                {pendingMeds.length} Pending Medication
-                                {pendingMeds.length !== 1 ? 's' : ''}
+                                {todayPendingMeds.length} Pending Medication
+                                {todayPendingMeds.length !== 1 ? 's' : ''}
                             </Badge>
                         )}
                         {(!latestVital ||
@@ -679,8 +802,15 @@ export default function WardPatientShow({
                 )}
 
                 {/* Tabbed Content */}
-                <Tabs defaultValue="vitals" className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="overview" className="w-full">
                     <TabsList>
+                        <TabsTrigger
+                            value="overview"
+                            className="flex items-center gap-2"
+                        >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Overview
+                        </TabsTrigger>
                         <TabsTrigger
                             value="vitals"
                             className="flex items-center gap-2"
@@ -693,13 +823,29 @@ export default function WardPatientShow({
                             className="flex items-center gap-2"
                         >
                             <Pill className="h-4 w-4" />
-                            Medications
-                            {pendingMeds && pendingMeds.length > 0 && (
+                            Medication Administration
+                            {todayPendingMeds && todayPendingMeds.length > 0 && (
                                 <Badge variant="destructive" className="ml-1">
-                                    {pendingMeds.length}
+                                    {todayPendingMeds.length}
                                 </Badge>
                             )}
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="history"
+                            className="flex items-center gap-2"
+                        >
+                            <ClipboardList className="h-4 w-4" />
+                            Medication History
+                        </TabsTrigger>
+                        {allLabOrders.length > 0 && (
+                            <TabsTrigger
+                                value="labs"
+                                className="flex items-center gap-2"
+                            >
+                                <FlaskConical className="h-4 w-4" />
+                                Labs
+                            </TabsTrigger>
+                        )}
                         <TabsTrigger
                             value="notes"
                             className="flex items-center gap-2"
@@ -716,19 +862,139 @@ export default function WardPatientShow({
                         </TabsTrigger>
                     </TabsList>
 
+                    {/* Overview Tab */}
+                    <TabsContent value="overview">
+                        <OverviewTab
+                            admission={admission}
+                            onNavigateToTab={handleNavigateToTab}
+                        />
+                    </TabsContent>
+
                     {/* Vital Signs Tab */}
                     <TabsContent value="vitals">
                         <div className="space-y-4">
+                            {/* Vitals Schedule Section */}
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Clock className="h-5 w-5" />
+                                            Vitals Schedule
+                                        </CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            {admission.vitals_schedule && (
+                                                <VitalsStatusBadge
+                                                    schedule={
+                                                        admission.vitals_schedule
+                                                    }
+                                                    admissionId={admission.id}
+                                                    wardId={
+                                                        admission.ward?.id || 0
+                                                    }
+                                                    onClick={() =>
+                                                        setVitalsModalOpen(true)
+                                                    }
+                                                />
+                                            )}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setVitalsScheduleModalOpen(
+                                                        true,
+                                                    )
+                                                }
+                                            >
+                                                {admission.vitals_schedule ? (
+                                                    <>
+                                                        <Edit2 className="mr-2 h-4 w-4" />
+                                                        Edit Schedule
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        Create Schedule
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                onClick={() =>
+                                                    setVitalsModalOpen(true)
+                                                }
+                                            >
+                                                <Activity className="mr-2 h-4 w-4" />
+                                                Record Vitals Now
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {admission.vitals_schedule ? (
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                        Recording Interval
+                                                    </p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                        {formatInterval(
+                                                            admission
+                                                                .vitals_schedule
+                                                                .interval_minutes,
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                        Next Due
+                                                    </p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                        {formatDateTime(
+                                                            admission
+                                                                .vitals_schedule
+                                                                .next_due_at,
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                        Last Recorded
+                                                    </p>
+                                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                        {admission
+                                                            .vitals_schedule
+                                                            .last_recorded_at
+                                                            ? formatDateTime(
+                                                                  admission
+                                                                      .vitals_schedule
+                                                                      .last_recorded_at,
+                                                              )
+                                                            : 'Never'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="py-8 text-center">
+                                            <Clock className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                                            <p className="mb-2 text-gray-600 dark:text-gray-400">
+                                                No vitals schedule configured
+                                            </p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-500">
+                                                Create a schedule to receive
+                                                automatic reminders for vitals
+                                                recording
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Vitals Recording Section */}
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Vital Signs Monitoring
+                                    Vital Signs History
                                 </h3>
-                                <Button
-                                    onClick={() => setVitalsModalOpen(true)}
-                                >
-                                    <Activity className="mr-2 h-4 w-4" />
-                                    Record Vitals
-                                </Button>
                             </div>
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                                 {/* Vitals Table - Left Side (2/5 width) */}
@@ -737,9 +1003,7 @@ export default function WardPatientShow({
                                         <CardTitle>Vitals History</CardTitle>
                                     </CardHeader>
                                     <CardContent className="max-h-[800px] overflow-y-auto">
-                                        <VitalsTable
-                                            vitals={admission.vital_signs || []}
-                                        />
+                                        <VitalsTable vitals={allVitals} />
                                     </CardContent>
                                 </Card>
 
@@ -749,16 +1013,14 @@ export default function WardPatientShow({
                                         <CardTitle>Vitals Trends</CardTitle>
                                     </CardHeader>
                                     <CardContent className="max-h-[800px] overflow-y-auto">
-                                        <VitalsChart
-                                            vitals={admission.vital_signs || []}
-                                        />
+                                        <VitalsChart vitals={allVitals} />
                                     </CardContent>
                                 </Card>
                             </div>
                         </div>
                     </TabsContent>
 
-                    {/* Medications Tab */}
+                    {/* Medication Administration Tab */}
                     <TabsContent value="medications">
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
@@ -775,18 +1037,16 @@ export default function WardPatientShow({
 
                             {/* MAR Chart */}
                             <MedicationAdministrationRecord
-                                medications={
-                                    admission.medication_administrations || []
-                                }
-                                onAdminister={() => {
+                                medications={allMedications}
+                                onAdminister={(med) => {
                                     // Open the panel to administer
                                     setMedicationPanelOpen(true);
                                 }}
-                                onHold={() => {
+                                onHold={(med) => {
                                     // Open the panel to hold
                                     setMedicationPanelOpen(true);
                                 }}
-                                onRefuse={() => {
+                                onRefuse={(med) => {
                                     // Open the panel to refuse
                                     setMedicationPanelOpen(true);
                                 }}
@@ -902,6 +1162,41 @@ export default function WardPatientShow({
                         </Card>
                     </TabsContent>
 
+                    {/* Medication History Tab */}
+                    <TabsContent value="history">
+                        <MedicationHistoryTab
+                            patientAdmissionId={admission.id}
+                            prescriptions={allPrescriptions}
+                            onConfigureTimes={(prescriptionId) => {
+                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                setSelectedPrescription(prescription || null);
+                                setConfigureTimesModalOpen(true);
+                            }}
+                            onReconfigureTimes={(prescriptionId) => {
+                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                setSelectedPrescription(prescription || null);
+                                setReconfigureTimesModalOpen(true);
+                            }}
+                            onViewSchedule={(prescriptionId) => {
+                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                setSelectedPrescription(prescription || null);
+                                setViewScheduleModalOpen(true);
+                            }}
+                            onDiscontinue={(prescriptionId, reason) => {
+                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                setSelectedPrescription(prescription || null);
+                                setDiscontinueModalOpen(true);
+                            }}
+                        />
+                    </TabsContent>
+
+                    {/* Labs Tab - Conditional */}
+                    {allLabOrders.length > 0 && (
+                        <TabsContent value="labs">
+                            <LabsTab labOrders={allLabOrders} />
+                        </TabsContent>
+                    )}
+
                     {/* Ward Rounds Tab */}
                     <TabsContent value="rounds">
                         <Card>
@@ -977,6 +1272,57 @@ export default function WardPatientShow({
                     }}
                     wardRound={selectedWardRound}
                     patientName={`${admission.patient.first_name} ${admission.patient.last_name}`}
+                />
+
+                <VitalsScheduleModal
+                    open={vitalsScheduleModalOpen}
+                    onOpenChange={setVitalsScheduleModalOpen}
+                    wardId={admission.ward?.id || 0}
+                    admissionId={admission.id}
+                    scheduleId={admission.vitals_schedule?.id}
+                    currentInterval={
+                        admission.vitals_schedule?.interval_minutes
+                    }
+                    patientName={`${admission.patient.first_name} ${admission.patient.last_name}`}
+                />
+
+                {/* Medication Scheduling Modals */}
+                <ConfigureScheduleTimesModal
+                    prescription={selectedPrescription}
+                    isOpen={configureTimesModalOpen}
+                    onClose={() => {
+                        setConfigureTimesModalOpen(false);
+                        setSelectedPrescription(null);
+                    }}
+                    isReconfigure={false}
+                />
+
+                <ConfigureScheduleTimesModal
+                    prescription={selectedPrescription}
+                    isOpen={reconfigureTimesModalOpen}
+                    onClose={() => {
+                        setReconfigureTimesModalOpen(false);
+                        setSelectedPrescription(null);
+                    }}
+                    isReconfigure={true}
+                />
+
+                <PrescriptionScheduleModal
+                    prescription={selectedPrescription}
+                    isOpen={viewScheduleModalOpen}
+                    onClose={() => {
+                        setViewScheduleModalOpen(false);
+                        setSelectedPrescription(null);
+                    }}
+                />
+
+                <DiscontinueMedicationModal
+                    prescription={selectedPrescription}
+                    isOpen={discontinueModalOpen}
+                    onClose={() => {
+                        setDiscontinueModalOpen(false);
+                        setSelectedPrescription(null);
+                    }}
                 />
 
                 {/* Confirmation Dialog for Starting New Ward Round */}

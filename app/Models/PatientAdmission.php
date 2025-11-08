@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PatientAdmission extends Model
 {
@@ -42,6 +43,16 @@ class PatientAdmission extends Model
             'is_overflow_patient' => 'boolean',
             'status' => 'string',
         ];
+    }
+
+    protected $appends = ['vitals_schedule'];
+
+    /**
+     * Accessor to provide activeVitalsSchedule as vitals_schedule for frontend compatibility
+     */
+    public function getVitalsScheduleAttribute(): ?VitalsSchedule
+    {
+        return $this->activeVitalsSchedule;
     }
 
     public function patient(): BelongsTo
@@ -126,6 +137,16 @@ class PatientAdmission extends Model
         return $this->consultation();
     }
 
+    public function vitalsSchedule(): HasOne
+    {
+        return $this->hasOne(VitalsSchedule::class);
+    }
+
+    public function activeVitalsSchedule(): HasOne
+    {
+        return $this->hasOne(VitalsSchedule::class)->where('is_active', true);
+    }
+
     public function wardRoundConsultations(): HasMany
     {
         return $this->hasMany(Consultation::class, 'admission_id');
@@ -206,6 +227,15 @@ class PatientAdmission extends Model
 
         if ($this->bed) {
             $this->bed->markAsAvailable();
+        }
+
+        // Disable vitals schedule and dismiss pending alerts
+        if ($this->activeVitalsSchedule) {
+            $this->activeVitalsSchedule->update(['is_active' => false]);
+
+            $this->activeVitalsSchedule->alerts()
+                ->whereIn('status', ['pending', 'due', 'overdue'])
+                ->update(['status' => 'dismissed']);
         }
     }
 

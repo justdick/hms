@@ -8,10 +8,17 @@ use App\Models\Bed;
 use App\Models\Consultation;
 use App\Models\PatientAdmission;
 use App\Models\Ward;
+use App\Services\MedicationScheduleService;
+use App\Services\VitalsScheduleService;
 use Illuminate\Http\Request;
 
 class AdmissionController extends Controller
 {
+    public function __construct(
+        protected VitalsScheduleService $vitalsScheduleService,
+        protected MedicationScheduleService $medicationScheduleService
+    ) {}
+
     public function store(Request $request, Consultation $consultation)
     {
         $this->authorize('update', $consultation);
@@ -52,6 +59,19 @@ class AdmissionController extends Controller
             'status' => 'admitted',
         ]);
 
+        // Create default vitals schedule (4 hours interval)
+        $this->vitalsScheduleService->createSchedule(
+            $admission,
+            240, // 4 hours = 240 minutes
+            $request->user()
+        );
+
+        // Generate medication administration schedules for consultation prescriptions
+        $consultation->load('prescriptions');
+        foreach ($consultation->prescriptions as $prescription) {
+            $this->medicationScheduleService->generateSchedule($prescription);
+        }
+
         // Fire admission event for billing
         event(new PatientAdmitted(
             checkin: $consultation->patientCheckin,
@@ -60,7 +80,7 @@ class AdmissionController extends Controller
         ));
 
         return redirect()->route('consultation.index')
-            ->with('success', "Patient admitted successfully. Admission Number: {$admission->admission_number}");
+            ->with('success', "Patient admitted successfully. Admission Number: {$admission->admission_number}. Default vitals schedule (4 hours) created.");
     }
 
     public function getAvailableWards()

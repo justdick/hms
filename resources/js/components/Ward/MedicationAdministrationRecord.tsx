@@ -32,12 +32,14 @@ interface Drug {
     id: number;
     name: string;
     strength?: string;
+    form?: string;
 }
 
 interface Prescription {
     id: number;
     medication_name: string;
     dosage?: string;
+    dose_quantity?: string;
     frequency?: string;
     duration?: string;
     route?: string;
@@ -48,7 +50,7 @@ interface MedicationAdministration {
     id: number;
     prescription: Prescription;
     scheduled_time: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted';
+    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
     dosage_given?: string;
     route?: string;
     notes?: string;
@@ -57,6 +59,7 @@ interface MedicationAdministration {
         id: number;
         name: string;
     };
+    is_adjusted?: boolean;
 }
 
 interface MedicationAdministrationRecordProps {
@@ -66,26 +69,25 @@ interface MedicationAdministrationRecordProps {
     onRefuse: (med: MedicationAdministration) => void;
 }
 
-// Common medication time slots (24-hour format)
-const TIME_SLOTS = [
-    '06:00',
-    '08:00',
-    '10:00',
-    '12:00',
-    '14:00',
-    '16:00',
-    '18:00',
-    '20:00',
-    '22:00',
-    '00:00',
-];
-
 export function MedicationAdministrationRecord({
     medications,
     onAdminister,
     onHold,
     onRefuse,
 }: MedicationAdministrationRecordProps) {
+    // Get today's unique scheduled times, sorted
+    const todayTimeSlots = useMemo(() => {
+        const times = new Set<string>();
+        
+        medications.forEach((med) => {
+            if (isToday(new Date(med.scheduled_time))) {
+                times.add(format(new Date(med.scheduled_time), 'HH:mm'));
+            }
+        });
+        
+        return Array.from(times).sort();
+    }, [medications]);
+
     // Group medications by prescription (unique drugs)
     const groupedMedications = useMemo(() => {
         const grouped = new Map<
@@ -175,10 +177,7 @@ export function MedicationAdministrationRecord({
                                 <TableHead className="w-[250px]">
                                     Medication
                                 </TableHead>
-                                <TableHead className="w-[120px]">
-                                    Dose & Route
-                                </TableHead>
-                                {TIME_SLOTS.map((time) => (
+                                {todayTimeSlots.map((time) => (
                                     <TableHead
                                         key={time}
                                         className="text-center"
@@ -201,13 +200,23 @@ export function MedicationAdministrationRecord({
                                             </div>
                                             {group.prescription.drug
                                                 ?.strength && (
-                                                <div className="text-xs text-muted-foreground">
+                                                <div className="text-sm text-muted-foreground">
                                                     {
                                                         group.prescription.drug
                                                             .strength
                                                     }
                                                 </div>
                                             )}
+                                            <div className="text-sm">
+                                                <span className="text-muted-foreground">
+                                                    Dose:{' '}
+                                                </span>
+                                                <span className="font-medium">
+                                                    {group.prescription.dosage ||
+                                                        group.prescription
+                                                            .dose_quantity}
+                                                </span>
+                                            </div>
                                             <Badge
                                                 variant="outline"
                                                 className="text-xs"
@@ -216,18 +225,7 @@ export function MedicationAdministrationRecord({
                                             </Badge>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="space-y-1 text-sm">
-                                            <div>
-                                                {group.prescription.dosage}
-                                            </div>
-                                            <div className="text-muted-foreground">
-                                                {group.prescription.route ||
-                                                    'PO'}
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    {TIME_SLOTS.map((timeSlot) => {
+                                    {todayTimeSlots.map((timeSlot) => {
                                         const administration =
                                             group.administrations.find(
                                                 (admin) => {
@@ -384,12 +382,18 @@ function MedicationSlot({
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <div className="flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center gap-0.5">
                         {getStatusIcon()}
+                        {administration.status === 'given' &&
+                            administration.route && (
+                                <span className="text-[10px] text-muted-foreground">
+                                    {administration.route}
+                                </span>
+                            )}
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <pre className="text-xs whitespace-pre-wrap">
+                    <pre className="whitespace-pre-wrap text-xs">
                         {getTooltipContent()}
                     </pre>
                 </TooltipContent>

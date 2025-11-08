@@ -80,11 +80,32 @@ class WardController extends Controller
                                 ->where('scheduled_time', '<=', now()->addHours(2))
                                 ->with('prescription.drug');
                         },
+                        'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
                     ])
                     ->withCount(['wardRounds', 'nursingNotes'])
                     ->orderBy('admitted_at', 'desc');
             },
         ]);
+
+        // Map admissions to include schedule status
+        $admissionsWithScheduleStatus = $ward->admissions->map(function ($admission) {
+            $admissionArray = $admission->toArray();
+
+            if ($admission->activeVitalsSchedule) {
+                $schedule = $admission->activeVitalsSchedule;
+                $admissionArray['vitals_schedule_status'] = [
+                    'status' => $schedule->getCurrentStatus(),
+                    'next_due_at' => $schedule->next_due_at,
+                    'interval_minutes' => $schedule->interval_minutes,
+                    'time_until_due' => $schedule->getTimeUntilDue(),
+                    'time_overdue' => $schedule->getTimeOverdue(),
+                ];
+            } else {
+                $admissionArray['vitals_schedule_status'] = null;
+            }
+
+            return $admissionArray;
+        });
 
         // Calculate ward statistics
         $stats = [
@@ -92,18 +113,25 @@ class WardController extends Controller
             'pending_meds_count' => $ward->admissions->sum(function ($admission) {
                 return $admission->pendingMedications->count();
             }),
-            'patients_needing_vitals' => $ward->admissions->filter(function ($admission) {
-                if ($admission->latestVitalSigns->isEmpty()) {
-                    return true;
-                }
-                $latestVital = $admission->latestVitalSigns->first();
-
-                return $latestVital->recorded_at < now()->subHours(4);
+            'vitals_due_count' => $admissionsWithScheduleStatus->filter(function ($admission) {
+                return isset($admission['vitals_schedule_status'])
+                    && $admission['vitals_schedule_status']['status'] === 'due';
+            })->count(),
+            'vitals_overdue_count' => $admissionsWithScheduleStatus->filter(function ($admission) {
+                return isset($admission['vitals_schedule_status'])
+                    && $admission['vitals_schedule_status']['status'] === 'overdue';
+            })->count(),
+            'scheduled_vitals_count' => $ward->admissions->filter(function ($admission) {
+                return $admission->activeVitalsSchedule !== null;
             })->count(),
         ];
 
+        // Prepare ward data with transformed admissions
+        $wardData = $ward->toArray();
+        $wardData['admissions'] = $admissionsWithScheduleStatus->values()->all();
+
         return Inertia::render('Ward/Show', [
-            'ward' => $ward,
+            'ward' => $wardData,
             'stats' => $stats,
         ]);
     }

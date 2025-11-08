@@ -12,6 +12,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Sheet,
     SheetContent,
     SheetDescription,
@@ -64,6 +71,7 @@ interface Prescription {
     id: number;
     medication_name: string;
     dosage?: string;
+    dose_quantity?: string;
     frequency?: string;
     duration?: string;
     route?: string;
@@ -74,7 +82,7 @@ interface MedicationAdministration {
     id: number;
     prescription: Prescription;
     scheduled_time: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted';
+    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
     dosage_given?: string;
     route?: string;
     notes?: string;
@@ -83,6 +91,7 @@ interface MedicationAdministration {
         id: number;
         name: string;
     };
+    is_adjusted?: boolean;
 }
 
 interface PatientAdmissionWithMeds extends PatientAdmission {
@@ -295,8 +304,14 @@ function MedicationCard({
     onRefuse,
 }: MedicationCardProps) {
     const scheduledTime = new Date(medication.scheduled_time);
+    const now = new Date();
     const isOverdue =
         isPast(scheduledTime) && medication.status === 'scheduled';
+    
+    // Check if medication is due (past scheduled time or within 30 minutes)
+    const isDue = medication.status === 'scheduled' && 
+        (isPast(scheduledTime) || 
+         (scheduledTime.getTime() - now.getTime()) <= 30 * 60 * 1000);
 
     return (
         <Card
@@ -331,7 +346,16 @@ function MedicationCard({
                             )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Dose: {medication.prescription.dosage} •{' '}
+                            Dose:{' '}
+                            {calculateTotalDosage(
+                                medication.prescription.drug?.strength,
+                                medication.prescription.dosage ||
+                                    medication.prescription.dose_quantity,
+                            ) ||
+                                medication.prescription.dosage ||
+                                medication.prescription.dose_quantity ||
+                                'Not specified'}{' '}
+                            •{' '}
                             {medication.route ||
                                 medication.prescription.route ||
                                 'PO'}
@@ -366,7 +390,7 @@ function MedicationCard({
                         )}
                     </div>
 
-                    {medication.status === 'scheduled' && (
+                    {medication.status === 'scheduled' && isDue && (
                         <div className="flex gap-2">
                             <Button
                                 size="sm"
@@ -374,7 +398,7 @@ function MedicationCard({
                                 className="bg-green-600 hover:bg-green-700"
                             >
                                 <CheckCircle2 className="mr-1 h-4 w-4" />
-                                Given
+                                Give
                             </Button>
                             <Button
                                 size="sm"
@@ -390,9 +414,16 @@ function MedicationCard({
                                 onClick={() => onRefuse(medication)}
                             >
                                 <X className="mr-1 h-4 w-4" />
-                                Refused
+                                Refuse
                             </Button>
                         </div>
+                    )}
+
+                    {medication.status === 'scheduled' && !isDue && (
+                        <Badge variant="outline" className="text-xs">
+                            <Clock className="mr-1 h-3 w-3" />
+                            Scheduled
+                        </Badge>
                     )}
 
                     {medication.status !== 'scheduled' && (
@@ -421,11 +452,73 @@ interface AdministerMedicationDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
+// Helper function to calculate total dosage
+function calculateTotalDosage(
+    strength?: string,
+    quantity?: string,
+): string | null {
+    if (!strength || !quantity) return null;
+
+    // Extract numeric value and unit from strength (e.g., "500mg" -> 500, "mg")
+    const strengthMatch = strength.match(/^(\d+(?:\.\d+)?)\s*(\w+)$/);
+    if (!strengthMatch) return null;
+
+    const strengthValue = parseFloat(strengthMatch[1]);
+    const unit = strengthMatch[2].toLowerCase();
+
+    // Extract numeric quantity (e.g., "2" or "2 tablets")
+    const quantityMatch = quantity.match(/^(\d+(?:\.\d+)?)/);
+    if (!quantityMatch) return null;
+
+    const quantityValue = parseFloat(quantityMatch[1]);
+
+    // Calculate total
+    const total = strengthValue * quantityValue;
+
+    // Format the quantity text (preserve "tablets", "capsules", etc. if present)
+    const quantityText = quantity.trim();
+
+    // Convert to grams if >= 1000mg
+    if (unit === 'mg' && total >= 1000) {
+        const grams = total / 1000;
+        // Format grams nicely (remove unnecessary decimals)
+        const gramsFormatted =
+            grams % 1 === 0 ? grams.toString() : grams.toFixed(2);
+        return `${quantityText} (${total}mg / ${gramsFormatted}g)`;
+    }
+
+    // Convert to mg if >= 1000mcg (micrograms)
+    if ((unit === 'mcg' || unit === 'μg') && total >= 1000) {
+        const mg = total / 1000;
+        const mgFormatted = mg % 1 === 0 ? mg.toString() : mg.toFixed(2);
+        return `${quantityText} (${total}${unit} / ${mgFormatted}mg)`;
+    }
+
+    // For other units or smaller amounts, just show the total
+    return `${quantityText} (${total}${unit})`;
+}
+
 function AdministerMedicationDialog({
     medication,
     open,
     onOpenChange,
 }: AdministerMedicationDialogProps) {
+    const [route, setRoute] = useState(
+        medication.route || medication.prescription.route || 'oral',
+    );
+
+    // Calculate the total dosage display
+    const calculatedDosage = calculateTotalDosage(
+        medication.prescription.drug?.strength,
+        medication.prescription.dosage || medication.prescription.dose_quantity,
+    );
+
+    const defaultDosageValue =
+        calculatedDosage ||
+        medication.prescription.dosage ||
+        medication.prescription.dose_quantity ||
+        '';
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
@@ -445,12 +538,108 @@ function AdministerMedicationDialog({
                             <DialogHeader>
                                 <DialogTitle>Administer Medication</DialogTitle>
                                 <DialogDescription>
-                                    {medication.prescription.drug?.name ||
-                                        medication.prescription.medication_name}
+                                    <div className="space-y-1">
+                                        <div className="font-semibold">
+                                            {medication.prescription.drug?.name ||
+                                                medication.prescription
+                                                    .medication_name}
+                                        </div>
+                                        {medication.prescription.drug
+                                            ?.strength && (
+                                            <div className="text-sm text-muted-foreground">
+                                                Strength:{' '}
+                                                {
+                                                    medication.prescription.drug
+                                                        .strength
+                                                }
+                                            </div>
+                                        )}
+                                    </div>
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-4">
+                                {/* Prescription Info Card */}
+                                <div className="rounded-lg bg-muted p-3">
+                                    <div className="space-y-1 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">
+                                                Prescribed Dose:
+                                            </span>
+                                            <span className="font-medium">
+                                                {medication.prescription
+                                                    .dosage ||
+                                                    medication.prescription
+                                                        .dose_quantity ||
+                                                    'Not specified'}
+                                            </span>
+                                        </div>
+                                        {medication.prescription.drug
+                                            ?.strength && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Drug Strength:
+                                                </span>
+                                                <span className="font-medium">
+                                                    {
+                                                        medication.prescription
+                                                            .drug.strength
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
+                                        {calculatedDosage && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Total Dosage:
+                                                </span>
+                                                <span className="font-medium text-primary">
+                                                    {calculatedDosage}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {medication.prescription.frequency && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Frequency:
+                                                </span>
+                                                <span className="font-medium">
+                                                    {
+                                                        medication.prescription
+                                                            .frequency
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
+                                        {medication.prescription.duration && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Duration:
+                                                </span>
+                                                <span className="font-medium">
+                                                    {
+                                                        medication.prescription
+                                                            .duration
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">
+                                                Scheduled Time:
+                                            </span>
+                                            <span className="font-medium">
+                                                {format(
+                                                    new Date(
+                                                        medication.scheduled_time,
+                                                    ),
+                                                    'MMM d, yyyy HH:mm',
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <Label htmlFor="dosage_given">
                                         Dosage Given{' '}
@@ -459,10 +648,8 @@ function AdministerMedicationDialog({
                                     <Input
                                         id="dosage_given"
                                         name="dosage_given"
-                                        defaultValue={
-                                            medication.prescription.dosage
-                                        }
-                                        placeholder="e.g., 500mg"
+                                        defaultValue={defaultDosageValue}
+                                        placeholder="e.g., 2 (1000mg or 1g)"
                                         required
                                     />
                                     {errors.dosage_given && (
@@ -470,19 +657,80 @@ function AdministerMedicationDialog({
                                             {errors.dosage_given}
                                         </p>
                                     )}
+                                    {calculatedDosage ? (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Calculated from{' '}
+                                            {
+                                                medication.prescription.drug
+                                                    ?.strength
+                                            }{' '}
+                                            strength
+                                        </p>
+                                    ) : (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Verify the dose matches the
+                                            prescription above
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="route">Route</Label>
-                                    <Input
-                                        id="route"
+                                    <Label htmlFor="route">
+                                        Route{' '}
+                                        <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Select
+                                        value={route}
+                                        onValueChange={setRoute}
                                         name="route"
-                                        defaultValue={
-                                            medication.route ||
-                                            medication.prescription.route ||
-                                            'oral'
-                                        }
-                                        placeholder="e.g., oral, IV, IM"
+                                        required
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select route" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="oral">
+                                                Oral (PO)
+                                            </SelectItem>
+                                            <SelectItem value="IV">
+                                                Intravenous (IV)
+                                            </SelectItem>
+                                            <SelectItem value="IM">
+                                                Intramuscular (IM)
+                                            </SelectItem>
+                                            <SelectItem value="SC">
+                                                Subcutaneous (SC)
+                                            </SelectItem>
+                                            <SelectItem value="topical">
+                                                Topical
+                                            </SelectItem>
+                                            <SelectItem value="rectal">
+                                                Rectal (PR)
+                                            </SelectItem>
+                                            <SelectItem value="sublingual">
+                                                Sublingual (SL)
+                                            </SelectItem>
+                                            <SelectItem value="inhalation">
+                                                Inhalation
+                                            </SelectItem>
+                                            <SelectItem value="ophthalmic">
+                                                Ophthalmic
+                                            </SelectItem>
+                                            <SelectItem value="otic">
+                                                Otic
+                                            </SelectItem>
+                                            <SelectItem value="nasal">
+                                                Nasal
+                                            </SelectItem>
+                                            <SelectItem value="transdermal">
+                                                Transdermal
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <input
+                                        type="hidden"
+                                        name="route"
+                                        value={route}
                                     />
                                     {errors.route && (
                                         <p className="mt-1 text-sm text-red-500">

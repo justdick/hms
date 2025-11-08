@@ -3,7 +3,10 @@
 use App\Http\Controllers\Vitals\VitalSignController;
 use App\Http\Controllers\Ward\BedAssignmentController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
+use App\Http\Controllers\Ward\MedicationScheduleController;
 use App\Http\Controllers\Ward\NursingNoteController;
+use App\Http\Controllers\Ward\VitalsAlertController;
+use App\Http\Controllers\Ward\VitalsScheduleController;
 use App\Http\Controllers\Ward\WardController;
 use App\Http\Controllers\Ward\WardPatientController;
 use App\Http\Controllers\Ward\WardRoundController;
@@ -22,6 +25,11 @@ Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(
     Route::put('/{ward}', [WardController::class, 'update'])->name('update');
     Route::delete('/{ward}', [WardController::class, 'destroy'])->name('destroy');
     Route::post('/{ward}/toggle-status', [WardController::class, 'toggleStatus'])->name('toggle-status');
+
+    // Vitals Schedule Management
+    Route::post('/{ward}/patients/{admission}/vitals-schedule', [VitalsScheduleController::class, 'store'])->name('patients.vitals-schedule.store');
+    Route::put('/{ward}/patients/{admission}/vitals-schedule/{schedule}', [VitalsScheduleController::class, 'update'])->name('patients.vitals-schedule.update');
+    Route::delete('/{ward}/patients/{admission}/vitals-schedule/{schedule}', [VitalsScheduleController::class, 'destroy'])->name('patients.vitals-schedule.destroy');
 });
 
 // Patient Admission Routes
@@ -46,6 +54,34 @@ Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.
     Route::post('/{administration}/hold', [MedicationAdministrationController::class, 'hold'])->name('medications.hold');
     Route::post('/{administration}/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
     Route::post('/{administration}/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
+});
+
+// Medication Schedule API Routes (JSON responses for AJAX calls)
+Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {
+    // Vitals Alert API endpoints
+    Route::prefix('vitals-alerts')->name('vitals-alerts.')->group(function () {
+        Route::get('/active', [VitalsAlertController::class, 'active'])->name('active');
+        Route::post('/{alert}/acknowledge', [VitalsAlertController::class, 'acknowledge'])->name('acknowledge');
+        Route::post('/{alert}/dismiss', [VitalsAlertController::class, 'dismiss'])->name('dismiss');
+    });
+
+    // Medication Schedule API endpoints
+    Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
+        Route::get('/{prescription}/schedule', [MedicationScheduleController::class, 'index'])->name('schedule');
+        Route::get('/{prescription}/smart-defaults', [MedicationScheduleController::class, 'smartDefaults'])->name('smart-defaults');
+        Route::post('/{prescription}/configure-schedule', [MedicationScheduleController::class, 'configureSchedule'])->name('configure-schedule');
+        Route::post('/{prescription}/reconfigure-schedule', [MedicationScheduleController::class, 'reconfigureSchedule'])->name('reconfigure-schedule');
+        Route::post('/{prescription}/discontinue', [MedicationScheduleController::class, 'discontinue'])->name('discontinue');
+    });
+
+    Route::prefix('medication-administrations')->name('medication-administrations.')->group(function () {
+        Route::patch('/{administration}/adjust-time', [MedicationScheduleController::class, 'adjustTime'])->name('adjust-time');
+        Route::get('/{administration}/adjustment-history', [MedicationScheduleController::class, 'adjustmentHistory'])->name('adjustment-history');
+    });
+});
+
+// Continue with Ward Rounds routes
+Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.')->group(function () {
 
     // Ward Rounds (IPD Patient Reviews)
     Route::get('/{admission}/ward-rounds', [WardRoundController::class, 'index'])->name('ward-rounds.index');

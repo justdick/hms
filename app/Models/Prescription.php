@@ -21,6 +21,7 @@ class Prescription extends Model
         'drug_id',
         'medication_name',
         'frequency',
+        'schedule_pattern',
         'duration',
         'dose_quantity',
         'quantity',
@@ -33,6 +34,9 @@ class Prescription extends Model
         'reviewed_at',
         'dispensing_notes',
         'external_reason',
+        'discontinued_at',
+        'discontinued_by_id',
+        'discontinuation_reason',
     ];
 
     protected function casts(): array
@@ -40,6 +44,8 @@ class Prescription extends Model
         return [
             'status' => 'string',
             'reviewed_at' => 'datetime',
+            'discontinued_at' => 'datetime',
+            'schedule_pattern' => 'json',
         ];
     }
 
@@ -71,6 +77,11 @@ class Prescription extends Model
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function discontinuedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'discontinued_by_id');
     }
 
     public function dispensing(): HasOne
@@ -175,5 +186,39 @@ class Prescription extends Model
     public function scopeNotDispensed($query): void
     {
         $query->where('status', 'not_dispensed');
+    }
+
+    public function scopeActive($query): void
+    {
+        $query->whereNull('discontinued_at');
+    }
+
+    public function discontinue(User $user, ?string $reason = null): void
+    {
+        $this->update([
+            'discontinued_at' => now(),
+            'discontinued_by_id' => $user->id,
+            'discontinuation_reason' => $reason,
+        ]);
+    }
+
+    public function isDiscontinued(): bool
+    {
+        return $this->discontinued_at !== null;
+    }
+
+    public function canBeDiscontinued(): bool
+    {
+        return ! $this->isDiscontinued();
+    }
+
+    public function hasSchedule(): bool
+    {
+        return $this->schedule_pattern !== null;
+    }
+
+    public function isPendingSchedule(): bool
+    {
+        return $this->schedule_pattern === null && $this->frequency !== 'PRN';
     }
 }

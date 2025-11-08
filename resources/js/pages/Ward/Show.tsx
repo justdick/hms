@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrentPatientsTable } from '@/components/Ward/CurrentPatientsTable';
+import { useVitalsAlerts } from '@/hooks/use-vitals-alerts';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import {
     Activity,
+    AlertCircle,
     ArrowLeft,
     Bed,
     Edit,
@@ -82,6 +84,15 @@ interface Consultation {
     doctor: Doctor;
 }
 
+interface VitalsSchedule {
+    id: number;
+    patient_admission_id: number;
+    interval_minutes: number;
+    next_due_at: string;
+    last_recorded_at?: string;
+    is_active: boolean;
+}
+
 interface PatientAdmission {
     id: number;
     admission_number: string;
@@ -95,6 +106,7 @@ interface PatientAdmission {
     pending_medications?: MedicationAdministration[];
     ward_rounds_count?: number;
     nursing_notes_count?: number;
+    vitals_schedule?: VitalsSchedule;
 }
 
 interface Ward {
@@ -113,7 +125,8 @@ interface Ward {
 interface WardStats {
     total_patients: number;
     pending_meds_count: number;
-    patients_needing_vitals: number;
+    vitals_due_count: number;
+    vitals_overdue_count: number;
 }
 
 interface Props {
@@ -122,6 +135,13 @@ interface Props {
 }
 
 export default function WardShow({ ward, stats }: Props) {
+    // Fetch vitals alerts for this ward (toasts are handled globally in AppLayout)
+    const { alerts } = useVitalsAlerts({
+        wardId: ward.id,
+        pollingInterval: 30000,
+        enabled: true,
+    });
+
     const getBedStatusColor = (status: string) => {
         const colors = {
             available:
@@ -221,7 +241,7 @@ export default function WardShow({ ward, stats }: Props) {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -307,13 +327,29 @@ export default function WardShow({ ward, stats }: Props) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Need Vitals
+                                        Vitals Due
                                     </p>
                                     <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                                        {stats.patients_needing_vitals}
+                                        {stats.vitals_due_count}
                                     </p>
                                 </div>
                                 <Thermometer className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Vitals Overdue
+                                    </p>
+                                    <p className="text-3xl font-bold text-red-600 dark:text-red-400">
+                                        {stats.vitals_overdue_count}
+                                    </p>
+                                </div>
+                                <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
                             </div>
                         </CardContent>
                     </Card>
