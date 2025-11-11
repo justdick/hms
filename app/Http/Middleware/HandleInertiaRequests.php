@@ -44,6 +44,12 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'permissions' => [
+                    'pharmacy' => [
+                        'inventory' => $request->user()?->can('inventory.view') ?? false,
+                        'dispensing' => $request->user()?->can('dispensing.view') ?? false,
+                    ],
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [

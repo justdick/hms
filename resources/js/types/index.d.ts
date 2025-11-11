@@ -3,6 +3,12 @@ import { LucideIcon } from 'lucide-react';
 
 export interface Auth {
     user: User;
+    permissions?: {
+        pharmacy?: {
+            inventory: boolean;
+            dispensing: boolean;
+        };
+    };
 }
 
 export interface BreadcrumbItem {
