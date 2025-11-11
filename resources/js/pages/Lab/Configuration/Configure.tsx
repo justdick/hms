@@ -21,7 +21,6 @@ import {
     Eye,
     FlaskConical,
     Plus,
-    Settings,
     Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -59,7 +58,6 @@ export default function LabServiceConfigure({ labService }: Props) {
     const [parameters, setParameters] = useState<Parameter[]>(
         labService.test_parameters?.parameters || [],
     );
-    const [showPreview, setShowPreview] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const addParameter = () => {
@@ -114,7 +112,9 @@ export default function LabServiceConfigure({ labService }: Props) {
             `/lab/services/configuration/${labService.id}`,
             {
                 test_parameters: {
-                    parameters: parameters.filter((p) => p.name && p.label),
+                    parameters: parameters.filter(
+                        (p) => p.name && p.label,
+                    ) as any,
                 },
             },
             {
@@ -212,493 +212,447 @@ export default function LabServiceConfigure({ labService }: Props) {
         >
             <Head title={`Configure ${labService.name}`} />
 
-            <div className="space-y-6">
+            <div className="space-y-4">
+                {/* Compact Header */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                                router.visit('/lab/services/configuration')
-                            }
-                        >
-                            <ArrowLeft className="mr-1 h-4 w-4" />
-                            Back to Configuration
-                        </Button>
-                        <div>
-                            <h1 className="flex items-center gap-2 text-2xl font-bold">
-                                <Settings className="h-6 w-6" />
-                                Configure Test Parameters
-                            </h1>
-                            <p className="text-muted-foreground">
-                                {labService.name} ({labService.code})
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowPreview(!showPreview)}
-                        >
-                            <Eye className="mr-2 h-4 w-4" />
-                            {showPreview ? 'Hide Preview' : 'Show Preview'}
-                        </Button>
-                        <Button onClick={handleSubmit} disabled={isProcessing}>
-                            {isProcessing ? 'Saving...' : 'Save Configuration'}
-                        </Button>
-                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                            router.visit('/lab/services/configuration')
+                        }
+                    >
+                        <ArrowLeft className="mr-1 h-4 w-4" />
+                        Back to Configuration
+                    </Button>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
-                    {/* Configuration Form */}
-                    <div className="space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <FlaskConical className="h-5 w-5" />
-                                    Test Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Test Name
-                                    </Label>
-                                    <p className="text-sm">{labService.name}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Code
-                                    </Label>
-                                    <p className="text-sm">{labService.code}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Category
-                                    </Label>
-                                    <Badge variant="outline">
+                {/* Test Info Banner */}
+                <Card className="bg-muted/50">
+                    <CardContent className="flex items-center justify-between py-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                                <FlaskConical className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-semibold">
+                                    {labService.name}
+                                </h1>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{labService.code}</span>
+                                    <span>•</span>
+                                    <Badge variant="outline" className="text-xs">
                                         {labService.category}
                                     </Badge>
+                                    {labService.description && (
+                                        <>
+                                            <span>•</span>
+                                            <span>{labService.description}</span>
+                                        </>
+                                    )}
                                 </div>
-                                {labService.description && (
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Description
-                                        </Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {labService.description}
-                                        </p>
-                                    </div>
-                                )}
-                                {labService.normal_range && (
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Current Normal Range
-                                        </Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {labService.normal_range}
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Test Parameters</CardTitle>
-                                <Button size="sm" onClick={addParameter}>
-                                    <Plus className="mr-1 h-4 w-4" />
-                                    Add Parameter
-                                </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {parameters.length === 0 ? (
-                                    <div className="py-8 text-center text-muted-foreground">
+                <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
+                    {/* Configuration Form */}
+                    <div className="flex flex-col">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Test Parameters
+                        </h2>
+
+                        <div className="flex-1 space-y-3">
+                            {parameters.length === 0 ? (
+                                <Card>
+                                    <CardContent className="py-12 text-center text-muted-foreground">
                                         <AlertCircle className="mx-auto mb-2 h-8 w-8" />
-                                        <p>No parameters configured yet.</p>
+                                        <p className="font-medium">
+                                            No parameters configured yet.
+                                        </p>
                                         <p className="text-xs">
                                             Click "Add Parameter" to get
                                             started.
                                         </p>
-                                    </div>
-                                ) : (
-                                    parameters.map((param, index) => (
-                                        <Card
-                                            key={index}
-                                            className="border-dashed"
-                                        >
-                                            <CardContent className="pt-4">
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className="font-medium">
-                                                            Parameter #
-                                                            {index + 1}
-                                                        </h4>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() =>
-                                                                removeParameter(
-                                                                    index,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                parameters.map((param, index) => (
+                                    <Card key={index}>
+                                        <CardContent className="p-4">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-sm font-medium text-muted-foreground">
+                                                        Parameter #{index + 1}
+                                                    </h4>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            removeParameter(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
 
-                                                    <div className="grid gap-4 md:grid-cols-2">
-                                                        <div className="space-y-2">
-                                                            <Label>
-                                                                Parameter Name
-                                                            </Label>
-                                                            <Input
-                                                                placeholder="e.g., hemoglobin"
-                                                                value={
-                                                                    param.name
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateParameter(
-                                                                        index,
-                                                                        {
-                                                                            name: e
-                                                                                .target
-                                                                                .value,
-                                                                        },
-                                                                    )
-                                                                }
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>
-                                                                Display Label
-                                                            </Label>
-                                                            <Input
-                                                                placeholder="e.g., Hemoglobin"
-                                                                value={
-                                                                    param.label
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateParameter(
-                                                                        index,
-                                                                        {
-                                                                            label: e
-                                                                                .target
-                                                                                .value,
-                                                                        },
-                                                                    )
-                                                                }
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid gap-4 md:grid-cols-2">
-                                                        <div className="space-y-2">
-                                                            <Label>
-                                                                Field Type
-                                                            </Label>
-                                                            <Select
-                                                                value={
-                                                                    param.type
-                                                                }
-                                                                onValueChange={(
-                                                                    value,
-                                                                ) =>
-                                                                    updateParameter(
-                                                                        index,
-                                                                        {
-                                                                            type: value as Parameter['type'],
-                                                                        },
-                                                                    )
-                                                                }
-                                                            >
-                                                                <SelectTrigger>
-                                                                    <SelectValue />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="numeric">
-                                                                        Numeric
-                                                                    </SelectItem>
-                                                                    <SelectItem value="text">
-                                                                        Text
-                                                                    </SelectItem>
-                                                                    <SelectItem value="select">
-                                                                        Dropdown
-                                                                    </SelectItem>
-                                                                    <SelectItem value="boolean">
-                                                                        Checkbox
-                                                                    </SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        {param.type ===
-                                                            'numeric' && (
-                                                            <div className="space-y-2">
-                                                                <Label>
-                                                                    Unit
-                                                                </Label>
-                                                                <Input
-                                                                    placeholder="e.g., g/dL, mg/dL, %"
-                                                                    value={
-                                                                        param.unit ||
-                                                                        ''
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateParameter(
-                                                                            index,
-                                                                            {
-                                                                                unit: e
-                                                                                    .target
-                                                                                    .value,
-                                                                            },
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {param.type ===
-                                                        'numeric' && (
-                                                        <div className="grid gap-4 md:grid-cols-2">
-                                                            <div className="space-y-2">
-                                                                <Label>
-                                                                    Normal Range
-                                                                    Min
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder="0"
-                                                                    value={
-                                                                        param
-                                                                            .normal_range
-                                                                            ?.min ||
-                                                                        ''
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateParameter(
-                                                                            index,
-                                                                            {
-                                                                                normal_range:
-                                                                                    {
-                                                                                        ...param.normal_range,
-                                                                                        min:
-                                                                                            parseFloat(
-                                                                                                e
-                                                                                                    .target
-                                                                                                    .value,
-                                                                                            ) ||
-                                                                                            undefined,
-                                                                                    },
-                                                                            },
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label>
-                                                                    Normal Range
-                                                                    Max
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder="100"
-                                                                    value={
-                                                                        param
-                                                                            .normal_range
-                                                                            ?.max ||
-                                                                        ''
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateParameter(
-                                                                            index,
-                                                                            {
-                                                                                normal_range:
-                                                                                    {
-                                                                                        ...param.normal_range,
-                                                                                        max:
-                                                                                            parseFloat(
-                                                                                                e
-                                                                                                    .target
-                                                                                                    .value,
-                                                                                            ) ||
-                                                                                            undefined,
-                                                                                    },
-                                                                            },
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {param.type ===
-                                                        'select' && (
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center justify-between">
-                                                                <Label>
-                                                                    Options
-                                                                </Label>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() =>
-                                                                        addOption(
-                                                                            index,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Plus className="mr-1 h-3 w-3" />
-                                                                    Add Option
-                                                                </Button>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                {(
-                                                                    param.options ||
-                                                                    []
-                                                                ).map(
-                                                                    (
-                                                                        option,
-                                                                        optionIndex,
-                                                                    ) => (
-                                                                        <div
-                                                                            key={
-                                                                                optionIndex
-                                                                            }
-                                                                            className="flex gap-2"
-                                                                        >
-                                                                            <Input
-                                                                                placeholder={`Option ${optionIndex + 1}`}
-                                                                                value={
-                                                                                    option
-                                                                                }
-                                                                                onChange={(
-                                                                                    e,
-                                                                                ) =>
-                                                                                    updateOption(
-                                                                                        index,
-                                                                                        optionIndex,
-                                                                                        e
-                                                                                            .target
-                                                                                            .value,
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="ghost"
-                                                                                onClick={() =>
-                                                                                    removeOption(
-                                                                                        index,
-                                                                                        optionIndex,
-                                                                                    )
-                                                                                }
-                                                                            >
-                                                                                <Trash2 className="h-4 w-4" />
-                                                                            </Button>
-                                                                        </div>
-                                                                    ),
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex items-center space-x-2">
-                                                        <Checkbox
-                                                            checked={
-                                                                param.required
-                                                            }
-                                                            onCheckedChange={(
-                                                                checked,
-                                                            ) =>
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs">
+                                                            Parameter Name
+                                                        </Label>
+                                                        <Input
+                                                            placeholder="e.g., hemoglobin"
+                                                            value={param.name}
+                                                            onChange={(e) =>
                                                                 updateParameter(
                                                                     index,
                                                                     {
-                                                                        required:
-                                                                            !!checked,
+                                                                        name: e
+                                                                            .target
+                                                                            .value,
                                                                     },
                                                                 )
                                                             }
                                                         />
-                                                        <Label>
-                                                            Required field
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs">
+                                                            Display Label
                                                         </Label>
+                                                        <Input
+                                                            placeholder="e.g., Hemoglobin"
+                                                            value={param.label}
+                                                            onChange={(e) =>
+                                                                updateParameter(
+                                                                    index,
+                                                                    {
+                                                                        label: e
+                                                                            .target
+                                                                            .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                        />
                                                     </div>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))
+
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs">
+                                                            Field Type
+                                                        </Label>
+                                                        <Select
+                                                            value={param.type}
+                                                            onValueChange={(
+                                                                value,
+                                                            ) =>
+                                                                updateParameter(
+                                                                    index,
+                                                                    {
+                                                                        type: value as Parameter['type'],
+                                                                    },
+                                                                )
+                                                            }
+                                                        >
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="numeric">
+                                                                    Numeric
+                                                                </SelectItem>
+                                                                <SelectItem value="text">
+                                                                    Text
+                                                                </SelectItem>
+                                                                <SelectItem value="select">
+                                                                    Dropdown
+                                                                </SelectItem>
+                                                                <SelectItem value="boolean">
+                                                                    Checkbox
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    {param.type ===
+                                                        'numeric' && (
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs">
+                                                                Unit
+                                                            </Label>
+                                                            <Input
+                                                                placeholder="e.g., g/dL, mg/dL, %"
+                                                                value={
+                                                                    param.unit ||
+                                                                    ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateParameter(
+                                                                        index,
+                                                                        {
+                                                                            unit: e
+                                                                                .target
+                                                                                .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {param.type === 'numeric' && (
+                                                    <div className="grid gap-3 md:grid-cols-2">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs">
+                                                                Normal Range Min
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="0"
+                                                                value={
+                                                                    param
+                                                                        .normal_range
+                                                                        ?.min ||
+                                                                    ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateParameter(
+                                                                        index,
+                                                                        {
+                                                                            normal_range:
+                                                                                {
+                                                                                    ...param.normal_range,
+                                                                                    min:
+                                                                                        parseFloat(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        ) ||
+                                                                                        undefined,
+                                                                                },
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs">
+                                                                Normal Range Max
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="100"
+                                                                value={
+                                                                    param
+                                                                        .normal_range
+                                                                        ?.max ||
+                                                                    ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateParameter(
+                                                                        index,
+                                                                        {
+                                                                            normal_range:
+                                                                                {
+                                                                                    ...param.normal_range,
+                                                                                    max:
+                                                                                        parseFloat(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        ) ||
+                                                                                        undefined,
+                                                                                },
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {param.type === 'select' && (
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs">
+                                                                Options
+                                                            </Label>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    addOption(
+                                                                        index,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Plus className="mr-1 h-3 w-3" />
+                                                                Add
+                                                            </Button>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {(
+                                                                param.options ||
+                                                                []
+                                                            ).map(
+                                                                (
+                                                                    option,
+                                                                    optionIndex,
+                                                                ) => (
+                                                                    <div
+                                                                        key={
+                                                                            optionIndex
+                                                                        }
+                                                                        className="flex gap-2"
+                                                                    >
+                                                                        <Input
+                                                                            placeholder={`Option ${optionIndex + 1}`}
+                                                                            value={
+                                                                                option
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                updateOption(
+                                                                                    index,
+                                                                                    optionIndex,
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            onClick={() =>
+                                                                                removeOption(
+                                                                                    index,
+                                                                                    optionIndex,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center space-x-2 pt-2">
+                                                    <Checkbox
+                                                        checked={param.required}
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            updateParameter(
+                                                                index,
+                                                                {
+                                                                    required:
+                                                                        !!checked,
+                                                                },
+                                                            )
+                                                        }
+                                                    />
+                                                    <Label className="text-xs font-normal">
+                                                        Required field
+                                                    </Label>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Sticky Add Parameter Button */}
+                        <div className="sticky bottom-0 mt-4 flex justify-center border-t bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                            <Button onClick={addParameter}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Parameter
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Preview - Always Visible & Sticky */}
+                    <div className="md:sticky md:top-6 md:h-fit md:self-start">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <Eye className="h-4 w-4" />
+                                    Form Preview
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {parameters.filter((p) => p.name && p.label)
+                                    .length === 0 ? (
+                                    <div className="py-12 text-center text-muted-foreground">
+                                        <AlertCircle className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                                        <p className="text-sm font-medium">
+                                            No parameters yet
+                                        </p>
+                                        <p className="text-xs">
+                                            Add parameters to see preview
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <h4 className="text-sm font-medium">
+                                                Enter Results for{' '}
+                                                {labService.name}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground">
+                                                This is how staff will enter
+                                                results
+                                            </p>
+                                        </div>
+                                        <Separator />
+                                        <div className="space-y-4">
+                                            {parameters
+                                                .filter(
+                                                    (p) => p.name && p.label,
+                                                )
+                                                .map((param, index) =>
+                                                    renderPreviewField(
+                                                        param,
+                                                        index,
+                                                    ),
+                                                )}
+                                        </div>
+                                        <Separator />
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium">
+                                                Result Notes
+                                            </Label>
+                                            <Textarea
+                                                placeholder="Additional notes..."
+                                                disabled
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
                     </div>
+                </div>
 
-                    {/* Preview */}
-                    {showPreview && (
-                        <div className="space-y-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Eye className="h-5 w-5" />
-                                        Form Preview
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {parameters.filter((p) => p.name && p.label)
-                                        .length === 0 ? (
-                                        <div className="py-8 text-center text-muted-foreground">
-                                            <AlertCircle className="mx-auto mb-2 h-8 w-8" />
-                                            <p>
-                                                No valid parameters to preview
-                                            </p>
-                                            <p className="text-xs">
-                                                Add parameters with name and
-                                                label to see preview
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <h4 className="font-medium">
-                                                Enter Results for{' '}
-                                                {labService.name}
-                                            </h4>
-                                            <Separator />
-                                            <div className="space-y-4">
-                                                {parameters
-                                                    .filter(
-                                                        (p) =>
-                                                            p.name && p.label,
-                                                    )
-                                                    .map((param, index) =>
-                                                        renderPreviewField(
-                                                            param,
-                                                            index,
-                                                        ),
-                                                    )}
-                                            </div>
-                                            <Separator />
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">
-                                                    Result Notes
-                                                </Label>
-                                                <Textarea
-                                                    placeholder="Additional notes..."
-                                                    disabled
-                                                    rows={3}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
+                {/* Save Button at Bottom */}
+                <div className="flex justify-end border-t pt-4">
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isProcessing}
+                        size="lg"
+                    >
+                        {isProcessing ? 'Saving...' : 'Save Configuration'}
+                    </Button>
                 </div>
             </div>
         </AppLayout>
