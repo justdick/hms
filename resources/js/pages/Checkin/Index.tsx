@@ -1,4 +1,5 @@
 import CheckinModal from '@/components/Checkin/CheckinModal';
+import CheckinPromptDialog from '@/components/Checkin/CheckinPromptDialog';
 import TodaysList from '@/components/Checkin/TodaysList';
 import VitalsModal from '@/components/Checkin/VitalsModal';
 import PatientRegistrationForm from '@/components/Patient/RegistrationForm';
@@ -82,6 +83,7 @@ export default function CheckinIndex({
     permissions,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
+    const [checkinPromptOpen, setCheckinPromptOpen] = useState(false);
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
         null,
@@ -106,7 +108,17 @@ export default function CheckinIndex({
 
     const handlePatientRegistered = (patient: Patient) => {
         setSelectedPatient(patient);
+        setCheckinPromptOpen(true);
+    };
+
+    const handleCheckinNow = () => {
+        setCheckinPromptOpen(false);
         setCheckinModalOpen(true);
+    };
+
+    const handleCheckinLater = () => {
+        setCheckinPromptOpen(false);
+        setSelectedPatient(null);
     };
 
     const handleCheckinSuccess = () => {
@@ -486,6 +498,13 @@ export default function CheckinIndex({
             </div>
 
             {/* Modals */}
+            <CheckinPromptDialog
+                open={checkinPromptOpen}
+                onClose={handleCheckinLater}
+                patient={selectedPatient}
+                onCheckinNow={handleCheckinNow}
+            />
+
             <CheckinModal
                 open={checkinModalOpen}
                 onClose={() => setCheckinModalOpen(false)}

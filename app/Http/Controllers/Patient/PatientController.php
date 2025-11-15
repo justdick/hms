@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Patient;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
+use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
 use Illuminate\Http\Request;
@@ -108,18 +109,305 @@ class PatientController extends Controller
         });
     }
 
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', Patient::class);
+
+        $query = Patient::query()
+            ->with([
+                'activeInsurance.plan',
+                'checkins' => function ($query) {
+                    // Get the most recent incomplete check-in
+                    $query->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
+                        ->latest()
+                        ->limit(1);
+                },
+            ])
+            ->where('status', 'active');
+
+        // Apply search filter if provided
+        if ($search = $request->get('search')) {
+            $query->search($search);
+        }
+
+        $patients = $query->latest()
+            ->get()
+            ->map(function ($patient) {
+                $recentCheckin = $patient->checkins->first();
+
+                return [
+                    'id' => $patient->id,
+                    'patient_number' => $patient->patient_number,
+                    'full_name' => $patient->full_name,
+                    'first_name' => $patient->first_name,
+                    'last_name' => $patient->last_name,
+                    'age' => $patient->age,
+                    'gender' => $patient->gender,
+                    'phone_number' => $patient->phone_number,
+                    'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
+                    'address' => $patient->address,
+                    'status' => $patient->status,
+                    'active_insurance' => $patient->activeInsurance ? [
+                        'id' => $patient->activeInsurance->id,
+                        'insurance_plan' => [
+                            'id' => $patient->activeInsurance->plan->id,
+                            'name' => $patient->activeInsurance->plan->name,
+                        ],
+                        'membership_id' => $patient->activeInsurance->membership_id,
+                        'coverage_start_date' => $patient->activeInsurance->coverage_start_date->format('Y-m-d'),
+                        'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
+                    ] : null,
+                    'recent_checkin' => $recentCheckin ? [
+                        'id' => $recentCheckin->id,
+                        'checked_in_at' => $recentCheckin->checked_in_at->format('Y-m-d H:i'),
+                        'status' => $recentCheckin->status,
+                    ] : null,
+                ];
+            });
+
+        // Get active departments for check-in modal
+        $departments = \App\Models\Department::active()
+            ->orderBy('name')
+            ->get()
+            ->map(function ($department) {
+                return [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'code' => $department->code,
+                    'description' => $department->description,
+                ];
+            });
+
+        // Get insurance plans for registration modal
+        $insurancePlans = \App\Models\InsurancePlan::with('provider')
+            ->where('is_active', true)
+            ->orderBy('plan_name')
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'plan_name' => $plan->plan_name,
+                    'plan_code' => $plan->plan_code,
+                    'provider' => [
+                        'id' => $plan->provider->id,
+                        'name' => $plan->provider->name,
+                        'code' => $plan->provider->code,
+                    ],
+                ];
+            });
+
+        return inertia('Patients/Index', [
+            'patients' => [
+                'data' => $patients,
+            ],
+            'departments' => $departments,
+            'insurancePlans' => $insurancePlans,
+        ]);
+    }
+
     public function show(Patient $patient)
     {
         $this->authorize('view', $patient);
 
         $patient->load([
-            'checkins.department',
-            'vitalSigns' => function ($query) {
-                $query->latest()->limit(5);
+            'activeInsurance.plan',
+            'insurancePlans.plan',
+            'checkins' => function ($query) {
+                $query->with('department')->latest()->limit(10);
             },
         ]);
 
-        return response()->json(['patient' => $patient]);
+        // Get active departments for check-in modal
+        $departments = \App\Models\Department::active()
+            ->orderBy('name')
+            ->get()
+            ->map(function ($department) {
+                return [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'code' => $department->code,
+                    'description' => $department->description,
+                ];
+            });
+
+        return inertia('Patients/Show', [
+            'patient' => [
+                'id' => $patient->id,
+                'patient_number' => $patient->patient_number,
+                'first_name' => $patient->first_name,
+                'last_name' => $patient->last_name,
+                'full_name' => $patient->full_name,
+                'gender' => $patient->gender,
+                'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
+                'age' => $patient->age,
+                'phone_number' => $patient->phone_number,
+                'address' => $patient->address,
+                'emergency_contact_name' => $patient->emergency_contact_name,
+                'emergency_contact_phone' => $patient->emergency_contact_phone,
+                'national_id' => $patient->national_id,
+                'status' => $patient->status,
+                'past_medical_surgical_history' => $patient->past_medical_surgical_history,
+                'drug_history' => $patient->drug_history,
+                'family_history' => $patient->family_history,
+                'social_history' => $patient->social_history,
+                'active_insurance' => $patient->activeInsurance ? [
+                    'id' => $patient->activeInsurance->id,
+                    'insurance_plan' => [
+                        'id' => $patient->activeInsurance->plan->id,
+                        'name' => $patient->activeInsurance->plan->name,
+                    ],
+                    'membership_id' => $patient->activeInsurance->membership_id,
+                    'policy_number' => $patient->activeInsurance->policy_number,
+                    'card_number' => $patient->activeInsurance->card_number,
+                    'is_dependent' => $patient->activeInsurance->is_dependent,
+                    'principal_member_name' => $patient->activeInsurance->principal_member_name,
+                    'relationship_to_principal' => $patient->activeInsurance->relationship_to_principal,
+                    'coverage_start_date' => $patient->activeInsurance->coverage_start_date->format('Y-m-d'),
+                    'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
+                    'status' => $patient->activeInsurance->status,
+                ] : null,
+                'insurance_plans' => $patient->insurancePlans->map(function ($insurance) {
+                    return [
+                        'id' => $insurance->id,
+                        'insurance_plan' => [
+                            'id' => $insurance->plan->id,
+                            'name' => $insurance->plan->name,
+                        ],
+                        'membership_id' => $insurance->membership_id,
+                        'coverage_start_date' => $insurance->coverage_start_date->format('Y-m-d'),
+                        'coverage_end_date' => $insurance->coverage_end_date?->format('Y-m-d'),
+                        'status' => $insurance->status,
+                    ];
+                }),
+                'checkin_history' => $patient->checkins->map(function ($checkin) {
+                    return [
+                        'id' => $checkin->id,
+                        'checked_in_at' => $checkin->checked_in_at->format('Y-m-d H:i'),
+                        'department' => [
+                            'id' => $checkin->department->id,
+                            'name' => $checkin->department->name,
+                        ],
+                        'status' => $checkin->status,
+                    ];
+                }),
+            ],
+            'departments' => $departments,
+            'can_edit' => auth()->user()->can('update', $patient),
+            'can_checkin' => auth()->user()->can('create', \App\Models\PatientCheckin::class),
+        ]);
+    }
+
+    public function edit(Patient $patient)
+    {
+        $this->authorize('update', $patient);
+
+        $patient->load(['activeInsurance.plan']);
+
+        // Get insurance plans
+        $insurancePlans = \App\Models\InsurancePlan::with('provider')
+            ->where('is_active', true)
+            ->orderBy('plan_name')
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'plan_name' => $plan->plan_name,
+                    'plan_code' => $plan->plan_code,
+                    'provider' => [
+                        'id' => $plan->provider->id,
+                        'name' => $plan->provider->name,
+                        'code' => $plan->provider->code,
+                    ],
+                ];
+            });
+
+        return inertia('Patients/Edit', [
+            'patient' => [
+                'id' => $patient->id,
+                'patient_number' => $patient->patient_number,
+                'first_name' => $patient->first_name,
+                'last_name' => $patient->last_name,
+                'full_name' => $patient->full_name,
+                'gender' => $patient->gender,
+                'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
+                'age' => $patient->age,
+                'phone_number' => $patient->phone_number,
+                'address' => $patient->address,
+                'emergency_contact_name' => $patient->emergency_contact_name,
+                'emergency_contact_phone' => $patient->emergency_contact_phone,
+                'national_id' => $patient->national_id,
+                'status' => $patient->status,
+                'past_medical_surgical_history' => $patient->past_medical_surgical_history,
+                'drug_history' => $patient->drug_history,
+                'family_history' => $patient->family_history,
+                'social_history' => $patient->social_history,
+                'active_insurance' => $patient->activeInsurance ? [
+                    'id' => $patient->activeInsurance->id,
+                    'insurance_plan_id' => $patient->activeInsurance->insurance_plan_id,
+                    'membership_id' => $patient->activeInsurance->membership_id,
+                    'policy_number' => $patient->activeInsurance->policy_number,
+                    'card_number' => $patient->activeInsurance->card_number,
+                    'is_dependent' => $patient->activeInsurance->is_dependent,
+                    'principal_member_name' => $patient->activeInsurance->principal_member_name,
+                    'relationship_to_principal' => $patient->activeInsurance->relationship_to_principal,
+                    'coverage_start_date' => $patient->activeInsurance->coverage_start_date->format('Y-m-d'),
+                    'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
+                ] : null,
+            ],
+            'insurance_plans' => $insurancePlans,
+        ]);
+    }
+
+    public function update(UpdatePatientRequest $request, Patient $patient)
+    {
+        $validated = $request->validated();
+
+        return DB::transaction(function () use ($request, $patient, $validated) {
+            // Update patient data
+            $patient->update([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'gender' => $validated['gender'],
+                'date_of_birth' => $validated['date_of_birth'],
+                'phone_number' => $validated['phone_number'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'emergency_contact_name' => $validated['emergency_contact_name'] ?? null,
+                'emergency_contact_phone' => $validated['emergency_contact_phone'] ?? null,
+                'national_id' => $validated['national_id'] ?? null,
+                'past_medical_surgical_history' => $validated['past_medical_surgical_history'] ?? null,
+                'drug_history' => $validated['drug_history'] ?? null,
+                'family_history' => $validated['family_history'] ?? null,
+                'social_history' => $validated['social_history'] ?? null,
+            ]);
+
+            // Update or create insurance record if patient has insurance
+            if ($request->boolean('has_insurance')) {
+                $insuranceData = [
+                    'insurance_plan_id' => $validated['insurance_plan_id'],
+                    'membership_id' => $validated['membership_id'],
+                    'policy_number' => $validated['policy_number'] ?? null,
+                    'card_number' => $validated['card_number'] ?? null,
+                    'is_dependent' => $request->boolean('is_dependent'),
+                    'principal_member_name' => $validated['principal_member_name'] ?? null,
+                    'relationship_to_principal' => $validated['relationship_to_principal'] ?? null,
+                    'coverage_start_date' => $validated['coverage_start_date'],
+                    'coverage_end_date' => $validated['coverage_end_date'] ?? null,
+                    'status' => 'active',
+                ];
+
+                // Update existing active insurance or create new one
+                $activeInsurance = $patient->activeInsurance;
+                if ($activeInsurance) {
+                    $activeInsurance->update($insuranceData);
+                } else {
+                    $patient->insurancePlans()->create($insuranceData);
+                }
+            }
+
+            return redirect()
+                ->route('patients.show', $patient)
+                ->with('success', 'Patient information updated successfully.');
+        });
     }
 
     private function generatePatientNumber(): string

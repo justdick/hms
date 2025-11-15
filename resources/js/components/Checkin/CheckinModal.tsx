@@ -186,21 +186,19 @@ export default function CheckinModal({
         onClose();
     };
 
-    if (!patient) {
-        return null;
-    }
-
     return (
         <>
-            <Dialog open={open} onOpenChange={handleModalClose}>
+            <Dialog open={open && !!patient} onOpenChange={handleModalClose}>
                 <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Check-in Patient</DialogTitle>
-                        <DialogDescription>
-                            Check in {patient.full_name} to a clinic for
-                            consultation.
-                        </DialogDescription>
-                    </DialogHeader>
+                    {patient && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>Check-in Patient</DialogTitle>
+                                <DialogDescription>
+                                    Check in {patient.full_name} to a clinic for
+                                    consultation.
+                                </DialogDescription>
+                            </DialogHeader>
 
                     <div className="space-y-6">
                         {/* Patient Information */}
@@ -275,26 +273,32 @@ export default function CheckinModal({
                                 <Label htmlFor="department_id">
                                     Select Clinic/Department *
                                 </Label>
-                                <select
-                                    id="department_id"
-                                    value={selectedDepartment}
-                                    onChange={(e) =>
-                                        setSelectedDepartment(e.target.value)
-                                    }
-                                    required
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    <option value="">Choose a clinic...</option>
-                                    {departments.map((department) => (
-                                        <option
-                                            key={department.id}
-                                            value={department.id}
-                                        >
-                                            {department.name} -{' '}
-                                            {department.description}
-                                        </option>
-                                    ))}
-                                </select>
+                                {departments.length === 0 ? (
+                                    <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                                        No active departments available. Please contact an administrator.
+                                    </div>
+                                ) : (
+                                    <select
+                                        id="department_id"
+                                        value={selectedDepartment}
+                                        onChange={(e) =>
+                                            setSelectedDepartment(e.target.value)
+                                        }
+                                        required
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <option value="">Choose a clinic...</option>
+                                        {departments.map((department) => (
+                                            <option
+                                                key={department.id}
+                                                value={department.id}
+                                            >
+                                                {department.name} -{' '}
+                                                {department.description}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -332,7 +336,7 @@ export default function CheckinModal({
                                         selectedDepartment,
                                     );
                                 }}
-                                disabled={checkingInsurance}
+                                disabled={checkingInsurance || departments.length === 0}
                             >
                                 {checkingInsurance && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -341,6 +345,8 @@ export default function CheckinModal({
                             </Button>
                         </div>
                     </div>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
 

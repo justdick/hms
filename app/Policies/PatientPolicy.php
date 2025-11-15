@@ -12,7 +12,8 @@ class PatientPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('patients.view-all') ||
+        return $user->can('patients.view') ||
+               $user->can('patients.view-all') ||
                $user->can('patients.view-dept') ||
                $user->hasRole('Admin');
     }
@@ -23,7 +24,7 @@ class PatientPolicy
     public function view(User $user, Patient $patient): bool
     {
         // Admin can view all
-        if ($user->hasRole('Admin') || $user->can('patients.view-all')) {
+        if ($user->hasRole('Admin') || $user->can('patients.view-all') || $user->can('patients.view')) {
             return true;
         }
 

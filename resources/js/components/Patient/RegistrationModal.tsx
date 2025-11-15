@@ -1,0 +1,72 @@
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import PatientRegistrationForm from './RegistrationForm';
+
+interface Patient {
+    id: number;
+    patient_number: string;
+    full_name: string;
+    age: number;
+    gender: string;
+    phone_number: string | null;
+    has_checkin_today: boolean;
+}
+
+interface InsurancePlan {
+    id: number;
+    plan_name: string;
+    plan_code: string;
+    provider: {
+        id: number;
+        name: string;
+        code: string;
+    };
+}
+
+interface PatientRegistrationModalProps {
+    open: boolean;
+    onClose: () => void;
+    onPatientRegistered: (patient: Patient) => void;
+    insurancePlans?: InsurancePlan[];
+    registrationEndpoint?: string;
+}
+
+export default function PatientRegistrationModal({
+    open,
+    onClose,
+    onPatientRegistered,
+    insurancePlans = [],
+    registrationEndpoint = '/checkin/patients',
+}: PatientRegistrationModalProps) {
+    const handlePatientRegistered = (patient: Patient) => {
+        onPatientRegistered(patient);
+        onClose();
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Register New Patient</DialogTitle>
+                    <DialogDescription>
+                        Enter patient information to create a new patient
+                        record. Insurance information is optional.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <PatientRegistrationForm
+                    onPatientRegistered={handlePatientRegistered}
+                    onCancel={onClose}
+                    registrationEndpoint={registrationEndpoint}
+                    showCancelButton={true}
+                    insurancePlans={insurancePlans}
+                />
+            </DialogContent>
+        </Dialog>
+    );
+}

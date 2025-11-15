@@ -27,6 +27,7 @@ import {
     Shield,
     Stethoscope,
     TrendingUp,
+    Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -64,6 +65,11 @@ export function AppSidebar() {
             title: 'Check-in',
             href: '/checkin',
             icon: Stethoscope,
+        },
+        {
+            title: 'Patients',
+            href: '/patients',
+            icon: Users,
         },
         {
             title: 'Consultation',

@@ -13,6 +13,7 @@ class PermissionSeeder extends Seeder
     {
         $permissions = [
             // Patient Management
+            'patients.view' => 'View patients',
             'patients.view-all' => 'View all patients system-wide',
             'patients.view-dept' => 'View patients in assigned departments',
             'patients.create' => 'Register new patients',

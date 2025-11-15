@@ -53,7 +53,7 @@ class InsuranceProviderController extends Controller
         }]);
 
         return Inertia::render('Admin/Insurance/Providers/Show', [
-            'provider' => new InsuranceProviderResource($provider),
+            'provider' => (new InsuranceProviderResource($provider))->resolve(),
         ]);
     }
 

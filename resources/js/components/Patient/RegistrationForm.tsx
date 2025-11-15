@@ -81,13 +81,14 @@ export default function PatientRegistrationForm({
 
         post(registrationEndpoint, {
             preserveScroll: true,
-            onSuccess: () => {
+            preserveState: (page) => Object.keys(page.props.errors).length > 0,
+            onSuccess: (page) => {
                 toast.success('Patient registered successfully');
                 reset();
                 setHasInsurance(false);
                 // Patient data comes from the page props via flash data
                 if (page.props.patient) {
-                    onPatientRegistered(page.props.patient);
+                    onPatientRegistered(page.props.patient as Patient);
                 }
             },
             onError: () => {

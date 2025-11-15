@@ -25,8 +25,8 @@ class InsuranceProviderResource extends JsonResource
             'updated_at' => $this->updated_at?->toISOString(),
 
             // Relationships
-            'plans' => InsurancePlanResource::collection($this->whenLoaded('plans')),
-            'plans_count' => $this->when(isset($this->plans_count), $this->plans_count) ?: $this->when($this->relationLoaded('plans'), fn () => $this->plans->count()),
+            'plans' => $this->when($this->relationLoaded('plans'), fn () => InsurancePlanResource::collection($this->plans)->resolve()),
+            'plans_count' => isset($this->plans_count) ? $this->plans_count : ($this->relationLoaded('plans') ? $this->plans->count() : null),
         ];
     }
 }
