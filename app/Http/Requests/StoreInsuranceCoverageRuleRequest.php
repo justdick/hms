@@ -45,6 +45,7 @@ class StoreInsuranceCoverageRuleRequest extends FormRequest
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
             'notes' => ['nullable', 'string', 'max:10000'],
+            'tariff_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
         ];
     }
 

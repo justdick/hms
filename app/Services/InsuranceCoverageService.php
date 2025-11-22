@@ -130,9 +130,20 @@ class InsuranceCoverageService
         // Get the applicable coverage rule
         $rule = $this->getCoverageRule($insurancePlanId, $category, $itemCode, $date);
 
-        // Get insurance tariff if exists, otherwise use standard amount
-        $tariff = $this->getInsuranceTariff($insurancePlanId, $category, $itemCode, $date);
-        $effectivePrice = $tariff ? $tariff->insurance_tariff : $amount;
+        // Determine effective price: tariff_amount from rule > tariff table > standard amount
+        $effectivePrice = (float) $amount; // Default to standard price
+
+        if ($rule && $rule->tariff_amount) {
+            // Use tariff from coverage rule if set
+            $effectivePrice = (float) $rule->tariff_amount;
+        } else {
+            // Fall back to tariff table
+            $tariff = $this->getInsuranceTariff($insurancePlanId, $category, $itemCode, $date);
+            if ($tariff) {
+                $effectivePrice = (float) $tariff->insurance_tariff;
+            }
+        }
+
         $subtotal = $effectivePrice * $quantity;
 
         // Default to no coverage
@@ -164,43 +175,42 @@ class InsuranceCoverageService
 
         // Calculate coverage based on type
         $insurancePays = 0.00;
-        $patientPays = $subtotal;
+        $patientPercentagePayment = 0.00;
+        $patientFixedCopay = ($rule->patient_copay_amount ?? 0) * $quantity;
         $coveragePercentage = 0.00;
 
         switch ($rule->coverage_type) {
             case 'full':
                 $insurancePays = $subtotal;
-                $patientPays = 0.00;
+                $patientPercentagePayment = 0.00;
                 $coveragePercentage = 100.00;
                 break;
 
             case 'percentage':
+                // Use coverage_value to determine insurance payment
                 $coveragePercentage = $rule->coverage_value ?? 0.00;
                 $insurancePays = $subtotal * ($coveragePercentage / 100);
-                $patientPays = $subtotal - $insurancePays;
 
-                // Apply patient copay if specified
-                if ($rule->patient_copay_percentage > 0) {
-                    $patientCopay = $subtotal * ($rule->patient_copay_percentage / 100);
-                    $insurancePays = $subtotal - $patientCopay;
-                    $patientPays = $patientCopay;
-                    $coveragePercentage = 100 - $rule->patient_copay_percentage;
-                }
+                // Patient pays the remainder (percentage-based)
+                $patientPercentagePayment = $subtotal - $insurancePays;
                 break;
 
             case 'fixed':
                 $fixedCoverage = $rule->coverage_value ?? 0.00;
                 $insurancePays = min($fixedCoverage * $quantity, $subtotal);
-                $patientPays = $subtotal - $insurancePays;
+                $patientPercentagePayment = $subtotal - $insurancePays;
                 $coveragePercentage = $subtotal > 0 ? ($insurancePays / $subtotal) * 100 : 0;
                 break;
 
             case 'excluded':
                 $insurancePays = 0.00;
-                $patientPays = $subtotal;
+                $patientPercentagePayment = $subtotal;
                 $coveragePercentage = 0.00;
                 break;
         }
+
+        // Calculate total patient payment (percentage + fixed copay)
+        $patientPays = $patientPercentagePayment + $patientFixedCopay;
 
         // Check amount limit per visit
         if ($rule->max_amount_per_visit && $insurancePays > $rule->max_amount_per_visit) {

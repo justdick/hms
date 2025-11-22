@@ -19,7 +19,9 @@ class InsuranceCoverageRule extends Model
         'is_covered',
         'coverage_type',
         'coverage_value',
+        'tariff_amount',
         'patient_copay_percentage',
+        'patient_copay_amount',
         'max_quantity_per_visit',
         'max_amount_per_visit',
         'requires_preauthorization',
@@ -34,7 +36,9 @@ class InsuranceCoverageRule extends Model
         return [
             'is_covered' => 'boolean',
             'coverage_value' => 'decimal:2',
+            'tariff_amount' => 'decimal:2',
             'patient_copay_percentage' => 'decimal:2',
+            'patient_copay_amount' => 'decimal:2',
             'max_quantity_per_visit' => 'integer',
             'max_amount_per_visit' => 'decimal:2',
             'requires_preauthorization' => 'boolean',
@@ -52,6 +56,20 @@ class InsuranceCoverageRule extends Model
     public function history(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(InsuranceCoverageRuleHistory::class, 'insurance_coverage_rule_id');
+    }
+
+    public function tariff(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(InsuranceTariff::class, 'item_code', 'item_code')
+            ->where(function ($query) {
+                $query->where('insurance_tariffs.insurance_plan_id', $this->insurance_plan_id)
+                    ->where('insurance_tariffs.item_type', $this->coverage_category);
+            })
+            ->where('effective_from', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('effective_to')
+                    ->orWhere('effective_to', '>=', now());
+            });
     }
 
     public function scopeActive($query): void

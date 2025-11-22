@@ -31,6 +31,13 @@ class InsuranceCoverageRuleResource extends JsonResource
 
             // Relationships
             'plan' => new InsurancePlanResource($this->whenLoaded('plan')),
+            'tariff' => $this->when($this->relationLoaded('tariff') && $this->tariff, function () {
+                return [
+                    'id' => $this->tariff->id,
+                    'insurance_tariff' => $this->tariff->insurance_tariff,
+                    'standard_price' => $this->tariff->standard_price,
+                ];
+            }),
         ];
     }
 }
