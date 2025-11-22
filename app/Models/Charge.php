@@ -36,6 +36,12 @@ class Charge extends Model
         'created_by_id',
         'is_emergency_override',
         'notes',
+        'is_waived',
+        'waived_by',
+        'waived_at',
+        'waived_reason',
+        'adjustment_amount',
+        'original_amount',
     ];
 
     protected function casts(): array
@@ -52,6 +58,10 @@ class Charge extends Model
             'metadata' => 'json',
             'is_insurance_claim' => 'boolean',
             'is_emergency_override' => 'boolean',
+            'is_waived' => 'boolean',
+            'waived_at' => 'datetime',
+            'adjustment_amount' => 'decimal:2',
+            'original_amount' => 'decimal:2',
         ];
     }
 
@@ -210,5 +220,39 @@ class Charge extends Model
     public function scopeWithoutInsurance($query)
     {
         return $query->where('is_insurance_claim', false);
+    }
+
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(BillAdjustment::class);
+    }
+
+    public function isWaived(): bool
+    {
+        return $this->is_waived === true;
+    }
+
+    public function hasAdjustment(): bool
+    {
+        return $this->adjustment_amount > 0;
+    }
+
+    public function getEffectiveAmount(): float
+    {
+        if ($this->is_waived) {
+            return 0;
+        }
+
+        return $this->amount;
+    }
+
+    public function scopeWaived($query)
+    {
+        return $query->where('is_waived', true);
+    }
+
+    public function scopeAdjusted($query)
+    {
+        return $query->where('adjustment_amount', '>', 0);
     }
 }

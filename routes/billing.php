@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Billing\BillAdjustmentController;
 use App\Http\Controllers\Billing\BillingConfigurationController;
 use App\Http\Controllers\Billing\PaymentController;
+use App\Http\Controllers\Billing\ServiceOverrideController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('billing')->name('billing.')->group(function () {
@@ -15,7 +17,19 @@ Route::middleware(['auth', 'verified'])->prefix('billing')->name('billing.')->gr
     Route::post('/checkin/{checkin}/payment', [PaymentController::class, 'processPayment'])->name('checkin.payment')->middleware('can:billing.create');
     Route::post('/checkin/{checkin}/emergency-override', [PaymentController::class, 'emergencyOverride'])->name('checkin.emergency-override')->middleware('can:billing.update');
     Route::get('/checkin/{checkin}/billing-status', [PaymentController::class, 'getBillingStatus'])->name('checkin.billing-status')->middleware('can:billing.view-dept');
+
+    // Quick Pay Routes
     Route::post('/charges/{charge}/quick-pay', [PaymentController::class, 'quickPay'])->name('charges.quick-pay')->middleware('can:billing.create');
+    Route::post('/charges/quick-pay-all', [PaymentController::class, 'quickPayAll'])->name('charges.quick-pay-all')->middleware('can:billing.create');
+
+    // Bill Adjustment Routes
+    Route::post('/charges/{charge}/waive', [BillAdjustmentController::class, 'waive'])->name('charges.waive');
+    Route::post('/charges/{charge}/adjust', [BillAdjustmentController::class, 'adjust'])->name('charges.adjust');
+
+    // Service Override Routes
+    Route::post('/checkin/{checkin}/override', [ServiceOverrideController::class, 'activate'])->name('override.activate');
+    Route::post('/overrides/{override}/deactivate', [ServiceOverrideController::class, 'deactivate'])->name('override.deactivate');
+    Route::get('/checkin/{checkin}/overrides', [ServiceOverrideController::class, 'index'])->name('override.index');
 
     // Billing Configuration Management
     Route::prefix('configuration')->name('configuration.')->group(function () {
