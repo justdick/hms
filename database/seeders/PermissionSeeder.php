@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
             'patients.view' => 'View patients',
             'patients.view-all' => 'View all patients system-wide',
             'patients.view-dept' => 'View patients in assigned departments',
+            'patients.view-medical-history' => 'View patient medical history',
             'patients.create' => 'Register new patients',
             'patients.update' => 'Edit patient information',
             'patients.delete' => 'Delete patients',
@@ -82,6 +83,11 @@ class PermissionSeeder extends Seeder
             'billing.update' => 'Update billing information',
             'billing.delete' => 'Delete bills',
             'billing.configure' => 'Configure billing settings and rules',
+            'billing.waive-charges' => 'Waive patient charges',
+            'billing.adjust-charges' => 'Adjust charge amounts',
+            'billing.emergency-override' => 'Override service access requirements',
+            'billing.cancel-charges' => 'Cancel charges',
+            'billing.view-audit-trail' => 'View billing audit trail',
 
             // Department Management
             'departments.view' => 'View departments',
@@ -163,6 +169,17 @@ class PermissionSeeder extends Seeder
             'medications.refuse' => 'Mark medication as refused',
             'medications.omit' => 'Omit medication administration',
 
+            // Minor Procedures Management
+            'minor-procedures.view-dept' => 'View minor procedures queue in assigned departments',
+            'minor-procedures.perform' => 'Perform and document minor procedures',
+            'minor-procedures.view-all' => 'View all minor procedures system-wide (admin)',
+
+            // Minor Procedure Types Configuration
+            'minor-procedures.view-types' => 'View procedure types configuration',
+            'minor-procedures.create-types' => 'Create new procedure types',
+            'minor-procedures.update-types' => 'Update existing procedure types',
+            'minor-procedures.delete-types' => 'Delete procedure types',
+
             // System Administration
             'system.admin' => 'Full system administration access',
             'system.reports' => 'Access system reports',
@@ -234,10 +251,13 @@ class PermissionSeeder extends Seeder
             'medications.refuse',
             'medications.omit',
             'manage prescriptions', // Nurses can discontinue prescriptions
+            'minor-procedures.view-dept',
+            'minor-procedures.perform',
         ]);
 
         $doctor->syncPermissions([
             'patients.view-dept',
+            'patients.view-medical-history',
             'patients.update',
             'checkins.view-dept',
             'vitals.view-dept',
@@ -316,6 +336,11 @@ class PermissionSeeder extends Seeder
             'billing.view-all',
             'billing.create',
             'billing.update',
+            'billing.waive-charges',
+            'billing.adjust-charges',
+            'billing.emergency-override',
+            'billing.cancel-charges',
+            'billing.view-audit-trail',
         ]);
 
         // Admin gets ALL permissions automatically
@@ -326,6 +351,12 @@ class PermissionSeeder extends Seeder
         if ($adminUser) {
             $adminUser->syncRoles(['Admin']);
             $adminUser->syncPermissions(\Spatie\Permission\Models\Permission::all());
+
+            // Assign all active departments to admin
+            $allDepartments = \App\Models\Department::where('is_active', true)->pluck('id');
+            if ($allDepartments->isNotEmpty()) {
+                $adminUser->departments()->sync($allDepartments);
+            }
         }
     }
 }

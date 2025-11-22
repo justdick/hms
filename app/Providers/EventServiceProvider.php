@@ -16,6 +16,10 @@ class EventServiceProvider extends ServiceProvider
         BedAssigned::class => [
             'App\Listeners\CreateWardCharge@handleBedAssignment',
         ],
+        // Minor procedure charge
+        'App\Events\MinorProcedurePerformed' => [
+            'App\Listeners\CreateMinorProcedureCharge',
+        ],
         // Other listeners are auto-discovered via Illuminate\Foundation\Support\Providers\EventServiceProvider
     ];
 

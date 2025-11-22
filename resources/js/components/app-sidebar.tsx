@@ -14,6 +14,7 @@ import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Bandage,
     BarChart3,
     ClipboardList,
     CreditCard,
@@ -87,6 +88,11 @@ export function AppSidebar() {
             icon: FlaskConical,
         },
         {
+            title: 'Minor Procedures',
+            href: '/minor-procedures',
+            icon: Bandage,
+        },
+        {
             title: 'Pharmacy',
             href: '/pharmacy',
             icon: Pill,
@@ -118,17 +124,7 @@ export function AppSidebar() {
                     icon: CreditCard,
                 },
                 {
-                    title: 'Coverage Rules',
-                    href: '/admin/insurance/coverage-rules',
-                    icon: FileBarChart,
-                },
-                {
-                    title: 'Tariffs',
-                    href: '/admin/insurance/tariffs',
-                    icon: TrendingUp,
-                },
-                {
-                    title: 'Reports',
+                    title: 'Analytics',
                     href: '/admin/insurance/reports',
                     icon: BarChart3,
                 },
