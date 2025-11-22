@@ -36,6 +36,7 @@ interface Props {
 }
 
 type CoverageType = 'percentage' | 'fixed' | 'full' | 'excluded';
+type PricingType = 'standard' | 'custom';
 
 export default function AddExceptionModal({
     open,
@@ -51,6 +52,8 @@ export default function AddExceptionModal({
     const [selectedItem, setSelectedItem] = useState<SearchItem | null>(null);
     const [coverageType, setCoverageType] = useState<CoverageType>('percentage');
     const [coverageValue, setCoverageValue] = useState('100');
+    const [pricingType, setPricingType] = useState<PricingType>('standard');
+    const [tariffPrice, setTariffPrice] = useState('');
 
     useEffect(() => {
         if (!open) {
@@ -60,6 +63,8 @@ export default function AddExceptionModal({
             setSelectedItem(null);
             setCoverageType('percentage');
             setCoverageValue('100');
+            setPricingType('standard');
+            setTariffPrice('');
         }
     }, [open]);
 
@@ -523,6 +528,86 @@ export default function AddExceptionModal({
                                             name="coverage_value"
                                             value="0"
                                         />
+                                    )}
+
+                                    {/* Tariff Pricing Section */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <Label>Pricing</Label>
+                                            <HelpTooltip
+                                                content="Choose whether to use the standard price for this item or set a custom tariff price specific to this insurance plan."
+                                                example="Set a custom tariff if this plan has negotiated special pricing"
+                                            />
+                                        </div>
+                                        <RadioGroup
+                                            value={pricingType}
+                                            onValueChange={(value) =>
+                                                setPricingType(value as PricingType)
+                                            }
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="standard"
+                                                    id="standard-price"
+                                                />
+                                                <Label
+                                                    htmlFor="standard-price"
+                                                    className="cursor-pointer font-normal"
+                                                >
+                                                    Use Standard Price (${parseFloat(String(selectedItem.price)).toFixed(2)})
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="custom"
+                                                    id="custom-tariff"
+                                                />
+                                                <Label
+                                                    htmlFor="custom-tariff"
+                                                    className="cursor-pointer font-normal"
+                                                >
+                                                    Set Custom Tariff
+                                                </Label>
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
+
+                                    {/* Custom Tariff Price Input */}
+                                    {pricingType === 'custom' && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <Label htmlFor="tariff_price">
+                                                    Custom Tariff Price
+                                                </Label>
+                                                <HelpTooltip
+                                                    content="Enter the custom price that will be used for billing this item under this insurance plan."
+                                                    example="If standard price is $100 but plan negotiated $80, enter 80"
+                                                />
+                                            </div>
+                                            <div className="relative">
+                                                <span className="absolute top-2.5 left-3 text-sm text-gray-500">
+                                                    $
+                                                </span>
+                                                <Input
+                                                    id="tariff_price"
+                                                    name="tariff_price"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={tariffPrice}
+                                                    onChange={(e) =>
+                                                        setTariffPrice(e.target.value)
+                                                    }
+                                                    className="pl-7"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                            {errors.tariff_price && (
+                                                <p className="text-sm text-red-600">
+                                                    {errors.tariff_price}
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
 
                                     {/* Auto-calculated copay */}

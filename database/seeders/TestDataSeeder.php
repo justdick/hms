@@ -44,6 +44,16 @@ class TestDataSeeder extends Seeder
         ]);
         $doctor->assignRole('Doctor');
 
+        // Assign all active OPD departments to all staff users
+        $opdDepartments = \App\Models\Department::where('type', 'opd')
+            ->where('is_active', true)
+            ->pluck('id');
+
+        $admin->departments()->sync($opdDepartments);
+        $receptionist->departments()->sync($opdDepartments);
+        $nurse->departments()->sync($opdDepartments);
+        $doctor->departments()->sync($opdDepartments);
+
         // Create sample patients
         $patients = [
             [

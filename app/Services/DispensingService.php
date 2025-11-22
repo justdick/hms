@@ -320,4 +320,112 @@ class DispensingService
             ];
         })->toArray();
     }
+
+    /**
+     * Get supplies ready for review.
+     */
+    public function getSuppliesForReview(int $patientId, ?\Carbon\Carbon $dateConstraint = null): array
+    {
+        $supplies = \App\Models\MinorProcedureSupply::whereHas('minorProcedure.patientCheckin', function ($query) use ($patientId) {
+            $query->where('patient_id', $patientId);
+        })
+            ->with(['drug', 'minorProcedure.procedureType'])
+            ->whereIn('status', ['pending', 'reviewed'])
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
+            ->get();
+
+        return $supplies->map(function ($supply) {
+            $stockStatus = $this->stockService->checkAvailability($supply->drug, $supply->quantity);
+
+            return [
+                'supply' => $supply,
+                'stock_status' => $stockStatus,
+                'can_dispense_full' => $stockStatus['available'],
+                'max_dispensable' => $stockStatus['in_stock'],
+                'procedure_type' => $supply->minorProcedure->procedureType->name,
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get supplies ready for dispensing.
+     */
+    public function getSuppliesForDispensing(int $patientId, ?\Carbon\Carbon $dateConstraint = null): array
+    {
+        $supplies = \App\Models\MinorProcedureSupply::whereHas('minorProcedure.patientCheckin', function ($query) use ($patientId) {
+            $query->where('patient_id', $patientId);
+        })
+            ->with(['drug', 'minorProcedure.procedureType', 'reviewer'])
+            ->where('status', 'reviewed')
+            ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
+            ->get();
+
+        return $supplies->map(function ($supply) {
+            return [
+                'supply' => $supply,
+                'procedure_type' => $supply->minorProcedure->procedureType->name,
+                'available_batches' => $this->stockService->getAvailableBatches(
+                    $supply->drug,
+                    $supply->quantity_to_dispense ?? $supply->quantity
+                ),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Review a minor procedure supply (similar to prescription review).
+     */
+    public function reviewSupply(\App\Models\MinorProcedureSupply $supply, array $data, User $reviewer): \App\Models\MinorProcedureSupply
+    {
+        DB::transaction(function () use ($supply, $data, $reviewer) {
+            $action = $data['action']; // 'keep', 'partial', 'external', 'cancel'
+
+            switch ($action) {
+                case 'keep':
+                    $supply->markAsReviewed($reviewer, $supply->quantity, $data['notes'] ?? null);
+                    break;
+
+                case 'partial':
+                    $newQuantity = $data['quantity_to_dispense'];
+                    $supply->markAsReviewed($reviewer, $newQuantity, $data['notes'] ?? 'Partial quantity - stock limitation');
+                    break;
+
+                case 'external':
+                case 'cancel':
+                    // Mark as cancelled/external - we'll just delete the supply request
+                    $supply->update([
+                        'status' => 'cancelled',
+                        'reviewed_by' => $reviewer->id,
+                        'reviewed_at' => now(),
+                        'dispensing_notes' => $data['reason'] ?? 'Cancelled by pharmacy',
+                    ]);
+                    break;
+            }
+        });
+
+        return $supply->fresh();
+    }
+
+    /**
+     * Dispense a minor procedure supply.
+     */
+    public function dispenseMinorProcedureSupply(\App\Models\MinorProcedureSupply $supply, User $dispenser): void
+    {
+        DB::transaction(function () use ($supply, $dispenser) {
+            $quantityToDispense = $supply->quantity_to_dispense ?? $supply->quantity;
+
+            // Deduct stock from batches
+            $stockResult = $this->stockService->deductStock($supply->drug, $quantityToDispense);
+
+            if (! $stockResult['success']) {
+                throw new \Exception("Insufficient stock. Still need {$stockResult['remaining_needed']} more units.");
+            }
+
+            // Mark supply as dispensed
+            $supply->markAsDispensed($dispenser);
+
+            // Create charge for the supply
+            $this->billingService->createSupplyCharge($supply);
+        });
+    }
 }

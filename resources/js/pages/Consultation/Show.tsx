@@ -1,3 +1,4 @@
+import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
 import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
@@ -215,6 +216,25 @@ interface Department {
     code: string;
 }
 
+interface ServiceCharge {
+    id: number;
+    description: string;
+    amount: number;
+    service_type: string;
+}
+
+interface ServiceAccessOverride {
+    id: number;
+    service_type: string;
+    reason: string;
+    authorized_by: {
+        id: number;
+        name: string;
+    };
+    expires_at: string;
+    remaining_duration: string;
+}
+
 interface Props {
     consultation: Consultation;
     labServices: LabService[];
@@ -233,6 +253,10 @@ interface Props {
     availableDrugs?: Drug[];
     availableDepartments?: Department[];
     availableDiagnoses?: Diagnosis[];
+    serviceBlocked?: boolean;
+    blockReason?: string;
+    pendingCharges?: ServiceCharge[];
+    activeOverride?: ServiceAccessOverride | null;
 }
 
 export default function ConsultationShow({
@@ -244,6 +268,10 @@ export default function ConsultationShow({
     availableDrugs = [],
     availableDepartments = [],
     availableDiagnoses = [],
+    serviceBlocked = false,
+    blockReason,
+    pendingCharges = [],
+    activeOverride,
 }: Props) {
     const [activeTab, setActiveTab] = useState('notes');
     const [isSaving, setIsSaving] = useState(false);
@@ -690,6 +718,15 @@ export default function ConsultationShow({
                     </div>
                 </div>
 
+                {/* Service Block Alert */}
+                <ServiceBlockAlert
+                    isBlocked={serviceBlocked}
+                    blockReason={blockReason}
+                    pendingCharges={pendingCharges}
+                    activeOverride={activeOverride}
+                    checkinId={consultation.patient_checkin.id}
+                />
+
                 {/* Admission Context Banner */}
                 {consultation.patient_checkin.patient.active_admission && (
                     <div className="rounded-lg border-l-4 border-blue-600 bg-blue-50 p-4 shadow-sm dark:border-blue-400 dark:bg-blue-950">
@@ -899,6 +936,9 @@ export default function ConsultationShow({
                         <PatientHistorySidebar
                             previousConsultations={
                                 patientHistory?.previousConsultations || []
+                            }
+                            previousMinorProcedures={
+                                patientHistory?.previousMinorProcedures || []
                             }
                             allergies={patientHistory?.allergies || []}
                         />

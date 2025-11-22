@@ -7,6 +7,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import axios from 'axios';
 import {
     AlertCircle,
@@ -25,6 +33,7 @@ interface Props {
     planId: number;
     category: string;
     onSuccess?: () => void;
+    onCategoryChange?: (category: string) => void;
 }
 
 interface ImportResult {
@@ -45,6 +54,7 @@ export default function BulkImportModal({
     planId,
     category,
     onSuccess,
+    onCategoryChange,
 }: Props) {
     const [step, setStep] = useState<Step>('upload');
     const [file, setFile] = useState<File | null>(null);
@@ -60,7 +70,7 @@ export default function BulkImportModal({
         
         try {
             const response = await axios.get(
-                `/admin/insurance/plans/${planId}/coverage-rules/template/${category}`,
+                `/admin/insurance/plans/${planId}/coverage/import-template/${category}`,
                 { responseType: 'blob' }
             );
             
@@ -141,7 +151,7 @@ export default function BulkImportModal({
 
         try {
             const response = await axios.post(
-                `/admin/insurance/plans/${planId}/coverage-rules/import`,
+                `/admin/insurance/plans/${planId}/coverage/import`,
                 formData,
                 {
                     headers: {
@@ -174,16 +184,51 @@ export default function BulkImportModal({
         onClose();
     };
 
+    const categoryLabels: Record<string, string> = {
+        consultation: 'Consultations',
+        drug: 'Drugs',
+        lab: 'Lab Tests',
+        procedure: 'Procedures',
+        ward: 'Ward Services',
+        nursing: 'Nursing Services',
+    };
+
     const renderUploadStep = () => (
         <>
             <DialogHeader>
                 <DialogTitle>Bulk Import Coverage Rules</DialogTitle>
                 <DialogDescription>
-                    Download a pre-populated template and edit coverage settings for {category}
+                    Download a pre-populated template and edit coverage settings
                 </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+                {/* Category Selector */}
+                {onCategoryChange && (
+                    <div className="space-y-2">
+                        <Label htmlFor="category-select">
+                            Select Category <span className="text-red-500">*</span>
+                        </Label>
+                        <Select value={category || ''} onValueChange={onCategoryChange}>
+                            <SelectTrigger id="category-select" className={!category ? 'border-red-300' : ''}>
+                                <SelectValue placeholder="Choose a category to import..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="consultation">{categoryLabels.consultation}</SelectItem>
+                                <SelectItem value="drug">{categoryLabels.drug}</SelectItem>
+                                <SelectItem value="lab">{categoryLabels.lab}</SelectItem>
+                                <SelectItem value="procedure">{categoryLabels.procedure}</SelectItem>
+                                <SelectItem value="ward">{categoryLabels.ward}</SelectItem>
+                                <SelectItem value="nursing">{categoryLabels.nursing}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {!category && (
+                            <p className="text-sm text-red-600 dark:text-red-400">
+                                Please select a category before downloading the template
+                            </p>
+                        )}
+                    </div>
+                )}
                 {/* Pre-populated Template Info */}
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
                     <div className="flex items-start gap-3">
@@ -207,7 +252,7 @@ export default function BulkImportModal({
                                 size="sm"
                                 className="mt-3"
                                 onClick={handleDownloadTemplate}
-                                disabled={downloading}
+                                disabled={downloading || !category}
                             >
                                 {downloading ? (
                                     <>
@@ -217,7 +262,7 @@ export default function BulkImportModal({
                                 ) : (
                                     <>
                                         <Download className="mr-2 size-4" />
-                                        Download Pre-populated Template
+                                        {!category ? 'Select a category first' : 'Download Pre-populated Template'}
                                     </>
                                 )}
                             </Button>

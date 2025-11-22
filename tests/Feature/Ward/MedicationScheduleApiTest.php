@@ -561,7 +561,7 @@ it('suggests correct defaults for BID at 10:30 AM', function () {
         ]);
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should be [10:30, 18:00]
     expect($defaults['day_1'])->toBe(['10:30', '18:00'])
         ->and($defaults['subsequent'])->toBe(['06:00', '18:00']);
@@ -587,7 +587,7 @@ it('suggests correct defaults for TID at 10:00 AM', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should be [14:00, 22:00] (next available times after 10:00)
     expect($defaults['day_1'])->toBe(['14:00', '22:00'])
         ->and($defaults['subsequent'])->toBe(['06:00', '14:00', '22:00']);
@@ -613,7 +613,7 @@ it('suggests correct defaults for QID', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Subsequent should be standard QID times
     expect($defaults['subsequent'])->toBe(['06:00', '12:00', '18:00', '00:00']);
 
@@ -638,10 +638,10 @@ it('calculates Q4H from current time rounded to nearest hour', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should start at 11:00 (rounded up from 10:30)
     expect($defaults['day_1'])->toBe(['11:00']);
-    
+
     // Subsequent should have 6 doses every 4 hours starting from 11:00
     expect($defaults['subsequent'])->toHaveCount(6)
         ->and($defaults['subsequent'][0])->toBe('11:00')
@@ -670,10 +670,10 @@ it('calculates Q4H from exact hour without rounding', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should start at 10:00 (no rounding)
     expect($defaults['day_1'])->toBe(['10:00']);
-    
+
     // Subsequent should have 6 doses every 4 hours starting from 10:00
     expect($defaults['subsequent'])->toHaveCount(6)
         ->and($defaults['subsequent'][0])->toBe('10:00')
@@ -698,7 +698,7 @@ it('returns empty defaults for PRN medications', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // PRN should return empty arrays
     expect($defaults['day_1'])->toBe([])
         ->and($defaults['subsequent'])->toBe([]);
@@ -722,7 +722,7 @@ it('suggests correct defaults for Q12H (BID equivalent)', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should be [09:00, 18:00]
     expect($defaults['day_1'])->toBe(['09:00', '18:00'])
         ->and($defaults['subsequent'])->toBe(['06:00', '18:00']);
@@ -748,7 +748,7 @@ it('suggests correct defaults for Q8H (TID equivalent)', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should be next available times after 07:00
     expect($defaults['day_1'])->toBe(['14:00', '22:00'])
         ->and($defaults['subsequent'])->toBe(['06:00', '14:00', '22:00']);
@@ -770,7 +770,7 @@ it('suggests correct defaults for Q6H (QID equivalent)', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Q6H should use standard QID times
     expect($defaults['subsequent'])->toBe(['06:00', '12:00', '18:00', '00:00']);
 });
@@ -793,10 +793,10 @@ it('calculates Q2H from current time rounded to nearest hour', function () {
     $response->assertSuccessful();
 
     $defaults = $response->json('defaults');
-    
+
     // Day 1 should start at 11:00 (rounded up from 10:45)
     expect($defaults['day_1'])->toBe(['11:00']);
-    
+
     // Subsequent should have 12 doses every 2 hours starting from 11:00
     expect($defaults['subsequent'])->toHaveCount(12)
         ->and($defaults['subsequent'][0])->toBe('11:00')

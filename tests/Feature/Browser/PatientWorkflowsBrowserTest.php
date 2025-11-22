@@ -6,9 +6,8 @@ use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
-use function Pest\Laravel\{actingAs};
+use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 

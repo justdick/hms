@@ -26,7 +26,7 @@ it('displays coverage dashboard page', function () {
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
-        ->component('Admin/Insurance/Plans/CoverageDashboard')
+        ->component('Admin/Insurance/Plans/CoverageManagement')
         ->has('plan')
         ->has('categories')
     );
@@ -161,6 +161,7 @@ it('returns category exceptions via API endpoint', function () {
         'item_code' => 'DRUG001',
         'item_description' => 'Paracetamol',
         'coverage_value' => 100,
+        'is_active' => true,
     ]);
 
     $exception2 = InsuranceCoverageRule::factory()->create([
@@ -169,6 +170,7 @@ it('returns category exceptions via API endpoint', function () {
         'item_code' => 'DRUG002',
         'item_description' => 'Ibuprofen',
         'coverage_value' => 90,
+        'is_active' => true,
     ]);
 
     $response = $this->getJson(route('admin.insurance.plans.coverage.exceptions', [

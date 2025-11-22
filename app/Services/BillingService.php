@@ -6,8 +6,10 @@ use App\Models\BillingConfiguration;
 use App\Models\Charge;
 use App\Models\DepartmentBilling;
 use App\Models\PatientCheckin;
+use App\Models\ServiceAccessOverride;
 use App\Models\ServiceChargeRule;
 use App\Models\WardBillingTemplate;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class BillingService
@@ -111,6 +113,12 @@ class BillingService
 
     public function canProceedWithService(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): bool
     {
+        // Check for active service access override first
+        $activeOverride = $this->getActiveOverride($checkin, $serviceType, $serviceCode);
+        if ($activeOverride) {
+            return true;
+        }
+
         $rule = ServiceChargeRule::where('service_type', $serviceType)
             ->where(function ($query) use ($serviceCode) {
                 $query->whereNull('service_code')
@@ -272,5 +280,55 @@ class BillingService
     {
         return request()->boolean('emergency_override') ||
                session()->get('emergency_override', false);
+    }
+
+    /**
+     * Get active service access override for a patient check-in and service.
+     */
+    public function getActiveOverride(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): ?ServiceAccessOverride
+    {
+        $query = ServiceAccessOverride::active()
+            ->where('patient_checkin_id', $checkin->id)
+            ->forService($serviceType, $serviceCode);
+
+        return $query->first();
+    }
+
+    /**
+     * Get all active overrides for a patient check-in.
+     */
+    public function getActiveOverrides(PatientCheckin $checkin): Collection
+    {
+        return ServiceAccessOverride::active()
+            ->where('patient_checkin_id', $checkin->id)
+            ->with('authorizedBy:id,name')
+            ->get();
+    }
+
+    /**
+     * Check if a specific service is blocked due to unpaid charges.
+     */
+    public function isServiceBlocked(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): bool
+    {
+        return ! $this->canProceedWithService($checkin, $serviceType, $serviceCode);
+    }
+
+    /**
+     * Get the reason why a service is blocked.
+     */
+    public function getServiceBlockReason(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): ?string
+    {
+        if ($this->canProceedWithService($checkin, $serviceType, $serviceCode)) {
+            return null;
+        }
+
+        $pendingCharges = $this->getPendingCharges($checkin, $serviceType);
+        $totalPending = $pendingCharges->sum('amount');
+
+        if ($totalPending > 0) {
+            return 'Outstanding payment of GHS '.number_format($totalPending, 2)." required for {$serviceType} service";
+        }
+
+        return 'Service blocked due to billing requirements';
     }
 }

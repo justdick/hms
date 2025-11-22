@@ -15,6 +15,10 @@ interface CoverageException {
     patient_copay_percentage: number;
     is_covered: boolean;
     notes?: string;
+    tariff?: {
+        id: number;
+        insurance_tariff: number;
+    };
 }
 
 interface Props {
@@ -23,6 +27,7 @@ interface Props {
     planId: number;
     category: string;
     onEdit?: (exception: CoverageException) => void;
+    searchQuery?: string;
 }
 
 export default function ExceptionList({
@@ -31,12 +36,16 @@ export default function ExceptionList({
     planId,
     category,
     onEdit,
+    searchQuery: externalSearchQuery,
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterType, setFilterType] = useState<'all' | 'full' | 'excluded'>(
+    const [filterType, setFilterType] = useState<'all' | 'full' | 'excluded' | 'custom_tariff'>(
         'all',
     );
     const [historyRuleId, setHistoryRuleId] = useState<number | null>(null);
+
+    // Use external search query if provided (from global search)
+    const activeSearchQuery = externalSearchQuery || searchQuery;
 
     const formatCoverage = (exception: CoverageException) => {
         if (exception.coverage_type === 'full') {
@@ -85,11 +94,31 @@ export default function ExceptionList({
         }
     };
 
+    // Highlight matching text
+    const highlightText = (text: string, query: string) => {
+        if (!query) return text;
+        
+        const parts = text.split(new RegExp(`(${query})`, 'gi'));
+        return (
+            <>
+                {parts.map((part, index) =>
+                    part.toLowerCase() === query.toLowerCase() ? (
+                        <mark key={index} className="bg-yellow-200 dark:bg-yellow-800">
+                            {part}
+                        </mark>
+                    ) : (
+                        part
+                    )
+                )}
+            </>
+        );
+    };
+
     // Filter exceptions
     const filteredExceptions = exceptions.filter((exception) => {
         // Search filter
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
+        if (activeSearchQuery) {
+            const query = activeSearchQuery.toLowerCase();
             const matchesSearch =
                 exception.item_code.toLowerCase().includes(query) ||
                 exception.item_description.toLowerCase().includes(query);
@@ -104,6 +133,9 @@ export default function ExceptionList({
             return (
                 exception.coverage_type === 'excluded' || !exception.is_covered
             );
+        }
+        if (filterType === 'custom_tariff') {
+            return exception.tariff !== undefined && exception.tariff !== null;
         }
 
         return true;
@@ -121,20 +153,20 @@ export default function ExceptionList({
 
     return (
         <div className="space-y-4">
-            {/* Search and Filters - Responsive */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative flex-1">
-                    <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
-                    <Input
-                        type="text"
-                        placeholder="Search exceptions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                        aria-label="Search exceptions by name or code"
-                    />
-                </div>
-                <div className="flex flex-wrap gap-2">
+            {/* Search and Filters - Responsive (hide search if external search is active) */}
+            {!externalSearchQuery && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="relative flex-1">
+                        <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
+                        <Input
+                            type="text"
+                            placeholder="Search exceptions..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9"
+                            aria-label="Search exceptions by name or code"
+                        />
+                    </div>
                     <Button
                         size="sm"
                         variant={filterType === 'all' ? 'default' : 'outline'}
@@ -164,8 +196,19 @@ export default function ExceptionList({
                         <span className="hidden sm:inline">Excluded</span>
                         <span className="sm:hidden">None</span>
                     </Button>
+                    <Button
+                        size="sm"
+                        variant={
+                            filterType === 'custom_tariff' ? 'default' : 'outline'
+                        }
+                        onClick={() => setFilterType('custom_tariff')}
+                        aria-pressed={filterType === 'custom_tariff'}
+                    >
+                        <span className="hidden sm:inline">Custom Tariff</span>
+                        <span className="sm:hidden">Tariff</span>
+                    </Button>
                 </div>
-            </div>
+            )}
 
             {/* Exception List */}
             <div className="space-y-2">
@@ -190,12 +233,17 @@ export default function ExceptionList({
                                             <Badge variant="secondary">
                                                 Exception
                                             </Badge>
+                                            {exception.tariff && (
+                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-700">
+                                                    Custom Tariff
+                                                </Badge>
+                                            )}
                                             <span className="font-mono text-xs text-gray-600 sm:text-sm dark:text-gray-400">
-                                                {exception.item_code}
+                                                {activeSearchQuery ? highlightText(exception.item_code, activeSearchQuery) : exception.item_code}
                                             </span>
                                         </div>
                                         <p className="mt-1 text-sm font-medium text-gray-900 sm:text-base dark:text-gray-100">
-                                            {exception.item_description}
+                                            {activeSearchQuery ? highlightText(exception.item_description, activeSearchQuery) : exception.item_description}
                                         </p>
                                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
                                             <span className="font-semibold text-green-700 dark:text-green-400">
@@ -210,6 +258,16 @@ export default function ExceptionList({
                                                 {exception.patient_copay_percentage}
                                                 %
                                             </span>
+                                            {exception.tariff && (
+                                                <>
+                                                    <span className="hidden text-gray-400 sm:inline">
+                                                        |
+                                                    </span>
+                                                    <span className="font-semibold text-purple-700 dark:text-purple-400">
+                                                        Tariff: ${parseFloat(String(exception.tariff.insurance_tariff)).toFixed(2)}
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
                                         {comparison && (
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">

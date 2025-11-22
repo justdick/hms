@@ -20,7 +20,7 @@ class DiagnosisFactory extends Factory
             'diagnosis' => fake()->words(3, true),
             'code' => fake()->regexify('[A-Z][0-9]{2}\.[0-9]{1,2}'),
             'g_drg' => fake()->optional()->regexify('[0-9]{3}'),
-            'icd_10' => fake()->optional()->regexify('[A-Z][0-9]{2}\.[0-9]{1,2}'),
+            'icd_10' => fake()->regexify('[A-Z][0-9]{2}\.[0-9]{1,2}'),
         ];
     }
 }

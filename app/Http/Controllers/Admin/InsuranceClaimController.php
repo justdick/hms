@@ -81,7 +81,7 @@ class InsuranceClaimController extends Controller
         ]);
     }
 
-    public function show(InsuranceClaim $claim): Response
+    public function show(InsuranceClaim $claim)
     {
         $this->authorize('view', $claim);
 
@@ -95,6 +95,19 @@ class InsuranceClaimController extends Controller
             'vettedBy',
             'submittedBy',
         ]);
+
+        // Support both Inertia and JSON responses
+        if (request()->wantsJson()) {
+            return response()->json([
+                'claim' => InsuranceClaimResource::make($claim)->resolve(),
+                'can' => [
+                    'vet' => auth()->user()->can('vetClaim', $claim),
+                    'submit' => auth()->user()->can('submitClaim', $claim),
+                    'approve' => auth()->user()->can('approveClaim', $claim),
+                    'reject' => auth()->user()->can('rejectClaim', $claim),
+                ],
+            ]);
+        }
 
         return Inertia::render('Admin/Insurance/Claims/Show', [
             'claim' => InsuranceClaimResource::make($claim)->resolve(),

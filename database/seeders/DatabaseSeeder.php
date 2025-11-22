@@ -15,19 +15,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create default user
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-            ]
-        );
+        // User::firstOrCreate(
+        //     ['email' => 'test@example.com'],
+        //     [
+        //         'name' => 'Test User',
+        //         'password' => Hash::make('password'),
+        //         'email_verified_at' => now(),
+        //     ]
+        // );
 
         // Seed consultation module data
         $this->call([
             PermissionSeeder::class,
             DepartmentSeeder::class,
+            MinorProceduresDepartmentSeeder::class,
+            MinorProcedureTypesSeeder::class,
             TestDataSeeder::class,
             PaymentMethodSeeder::class,
             LabServiceSeeder::class,

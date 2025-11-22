@@ -1,3 +1,4 @@
+import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
 import { PrescriptionStatusBadge } from '@/components/Pharmacy/PrescriptionStatusBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +71,25 @@ interface Patient {
     full_name: string;
 }
 
+interface ServiceCharge {
+    id: number;
+    description: string;
+    amount: number;
+    service_type: string;
+}
+
+interface ServiceAccessOverride {
+    id: number;
+    service_type: string;
+    reason: string;
+    authorized_by: {
+        id: number;
+        name: string;
+    };
+    expires_at: string;
+    remaining_duration: string;
+}
+
 interface Props {
     patient: Patient;
     checkin: {
@@ -77,12 +97,20 @@ interface Props {
         created_at: string;
     };
     prescriptionsData: PrescriptionData[];
+    serviceBlocked?: boolean;
+    blockReason?: string;
+    pendingCharges?: ServiceCharge[];
+    activeOverride?: ServiceAccessOverride | null;
 }
 
 export default function Dispense({
     patient,
     checkin,
     prescriptionsData,
+    serviceBlocked = false,
+    blockReason,
+    pendingCharges = [],
+    activeOverride,
 }: Props) {
     const [processing, setProcessing] = useState<number | null>(null);
 
@@ -136,7 +164,16 @@ export default function Dispense({
                     </div>
                 </div>
 
-                {!allPaid && (
+                {/* Service Block Alert */}
+                <ServiceBlockAlert
+                    isBlocked={serviceBlocked}
+                    blockReason={blockReason}
+                    pendingCharges={pendingCharges}
+                    activeOverride={activeOverride}
+                    checkinId={checkin.id}
+                />
+
+                {!serviceBlocked && !allPaid && (
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
@@ -147,7 +184,7 @@ export default function Dispense({
                     </Alert>
                 )}
 
-                {allPaid && (
+                {!serviceBlocked && allPaid && (
                     <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
                         <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <AlertDescription className="text-green-600 dark:text-green-400">

@@ -101,12 +101,12 @@ export default function PlanSetupWizard({ providers }: Props) {
     });
 
     const [coverageData, setCoverageData] = useState<CoverageData>({
-        consultation: '',
-        drug: '',
-        lab: '',
-        procedure: '',
-        ward: '',
-        nursing: '',
+        consultation: '80',
+        drug: '80',
+        lab: '80',
+        procedure: '80',
+        ward: '80',
+        nursing: '80',
     });
 
     const [selectedPreset, setSelectedPreset] = useState<CoveragePreset | null>(null);

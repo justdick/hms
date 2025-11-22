@@ -1,3 +1,4 @@
+import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -273,6 +274,7 @@ interface PatientAdmission {
     id: number;
     admission_number: string;
     patient: Patient;
+    patient_checkin_id?: number;
     status: string;
     admitted_at: string;
     discharged_at?: string;
@@ -289,11 +291,34 @@ interface PatientAdmission {
     vitals_schedule?: VitalsSchedule;
 }
 
+interface ServiceCharge {
+    id: number;
+    description: string;
+    amount: number;
+    service_type: string;
+}
+
+interface ServiceAccessOverride {
+    id: number;
+    service_type: string;
+    reason: string;
+    authorized_by: {
+        id: number;
+        name: string;
+    };
+    expires_at: string;
+    remaining_duration: string;
+}
+
 interface Props {
     admission: PatientAdmission;
     availableBeds?: BedType[];
     allBeds?: BedType[];
     hasAvailableBeds?: boolean;
+    serviceBlocked?: boolean;
+    blockReason?: string;
+    pendingCharges?: ServiceCharge[];
+    activeOverride?: ServiceAccessOverride | null;
 }
 
 const NOTE_TYPES = [
@@ -309,6 +334,10 @@ export default function WardPatientShow({
     availableBeds = [],
     allBeds = [],
     hasAvailableBeds = false,
+    serviceBlocked = false,
+    blockReason,
+    pendingCharges = [],
+    activeOverride,
 }: Props) {
     const [activeTab, setActiveTab] = useState('overview');
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
@@ -581,6 +610,15 @@ export default function WardPatientShow({
                         </Link>
                     )}
                 </div>
+
+                {/* Service Block Alert */}
+                <ServiceBlockAlert
+                    isBlocked={serviceBlocked}
+                    blockReason={blockReason}
+                    pendingCharges={pendingCharges}
+                    activeOverride={activeOverride}
+                    checkinId={admission.patient_checkin_id}
+                />
 
                 {/* Patient Info Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">

@@ -48,9 +48,15 @@ class EnhancedInstructionsSheet implements FromArray, WithColumnWidths, WithStyl
             [''],
             ['INSTRUCTIONS:'],
             ['1. The Data sheet is PRE-FILLED with all items from your system inventory'],
-            ['2. Review and edit ONLY the coverage_type and coverage_value columns'],
+            ['2. Review and edit coverage_type, coverage_value, tariff_amount, and patient_copay_amount columns'],
             ['3. Do NOT modify item_code, item_name, or current_price columns'],
             ['4. Delete rows for items that should use the general/default rule'],
+            [''],
+            ['COLUMN EXPLANATIONS:'],
+            [''],
+            ['current_price: Hospital standard price (for non-insured patients)'],
+            ['tariff_amount: Insurance negotiated price (optional - leave empty to use current_price)'],
+            ['patient_copay_amount: Fixed amount patient pays in addition to percentage (optional)'],
             [''],
             ['COVERAGE TYPES:'],
             [''],
@@ -75,10 +81,22 @@ class EnhancedInstructionsSheet implements FromArray, WithColumnWidths, WithStyl
             ['  Use for: Cosmetic items, non-covered services'],
             [''],
             ['EXAMPLES:'],
-            ['  Paracetamol: percentage, 100 → 100% covered'],
-            ['  Insulin: fixed_amount, 30 → Insurance pays $30, patient pays rest'],
-            ['  Cosmetic cream: excluded, 0 → Not covered, patient pays all'],
-            ['  Preventive vaccine: full, 100 → Fully covered, no copay'],
+            [''],
+            ['Example 1: Tariff + Fixed Copay'],
+            ['  Standard: 20, Tariff: 10, Coverage: 100%, Copay: 15'],
+            ['  Result: Insurance pays 10, Patient pays 15, Hospital gets 25'],
+            [''],
+            ['Example 2: Standard Price with Percentage Split'],
+            ['  Standard: 20, Tariff: (empty), Coverage: 80%, Copay: 0'],
+            ['  Result: Insurance pays 16 (80%), Patient pays 4 (20%), Hospital gets 20'],
+            [''],
+            ['Example 3: Standard Price + Percentage + Additional Copay'],
+            ['  Standard: 20, Tariff: (empty), Coverage: 80%, Copay: 5'],
+            ['  Result: Insurance pays 16 (80%), Patient pays 4 (20%) + 5 (copay) = 9, Hospital gets 25'],
+            [''],
+            ['Example 4: Full Tariff Coverage'],
+            ['  Standard: 20, Tariff: 8, Coverage: 100%, Copay: 0'],
+            ['  Result: Insurance pays 8, Patient pays 0, Hospital gets 8'],
             [''],
             ['ERROR DETECTION:'],
             ['The template includes automatic error highlighting:'],
@@ -157,7 +175,7 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
             ->first();
 
         $defaultCoverageType = $generalRule?->coverage_type ?? 'percentage';
-        $defaultCoverageValue = $generalRule?->coverage_value ?? 80;
+        $defaultCoverageValue = $generalRule?->coverage_value ?? 0;
 
         // Map items to template rows
         $collection = $items->map(function ($item) use ($existingRules, $defaultCoverageType, $defaultCoverageValue) {
@@ -175,6 +193,8 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
                 'current_price' => number_format($item->price, 2, '.', ''),
                 'coverage_type' => $coverageType,
                 'coverage_value' => $existingRule?->coverage_value ?? $defaultCoverageValue,
+                'tariff_amount' => $existingRule?->tariff_amount ? number_format($existingRule->tariff_amount, 2, '.', '') : '',
+                'patient_copay_amount' => $existingRule?->patient_copay_amount ? number_format($existingRule->patient_copay_amount, 2, '.', '') : '',
                 'notes' => $existingRule?->notes ?? '',
             ];
         });
@@ -228,6 +248,8 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
             'current_price',
             'coverage_type',
             'coverage_value',
+            'tariff_amount',
+            'patient_copay_amount',
             'notes',
         ];
     }
@@ -245,7 +267,9 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
             'C' => 15,  // current_price
             'D' => 18,  // coverage_type
             'E' => 18,  // coverage_value
-            'F' => 30,  // notes
+            'F' => 18,  // tariff_amount
+            'G' => 20,  // patient_copay_amount
+            'H' => 30,  // notes
         ];
     }
 

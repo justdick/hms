@@ -1,3 +1,4 @@
+import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,7 @@ interface Patient {
 }
 
 interface PatientCheckin {
+    id: number;
     patient: Patient;
 }
 
@@ -120,8 +122,31 @@ interface LabOrder {
     result_notes?: string;
 }
 
+interface Charge {
+    id: number;
+    description: string;
+    amount: number;
+    service_type: string;
+}
+
+interface ServiceAccessOverride {
+    id: number;
+    service_type: string;
+    reason: string;
+    authorized_by: {
+        id: number;
+        name: string;
+    };
+    expires_at: string;
+    remaining_duration: string;
+}
+
 interface Props {
     labOrder: LabOrder;
+    serviceBlocked?: boolean;
+    blockReason?: string;
+    pendingCharges?: Charge[];
+    activeOverride?: ServiceAccessOverride | null;
 }
 
 const statusConfig = {
@@ -173,7 +198,13 @@ const priorityConfig = {
     },
 };
 
-export default function LabShow({ labOrder }: Props) {
+export default function LabShow({
+    labOrder,
+    serviceBlocked = false,
+    blockReason,
+    pendingCharges = [],
+    activeOverride,
+}: Props) {
     const [showResultsDialog, setShowResultsDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [resultValues, setResultValues] = useState(
@@ -332,6 +363,15 @@ export default function LabShow({ labOrder }: Props) {
                         {getStatusBadge(labOrder.status)}
                     </div>
                 </div>
+
+                {/* Service Block Alert */}
+                <ServiceBlockAlert
+                    isBlocked={serviceBlocked}
+                    blockReason={blockReason}
+                    pendingCharges={pendingCharges}
+                    activeOverride={activeOverride}
+                    checkinId={labOrder.consultation.patient_checkin.id}
+                />
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">

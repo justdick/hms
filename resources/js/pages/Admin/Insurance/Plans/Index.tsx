@@ -2,6 +2,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     Table,
     TableBody,
     TableCell,
@@ -11,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
-import { FileText, Plus, Shield } from 'lucide-react';
+import { ClipboardList, Edit, FileText, MoreVertical, Plus, Settings, Shield } from 'lucide-react';
 
 interface InsuranceProvider {
     id: number;
@@ -89,7 +95,7 @@ export default function InsurancePlansIndex({ plans }: Props) {
                                         <TableHead>Status</TableHead>
                                         <TableHead>Rules</TableHead>
                                         <TableHead>Tariffs</TableHead>
-                                        <TableHead></TableHead>
+                                        <TableHead>Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -135,16 +141,90 @@ export default function InsurancePlansIndex({ plans }: Props) {
                                                 {plan.tariffs_count || 0}
                                             </TableCell>
                                             <TableCell>
-                                                <Link
-                                                    href={`/admin/insurance/plans/${plan.id}`}
-                                                >
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                {/* Desktop: Show all buttons */}
+                                                <div className="hidden items-center gap-2 lg:flex">
+                                                    <Link
+                                                        href={`/admin/insurance/plans/${plan.id}/coverage`}
                                                     >
-                                                        View
-                                                    </Button>
-                                                </Link>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                        >
+                                                            <Settings className="mr-2 h-4 w-4" />
+                                                            Manage Coverage
+                                                        </Button>
+                                                    </Link>
+                                                    <Link
+                                                        href={`/admin/insurance/claims?plan_id=${plan.id}`}
+                                                    >
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                        >
+                                                            <ClipboardList className="mr-2 h-4 w-4" />
+                                                            View Claims
+                                                        </Button>
+                                                    </Link>
+                                                    <Link
+                                                        href={`/admin/insurance/plans/${plan.id}`}
+                                                    >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                        >
+                                                            <FileText className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+
+                                                {/* Mobile: Show dropdown menu */}
+                                                <div className="lg:hidden">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                            >
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={`/admin/insurance/plans/${plan.id}/coverage`}
+                                                                >
+                                                                    <Settings className="mr-2 h-4 w-4" />
+                                                                    Manage
+                                                                    Coverage
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={`/admin/insurance/claims?plan_id=${plan.id}`}
+                                                                >
+                                                                    <ClipboardList className="mr-2 h-4 w-4" />
+                                                                    View Claims
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={`/admin/insurance/plans/${plan.id}`}
+                                                                >
+                                                                    <FileText className="mr-2 h-4 w-4" />
+                                                                    View Details
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}

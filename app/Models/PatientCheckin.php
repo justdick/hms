@@ -77,6 +77,11 @@ class PatientCheckin extends Model
         return $this->hasOne(InsuranceClaim::class);
     }
 
+    public function minorProcedures(): HasMany
+    {
+        return $this->hasMany(MinorProcedure::class);
+    }
+
     public function scopeToday($query): void
     {
         $query->whereDate('checked_in_at', today());

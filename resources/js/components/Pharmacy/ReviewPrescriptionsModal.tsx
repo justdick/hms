@@ -50,8 +50,34 @@ interface PrescriptionData {
     max_dispensable: number;
 }
 
+interface MinorProcedureSupply {
+    id: number;
+    drug_id: number;
+    drug: Drug;
+    quantity: number;
+    quantity_to_dispense?: number;
+    status: string;
+    dispensing_notes?: string;
+}
+
+interface SupplyData {
+    supply: MinorProcedureSupply;
+    stock_status: StockStatus;
+    can_dispense_full: boolean;
+    max_dispensable: number;
+    procedure_type: string;
+}
+
 interface ReviewForm {
     prescription_id: number;
+    action: 'keep' | 'partial' | 'external' | 'cancel';
+    quantity_to_dispense: number | null;
+    notes: string;
+    reason: string;
+}
+
+interface SupplyReviewForm {
+    supply_id: number;
     action: 'keep' | 'partial' | 'external' | 'cancel';
     quantity_to_dispense: number | null;
     notes: string;
@@ -63,6 +89,7 @@ interface Props {
     onOpenChange: (open: boolean) => void;
     patientId: number;
     prescriptionsData: PrescriptionData[];
+    suppliesData: SupplyData[];
 }
 
 export function ReviewPrescriptionsModal({
@@ -70,6 +97,7 @@ export function ReviewPrescriptionsModal({
     onOpenChange,
     patientId,
     prescriptionsData,
+    suppliesData,
 }: Props) {
     const [reviews, setReviews] = useState<ReviewForm[]>(
         prescriptionsData.map((pd) => {
@@ -91,6 +119,28 @@ export function ReviewPrescriptionsModal({
                 action,
                 quantity_to_dispense: quantityToDispense,
                 notes: isReviewed ? pd.prescription.dispensing_notes || '' : '',
+                reason: '',
+            };
+        }),
+    );
+
+    const [supplyReviews, setSupplyReviews] = useState<SupplyReviewForm[]>(
+        suppliesData.map((sd) => {
+            const isReviewed = sd.supply.status === 'reviewed';
+            const quantityToDispense = isReviewed
+                ? sd.supply.quantity_to_dispense || sd.supply.quantity
+                : sd.supply.quantity;
+
+            let action: 'keep' | 'partial' | 'external' | 'cancel' = 'keep';
+            if (isReviewed && quantityToDispense < sd.supply.quantity) {
+                action = 'partial';
+            }
+
+            return {
+                supply_id: sd.supply.id,
+                action,
+                quantity_to_dispense: quantityToDispense,
+                notes: isReviewed ? sd.supply.dispensing_notes || '' : '',
                 reason: '',
             };
         }),
@@ -120,10 +170,30 @@ export function ReviewPrescriptionsModal({
         setReviews(newReviews);
     };
 
+    const updateSupplyReview = (
+        index: number,
+        field: keyof SupplyReviewForm,
+        value: any,
+    ) => {
+        const newReviews = [...supplyReviews];
+        newReviews[index] = { ...newReviews[index], [field]: value };
+
+        if (field === 'action') {
+            if (value === 'keep') {
+                newReviews[index].quantity_to_dispense =
+                    suppliesData[index].supply.quantity;
+            } else if (value === 'partial') {
+                newReviews[index].quantity_to_dispense = null;
+            }
+        }
+
+        setSupplyReviews(newReviews);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Clean up the data before submission - only include reason when needed
+        // Clean up prescription reviews
         const cleanedReviews = reviews.map((review) => {
             const cleaned: any = {
                 prescription_id: review.prescription_id,
@@ -131,12 +201,29 @@ export function ReviewPrescriptionsModal({
                 quantity_to_dispense: review.quantity_to_dispense,
             };
 
-            // Only include notes if not empty
             if (review.notes) {
                 cleaned.notes = review.notes;
             }
 
-            // Only include reason for external/cancel actions
+            if (review.action === 'external' || review.action === 'cancel') {
+                cleaned.reason = review.reason;
+            }
+
+            return cleaned;
+        });
+
+        // Clean up supply reviews
+        const cleanedSupplyReviews = supplyReviews.map((review) => {
+            const cleaned: any = {
+                supply_id: review.supply_id,
+                action: review.action,
+                quantity_to_dispense: review.quantity_to_dispense,
+            };
+
+            if (review.notes) {
+                cleaned.notes = review.notes;
+            }
+
             if (review.action === 'external' || review.action === 'cancel') {
                 cleaned.reason = review.reason;
             }
@@ -146,10 +233,19 @@ export function ReviewPrescriptionsModal({
 
         setProcessing(true);
 
-        // Submit with cleaned data using router
+        // Build payload - only include non-empty arrays
+        const payload: any = {};
+        if (cleanedReviews.length > 0) {
+            payload.reviews = cleanedReviews;
+        }
+        if (cleanedSupplyReviews.length > 0) {
+            payload.supply_reviews = cleanedSupplyReviews;
+        }
+
+        // Submit both prescriptions and supplies
         router.post(
             `/pharmacy/dispensing/patients/${patientId}/review`,
-            { reviews: cleanedReviews },
+            payload,
             {
                 onSuccess: () => {
                     onOpenChange(false);
@@ -168,10 +264,9 @@ export function ReviewPrescriptionsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[90vh] w-[95vw] max-w-[95vw] sm:max-w-[95vw]">
                 <DialogHeader>
-                    <DialogTitle>Review Prescriptions</DialogTitle>
+                    <DialogTitle>Review Items for Dispensing</DialogTitle>
                     <DialogDescription>
-                        Review stock availability and adjust quantities before
-                        dispensing
+                        Review stock availability and adjust quantities for prescriptions and supplies before dispensing
                     </DialogDescription>
                 </DialogHeader>
 
@@ -204,24 +299,112 @@ export function ReviewPrescriptionsModal({
                     )}
 
                     <ScrollArea className="h-[calc(90vh-16rem)]">
-                        {/* Desktop: Table View */}
-                        <div className="hidden pr-4 md:block">
-                            <PrescriptionReviewTable
-                                prescriptionsData={prescriptionsData}
-                                reviews={reviews}
-                                onUpdateReview={updateReview}
-                                errors={errors}
-                            />
-                        </div>
+                        <div className="space-y-6 pr-4">
+                            {/* Prescriptions Section */}
+                            {prescriptionsData.length > 0 && (
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-semibold">
+                                        Prescriptions ({prescriptionsData.length})
+                                    </h3>
+                                    {/* Desktop: Table View */}
+                                    <div className="hidden md:block">
+                                        <PrescriptionReviewTable
+                                            prescriptionsData={prescriptionsData}
+                                            reviews={reviews}
+                                            onUpdateReview={updateReview}
+                                            errors={errors}
+                                        />
+                                    </div>
 
-                        {/* Mobile: Card View */}
-                        <div className="pr-4 md:hidden">
-                            <MobileReviewCards
-                                prescriptionsData={prescriptionsData}
-                                reviews={reviews}
-                                onUpdateReview={updateReview}
-                                errors={errors}
-                            />
+                                    {/* Mobile: Card View */}
+                                    <div className="md:hidden">
+                                        <MobileReviewCards
+                                            prescriptionsData={prescriptionsData}
+                                            reviews={reviews}
+                                            onUpdateReview={updateReview}
+                                            errors={errors}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Minor Procedure Supplies Section */}
+                            {suppliesData.length > 0 && (
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-semibold">
+                                        Minor Procedure Supplies ({suppliesData.length})
+                                    </h3>
+                                    {/* Desktop: Table View */}
+                                    <div className="hidden md:block">
+                                        <PrescriptionReviewTable
+                                            prescriptionsData={suppliesData.map((sd) => ({
+                                                prescription: {
+                                                    id: sd.supply.id,
+                                                    drug_id: sd.supply.drug_id,
+                                                    drug: sd.supply.drug,
+                                                    quantity: sd.supply.quantity,
+                                                    quantity_to_dispense: sd.supply.quantity_to_dispense,
+                                                    dose_quantity: undefined,
+                                                    frequency: sd.procedure_type,
+                                                    duration: '',
+                                                    status: sd.supply.status,
+                                                    dispensing_notes: sd.supply.dispensing_notes,
+                                                },
+                                                stock_status: sd.stock_status,
+                                                can_dispense_full: sd.can_dispense_full,
+                                                max_dispensable: sd.max_dispensable,
+                                            }))}
+                                            reviews={supplyReviews.map((sr) => ({
+                                                prescription_id: sr.supply_id,
+                                                action: sr.action,
+                                                quantity_to_dispense: sr.quantity_to_dispense,
+                                                notes: sr.notes,
+                                                reason: sr.reason,
+                                            }))}
+                                            onUpdateReview={updateSupplyReview}
+                                            errors={errors}
+                                        />
+                                    </div>
+
+                                    {/* Mobile: Card View */}
+                                    <div className="md:hidden">
+                                        <MobileReviewCards
+                                            prescriptionsData={suppliesData.map((sd) => ({
+                                                prescription: {
+                                                    id: sd.supply.id,
+                                                    drug_id: sd.supply.drug_id,
+                                                    drug: sd.supply.drug,
+                                                    quantity: sd.supply.quantity,
+                                                    quantity_to_dispense: sd.supply.quantity_to_dispense,
+                                                    dose_quantity: undefined,
+                                                    frequency: sd.procedure_type,
+                                                    duration: '',
+                                                    status: sd.supply.status,
+                                                    dispensing_notes: sd.supply.dispensing_notes,
+                                                },
+                                                stock_status: sd.stock_status,
+                                                can_dispense_full: sd.can_dispense_full,
+                                                max_dispensable: sd.max_dispensable,
+                                            }))}
+                                            reviews={supplyReviews.map((sr) => ({
+                                                prescription_id: sr.supply_id,
+                                                action: sr.action,
+                                                quantity_to_dispense: sr.quantity_to_dispense,
+                                                notes: sr.notes,
+                                                reason: sr.reason,
+                                            }))}
+                                            onUpdateReview={updateSupplyReview}
+                                            errors={errors}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {prescriptionsData.length === 0 && suppliesData.length === 0 && (
+                                <div className="py-8 text-center text-muted-foreground">
+                                    No items to review
+                                </div>
+                            )}
                         </div>
                     </ScrollArea>
 

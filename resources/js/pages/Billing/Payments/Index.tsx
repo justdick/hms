@@ -1,24 +1,17 @@
-import { InsuranceCoverageBadge } from '@/components/Insurance/InsuranceCoverageBadge';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    CheckCircle,
-    CreditCard,
-    DollarSign,
-    Loader2,
-    Search,
-    Settings,
-    ShieldCheck,
-    TrendingUp,
-    User,
-} from 'lucide-react';
+import { Settings } from 'lucide-react';
 import React, { useState } from 'react';
+import { BillingStatsCards } from './components/BillingStatsCards';
+import { PatientSearchBar } from './components/PatientSearchBar';
+import { PatientSearchResults } from './components/PatientSearchResults';
+import { PatientBillingDetails } from './components/PatientBillingDetails';
+import { InlinePaymentForm } from './components/InlinePaymentForm';
+import { BillWaiverModal } from './components/BillWaiverModal';
+import { BillAdjustmentModal } from './components/BillAdjustmentModal';
+import { ServiceAccessOverrideModal } from './components/ServiceAccessOverrideModal';
 
 interface Patient {
     id: number;
@@ -33,6 +26,18 @@ interface Department {
     name: string;
 }
 
+interface ChargeItem {
+    id: number;
+    description: string;
+    amount: number;
+    is_insurance_claim: boolean;
+    insurance_covered_amount: number;
+    patient_copay_amount: number;
+    service_type: string;
+    charged_at: string;
+    status: string;
+}
+
 interface Visit {
     checkin_id: number;
     department: Department;
@@ -44,15 +49,31 @@ interface Visit {
     charges: ChargeItem[];
 }
 
-interface ChargeItem {
-    id: number;
-    description: string;
-    amount: number;
-    is_insurance_claim: boolean;
-    insurance_covered_amount: number;
-    patient_copay_amount: number;
+interface ServiceAccessStatus {
     service_type: string;
-    charged_at: string;
+    is_blocked: boolean;
+    pending_amount: number;
+    has_active_override: boolean;
+}
+
+interface OverrideHistoryItem {
+    id: number;
+    type: 'override' | 'waiver' | 'adjustment';
+    service_type?: string;
+    charge_description?: string;
+    reason: string;
+    authorized_by: {
+        id: number;
+        name: string;
+    };
+    authorized_at: string;
+    expires_at?: string;
+    is_active?: boolean;
+    remaining_duration?: string;
+    original_amount?: number;
+    adjustment_amount?: number;
+    final_amount?: number;
+    adjustment_type?: string;
 }
 
 interface PatientSearchResult {
@@ -64,10 +85,8 @@ interface PatientSearchResult {
     total_charges: number;
     visits_with_charges: number;
     visits: Visit[];
-}
-
-interface SelectedPatient extends PatientSearchResult {
-    // Additional fields loaded when selected
+    service_access_status?: ServiceAccessStatus[];
+    override_history?: OverrideHistoryItem[];
 }
 
 interface Stats {
@@ -77,19 +96,51 @@ interface Stats {
     total_outstanding: number;
 }
 
-interface Props {
-    stats: Stats;
+interface BillingStats {
+    pending_charges_count: number;
+    pending_charges_amount: number;
+    todays_revenue: number;
+    total_outstanding: number;
+    collection_rate: number;
 }
 
-export default function PaymentIndex({ stats }: Props) {
+interface BillingPermissions {
+    canProcessPayment: boolean;
+    canWaiveCharges: boolean;
+    canAdjustCharges: boolean;
+    canOverrideServices: boolean;
+    canCancelCharges: boolean;
+}
+
+interface Props {
+    stats: Stats;
+    permissions: BillingPermissions;
+}
+
+export default function PaymentIndex({ stats, permissions }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<PatientSearchResult[]>(
         [],
     );
     const [isSearching, setIsSearching] = useState(false);
     const [selectedPatient, setSelectedPatient] =
-        useState<SelectedPatient | null>(null);
-    const [isLoadingPatient, setIsLoadingPatient] = useState(false);
+        useState<PatientSearchResult | null>(null);
+    const [expandedPatients, setExpandedPatients] = useState<Set<number>>(
+        new Set(),
+    );
+    const [selectedCharges, setSelectedCharges] = useState<number[]>([]);
+    const [processingPayment, setProcessingPayment] = useState(false);
+
+    // Modal states
+    const [waiverModalOpen, setWaiverModalOpen] = useState(false);
+    const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+    const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+    const [selectedChargeId, setSelectedChargeId] = useState<number | null>(
+        null,
+    );
+    const [selectedServiceType, setSelectedServiceType] = useState<
+        string | null
+    >(null);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-GH', {
@@ -119,42 +170,88 @@ export default function PaymentIndex({ stats }: Props) {
         }
     };
 
-    const handleSearchInput = (query: string) => {
-        setSearchQuery(query);
-        const timeoutId = setTimeout(() => {
-            searchPatients(query);
-        }, 300);
-
-        return () => clearTimeout(timeoutId);
+    const handlePatientSelect = (patient: PatientSearchResult) => {
+        setSelectedPatient(patient);
+        // Expand the patient details
+        setExpandedPatients((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(patient.patient_id);
+            return newSet;
+        });
+        // Auto-select all charges for this patient
+        const allChargeIds = patient.visits.flatMap((visit) =>
+            visit.charges.map((charge) => charge.id),
+        );
+        setSelectedCharges(allChargeIds);
     };
 
-    const handlePatientSelect = async (patient: PatientSearchResult) => {
-        setIsLoadingPatient(true);
-        try {
-            // Patient data already includes all visit and charge details
-            setSelectedPatient(patient);
-        } catch (error) {
-            console.error('Failed to load patient billing details:', error);
-        } finally {
-            setIsLoadingPatient(false);
+    const togglePatientExpanded = (patientId: number) => {
+        setExpandedPatients((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(patientId)) {
+                newSet.delete(patientId);
+            } else {
+                newSet.add(patientId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleQuickPayAll = (patient: PatientSearchResult) => {
+        // Navigate to most recent visit for quick pay
+        const mostRecentVisit = patient.visits[0];
+        if (mostRecentVisit) {
+            router.post(`/billing/charges/quick-pay-all`, {
+                patient_checkin_id: mostRecentVisit.checkin_id,
+                payment_method: 'cash',
+                charges: patient.visits.flatMap((v) =>
+                    v.charges.map((c) => c.id),
+                ),
+            });
         }
     };
 
-    const handlePaymentClick = () => {
-        if (selectedPatient) {
-            router.visit(
-                `/billing/checkin/${selectedPatient.checkin_id}/billing`,
-            );
-        }
+    const handleWaiveCharge = (chargeId: number) => {
+        setSelectedChargeId(chargeId);
+        setWaiverModalOpen(true);
     };
 
-    React.useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            searchPatients(searchQuery);
-        }, 300);
+    const handleAdjustCharge = (chargeId: number) => {
+        setSelectedChargeId(chargeId);
+        setAdjustmentModalOpen(true);
+    };
 
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
+    const handleOverrideService = (serviceType: string) => {
+        setSelectedServiceType(serviceType);
+        setOverrideModalOpen(true);
+    };
+
+    const handlePaymentSubmit = (paymentData: {
+        charges: number[];
+        payment_method: string;
+        amount_paid: number;
+        notes?: string;
+    }) => {
+        if (!selectedPatient) return;
+
+        setProcessingPayment(true);
+        const mostRecentVisit = selectedPatient.visits[0];
+
+        router.post(
+            `/billing/checkin/${mostRecentVisit.checkin_id}/payment`,
+            paymentData,
+            {
+                onSuccess: () => {
+                    setProcessingPayment(false);
+                    // Refresh search results
+                    searchPatients(searchQuery);
+                },
+                onError: () => {
+                    setProcessingPayment(false);
+                },
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Billing', href: '/billing' }]}>
@@ -164,10 +261,10 @@ export default function PaymentIndex({ stats }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             Billing & Payments
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 dark:text-gray-400">
                             Search for patients and manage payments
                         </p>
                     </div>
@@ -185,551 +282,162 @@ export default function PaymentIndex({ stats }: Props) {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Pending Charges
-                            </CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-red-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">
-                                {stats.pending_charges}
-                            </div>
-                            <p className="text-xs text-gray-600">
-                                {formatCurrency(stats.pending_amount)}{' '}
-                                outstanding
-                            </p>
-                        </CardContent>
-                    </Card>
+                <BillingStatsCards
+                    stats={{
+                        pending_charges_count: stats.pending_charges,
+                        pending_charges_amount: stats.pending_amount,
+                        todays_revenue: stats.paid_today,
+                        total_outstanding: stats.total_outstanding,
+                        collection_rate:
+                            stats.total_outstanding > 0
+                                ? (stats.paid_today /
+                                      (stats.paid_today +
+                                          stats.total_outstanding)) *
+                                  100
+                                : 100,
+                    }}
+                    formatCurrency={formatCurrency}
+                />
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Today's Revenue
-                            </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(stats.paid_today)}
-                            </div>
-                            <p className="text-xs text-gray-600">
-                                Collected today
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Outstanding
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-amber-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-amber-600">
-                                {formatCurrency(stats.total_outstanding)}
-                            </div>
-                            <p className="text-xs text-gray-600">
-                                All unpaid charges
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Collection Rate
-                            </CardTitle>
-                            <CheckCircle className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {stats.total_outstanding > 0
-                                    ? Math.round(
-                                          (stats.paid_today /
-                                              (stats.paid_today +
-                                                  stats.total_outstanding)) *
-                                              100,
-                                      )
-                                    : 100}
-                                %
-                            </div>
-                            <p className="text-xs text-gray-600">
-                                Payment efficiency
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Main Content - Two Column Layout */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Left Column - Patient Search */}
+                {/* Main Content - Single Page Layout */}
+                <div className="space-y-6">
+                    {/* Patient Search Section */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Search className="h-5 w-5" />
-                                Search Patient
-                            </CardTitle>
+                            <CardTitle>Search Patient</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="search">
-                                        Search by name, patient number, or phone
-                                    </Label>
-                                    <div className="relative">
-                                        <Search className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="search"
-                                            placeholder="Enter patient name, number, or phone..."
-                                            value={searchQuery}
-                                            onChange={(e) =>
-                                                setSearchQuery(e.target.value)
-                                            }
-                                            className="pl-10"
-                                        />
-                                        {isSearching && (
-                                            <Loader2 className="absolute top-3 right-3 h-4 w-4 animate-spin text-muted-foreground" />
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="max-h-96 space-y-2 overflow-y-auto">
-                                    {searchResults.length === 0 &&
-                                        searchQuery.length >= 2 &&
-                                        !isSearching && (
-                                            <div className="py-8 text-center text-muted-foreground">
-                                                No patients found with pending
-                                                charges matching "{searchQuery}"
-                                            </div>
-                                        )}
-
-                                    {searchQuery.length === 0 && (
-                                        <div className="py-8 text-center text-muted-foreground">
-                                            <CreditCard className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                                            <p>
-                                                Search for patients with pending
-                                                charges
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {searchResults.map((patient) => (
-                                        <div
-                                            key={patient.patient_id}
-                                            className={`cursor-pointer rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
-                                                selectedPatient?.patient_id ===
-                                                patient.patient_id
-                                                    ? 'border-blue-200 bg-blue-50'
-                                                    : ''
-                                            }`}
-                                            onClick={() =>
-                                                handlePatientSelect(patient)
-                                            }
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <h3 className="font-medium">
-                                                        {
-                                                            patient.patient
-                                                                .first_name
-                                                        }{' '}
-                                                        {
-                                                            patient.patient
-                                                                .last_name
-                                                        }
-                                                    </h3>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {
-                                                            patient.patient
-                                                                .patient_number
-                                                        }
-                                                    </p>
-                                                    {patient.patient
-                                                        .phone_number && (
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {
-                                                                patient.patient
-                                                                    .phone_number
-                                                            }
-                                                        </p>
-                                                    )}
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {
-                                                            patient.visits_with_charges
-                                                        }{' '}
-                                                        visit
-                                                        {patient.visits_with_charges !==
-                                                        1
-                                                            ? 's'
-                                                            : ''}{' '}
-                                                        with charges
-                                                    </p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="space-y-1">
-                                                        <div className="font-medium text-orange-600">
-                                                            Patient Owes:{' '}
-                                                            {formatCurrency(
-                                                                patient.total_patient_owes,
-                                                            )}
-                                                        </div>
-                                                        {patient.total_insurance_covered >
-                                                            0 && (
-                                                            <div className="text-xs text-green-600">
-                                                                <ShieldCheck className="inline h-3 w-3" />{' '}
-                                                                Insurance:{' '}
-                                                                {formatCurrency(
-                                                                    patient.total_insurance_covered,
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="mt-1 text-xs"
-                                                    >
-                                                        {patient.total_charges}{' '}
-                                                        charge
-                                                        {patient.total_charges !==
-                                                        1
-                                                            ? 's'
-                                                            : ''}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            <PatientSearchBar
+                                onSearch={searchPatients}
+                                isSearching={isSearching}
+                            />
+                            <div className="mt-4">
+                                <PatientSearchResults
+                                    results={searchResults}
+                                    searchQuery={searchQuery}
+                                    selectedPatientId={
+                                        selectedPatient?.patient_id || null
+                                    }
+                                    onPatientSelect={handlePatientSelect}
+                                    onQuickPayAll={handleQuickPayAll}
+                                    formatCurrency={formatCurrency}
+                                />
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Right Column - Selected Patient Details */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="h-5 w-5" />
-                                Patient Billing Details
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoadingPatient && (
-                                <div className="flex items-center justify-center py-12">
-                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                    <span className="ml-2 text-muted-foreground">
-                                        Loading patient details...
-                                    </span>
-                                </div>
+                    {/* Expandable Patient Details */}
+                    {selectedPatient && (
+                        <div className="space-y-6">
+                            <PatientBillingDetails
+                                patient={selectedPatient}
+                                isExpanded={expandedPatients.has(
+                                    selectedPatient.patient_id,
+                                )}
+                                onToggle={() =>
+                                    togglePatientExpanded(
+                                        selectedPatient.patient_id,
+                                    )
+                                }
+                                permissions={permissions}
+                                formatCurrency={formatCurrency}
+                                onWaiveCharge={
+                                    permissions.canWaiveCharges
+                                        ? handleWaiveCharge
+                                        : undefined
+                                }
+                                onAdjustCharge={
+                                    permissions.canAdjustCharges
+                                        ? handleAdjustCharge
+                                        : undefined
+                                }
+                                onOverrideService={
+                                    permissions.canOverrideServices
+                                        ? handleOverrideService
+                                        : undefined
+                                }
+                            />
+
+                            {/* Inline Payment Form */}
+                            {expandedPatients.has(
+                                selectedPatient.patient_id,
+                            ) && (
+                                <InlinePaymentForm
+                                    checkinId={selectedPatient.visits[0]?.checkin_id}
+                                    selectedCharges={selectedCharges}
+                                    totalAmount={selectedPatient.visits
+                                        .flatMap((v) => v.charges)
+                                        .filter((c) =>
+                                            selectedCharges.includes(c.id),
+                                        )
+                                        .reduce(
+                                            (sum, c) =>
+                                                sum +
+                                                (c.is_insurance_claim
+                                                    ? c.patient_copay_amount
+                                                    : c.amount),
+                                            0,
+                                        )}
+                                    formatCurrency={formatCurrency}
+                                    onSuccess={() => {
+                                        searchPatients(searchQuery);
+                                    }}
+                                />
                             )}
-
-                            {!selectedPatient && !isLoadingPatient && (
-                                <div className="py-12 text-center text-muted-foreground">
-                                    <CreditCard className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                                    <p>
-                                        Select a patient to view billing details
-                                    </p>
-                                </div>
-                            )}
-
-                            {selectedPatient && !isLoadingPatient && (
-                                <div className="space-y-4">
-                                    {/* Patient Info */}
-                                    <div className="rounded-lg bg-muted/30 p-4">
-                                        <h3 className="text-lg font-semibold">
-                                            {selectedPatient.patient.first_name}{' '}
-                                            {selectedPatient.patient.last_name}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground">
-                                            {
-                                                selectedPatient.patient
-                                                    .patient_number
-                                            }
-                                        </p>
-                                        {selectedPatient.patient
-                                            .phone_number && (
-                                            <p className="text-sm text-muted-foreground">
-                                                {
-                                                    selectedPatient.patient
-                                                        .phone_number
-                                                }
-                                            </p>
-                                        )}
-                                        <p className="text-xs text-muted-foreground">
-                                            {
-                                                selectedPatient.visits_with_charges
-                                            }{' '}
-                                            visit
-                                            {selectedPatient.visits_with_charges !==
-                                            1
-                                                ? 's'
-                                                : ''}{' '}
-                                            with outstanding charges
-                                        </p>
-                                    </div>
-
-                                    {/* Total Outstanding Amount with Insurance Breakdown */}
-                                    <div className="space-y-3">
-                                        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Patient Owes (Copay):
-                                                </span>
-                                                <span className="text-xl font-bold text-orange-600">
-                                                    {formatCurrency(
-                                                        selectedPatient.total_patient_owes,
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                Amount to collect from patient
-                                            </p>
-                                        </div>
-
-                                        {selectedPatient.total_insurance_covered >
-                                            0 && (
-                                            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="flex items-center gap-2 font-medium">
-                                                        <ShieldCheck className="h-4 w-4 text-green-600" />
-                                                        Insurance Covers:
-                                                    </span>
-                                                    <span className="text-xl font-bold text-green-600">
-                                                        {formatCurrency(
-                                                            selectedPatient.total_insurance_covered,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <p className="mt-1 text-xs text-muted-foreground">
-                                                    Will be claimed from
-                                                    insurance
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-medium">
-                                                    Total Charges:
-                                                </span>
-                                                <span className="text-xl font-bold text-gray-700">
-                                                    {formatCurrency(
-                                                        selectedPatient.total_pending,
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                {selectedPatient.total_charges}{' '}
-                                                charge
-                                                {selectedPatient.total_charges !==
-                                                1
-                                                    ? 's'
-                                                    : ''}{' '}
-                                                across{' '}
-                                                {
-                                                    selectedPatient.visits_with_charges
-                                                }{' '}
-                                                visit
-                                                {selectedPatient.visits_with_charges !==
-                                                1
-                                                    ? 's'
-                                                    : ''}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Visits Breakdown */}
-                                    <div className="space-y-3">
-                                        <h4 className="font-medium">
-                                            Visits with Outstanding Charges:
-                                        </h4>
-                                        {selectedPatient.visits.map(
-                                            (visit, index) => (
-                                                <div
-                                                    key={visit.checkin_id}
-                                                    className="rounded-lg border bg-gray-50 p-3"
-                                                >
-                                                    <div className="mb-2 flex items-center justify-between">
-                                                        <div>
-                                                            <p className="text-sm font-medium">
-                                                                {
-                                                                    visit
-                                                                        .department
-                                                                        .name
-                                                                }{' '}
-                                                                •{' '}
-                                                                {
-                                                                    visit.checked_in_at
-                                                                }
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {
-                                                                    visit.charges_count
-                                                                }{' '}
-                                                                charge
-                                                                {visit.charges_count !==
-                                                                1
-                                                                    ? 's'
-                                                                    : ''}
-                                                            </p>
-                                                        </div>
-                                                        <div className="space-y-1 text-right">
-                                                            <div className="font-medium text-orange-600">
-                                                                Patient:{' '}
-                                                                {formatCurrency(
-                                                                    visit.patient_copay,
-                                                                )}
-                                                            </div>
-                                                            {visit.insurance_covered >
-                                                                0 && (
-                                                                <div className="text-xs text-green-600">
-                                                                    Insurance:{' '}
-                                                                    {formatCurrency(
-                                                                        visit.insurance_covered,
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Charges for this visit */}
-                                                    <div className="space-y-1 border-l-2 border-gray-300 pl-3">
-                                                        {visit.charges.map(
-                                                            (
-                                                                charge: ChargeItem,
-                                                                chargeIndex: number,
-                                                            ) => (
-                                                                <div
-                                                                    key={
-                                                                        chargeIndex
-                                                                    }
-                                                                    className="flex items-center justify-between gap-2 text-xs"
-                                                                >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span>
-                                                                            {
-                                                                                charge.description
-                                                                            }
-                                                                        </span>
-                                                                        {charge.is_insurance_claim && (
-                                                                            <InsuranceCoverageBadge
-                                                                                isInsuranceClaim={
-                                                                                    charge.is_insurance_claim
-                                                                                }
-                                                                                insuranceCoveredAmount={
-                                                                                    charge.insurance_covered_amount
-                                                                                }
-                                                                                patientCopayAmount={
-                                                                                    charge.patient_copay_amount
-                                                                                }
-                                                                                amount={
-                                                                                    charge.amount
-                                                                                }
-                                                                                className="text-xs"
-                                                                            />
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-right">
-                                                                        {charge.is_insurance_claim ? (
-                                                                            <div className="space-y-0.5">
-                                                                                <div className="font-medium text-orange-600">
-                                                                                    {formatCurrency(
-                                                                                        charge.patient_copay_amount,
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="text-[10px] text-muted-foreground">
-                                                                                    of{' '}
-                                                                                    {formatCurrency(
-                                                                                        charge.amount,
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <span className="font-medium">
-                                                                                {formatCurrency(
-                                                                                    charge.amount,
-                                                                                )}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
-
-                                    {/* Payment Action Buttons */}
-                                    <div className="space-y-2 pt-4">
-                                        <Button
-                                            onClick={() => {
-                                                // Navigate to patient billing page (use most recent visit for now)
-                                                const mostRecentVisit =
-                                                    selectedPatient.visits[0];
-                                                router.visit(
-                                                    `/billing/checkin/${mostRecentVisit.checkin_id}/billing`,
-                                                );
-                                            }}
-                                            className="w-full bg-green-600 hover:bg-green-700"
-                                        >
-                                            <CreditCard className="mr-2 h-4 w-4" />
-                                            Collect Payment (
-                                            {formatCurrency(
-                                                selectedPatient.total_patient_owes,
-                                            )}
-                                            )
-                                        </Button>
-
-                                        {selectedPatient.visits.length > 1 && (
-                                            <div className="space-y-1">
-                                                <p className="text-xs text-muted-foreground">
-                                                    Or pay individual visits:
-                                                </p>
-                                                {selectedPatient.visits.map(
-                                                    (visit, index) => (
-                                                        <Button
-                                                            key={
-                                                                visit.checkin_id
-                                                            }
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                router.visit(
-                                                                    `/billing/checkin/${visit.checkin_id}/billing`,
-                                                                );
-                                                            }}
-                                                            className="w-full text-xs"
-                                                        >
-                                                            Pay{' '}
-                                                            {
-                                                                visit.department
-                                                                    .name
-                                                            }{' '}
-                                                            -{' '}
-                                                            {
-                                                                visit.checked_in_at
-                                                            }{' '}
-                                                            (
-                                                            {formatCurrency(
-                                                                visit.patient_copay,
-                                                            )}
-                                                            )
-                                                        </Button>
-                                                    ),
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    )}
                 </div>
+
+                {/* Modals */}
+                {selectedChargeId && selectedPatient && (
+                    <>
+                        {(() => {
+                            const charge = selectedPatient.visits
+                                .flatMap((v) => v.charges)
+                                .find((c) => c.id === selectedChargeId);
+                            return charge ? (
+                                <>
+                                    <BillWaiverModal
+                                        isOpen={waiverModalOpen}
+                                        onClose={() => setWaiverModalOpen(false)}
+                                        charge={charge}
+                                        formatCurrency={formatCurrency}
+                                        onSuccess={() => {
+                                            setWaiverModalOpen(false);
+                                            searchPatients(searchQuery);
+                                        }}
+                                    />
+
+                                    <BillAdjustmentModal
+                                        isOpen={adjustmentModalOpen}
+                                        onClose={() => setAdjustmentModalOpen(false)}
+                                        charge={charge}
+                                        formatCurrency={formatCurrency}
+                                        onSuccess={() => {
+                                            setAdjustmentModalOpen(false);
+                                            searchPatients(searchQuery);
+                                        }}
+                                    />
+                                </>
+                            ) : null;
+                        })()}
+                    </>
+                )}
+
+                {selectedServiceType && selectedPatient && selectedPatient.visits[0] && (
+                    <ServiceAccessOverrideModal
+                        isOpen={overrideModalOpen}
+                        onClose={() => setOverrideModalOpen(false)}
+                        serviceType={selectedServiceType}
+                        checkinId={selectedPatient.visits[0].checkin_id}
+                        pendingCharges={selectedPatient.visits.flatMap((v) =>
+                            v.charges.filter(
+                                (c) => c.service_type === selectedServiceType,
+                            ),
+                        )}
+                        formatCurrency={formatCurrency}
+                    />
+                )}
             </div>
         </AppLayout>
     );

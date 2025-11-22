@@ -5,7 +5,7 @@
       "args": [
         "@playwright/mcp@latest"
       ],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": [
         "browser_navigate",
         "browser_fill_form",

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('service_code')->nullable(); // specific service identifier
             $table->string('description');
             $table->decimal('amount', 10, 2);
-            $table->enum('charge_type', ['consultation_fee', 'equipment_fee', 'emergency_surcharge', 'lab_test', 'medication', 'ward_bed', 'nursing_care', 'procedure', 'other']);
+            $table->enum('charge_type', ['consultation_fee', 'equipment_fee', 'emergency_surcharge', 'lab_test', 'medication', 'ward_bed', 'nursing_care', 'procedure', 'minor_procedure', 'other']);
             $table->enum('status', ['pending', 'paid', 'partial', 'waived', 'cancelled', 'voided'])->default('pending');
             $table->decimal('paid_amount', 10, 2)->default(0);
             $table->timestamp('charged_at');

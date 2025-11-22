@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -30,7 +31,10 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, lazy, Suspense, useEffect, useState } from 'react';
+
+// Lazy load ClaimsVettingPanel for better performance
+const ClaimsVettingPanel = lazy(() => import('@/components/Insurance/ClaimsVettingPanel'));
 
 interface InsuranceProvider {
     id: number;
@@ -126,6 +130,8 @@ export default function InsuranceClaimsIndex({
 }: Props) {
     const [showFilters, setShowFilters] = useState(false);
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
+    const [vettingPanelOpen, setVettingPanelOpen] = useState(false);
+    const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
 
     useEffect(() => {
         setLocalFilters(filters);
@@ -177,6 +183,15 @@ export default function InsuranceClaimsIndex({
         });
     };
 
+    const handleReviewClaim = (claimId: number) => {
+        setSelectedClaimId(claimId);
+        setVettingPanelOpen(true);
+    };
+
+    const handleVetSuccess = () => {
+        router.reload({ only: ['claims', 'stats'] });
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -199,13 +214,22 @@ export default function InsuranceClaimsIndex({
                             Review and vet insurance claims for submission
                         </p>
                     </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        <Filter className="mr-2 h-4 w-4" />
-                        {showFilters ? 'Hide Filters' : 'Show Filters'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {hasActiveFilters && (
+                            <Badge variant="secondary">
+                                {Object.keys(filters).length} filter
+                                {Object.keys(filters).length > 1 ? 's' : ''}{' '}
+                                active
+                            </Badge>
+                        )}
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <Filter className="mr-2 h-4 w-4" />
+                            {showFilters ? 'Hide Filters' : 'Show Filters'}
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Overview */}
@@ -299,7 +323,7 @@ export default function InsuranceClaimsIndex({
                                 onSubmit={handleApplyFilters}
                                 className="space-y-4"
                             >
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     {/* Search */}
                                     <div className="space-y-2">
                                         <Label htmlFor="search">Search</Label>
@@ -368,92 +392,6 @@ export default function InsuranceClaimsIndex({
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-                                    {/* Provider Filter */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="provider">
-                                            Insurance Provider
-                                        </Label>
-                                        <Select
-                                            value={
-                                                localFilters.provider_id ||
-                                                'all'
-                                            }
-                                            onValueChange={(value) =>
-                                                handleFilterChange(
-                                                    'provider_id',
-                                                    value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger id="provider">
-                                                <SelectValue placeholder="All providers" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">
-                                                    All providers
-                                                </SelectItem>
-                                                {providers.data.map(
-                                                    (provider) => (
-                                                        <SelectItem
-                                                            key={provider.id}
-                                                            value={String(
-                                                                provider.id,
-                                                            )}
-                                                        >
-                                                            {provider.name}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {/* Date From */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="date_from">
-                                            Date From
-                                        </Label>
-                                        <div className="relative">
-                                            <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                                            <Input
-                                                id="date_from"
-                                                type="date"
-                                                value={
-                                                    localFilters.date_from || ''
-                                                }
-                                                onChange={(e) =>
-                                                    handleFilterChange(
-                                                        'date_from',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="pl-9"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Date To */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="date_to">Date To</Label>
-                                        <div className="relative">
-                                            <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                                            <Input
-                                                id="date_to"
-                                                type="date"
-                                                value={
-                                                    localFilters.date_to || ''
-                                                }
-                                                onChange={(e) =>
-                                                    handleFilterChange(
-                                                        'date_to',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="pl-9"
-                                            />
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -465,7 +403,7 @@ export default function InsuranceClaimsIndex({
                                             onClick={handleClearFilters}
                                         >
                                             <X className="mr-2 h-4 w-4" />
-                                            Clear Filters
+                                            Clear All Filters
                                         </Button>
                                     )}
                                 </div>
@@ -566,16 +504,33 @@ export default function InsuranceClaimsIndex({
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Link
-                                                        href={`/admin/insurance/claims/${claim.id}`}
-                                                    >
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {claim.status ===
+                                                            'pending_vetting' && (
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    handleReviewClaim(
+                                                                        claim.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <FileCheck className="mr-1 h-4 w-4" />
+                                                                Review
+                                                            </Button>
+                                                        )}
+                                                        <Link
+                                                            href={`/admin/insurance/claims/${claim.id}`}
                                                         >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -642,6 +597,24 @@ export default function InsuranceClaimsIndex({
                         </div>
                     )}
             </div>
+
+            {/* Claims Vetting Panel */}
+            <Suspense fallback={
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="rounded-lg bg-white p-6 dark:bg-gray-900">
+                        <Skeleton className="h-8 w-64 mb-4" />
+                        <Skeleton className="h-64 w-96 mb-4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </div>
+            }>
+                <ClaimsVettingPanel
+                    claimId={selectedClaimId}
+                    isOpen={vettingPanelOpen}
+                    onClose={() => setVettingPanelOpen(false)}
+                    onVetSuccess={handleVetSuccess}
+                />
+            </Suspense>
         </AppLayout>
     );
 }

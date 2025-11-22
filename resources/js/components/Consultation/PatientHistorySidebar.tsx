@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import {
     Activity,
+    Bandage,
     Calendar,
     ChevronRight,
     FileText,
@@ -78,6 +79,51 @@ interface LabOrder {
     };
 }
 
+interface MinorProcedureSupply {
+    id: number;
+    drug: {
+        id: number;
+        name: string;
+        form: string;
+        strength: string;
+    };
+    quantity: number;
+    dispensed: boolean;
+}
+
+interface MinorProcedureDiagnosis {
+    id: number;
+    diagnosis: string;
+    code: string;
+    icd_10: string;
+    g_drg: string;
+}
+
+interface MinorProcedure {
+    id: number;
+    performed_at: string;
+    status: string;
+    procedure_notes: string;
+    procedure_type: {
+        id: number;
+        name: string;
+        code: string;
+    };
+    nurse: {
+        id: number;
+        name: string;
+    };
+    patient_checkin: {
+        id: number;
+        department: {
+            id: number;
+            name: string;
+        };
+    };
+    diagnoses: MinorProcedureDiagnosis[];
+    supplies: MinorProcedureSupply[];
+}
+
 interface PreviousConsultation {
     id: number;
     started_at: string;
@@ -109,11 +155,13 @@ interface PreviousConsultation {
 
 interface Props {
     previousConsultations: PreviousConsultation[];
+    previousMinorProcedures?: MinorProcedure[];
     allergies: string[];
 }
 
 export function PatientHistorySidebar({
     previousConsultations,
+    previousMinorProcedures = [],
     allergies,
 }: Props) {
     const [isOpen, setIsOpen] = useState(false);
@@ -150,7 +198,7 @@ export function PatientHistorySidebar({
                 <SheetTrigger asChild>
                     <Button variant="outline" className="gap-2">
                         <History className="h-4 w-4" />
-                        Previous Visits ({previousConsultations.length})
+                        Previous Visits ({previousConsultations.length + previousMinorProcedures.length})
                     </Button>
                 </SheetTrigger>
                 <SheetContent
@@ -185,6 +233,123 @@ export function PatientHistorySidebar({
                                         </Badge>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Minor Procedures Section */}
+                        {previousMinorProcedures.length > 0 && (
+                            <div className="mb-6 space-y-3">
+                                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    Minor Procedures
+                                </h3>
+
+                                {previousMinorProcedures.map((procedure) => (
+                                    <div
+                                        key={procedure.id}
+                                        className="rounded-lg border bg-purple-50/50 p-4 dark:border-purple-900/30 dark:bg-purple-950/20"
+                                    >
+                                        {/* Procedure Header */}
+                                        <div className="mb-3 flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="mb-1 flex items-center gap-2">
+                                                    <Bandage className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                        {
+                                                            procedure
+                                                                .procedure_type
+                                                                .name
+                                                        }
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>
+                                                        {formatDate(
+                                                            procedure.performed_at,
+                                                        )}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <User className="h-3 w-3" />
+                                                    <span>
+                                                        {procedure.nurse.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Procedure Notes */}
+                                        {procedure.procedure_notes && (
+                                            <div className="mb-3 rounded bg-purple-100/50 p-2 text-xs dark:bg-purple-950/30">
+                                                <p className="mb-1 font-medium text-purple-900 dark:text-purple-300">
+                                                    Notes:
+                                                </p>
+                                                <p className="line-clamp-2 text-purple-800 dark:text-purple-400">
+                                                    {procedure.procedure_notes}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Diagnoses */}
+                                        {procedure.diagnoses.length > 0 && (
+                                            <div className="mb-2">
+                                                <p className="mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                    Diagnoses:
+                                                </p>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {procedure.diagnoses.map(
+                                                        (diagnosis) => (
+                                                            <Badge
+                                                                key={
+                                                                    diagnosis.id
+                                                                }
+                                                                variant="secondary"
+                                                                className="text-xs dark:bg-gray-800 dark:text-gray-300"
+                                                            >
+                                                                {diagnosis.code}
+                                                            </Badge>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Supplies Used */}
+                                        {procedure.supplies.length > 0 && (
+                                            <div className="border-t pt-2 dark:border-purple-900/30">
+                                                <p className="mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                    Supplies Used:
+                                                </p>
+                                                <div className="space-y-1">
+                                                    {procedure.supplies.map(
+                                                        (supply) => (
+                                                            <div
+                                                                key={supply.id}
+                                                                className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"
+                                                            >
+                                                                <span>
+                                                                    {
+                                                                        supply
+                                                                            .drug
+                                                                            .name
+                                                                    }{' '}
+                                                                    {supply.drug
+                                                                        .strength &&
+                                                                        `(${supply.drug.strength})`}
+                                                                </span>
+                                                                <span className="font-medium">
+                                                                    ×
+                                                                    {
+                                                                        supply.quantity
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\InsuranceCoverageImportController;
 use App\Http\Controllers\Admin\InsuranceCoverageRuleController;
 use App\Http\Controllers\Admin\InsurancePlanController;
 use App\Http\Controllers\Admin\InsuranceProviderController;
-use App\Http\Controllers\Admin\InsuranceTariffController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->group(function () {
@@ -21,8 +20,10 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::get('plans/{plan}/recent-items', [InsurancePlanController::class, 'getRecentItems'])->name('plans.recent-items');
     Route::get('coverage-presets', [InsurancePlanController::class, 'getCoveragePresets'])->name('coverage-presets');
 
-    // Coverage Rules
-    Route::resource('coverage-rules', InsuranceCoverageRuleController::class);
+    // Coverage Rules (API endpoints only - UI is in Coverage Management)
+    Route::post('coverage-rules', [InsuranceCoverageRuleController::class, 'store'])->name('coverage-rules.store');
+    Route::patch('coverage-rules/{coverageRule}', [InsuranceCoverageRuleController::class, 'update'])->name('coverage-rules.update');
+    Route::delete('coverage-rules/{coverageRule}', [InsuranceCoverageRuleController::class, 'destroy'])->name('coverage-rules.destroy');
     Route::get('coverage-rules/search-items/{category}', [InsuranceCoverageRuleController::class, 'searchItems'])->name('coverage-rules.search-items');
     Route::patch('coverage-rules/{coverageRule}/quick-update', [InsuranceCoverageRuleController::class, 'quickUpdate'])->name('coverage-rules.quick-update');
     Route::get('coverage-rules/{coverageRule}/history', [InsuranceCoverageRuleController::class, 'history'])->name('coverage-rules.history');
@@ -34,8 +35,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::post('plans/{plan}/coverage/import-preview', [InsuranceCoverageImportController::class, 'preview'])->name('coverage.import-preview');
     Route::post('plans/{plan}/coverage/import', [InsuranceCoverageImportController::class, 'import'])->name('coverage.import');
 
-    // Tariffs
-    Route::resource('tariffs', InsuranceTariffController::class);
+    // Tariffs (managed through Coverage Management - no standalone UI)
 
     // Claims
     Route::get('claims', [InsuranceClaimController::class, 'index'])->name('claims.index');

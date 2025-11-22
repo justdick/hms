@@ -1,30 +1,31 @@
-# Simplified Insurance UI - User Guide
+# Insurance Management System - User Guide
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Getting Started](#getting-started)
 3. [Setting Up a New Insurance Plan](#setting-up-a-new-insurance-plan)
 4. [Using Coverage Presets](#using-coverage-presets)
-5. [Managing Coverage with the Dashboard](#managing-coverage-with-the-dashboard)
-6. [Adding Coverage Exceptions](#adding-coverage-exceptions)
+5. [Managing Coverage](#managing-coverage)
+6. [Adding Coverage Exceptions with Tariffs](#adding-coverage-exceptions-with-tariffs)
 7. [Bulk Import Guide](#bulk-import-guide)
-8. [Monitoring Recent Items](#monitoring-recent-items)
-9. [Keyboard Shortcuts](#keyboard-shortcuts)
+8. [Viewing Insurance Analytics](#viewing-insurance-analytics)
+9. [Vetting Insurance Claims](#vetting-insurance-claims)
 10. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Introduction
 
-The Simplified Insurance UI makes it easy to configure and manage insurance coverage plans. This guide will walk you through all the features, from setting up a new plan to managing exceptions and monitoring coverage.
+The Insurance Management System provides a streamlined interface for configuring insurance plans, managing coverage rules, processing claims, and viewing analytics. This guide covers all essential workflows.
 
 **Key Features:**
-- Quick plan setup with smart presets
-- Visual coverage dashboard with color-coded categories
-- Inline editing for fast adjustments
-- Simplified exception management
-- Bulk import for multiple exceptions
-- Real-time monitoring of new items
+- Quick plan setup with smart defaults (80% coverage auto-created)
+- Unified coverage management with inline editing
+- Integrated tariff pricing within exception workflow
+- Quick actions from Plans list for faster navigation
+- Slide-over claims vetting panel for efficient review
+- Analytics dashboard with expandable report widgets
+- Simplified navigation with fewer clicks
 
 ---
 
@@ -33,16 +34,23 @@ The Simplified Insurance UI makes it easy to configure and manage insurance cove
 ### Accessing the Insurance Management System
 
 1. Log in to the admin panel
-2. Navigate to **Insurance** → **Plans**
-3. You'll see a list of all insurance plans
+2. Navigate to **Insurance** in the main menu
+3. You'll see five main sections:
+   - **Providers** - Manage insurance companies
+   - **Plans** - View and configure insurance plans
+   - **Coverage** - Manage coverage rules (accessed via Plans)
+   - **Claims** - Process and vet insurance claims
+   - **Analytics** - View reports and metrics
 
-### Switching Between UI Modes
+### Quick Navigation from Plans List
 
-If your system has both the old and new UI enabled:
+The Plans list provides quick action buttons for common tasks:
 
-1. Look for the **UI Mode** toggle in the top-right corner
-2. Click to switch between "Classic UI" and "Simplified UI"
-3. Your preference will be saved for future sessions
+- **Manage Coverage** - Jump directly to coverage management for a plan
+- **View Claims** - See all claims for a specific plan
+- **Edit** - Modify plan details
+
+This reduces navigation from 5 clicks to 3 clicks for most workflows.
 
 ---
 
@@ -63,55 +71,39 @@ Fill in the basic information:
 
 Click **Next** to continue.
 
-### Step 3: Choose Coverage Preset
+### Step 3: Smart Defaults Applied Automatically
 
-Select a preset that matches your plan type:
-
-#### Available Presets:
-
-**NHIS Standard**
-- Consultation: 70%
+**NEW:** The system automatically creates default coverage rules at 80% for all six categories:
+- Consultation: 80%
 - Drugs: 80%
-- Labs: 90%
-- Procedures: 75%
-- Ward: 100%
+- Labs: 80%
+- Procedures: 80%
+- Ward: 80%
 - Nursing: 80%
 
-**Corporate Premium**
-- Consultation: 90%
-- Drugs: 90%
-- Labs: 100%
-- Procedures: 90%
-- Ward: 100%
-- Nursing: 90%
+You can adjust these percentages during plan creation or modify them later in Coverage Management.
 
-**Basic Coverage**
-- Consultation: 50%
-- Drugs: 60%
-- Labs: 70%
-- Procedures: 50%
-- Ward: 80%
-- Nursing: 60%
+### Step 4: Review and Create
 
-**Custom**
-- Start with blank fields and set your own percentages
-
-### Step 4: Adjust Coverage (Optional)
-
-After selecting a preset:
-- Review the pre-filled percentages
-- Modify any category as needed
-- Use **Copy to All** to apply one percentage to all categories
-- The patient copay is calculated automatically
-
-### Step 5: Review and Create
-
-1. Review all plan details and coverage percentages
-2. Click **Create Plan**
-3. The system creates the plan and all default coverage rules
-4. You'll be redirected to the Coverage Dashboard
+1. Review all plan details and default coverage percentages
+2. Adjust any percentages if needed
+3. Click **Create Plan**
+4. The system creates:
+   - The insurance plan
+   - 6 default coverage rules (one per category)
+5. Success message confirms: "Plan created with default 80% coverage for all categories"
+6. You're redirected to the Plans list
 
 **Time to Complete:** Under 2 minutes for a standard plan!
+
+### Optional: Coverage Presets
+
+If you prefer different starting values, you can still use presets:
+
+**NHIS Standard** - 70-90% coverage across categories
+**Corporate Premium** - 90-100% high-end coverage
+**Basic Coverage** - 50-80% budget-friendly coverage
+**Custom** - Set your own percentages
 
 ---
 
@@ -153,11 +145,24 @@ You can always modify preset values:
 
 ---
 
-## Managing Coverage with the Dashboard
+## Managing Coverage
 
-### Understanding the Coverage Dashboard
+### Accessing Coverage Management
 
-The dashboard shows all six coverage categories as visual cards:
+**From Plans List (Recommended):**
+1. Navigate to **Insurance** → **Plans**
+2. Find the plan you want to manage
+3. Click **Manage Coverage** button
+4. You're taken directly to Coverage Management
+
+**Direct Navigation:**
+1. Navigate to **Insurance** → **Plans**
+2. Click on a plan name
+3. Click **Coverage** tab
+
+### Understanding Coverage Management
+
+The unified interface shows all six coverage categories as visual cards:
 
 ```
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
@@ -169,7 +174,7 @@ The dashboard shows all six coverage categories as visual cards:
 
 ### Color Coding
 
-Cards are color-coded for quick understanding:
+Cards use consistent color indicators:
 
 - **Green (80-100%)**: High coverage - excellent for patients
 - **Yellow (50-79%)**: Medium coverage - moderate patient cost
@@ -182,19 +187,14 @@ Each card displays:
 - **Category icon and name**
 - **Default coverage percentage**
 - **Number of exceptions** (items with different coverage)
-- **Visual color indicator**
+- **Exception count badge**
 
-### Interacting with Cards
+### Expanding Cards
 
 **Click a card** to expand and see:
-- Default coverage rule details
-- List of all exceptions
+- Unified table showing all coverage rules and exceptions
+- Tariff prices for items with custom pricing
 - Quick actions (Add Exception, Edit Default)
-
-**Hover over a card** to see:
-- Quick summary tooltip
-- Coverage and copay breakdown
-- Exception count
 
 ### Inline Editing
 
@@ -210,18 +210,27 @@ To quickly change a coverage percentage:
 **Example:**
 - Click "80%" → Type "85" → Press Enter → Saved!
 
+### Global Search
+
+Use the search bar at the top to find items across all categories:
+
+1. Type item name or code
+2. Results appear in real-time
+3. Matching items are highlighted in expanded cards
+4. Search results count is displayed
+
 ---
 
-## Adding Coverage Exceptions
+## Adding Coverage Exceptions with Tariffs
 
 ### What Are Exceptions?
 
-Exceptions are specific items that have different coverage than the default for their category.
+Exceptions are specific items that have different coverage than the default for their category. They can also have custom tariff pricing.
 
 **Example:**
 - Default drug coverage: 80%
 - Paracetamol exception: 100% (fully covered)
-- Expensive cancer drug exception: 50% (lower coverage)
+- Expensive cancer drug exception: 50% (lower coverage) + custom tariff
 
 ### When to Add Exceptions
 
@@ -229,13 +238,13 @@ Add exceptions when:
 - Specific items should be fully covered
 - Expensive items need lower coverage
 - Certain items should be excluded
-- Special pricing applies to particular items
+- Special pricing (tariffs) applies to particular items
 
-### Adding an Exception
+### Adding an Exception with Tariff
 
 1. **Open the category** by clicking its card
 2. Click **Add Exception** button
-3. The simplified modal appears
+3. The exception modal appears
 
 ### Exception Modal Fields
 
@@ -247,7 +256,7 @@ Add exceptions when:
 
 **2. Choose Coverage Type**
 
-Four simple options:
+Four options:
 
 - **Percentage** (most common)
   - Enter a percentage (0-100)
@@ -265,10 +274,35 @@ Four simple options:
   - Insurance pays 0%
   - Patient pays full price
 
-**3. Add Notes (Optional)**
+**3. Set Tariff Pricing (NEW)**
+
+Choose pricing option:
+
+- **Use Standard Price** (default)
+  - Uses the hospital's standard price
+  - No custom tariff needed
+  
+- **Set Custom Tariff**
+  - Enter a custom price for this item
+  - Insurance pays from this tariff amount
+  - Useful for negotiated rates
+
+**Example:**
+```
+Item: Advanced MRI Scan
+Standard Price: GHS 850.00
+Custom Tariff: GHS 700.00 (negotiated rate)
+Coverage: 90%
+
+Result:
+- Insurance pays: GHS 630.00 (90% of GHS 700)
+- Patient pays: GHS 70.00 (10% of GHS 700)
+```
+
+**4. Add Notes (Optional)**
 - Explain why this exception exists
 - Document special circumstances
-- Help future administrators understand
+- Note negotiated rates or special terms
 
 ### Coverage Preview
 
@@ -276,10 +310,21 @@ The modal shows a real-time preview:
 
 ```
 Preview:
-Item Price: $45.00
-Insurance pays: $45.00 (100%)
-Patient pays: $0.00 (0%)
+Standard Price: GHS 45.00
+Tariff Price: GHS 40.00 (custom)
+Insurance pays: GHS 40.00 (100%)
+Patient pays: GHS 0.00 (0%)
 ```
+
+### Viewing Tariffs in Exception List
+
+When you expand a category, the exceptions table shows:
+- Item code and description
+- Coverage percentage
+- **Tariff price** (if custom tariff set)
+- Indicator for items with custom tariffs
+
+You can filter to show only items with custom tariffs.
 
 ### Saving the Exception
 
@@ -288,13 +333,14 @@ Patient pays: $0.00 (0%)
 3. The modal closes
 4. The exception appears in the category's exception list
 5. The exception count badge updates
+6. Custom tariff is saved and displayed
 
 ### Editing Exceptions
 
 1. Expand the category card
 2. Find the exception in the list
 3. Click the **Edit** icon
-4. Modify the values
+4. Modify coverage or tariff values
 5. Click **Save**
 
 ### Deleting Exceptions
@@ -304,6 +350,7 @@ Patient pays: $0.00 (0%)
 3. Click the **Delete** icon
 4. Confirm the deletion
 5. The item reverts to using the default coverage
+6. Custom tariff is removed
 
 ---
 
@@ -421,114 +468,199 @@ The exceptions now appear in the category's exception list.
 
 ---
 
-## Monitoring Recent Items
+## Viewing Insurance Analytics
 
-### Recent Items Panel
+### Accessing the Analytics Dashboard
 
-The Recent Items panel shows items added to the system in the last 30 days.
+1. Navigate to **Insurance** → **Analytics**
+2. You'll see the Analytics Dashboard with six report widgets
 
-### Why Monitor Recent Items?
+### Analytics Dashboard Overview
 
-- **Catch expensive items**: Review high-cost items before they're claimed
-- **Ensure proper coverage**: Verify new items have appropriate coverage
-- **Prevent surprises**: Avoid unexpected claim costs
-- **Maintain control**: Stay informed about system changes
-
-### Understanding the Panel
+The dashboard displays all insurance reports in a single view with expandable widgets:
 
 ```
-┌─────────────────────────────────────────────┐
-│  Recently Added Items (Last 30 Days)        │
-├─────────────────────────────────────────────┤
-│  ⚠️  Advanced MRI Scan                      │
-│      $850.00 • Uses default 90% coverage    │
-│      [Add Exception]                        │
-├─────────────────────────────────────────────┤
-│  ✓  Basic X-Ray                             │
-│      $45.00 • Uses default 90% coverage     │
-│      [Add Exception]                        │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│ Insurance Analytics Dashboard                           │
+│ Date Range: [From: 01/01/25] [To: 31/01/25] [Apply]   │
+├─────────────────────────────────────────────────────────┤
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│ │ Claims       │  │ Revenue      │  │ Outstanding  │  │
+│ │ Summary      │  │ Analysis     │  │ Claims       │  │
+│ │ 245 claims   │  │ GHS 125,000  │  │ 23 pending   │  │
+│ │ [Expand ▼]   │  │ [Expand ▼]   │  │ [Expand ▼]   │  │
+│ └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                         │
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│ │ Vetting      │  │ Utilization  │  │ Rejection    │  │
+│ │ Performance  │  │ Report       │  │ Analysis     │  │
+│ │ 95% approved │  │ 78% avg      │  │ 5% rejected  │  │
+│ │ [Expand ▼]   │  │ [Expand ▼]   │  │ [Expand ▼]   │  │
+│ └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Item Indicators
+### Using the Date Range Filter
 
-**⚠️ Warning Icon (Red)**
-- Item is expensive (over $500)
-- Requires attention
-- May need custom coverage
+The date range filter at the top affects all widgets:
 
-**✓ Check Icon (Green)**
-- Standard-priced item
-- Using default coverage
-- No immediate action needed
+1. Select **From** date
+2. Select **To** date
+3. Click **Apply**
+4. All widgets refresh with new data
 
-### Coverage Status
+### Expanding Widgets
 
-Each item shows its current status:
+To see detailed information:
 
-- **"Uses default 90% coverage"**: Following the category default
-- **"Custom exception: 50%"**: Has a specific exception
-- **"Not covered"**: No coverage configured
+1. Click **Expand** on any widget
+2. The widget expands inline to show details
+3. Detailed data loads (lazy loaded for performance)
+4. Click **Collapse** to minimize
 
-### Quick Actions
+### Available Reports
 
-**Add Exception Button**
-- Click to immediately add an exception for this item
-- Pre-fills the item in the exception modal
-- Fast way to adjust coverage for new items
+**1. Claims Summary**
+- Total claims count
+- Total claim amount
+- Claims by status
+- Claims by provider
 
-### Reviewing Items
+**2. Revenue Analysis**
+- Total revenue from insurance
+- Revenue by provider
+- Revenue by month
+- Top revenue-generating services
 
-Regular review workflow:
+**3. Outstanding Claims**
+- Claims pending vetting
+- Claims pending submission
+- Claims pending payment
+- Aging analysis
 
-1. **Check the panel weekly**
-2. **Look for warning icons** (expensive items)
-3. **Review coverage status**
-4. **Add exceptions** if needed
-5. **Dismiss** items after review (if applicable)
+**4. Vetting Performance**
+- Approval rate
+- Rejection rate
+- Average vetting time
+- Vetting officer performance
 
-### Expensive Item Threshold
+**5. Utilization Report**
+- Average coverage percentage
+- Most utilized services
+- Utilization by category
+- Utilization trends
 
-Items over $500 are flagged as expensive. This threshold helps you:
-- Focus on high-impact items
-- Prevent costly surprises
-- Maintain budget control
+**6. Rejection Analysis**
+- Rejection reasons
+- Rejection rate by provider
+- Rejection trends
+- Common rejection patterns
+
+### Benefits of Widget-Based Analytics
+
+- **Single Page View** - All reports in one place
+- **Shared Filters** - Date range applies to all widgets
+- **Lazy Loading** - Details load only when expanded
+- **Fast Navigation** - No page changes required
+- **Responsive Design** - Works on all screen sizes
 
 ---
 
-## Keyboard Shortcuts
+## Vetting Insurance Claims
 
-Speed up your workflow with keyboard shortcuts:
+### Accessing Claims for Vetting
 
-### Global Shortcuts
+1. Navigate to **Insurance** → **Claims**
+2. You'll see the Claims list with all insurance claims
+3. Use filters to find claims needing vetting:
+   - Status: Pending Vetting
+   - Insurance provider
+   - Date range
+   - Search by patient name or claim code
 
-| Shortcut | Action |
-|----------|--------|
-| `N` | Add new exception (when viewing a category) |
-| `E` | Enable inline edit mode |
-| `Esc` | Close modal or cancel edit |
-| `?` | Show keyboard shortcuts help |
+### Claims List View
 
-### Form Shortcuts
+The list shows key information:
+- Claim Check Code (CCC)
+- Patient name
+- Insurance plan
+- Visit date
+- Total amount
+- Status
+- **Review** button
 
-| Shortcut | Action |
-|----------|--------|
-| `Enter` | Save inline edit |
-| `Tab` | Move to next field |
-| `Shift + Tab` | Move to previous field |
+### Opening the Vetting Panel
 
-### Navigation Shortcuts
+**NEW:** Claims are now vetted using a slide-over panel:
 
-| Shortcut | Action |
-|----------|--------|
-| `Arrow Keys` | Navigate between cards |
-| `Enter` | Expand selected card |
+1. Click **Review** button on any claim
+2. A panel slides in from the right
+3. You stay on the Claims list (no navigation)
+4. Review claim details in the panel
 
-### Enabling Shortcuts
+### Vetting Panel Contents
 
-Keyboard shortcuts are enabled by default. To see all available shortcuts:
-- Press `?` key
-- Or click **Keyboard Shortcuts** in the help menu
+The panel displays:
+
+**Patient Information**
+- Patient name
+- Membership ID
+- Insurance plan
+- Visit date
+
+**Claim Items Table**
+- Service/item description
+- Quantity
+- Unit tariff
+- Coverage percentage
+- Insurance pays amount
+- Patient pays amount
+
+**Diagnosis Information**
+- Primary diagnosis code and description
+- Secondary diagnoses (if any)
+
+**Financial Summary**
+- Total claim amount
+- Insurance covered amount
+- Patient copay amount
+
+### Vetting Actions
+
+**Approve Claim:**
+1. Review all claim items
+2. Verify services match diagnosis
+3. Click **Approve** button
+4. Claim status changes to "Vetted"
+5. Panel closes automatically
+6. Claims list refreshes
+
+**Reject Claim:**
+1. Review claim items
+2. Identify issues
+3. Click **Reject** button
+4. Enter rejection reason (required)
+5. Click **Confirm Rejection**
+6. Claim status changes to "Rejected"
+7. Panel closes automatically
+
+**Close Panel:**
+- Click **Close** button
+- Press **Escape** key
+- Click outside the panel
+
+### Keyboard Shortcuts in Vetting Panel
+
+- **Escape** - Close panel
+- **Ctrl+Enter** - Approve claim (quick approval)
+- **Tab** - Navigate between fields
+
+### Benefits of Slide-Over Vetting
+
+- **No Navigation** - Stay on Claims list
+- **Faster Workflow** - Review multiple claims quickly
+- **Context Preserved** - See list while reviewing
+- **Keyboard Support** - Efficient for power users
 
 ---
 
@@ -569,13 +701,37 @@ Keyboard shortcuts are enabled by default. To see all available shortcuts:
 - Check if the exception was actually saved
 - Try adding the exception again
 
-#### Issue: Can't see recent items
+#### Issue: Can't access Coverage Management from Plans list
 
 **Solution:**
-- Ensure items were added in the last 30 days
-- Check if the category has default coverage
-- Verify you have permission to view recent items
-- Refresh the page
+- Ensure you have permission to manage coverage
+- Check that the plan is active
+- Try clicking the plan name first, then the Coverage tab
+- Contact your administrator if the button is missing
+
+#### Issue: Vetting panel won't open
+
+**Solution:**
+- Check your internet connection
+- Ensure the claim exists and is in correct status
+- Try refreshing the Claims list
+- Check browser console for errors
+
+#### Issue: Analytics widgets won't expand
+
+**Solution:**
+- Check your internet connection
+- Ensure date range is valid
+- Try refreshing the page
+- Check if you have permission to view reports
+
+#### Issue: Tariff price not saving
+
+**Solution:**
+- Ensure you selected "Set Custom Tariff" option
+- Enter a valid price (greater than 0)
+- Check that the exception was saved successfully
+- Verify you have permission to set tariffs
 
 #### Issue: Color coding seems wrong
 
@@ -586,6 +742,15 @@ Keyboard shortcuts are enabled by default. To see all available shortcuts:
   - Red: 1-49%
   - Gray: Not configured
 - If colors still seem incorrect, report to your administrator
+
+#### Issue: Global search not finding items
+
+**Solution:**
+- Check spelling of search term
+- Try searching by item code instead of name
+- Ensure the item exists in the system
+- Expand categories to see if item appears
+- Clear search and try again
 
 ### Getting Help
 
@@ -658,30 +823,31 @@ If you encounter issues not covered here:
 ## Quick Reference Card
 
 ### Setup Checklist
-- [ ] Create new plan
-- [ ] Choose preset or custom coverage
-- [ ] Review and adjust percentages
-- [ ] Create plan
-- [ ] Add exceptions as needed
-- [ ] Monitor recent items
+- [ ] Create new plan (auto-creates 80% default coverage)
+- [ ] Review and adjust default percentages if needed
+- [ ] Add exceptions for specific items
+- [ ] Set custom tariffs where applicable
+- [ ] Test coverage calculations
 
 ### Daily Tasks
-- [ ] Check recent items panel
-- [ ] Review expensive item alerts
-- [ ] Add exceptions for new items
-- [ ] Respond to notifications
+- [ ] Vet pending claims using slide-over panel
+- [ ] Review claims list for new submissions
+- [ ] Respond to claim rejections
+- [ ] Monitor claim status changes
 
 ### Weekly Tasks
 - [ ] Review all coverage categories
-- [ ] Check exception lists
+- [ ] Check exception lists and tariffs
+- [ ] View Analytics Dashboard for trends
 - [ ] Export coverage rules (backup)
-- [ ] Review change history
+- [ ] Review vetting performance metrics
 
 ### Monthly Tasks
 - [ ] Audit all insurance plans
-- [ ] Review expensive item trends
-- [ ] Update coverage as needed
-- [ ] Train new administrators
+- [ ] Review utilization reports
+- [ ] Update coverage rules as needed
+- [ ] Analyze rejection patterns
+- [ ] Train new administrators on simplified workflows
 
 ---
 

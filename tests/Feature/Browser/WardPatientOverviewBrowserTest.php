@@ -15,7 +15,6 @@
  * - WardPatientOverviewTabTest.php
  * - WardPatientLabsTabTest.php
  */
-
 test('browser tests require pest browser plugin', function () {
     expect(true)->toBeTrue();
 })->skip('Install Pest Browser plugin to run browser tests');

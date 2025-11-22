@@ -126,6 +126,20 @@ class ConsultationController extends Controller
                 ->orderBy('started_at', 'desc')
                 ->limit(10)
                 ->get(),
+            'previousMinorProcedures' => \App\Models\MinorProcedure::with([
+                'nurse:id,name',
+                'procedureType:id,name,code',
+                'patientCheckin.department:id,name',
+                'diagnoses:id,diagnosis,code,icd_10,g_drg',
+                'supplies.drug:id,name,form,strength',
+            ])
+                ->whereHas('patientCheckin', function ($query) use ($patient) {
+                    $query->where('patient_id', $patient->id);
+                })
+                ->where('status', 'completed')
+                ->orderBy('performed_at', 'desc')
+                ->limit(10)
+                ->get(),
             'previousPrescriptions' => Prescription::with('consultation.doctor:id,name')
                 ->whereHas('consultation.patientCheckin', function ($query) use ($patient) {
                     $query->where('patient_id', $patient->id);

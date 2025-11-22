@@ -180,4 +180,40 @@ class PharmacyBillingService
             'pending_charges_count' => $charges->where('status', 'pending')->count(),
         ];
     }
+
+    /**
+     * Create a charge for a minor procedure supply when it's dispensed.
+     */
+    public function createSupplyCharge(\App\Models\MinorProcedureSupply $supply): Charge
+    {
+        $drug = $supply->drug;
+        $quantity = $supply->quantity;
+
+        // Calculate amount: unit price × quantity
+        $amount = $drug->unit_price * $quantity;
+
+        $user = Auth::user();
+
+        // Get patient_checkin_id from the minor procedure
+        $patientCheckinId = $supply->minorProcedure->patient_checkin_id;
+
+        return Charge::create([
+            'patient_checkin_id' => $patientCheckinId,
+            'service_type' => 'pharmacy',
+            'service_code' => $drug->drug_code,
+            'description' => "Minor Procedure Supply: {$drug->name} ({$quantity} {$drug->form})",
+            'amount' => $amount,
+            'charge_type' => 'supply',
+            'status' => 'pending',
+            'charged_at' => now(),
+            'created_by_type' => $user ? get_class($user) : null,
+            'created_by_id' => $user?->id,
+            'notes' => "Auto-generated from minor procedure supply #{$supply->id}",
+            'metadata' => [
+                'minor_procedure_supply_id' => $supply->id,
+                'minor_procedure_id' => $supply->minor_procedure_id,
+                'quantity' => $quantity,
+            ],
+        ]);
+    }
 }

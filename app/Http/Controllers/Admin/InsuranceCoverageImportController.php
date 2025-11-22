@@ -102,7 +102,9 @@ class InsuranceCoverageImportController extends Controller
         ];
 
         try {
-            $rows = Excel::toArray([], $request->file('file'))[0];
+            // Read from the Data sheet (index 1), not Instructions sheet (index 0)
+            $sheets = Excel::toArray([], $request->file('file'));
+            $rows = $sheets[1] ?? $sheets[0]; // Try Data sheet first, fallback to first sheet
 
             // Skip header row
             $header = array_shift($rows);
@@ -180,7 +182,9 @@ class InsuranceCoverageImportController extends Controller
                             'item_description' => $rowData['item_name'] ?? null,
                             'coverage_type' => $dbCoverageType,
                             'coverage_value' => $coverageData['coverage_value'],
+                            'tariff_amount' => isset($rowData['tariff_amount']) && $rowData['tariff_amount'] !== '' ? (float) $rowData['tariff_amount'] : null,
                             'patient_copay_percentage' => $coverageData['copay_percentage'],
+                            'patient_copay_amount' => isset($rowData['patient_copay_amount']) && $rowData['patient_copay_amount'] !== '' ? (float) $rowData['patient_copay_amount'] : 0,
                             'is_covered' => $coverageData['is_covered'],
                             'is_active' => true,
                             'effective_from' => now(),

@@ -28,8 +28,17 @@ class PaymentController extends Controller
             'total_outstanding' => Charge::pending()->sum('amount'),
         ];
 
+        $permissions = [
+            'canProcessPayment' => auth()->user()->can('billing.create'),
+            'canWaiveCharges' => auth()->user()->can('billing.waive-charges'),
+            'canAdjustCharges' => auth()->user()->can('billing.adjust-charges'),
+            'canOverrideServices' => auth()->user()->can('billing.emergency-override'),
+            'canCancelCharges' => auth()->user()->can('billing.cancel-charges'),
+        ];
+
         return Inertia::render('Billing/Payments/Index', [
             'stats' => $stats,
+            'permissions' => $permissions,
         ]);
     }
 
@@ -150,6 +159,28 @@ class PaymentController extends Controller
 
         $paidCharges = Charge::forPatient($checkin->id)->paid()->get();
 
+        // Get active overrides
+        $activeOverrides = \App\Models\ServiceAccessOverride::where('patient_checkin_id', $checkin->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->with('authorizedBy:id,name')
+            ->get()
+            ->map(function ($override) {
+                return [
+                    'id' => $override->id,
+                    'service_type' => $override->service_type,
+                    'service_code' => $override->service_code,
+                    'reason' => $override->reason,
+                    'authorized_by' => [
+                        'id' => $override->authorizedBy->id,
+                        'name' => $override->authorizedBy->name,
+                    ],
+                    'authorized_at' => $override->authorized_at->format('M j, Y g:i A'),
+                    'expires_at' => $override->expires_at->format('M j, Y g:i A'),
+                    'remaining_duration' => $override->getRemainingDuration(),
+                ];
+            });
+
         return Inertia::render('Billing/Payments/Show', [
             'checkin' => $checkin,
             'charges' => $charges,
@@ -163,14 +194,17 @@ class PaymentController extends Controller
                 'policy_number' => $checkin->patient->activeInsurance->policy_number,
             ] : null,
             'canProceedWithServices' => $this->getServiceStatus($checkin),
+            'activeOverrides' => $activeOverrides,
         ]);
     }
 
     /**
-     * Process payment for charges
+     * Process payment for charges (enhanced for inline form submission)
      */
     public function processPayment(Request $request, PatientCheckin $checkin)
     {
+        $this->authorize('create', Charge::class);
+
         $validated = $request->validate([
             'charges' => 'required|array|min:1',
             'charges.*' => 'exists:charges,id',
@@ -208,39 +242,53 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Process payment proportionally across charges
-        $remainingPayment = $amountPaid;
+        try {
+            \DB::transaction(function () use ($charges, $validated, $amountPaid, $checkin) {
+                // Process payment proportionally across charges
+                $remainingPayment = $amountPaid;
 
-        foreach ($charges as $charge) {
-            if ($remainingPayment <= 0) {
-                break;
-            }
+                foreach ($charges as $charge) {
+                    if ($remainingPayment <= 0) {
+                        break;
+                    }
 
-            // Determine amount due from patient for this charge
-            $amountDue = $charge->is_insurance_claim
-                ? $charge->patient_copay_amount
-                : $charge->amount;
+                    // Determine amount due from patient for this charge
+                    $amountDue = $charge->is_insurance_claim
+                        ? $charge->patient_copay_amount
+                        : $charge->amount;
 
-            $paymentForCharge = min($remainingPayment, $amountDue);
+                    $paymentForCharge = min($remainingPayment, $amountDue);
 
-            $charge->update([
-                'paid_amount' => $paymentForCharge,
-                'paid_at' => now(),
-                'status' => $paymentForCharge >= $amountDue ? 'paid' : 'partial',
-                'is_emergency_override' => $validated['emergency_override'] ?? false,
+                    $charge->update([
+                        'paid_amount' => $paymentForCharge,
+                        'paid_at' => now(),
+                        'status' => $paymentForCharge >= $amountDue ? 'paid' : 'partial',
+                        'is_emergency_override' => $validated['emergency_override'] ?? false,
+                    ]);
+
+                    $remainingPayment -= $paymentForCharge;
+                }
+
+                // Log payment
+                $this->logPayment($checkin, $validated, $amountPaid);
+            });
+
+            $message = $amountPaid >= $totalPatientOwes
+                ? 'Payment processed successfully. All patient copays cleared.'
+                : 'Partial payment processed successfully.';
+
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            \Log::error('Payment processing failed', [
+                'patient_checkin_id' => $checkin->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
             ]);
 
-            $remainingPayment -= $paymentForCharge;
+            return back()->withErrors([
+                'error' => 'Payment processing failed. Please try again.',
+            ]);
         }
-
-        // Log payment
-        $this->logPayment($checkin, $validated, $amountPaid);
-
-        $message = $amountPaid >= $totalPatientOwes
-            ? 'Payment processed successfully. All patient copays cleared.'
-            : 'Partial payment processed successfully.';
-
-        return back()->with('success', $message);
     }
 
     /**
@@ -276,15 +324,39 @@ class PaymentController extends Controller
     {
         $pendingCharges = $this->billingService->getPendingCharges($checkin);
         $totalPending = $pendingCharges->sum('amount');
+        $totalPatientOwes = $pendingCharges->sum('patient_copay_amount');
 
         $serviceStatus = $this->getServiceStatus($checkin);
+
+        // Get active overrides from database
+        $activeOverrides = \App\Models\ServiceAccessOverride::where('patient_checkin_id', $checkin->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->with('authorizedBy:id,name')
+            ->get()
+            ->map(function ($override) {
+                return [
+                    'id' => $override->id,
+                    'service_type' => $override->service_type,
+                    'service_code' => $override->service_code,
+                    'reason' => $override->reason,
+                    'authorized_by' => [
+                        'id' => $override->authorizedBy->id,
+                        'name' => $override->authorizedBy->name,
+                    ],
+                    'authorized_at' => $override->authorized_at->format('M j, Y g:i A'),
+                    'expires_at' => $override->expires_at->format('M j, Y g:i A'),
+                    'remaining_duration' => $override->getRemainingDuration(),
+                ];
+            });
 
         return response()->json([
             'has_pending_charges' => $pendingCharges->isNotEmpty(),
             'total_pending' => $totalPending,
+            'total_patient_owes' => $totalPatientOwes,
             'pending_charges' => $pendingCharges,
             'service_status' => $serviceStatus,
-            'emergency_overrides' => $this->getActiveOverrides($checkin),
+            'active_overrides' => $activeOverrides,
         ]);
     }
 
@@ -293,6 +365,8 @@ class PaymentController extends Controller
      */
     public function quickPay(Request $request, Charge $charge)
     {
+        $this->authorize('create', Charge::class);
+
         if ($charge->status !== 'pending') {
             return back()->withErrors([
                 'error' => 'This charge has already been paid or cancelled',
@@ -316,6 +390,69 @@ class PaymentController extends Controller
         $this->logPayment($charge->patientCheckin, $validated, $amount);
 
         return back()->with('success', 'Payment processed successfully');
+    }
+
+    /**
+     * Quick pay all charges for a patient
+     */
+    public function quickPayAll(Request $request)
+    {
+        $this->authorize('create', Charge::class);
+
+        $validated = $request->validate([
+            'patient_checkin_id' => 'required|exists:patient_checkins,id',
+            'payment_method' => 'required|in:cash,card,mobile_money,insurance,bank_transfer',
+            'charges' => 'required|array|min:1',
+            'charges.*' => 'exists:charges,id',
+        ]);
+
+        $checkin = PatientCheckin::findOrFail($validated['patient_checkin_id']);
+
+        $charges = Charge::whereIn('id', $validated['charges'])
+            ->where('patient_checkin_id', $checkin->id)
+            ->where('status', 'pending')
+            ->get();
+
+        if ($charges->isEmpty()) {
+            return back()->withErrors([
+                'charges' => 'No valid pending charges found',
+            ]);
+        }
+
+        try {
+            \DB::transaction(function () use ($charges, $validated, $checkin) {
+                $totalPaid = 0;
+
+                foreach ($charges as $charge) {
+                    // For insurance claims, patient only pays copay
+                    $amountDue = $charge->is_insurance_claim
+                        ? $charge->patient_copay_amount
+                        : $charge->amount;
+
+                    $charge->update([
+                        'paid_amount' => $amountDue,
+                        'paid_at' => now(),
+                        'status' => 'paid',
+                    ]);
+
+                    $totalPaid += $amountDue;
+                }
+
+                $this->logPayment($checkin, $validated, $totalPaid);
+            });
+
+            return back()->with('success', 'All charges paid successfully');
+        } catch (\Exception $e) {
+            \Log::error('Quick pay all failed', [
+                'patient_checkin_id' => $checkin->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Payment processing failed. Please try again.',
+            ]);
+        }
     }
 
     private function getServiceStatus(PatientCheckin $checkin): array

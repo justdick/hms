@@ -230,6 +230,15 @@ class PatientController extends Controller
                 ];
             });
 
+        // Check if user can view medical history
+        $canViewMedicalHistory = auth()->user()->can('viewMedicalHistory', $patient);
+
+        // Get billing summary if user has permission
+        $billingSummary = null;
+        if (auth()->user()->can('patients.view')) {
+            $billingSummary = $this->getBillingSummary($patient);
+        }
+
         return inertia('Patients/Show', [
             'patient' => [
                 'id' => $patient->id,
@@ -246,10 +255,10 @@ class PatientController extends Controller
                 'emergency_contact_phone' => $patient->emergency_contact_phone,
                 'national_id' => $patient->national_id,
                 'status' => $patient->status,
-                'past_medical_surgical_history' => $patient->past_medical_surgical_history,
-                'drug_history' => $patient->drug_history,
-                'family_history' => $patient->family_history,
-                'social_history' => $patient->social_history,
+                'past_medical_surgical_history' => $canViewMedicalHistory ? $patient->past_medical_surgical_history : null,
+                'drug_history' => $canViewMedicalHistory ? $patient->drug_history : null,
+                'family_history' => $canViewMedicalHistory ? $patient->family_history : null,
+                'social_history' => $canViewMedicalHistory ? $patient->social_history : null,
                 'active_insurance' => $patient->activeInsurance ? [
                     'id' => $patient->activeInsurance->id,
                     'insurance_plan' => [
@@ -294,6 +303,9 @@ class PatientController extends Controller
             'departments' => $departments,
             'can_edit' => auth()->user()->can('update', $patient),
             'can_checkin' => auth()->user()->can('create', \App\Models\PatientCheckin::class),
+            'can_view_medical_history' => $canViewMedicalHistory,
+            'billing_summary' => $billingSummary,
+            'can_process_payment' => auth()->user()->can('billing.create'),
         ]);
     }
 
@@ -408,6 +420,84 @@ class PatientController extends Controller
                 ->route('patients.show', $patient)
                 ->with('success', 'Patient information updated successfully.');
         });
+    }
+
+    /**
+     * Get billing summary for a patient
+     */
+    private function getBillingSummary(Patient $patient): ?array
+    {
+        $checkins = $patient->checkins()
+            ->with(['charges' => function ($query) {
+                $query->where('status', 'pending');
+            }])
+            ->get();
+
+        $pendingCharges = $checkins->flatMap->charges
+            ->where('status', 'pending');
+
+        if ($pendingCharges->isEmpty()) {
+            // Get recent payments if no pending charges
+            $recentPayments = $patient->checkins()
+                ->with(['charges' => function ($query) {
+                    $query->where('status', 'paid')
+                        ->whereNotNull('paid_at')
+                        ->latest('paid_at')
+                        ->limit(5);
+                }])
+                ->get()
+                ->flatMap->charges
+                ->sortByDesc('paid_at')
+                ->take(5);
+
+            return [
+                'total_outstanding' => 0,
+                'insurance_covered' => 0,
+                'patient_owes' => 0,
+                'recent_payments' => $recentPayments->map(fn ($charge) => [
+                    'date' => $charge->paid_at->format('M j, Y'),
+                    'amount' => $charge->paid_amount ?? $charge->amount,
+                    'method' => $charge->metadata['payment_method'] ?? 'Unknown',
+                    'description' => $charge->description,
+                ])->values(),
+                'has_active_overrides' => false,
+            ];
+        }
+
+        // Get recent payments
+        $recentPayments = $patient->checkins()
+            ->with(['charges' => function ($query) {
+                $query->where('status', 'paid')
+                    ->whereNotNull('paid_at')
+                    ->latest('paid_at')
+                    ->limit(5);
+            }])
+            ->get()
+            ->flatMap->charges
+            ->sortByDesc('paid_at')
+            ->take(5);
+
+        // Check for active overrides
+        $hasActiveOverrides = \App\Models\ServiceAccessOverride::whereIn(
+            'patient_checkin_id',
+            $checkins->pluck('id')
+        )
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->exists();
+
+        return [
+            'total_outstanding' => $pendingCharges->sum('amount'),
+            'insurance_covered' => $pendingCharges->sum('insurance_covered_amount'),
+            'patient_owes' => $pendingCharges->sum('patient_copay_amount'),
+            'recent_payments' => $recentPayments->map(fn ($charge) => [
+                'date' => $charge->paid_at->format('M j, Y'),
+                'amount' => $charge->paid_amount ?? $charge->amount,
+                'method' => $charge->metadata['payment_method'] ?? 'Unknown',
+                'description' => $charge->description,
+            ])->values(),
+            'has_active_overrides' => $hasActiveOverrides,
+        ];
     }
 
     private function generatePatientNumber(): string

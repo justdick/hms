@@ -474,4 +474,3 @@ it('shows overdue vitals indicator when vitals are old', function () {
         ->has('admission.vital_signs', 1)
     );
 });
-

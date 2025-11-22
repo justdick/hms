@@ -60,26 +60,47 @@ class InsurancePlanController extends Controller
         $plan = \DB::transaction(function () use ($validated, $coverageRules) {
             $plan = InsurancePlan::create($validated);
 
-            // Create default coverage rules
-            foreach ($coverageRules as $rule) {
-                $plan->coverageRules()->create([
-                    'coverage_category' => $rule['coverage_category'],
-                    'item_code' => null,
-                    'item_description' => null,
-                    'coverage_type' => 'percentage',
-                    'coverage_value' => $rule['coverage_value'],
-                    'patient_copay_percentage' => 100 - $rule['coverage_value'],
-                    'is_covered' => $rule['coverage_value'] > 0,
-                    'is_active' => true,
-                ]);
+            // If no coverage rules provided, create default 80% coverage for all categories
+            if (empty($coverageRules)) {
+                $categories = ['consultation', 'drug', 'lab', 'procedure', 'ward', 'nursing'];
+                foreach ($categories as $category) {
+                    $plan->coverageRules()->create([
+                        'coverage_category' => $category,
+                        'item_code' => null,
+                        'item_description' => null,
+                        'coverage_type' => 'percentage',
+                        'coverage_value' => 80.00,
+                        'patient_copay_percentage' => 20.00,
+                        'is_covered' => true,
+                        'is_active' => true,
+                    ]);
+                }
+            } else {
+                // Create coverage rules from wizard input
+                foreach ($coverageRules as $rule) {
+                    $plan->coverageRules()->create([
+                        'coverage_category' => $rule['coverage_category'],
+                        'item_code' => null,
+                        'item_description' => null,
+                        'coverage_type' => 'percentage',
+                        'coverage_value' => $rule['coverage_value'],
+                        'patient_copay_percentage' => 100 - $rule['coverage_value'],
+                        'is_covered' => $rule['coverage_value'] > 0,
+                        'is_active' => true,
+                    ]);
+                }
             }
 
             return $plan;
         });
 
+        $message = empty($coverageRules)
+            ? 'Insurance plan created successfully with default 80% coverage for all categories.'
+            : 'Insurance plan created successfully with default coverage rules.';
+
         return redirect()
             ->route('admin.insurance.plans.show', $plan)
-            ->with('success', 'Insurance plan created successfully with default coverage rules.');
+            ->with('success', $message);
     }
 
     public function show(InsurancePlan $plan): Response
@@ -165,31 +186,36 @@ class InsurancePlanController extends Controller
 
         $plan->load('provider');
 
-        $categories = ['consultation', 'drug', 'lab', 'procedure', 'ward', 'nursing'];
-        $dashboardData = [];
+        // Cache coverage dashboard data for 5 minutes
+        $dashboardData = \Cache::remember("coverage-dashboard-{$plan->id}", now()->addMinutes(5), function () use ($plan) {
+            $categories = ['consultation', 'drug', 'lab', 'procedure', 'ward', 'nursing'];
+            $data = [];
 
-        foreach ($categories as $category) {
-            $generalRule = $plan->coverageRules()
-                ->whereNull('item_code')
-                ->where('coverage_category', $category)
-                ->active()
-                ->first();
+            foreach ($categories as $category) {
+                $generalRule = $plan->coverageRules()
+                    ->whereNull('item_code')
+                    ->where('coverage_category', $category)
+                    ->active()
+                    ->first();
 
-            $exceptionCount = $plan->coverageRules()
-                ->whereNotNull('item_code')
-                ->where('coverage_category', $category)
-                ->active()
-                ->count();
+                $exceptionCount = $plan->coverageRules()
+                    ->whereNotNull('item_code')
+                    ->where('coverage_category', $category)
+                    ->active()
+                    ->count();
 
-            $dashboardData[] = [
-                'category' => $category,
-                'default_coverage' => $generalRule?->coverage_value,
-                'exception_count' => $exceptionCount,
-                'general_rule_id' => $generalRule?->id,
-            ];
-        }
+                $data[] = [
+                    'category' => $category,
+                    'default_coverage' => $generalRule?->coverage_value,
+                    'exception_count' => $exceptionCount,
+                    'general_rule_id' => $generalRule?->id,
+                ];
+            }
 
-        return Inertia::render('Admin/Insurance/Plans/CoverageDashboard', [
+            return $data;
+        });
+
+        return Inertia::render('Admin/Insurance/Plans/CoverageManagement', [
             'plan' => new InsurancePlanResource($plan),
             'categories' => $dashboardData,
         ]);
@@ -199,12 +225,16 @@ class InsurancePlanController extends Controller
     {
         $this->authorize('view', $plan);
 
-        $exceptions = $plan->coverageRules()
-            ->whereNotNull('item_code')
-            ->where('coverage_category', $category)
-            ->active()
-            ->orderBy('item_description')
-            ->get();
+        // Cache exceptions for 5 minutes
+        $exceptions = \Cache::remember("exceptions-{$plan->id}-{$category}", now()->addMinutes(5), function () use ($plan, $category) {
+            return $plan->coverageRules()
+                ->whereNotNull('item_code')
+                ->where('coverage_category', $category)
+                ->with('tariff')
+                ->active()
+                ->orderBy('item_description')
+                ->get();
+        });
 
         return response()->json([
             'exceptions' => InsuranceCoverageRuleResource::collection($exceptions),

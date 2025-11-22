@@ -21,32 +21,28 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-interface Visit {
-    type: 'consultation' | 'ward_round';
-    date: string;
-    date_formatted: string;
-    date_relative: string;
-    is_today: boolean;
-    prescription_count: number;
-    prescribed_count: number;
-    reviewed_count: number;
-    dispensed_count: number;
-}
+
 
 interface SearchResult {
     id: number;
     patient_number: string;
     full_name: string;
     phone_number: string | null;
-    prescription_status: 'needs_review' | 'ready_to_dispense' | 'completed';
-    prescribed_count: number;
-    reviewed_count: number;
-    dispensed_count: number;
-    total_prescriptions: number;
-    last_visit: string | null;
-    last_visit_date: string | null;
-    visit_count: number;
-    visits: Visit[];
+    status: 'needs_review' | 'ready_to_dispense' | 'completed';
+    // Prescription counts
+    prescription_count: number;
+    prescription_needs_review: number;
+    prescription_ready_to_dispense: number;
+    prescription_dispensed: number;
+    // Supply counts
+    supply_count: number;
+    supply_needs_review: number;
+    supply_ready_to_dispense: number;
+    supply_dispensed: number;
+    // Combined counts
+    total_items: number;
+    total_needs_review: number;
+    total_ready_to_dispense: number;
 }
 
 interface Props {
@@ -109,7 +105,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                 `/pharmacy/dispensing/patients/${patient.id}?date_filter=${dateFilter}`,
             );
             const data = await response.json();
-            setReviewData(data.prescriptionsData);
+            setReviewData(data); // Now includes both prescriptions and supplies
             setReviewModalOpen(true);
         } catch (error) {
             console.error('Error loading review data:', error);
@@ -127,7 +123,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                 `/pharmacy/dispensing/patients/${patient.id}/prescriptions?date_filter=${dateFilter}`,
             );
             const data = await response.json();
-            setDispenseData(data);
+            setDispenseData(data); // Now includes both prescriptionsData and suppliesData
             setDispenseModalOpen(true);
         } catch (error) {
             console.error('Error loading dispense data:', error);
@@ -193,9 +189,9 @@ export default function DispensingIndex({ pendingCount }: Props) {
 
                     {pendingCount > 0 && (
                         <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 dark:border-blue-800 dark:bg-blue-950">
-                            <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <Pill className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                {pendingCount} Pending Prescription
+                                {pendingCount} Pending Item
                                 {pendingCount !== 1 ? 's' : ''}
                             </span>
                         </div>
@@ -237,7 +233,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                 <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-2">
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4" />
-                                        <span>Show prescriptions from:</span>
+                                        <span>Show items from:</span>
                                     </div>
                                     <div className="flex gap-1">
                                         <Button
@@ -329,110 +325,43 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                 </div>
                                                                 <div className="mt-2 flex flex-wrap items-center gap-2">
                                                                     {getStatusBadge(
-                                                                        patient.prescription_status,
+                                                                        patient.status,
+                                                                    )}
+                                                                    {patient.prescription_count >
+                                                                        0 && (
+                                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                                            <FileText className="h-3 w-3" />
+                                                                            {
+                                                                                patient.prescription_count
+                                                                            }{' '}
+                                                                            Rx
+                                                                        </span>
+                                                                    )}
+                                                                    {patient.supply_count >
+                                                                        0 && (
+                                                                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                                                                            <Pill className="h-3 w-3" />
+                                                                            {
+                                                                                patient.supply_count
+                                                                            }{' '}
+                                                                            Supplies
+                                                                        </span>
                                                                     )}
                                                                     <span className="text-xs text-muted-foreground">
                                                                         {
-                                                                            patient.total_prescriptions
+                                                                            patient.total_items
                                                                         }{' '}
-                                                                        prescription
-                                                                        {patient.total_prescriptions !==
+                                                                        total
+                                                                        item
+                                                                        {patient.total_items !==
                                                                         1
                                                                             ? 's'
                                                                             : ''}
                                                                     </span>
-                                                                    {patient.visit_count >
-                                                                        1 && (
-                                                                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                                                                            <Calendar className="h-3 w-3" />
-                                                                            {
-                                                                                patient.visit_count
-                                                                            }{' '}
-                                                                            visits
-                                                                        </span>
-                                                                    )}
-                                                                    {patient.last_visit && (
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            •{' '}
-                                                                            {
-                                                                                patient.last_visit
-                                                                            }
-                                                                        </span>
-                                                                    )}
                                                                 </div>
-
-                                                                {/* Visit Details */}
-                                                                {patient.visit_count >
-                                                                    1 && (
-                                                                    <div className="mt-3 space-y-1.5">
-                                                                        {patient.visits.map(
-                                                                            (
-                                                                                visit,
-                                                                                idx,
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        idx
-                                                                                    }
-                                                                                    className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs ${
-                                                                                        visit.is_today
-                                                                                            ? 'border-primary/20 bg-primary/5 dark:border-primary/30'
-                                                                                            : 'border-muted bg-muted/30'
-                                                                                    }`}
-                                                                                >
-                                                                                    <Stethoscope className="h-3 w-3 text-muted-foreground" />
-                                                                                    <span className="font-medium">
-                                                                                        {
-                                                                                            visit.date_formatted
-                                                                                        }
-                                                                                    </span>
-                                                                                    <span className="text-muted-foreground">
-                                                                                        (
-                                                                                        {
-                                                                                            visit.date_relative
-                                                                                        }
-
-                                                                                        )
-                                                                                    </span>
-                                                                                    <span className="text-muted-foreground">
-                                                                                        •{' '}
-                                                                                        {
-                                                                                            visit.prescription_count
-                                                                                        }{' '}
-                                                                                        Rx
-                                                                                    </span>
-                                                                                    {visit.prescribed_count >
-                                                                                        0 && (
-                                                                                        <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300">
-                                                                                            {
-                                                                                                visit.prescribed_count
-                                                                                            }{' '}
-                                                                                            to
-                                                                                            review
-                                                                                        </span>
-                                                                                    )}
-                                                                                    {visit.reviewed_count >
-                                                                                        0 && (
-                                                                                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                                                                            {
-                                                                                                visit.reviewed_count
-                                                                                            }{' '}
-                                                                                            ready
-                                                                                        </span>
-                                                                                    )}
-                                                                                    {visit.is_today && (
-                                                                                        <span className="ml-auto rounded bg-primary px-1.5 py-0.5 text-primary-foreground">
-                                                                                            Today
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            ),
-                                                                        )}
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                             <div className="flex flex-col gap-2">
-                                                                {patient.prescription_status ===
+                                                                {patient.status ===
                                                                     'needs_review' && (
                                                                     <Button
                                                                         size="sm"
@@ -448,7 +377,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                         Review
                                                                     </Button>
                                                                 )}
-                                                                {patient.prescription_status ===
+                                                                {patient.status ===
                                                                     'ready_to_dispense' && (
                                                                     <>
                                                                         <Button
@@ -480,7 +409,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                         </Button>
                                                                     </>
                                                                 )}
-                                                                {patient.prescription_status ===
+                                                                {patient.status ===
                                                                     'completed' && (
                                                                     <Button
                                                                         size="sm"
@@ -501,7 +430,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                             <User className="mx-auto mb-2 h-12 w-12 opacity-50" />
                                             <p>
                                                 No patients found with pending
-                                                prescriptions
+                                                items
                                             </p>
                                             <p className="mt-1 text-sm">
                                                 Try a different search term
@@ -536,17 +465,18 @@ export default function DispensingIndex({ pendingCount }: Props) {
                 )}
             </div>
 
-            {/* Review Modal */}
+            {/* Review Modal - now handles both prescriptions and supplies */}
             {selectedPatient && reviewData && (
                 <ReviewPrescriptionsModal
                     open={reviewModalOpen}
                     onOpenChange={setReviewModalOpen}
                     patientId={selectedPatient.id}
-                    prescriptionsData={reviewData}
+                    prescriptionsData={reviewData.prescriptions || []}
+                    suppliesData={reviewData.supplies || []}
                 />
             )}
 
-            {/* Dispense Modal */}
+            {/* Dispense Modal - now handles both prescriptions and supplies */}
             {selectedPatient && dispenseData && (
                 <DispenseModal
                     open={dispenseModalOpen}
@@ -556,7 +486,8 @@ export default function DispensingIndex({ pendingCount }: Props) {
                         patient_number: selectedPatient.patient_number,
                         full_name: selectedPatient.full_name,
                     }}
-                    prescriptionsData={dispenseData}
+                    prescriptionsData={dispenseData.prescriptionsData || []}
+                    suppliesData={dispenseData.suppliesData || []}
                 />
             )}
         </AppLayout>

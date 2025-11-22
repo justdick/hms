@@ -75,11 +75,41 @@ class InsuranceCoverageRuleController extends Controller
     {
         $this->authorize('create', InsuranceCoverageRule::class);
 
-        $rule = InsuranceCoverageRule::create($request->validated());
+        $validated = $request->validated();
+        $tariffPrice = $validated['tariff_price'] ?? null;
+        unset($validated['tariff_price']);
+
+        $rule = InsuranceCoverageRule::create($validated);
+
+        // Create tariff if custom price is provided
+        if ($tariffPrice !== null && $rule->item_code) {
+            \App\Models\InsuranceTariff::create([
+                'insurance_plan_id' => $rule->insurance_plan_id,
+                'item_type' => $rule->coverage_category,
+                'item_code' => $rule->item_code,
+                'item_description' => $rule->item_description,
+                'standard_price' => $this->getStandardPrice($rule->coverage_category, $rule->item_code),
+                'insurance_tariff' => $tariffPrice,
+                'effective_from' => now(),
+            ]);
+        }
+
+        // Invalidate cache for this plan and category
+        \Cache::forget("coverage-dashboard-{$rule->insurance_plan_id}");
+        \Cache::forget("exceptions-{$rule->insurance_plan_id}-{$rule->coverage_category}");
 
         return redirect()
-            ->route('admin.insurance.coverage-rules.index', ['plan_id' => $rule->insurance_plan_id])
+            ->route('admin.insurance.plans.coverage', ['plan' => $rule->insurance_plan_id])
             ->with('success', 'Coverage rule created successfully.');
+    }
+
+    private function getStandardPrice(string $category, string $itemCode): float
+    {
+        return match ($category) {
+            'drug' => Drug::where('drug_code', $itemCode)->value('unit_price') ?? 0,
+            'lab' => LabService::where('code', $itemCode)->value('price') ?? 0,
+            default => 0,
+        };
     }
 
     public function show(InsuranceCoverageRule $coverageRule): Response
@@ -116,8 +146,12 @@ class InsuranceCoverageRuleController extends Controller
 
         $coverageRule->update($request->validated());
 
+        // Invalidate cache for this plan and category
+        \Cache::forget("coverage-dashboard-{$coverageRule->insurance_plan_id}");
+        \Cache::forget("exceptions-{$coverageRule->insurance_plan_id}-{$coverageRule->coverage_category}");
+
         return redirect()
-            ->route('admin.insurance.coverage-rules.index', ['plan_id' => $coverageRule->insurance_plan_id])
+            ->route('admin.insurance.plans.coverage', ['plan' => $coverageRule->insurance_plan_id])
             ->with('success', 'Coverage rule updated successfully.');
     }
 
@@ -126,10 +160,16 @@ class InsuranceCoverageRuleController extends Controller
         $this->authorize('delete', $coverageRule);
 
         $planId = $coverageRule->insurance_plan_id;
+        $category = $coverageRule->coverage_category;
+
         $coverageRule->delete();
 
+        // Invalidate cache for this plan and category
+        \Cache::forget("coverage-dashboard-{$planId}");
+        \Cache::forget("exceptions-{$planId}-{$category}");
+
         return redirect()
-            ->route('admin.insurance.coverage-rules.index', ['plan_id' => $planId])
+            ->route('admin.insurance.plans.coverage', ['plan' => $planId])
             ->with('success', 'Coverage rule deleted successfully.');
     }
 

@@ -89,4 +89,18 @@ class PatientPolicy
     {
         return false;
     }
+
+    /**
+     * Determine whether the user can view medical history.
+     */
+    public function viewMedicalHistory(User $user, Patient $patient): bool
+    {
+        // Admin and doctors can view medical history
+        if ($user->hasRole('Admin') || $user->hasRole('Doctor')) {
+            return true;
+        }
+
+        // Users with explicit permission
+        return $user->can('patients.view-medical-history');
+    }
 }

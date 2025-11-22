@@ -22,7 +22,7 @@ class InsuranceReportController extends Controller
         return Inertia::render('Admin/Insurance/Reports/Index');
     }
 
-    public function claimsSummary(Request $request): Response
+    public function claimsSummary(Request $request)
     {
         abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
 
@@ -32,7 +32,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "claims_summary_{$dateFrom}_{$dateTo}_{$providerId}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($dateFrom, $dateTo, $providerId) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($dateFrom, $dateTo, $providerId) {
             $query = InsuranceClaim::whereBetween('date_of_attendance', [$dateFrom, $dateTo]);
 
             if ($providerId) {
@@ -89,6 +89,11 @@ class InsuranceReportController extends Controller
             ];
         });
 
+        // Support JSON responses for API calls
+        if ($request->wantsJson()) {
+            return response()->json(['data' => $data]);
+        }
+
         $providers = InsuranceProvider::orderBy('name')->get();
 
         return Inertia::render('Admin/Insurance/Reports/ClaimsSummary', [
@@ -102,7 +107,7 @@ class InsuranceReportController extends Controller
         ]);
     }
 
-    public function revenueAnalysis(Request $request): Response
+    public function revenueAnalysis(Request $request)
     {
         abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
 
@@ -111,7 +116,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "revenue_analysis_{$dateFrom}_{$dateTo}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($dateFrom, $dateTo) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($dateFrom, $dateTo) {
             // Insurance revenue
             $insuranceRevenue = InsuranceClaim::whereBetween('date_of_attendance', [$dateFrom, $dateTo])
                 ->whereIn('status', ['paid', 'partial'])
@@ -168,6 +173,11 @@ class InsuranceReportController extends Controller
             ];
         });
 
+        // Support JSON responses for API calls
+        if ($request->wantsJson()) {
+            return response()->json(['data' => $data]);
+        }
+
         return Inertia::render('Admin/Insurance/Reports/RevenueAnalysis', [
             'data' => $data,
             'filters' => [
@@ -177,7 +187,7 @@ class InsuranceReportController extends Controller
         ]);
     }
 
-    public function outstandingClaims(Request $request): Response
+    public function outstandingClaims(Request $request)
     {
         abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
 
@@ -185,7 +195,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "outstanding_claims_{$providerId}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($providerId) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($providerId) {
             $query = InsuranceClaim::whereIn('status', ['submitted', 'approved'])
                 ->with(['patientInsurance.plan.provider']);
 
@@ -263,6 +273,11 @@ class InsuranceReportController extends Controller
             ];
         });
 
+        // Support JSON responses for API calls
+        if ($request->wantsJson()) {
+            return response()->json(['data' => $data]);
+        }
+
         $providers = InsuranceProvider::orderBy('name')->get();
 
         return Inertia::render('Admin/Insurance/Reports/OutstandingClaims', [
@@ -283,7 +298,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "vetting_performance_{$dateFrom}_{$dateTo}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($dateFrom, $dateTo) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($dateFrom, $dateTo) {
             // Get vetting officers performance
             $officersPerformance = InsuranceClaim::whereBetween('vetted_at', [$dateFrom, $dateTo])
                 ->whereNotNull('vetted_by')
@@ -354,7 +369,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "utilization_report_{$dateFrom}_{$dateTo}_{$providerId}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($dateFrom, $dateTo, $providerId) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($dateFrom, $dateTo, $providerId) {
             // Top services by insurance provider
             $topServicesQuery = InsuranceClaimItem::query()
                 ->join('insurance_claims', 'insurance_claim_items.insurance_claim_id', '=', 'insurance_claims.id')
@@ -447,7 +462,7 @@ class InsuranceReportController extends Controller
 
         $cacheKey = "rejection_analysis_{$dateFrom}_{$dateTo}_{$providerId}";
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($dateFrom, $dateTo, $providerId) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($dateFrom, $dateTo, $providerId) {
             $query = InsuranceClaim::where('status', 'rejected')
                 ->whereBetween('updated_at', [$dateFrom, $dateTo]);
 

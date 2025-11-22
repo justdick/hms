@@ -27,6 +27,10 @@ Route::middleware(['auth', 'verified', 'can:pharmacy.view'])->prefix('pharmacy')
     Route::get('dispensing/patients/{patient}/dispense', [DispensingController::class, 'showDispense'])->name('dispensing.dispense.show')->middleware('can:dispensing.process');
     Route::post('prescriptions/{prescription}/dispense', [DispensingController::class, 'processDispensing'])->name('dispensing.process')->middleware('can:dispensing.process');
 
+    // Minor Procedure Supplies
+    Route::get('dispensing/patients/{patient}/supplies', [DispensingController::class, 'getSuppliesForDispensing'])->name('dispensing.supplies')->middleware('can:dispensing.view');
+    Route::post('supplies/{supply}/dispense', [DispensingController::class, 'dispenseSupply'])->name('supplies.dispense')->middleware('can:dispensing.process');
+
     // Stock Management
     Route::get('inventory', [DrugController::class, 'inventory'])->name('inventory.index')->middleware('can:inventory.view');
     Route::get('inventory/low-stock', [DrugController::class, 'lowStock'])->name('inventory.low-stock')->middleware('can:inventory.view');
