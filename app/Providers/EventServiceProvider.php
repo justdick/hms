@@ -20,6 +20,14 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\MinorProcedurePerformed' => [
             'App\Listeners\CreateMinorProcedureCharge',
         ],
+        // Consultation procedure charge
+        'App\Events\ConsultationProcedurePerformed' => [
+            'App\Listeners\CreateConsultationProcedureCharge',
+        ],
+        // Ward round procedure charge
+        'App\Events\WardRoundProcedurePerformed' => [
+            'App\Listeners\CreateWardRoundProcedureCharge',
+        ],
         // Other listeners are auto-discovered via Illuminate\Foundation\Support\Providers\EventServiceProvider
     ];
 

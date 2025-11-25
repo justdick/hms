@@ -25,6 +25,7 @@ interface ProcedureType {
     name: string;
     code: string;
     category: string;
+    type: 'minor' | 'major';
     description: string | null;
     price: number;
     is_active: boolean;
@@ -107,6 +108,35 @@ export default function ProcedureTypeModal({
                 >
                     {({ errors, processing }) => (
                         <div className="space-y-4">
+                            {/* Type */}
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Procedure Type *</Label>
+                                <Select
+                                    name="type"
+                                    defaultValue={editingType?.type || 'minor'}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="minor">
+                                            Minor (OPD Procedures)
+                                        </SelectItem>
+                                        <SelectItem value="major">
+                                            Major (Theatre Procedures)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    Minor procedures are performed by nurses at OPD. Major procedures are theatre operations.
+                                </p>
+                                {errors.type && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.type}
+                                    </p>
+                                )}
+                            </div>
+
                             {/* Category */}
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category *</Label>

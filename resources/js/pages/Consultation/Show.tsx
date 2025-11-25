@@ -4,6 +4,7 @@ import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
 import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
+import TheatreProceduresTab from '@/components/Consultation/TheatreProceduresTab';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -178,6 +179,26 @@ interface PatientWithAdmission extends Patient {
     active_admission?: PatientAdmission;
 }
 
+interface ProcedureType {
+    id: number;
+    name: string;
+    code: string;
+    type: 'minor' | 'major';
+    category: string;
+    price: number;
+}
+
+interface ConsultationProcedure {
+    id: number;
+    procedure_type: ProcedureType;
+    comments: string | null;
+    performed_at: string;
+    doctor: {
+        id: number;
+        name: string;
+    };
+}
+
 interface Consultation {
     id: number;
     started_at: string;
@@ -201,6 +222,7 @@ interface Consultation {
     diagnoses: ConsultationDiagnosis[];
     prescriptions: Prescription[];
     lab_orders: LabOrder[];
+    procedures?: ConsultationProcedure[];
 }
 
 interface Ward {
@@ -253,6 +275,7 @@ interface Props {
     availableDrugs?: Drug[];
     availableDepartments?: Department[];
     availableDiagnoses?: Diagnosis[];
+    availableProcedures?: ProcedureType[];
     serviceBlocked?: boolean;
     blockReason?: string;
     pendingCharges?: ServiceCharge[];
@@ -268,6 +291,7 @@ export default function ConsultationShow({
     availableDrugs = [],
     availableDepartments = [],
     availableDiagnoses = [],
+    availableProcedures = [],
     serviceBlocked = false,
     blockReason,
     pendingCharges = [],
@@ -1240,7 +1264,7 @@ export default function ConsultationShow({
                     onValueChange={setActiveTab}
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-5">
+                    <TabsList className="grid w-full grid-cols-6">
                         <TabsTrigger
                             value="notes"
                             className="flex items-center gap-2"
@@ -1275,6 +1299,13 @@ export default function ConsultationShow({
                         >
                             <TestTube className="h-4 w-4" />
                             Lab Orders
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="theatre"
+                            className="flex items-center gap-2"
+                        >
+                            <Stethoscope className="h-4 w-4" />
+                            Theatre
                         </TabsTrigger>
                     </TabsList>
 
@@ -1737,6 +1768,15 @@ export default function ConsultationShow({
                                 </CardContent>
                             </Card>
                         </div>
+                    </TabsContent>
+
+                    {/* Theatre Procedures Tab */}
+                    <TabsContent value="theatre">
+                        <TheatreProceduresTab
+                            consultationId={consultation.id}
+                            procedures={consultation.procedures || []}
+                            availableProcedures={availableProcedures || []}
+                        />
                     </TabsContent>
                 </Tabs>
             </div>

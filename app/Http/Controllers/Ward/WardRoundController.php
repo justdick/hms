@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Ward;
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWardRoundRequest;
+use App\Models\MinorProcedureType;
 use App\Models\PatientAdmission;
 use App\Models\WardRound;
 use Inertia\Inertia;
@@ -119,6 +120,7 @@ class WardRoundController extends Controller
             'patientHistories' => $patientHistories,
             'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
             'availableDiagnoses' => \App\Models\Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);
     }
 
@@ -191,6 +193,8 @@ class WardRoundController extends Controller
             'diagnoses.diagnosedBy:id,name',
             'prescriptions.drug',
             'labOrders.labService',
+            'procedures.procedureType',
+            'procedures.doctor:id,name',
         ]);
 
         return Inertia::render('Ward/WardRoundCreate', [
@@ -202,6 +206,7 @@ class WardRoundController extends Controller
             'patientHistories' => $patientHistories,
             'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
             'availableDiagnoses' => \App\Models\Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);
     }
 

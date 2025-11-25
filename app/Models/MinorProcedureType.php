@@ -15,6 +15,7 @@ class MinorProcedureType extends Model
         'name',
         'code',
         'category',
+        'type',
         'description',
         'price',
         'is_active',
@@ -55,5 +56,20 @@ class MinorProcedureType extends Model
                 ->orWhere('code', 'LIKE', "%{$term}%")
                 ->orWhere('description', 'LIKE', "%{$term}%");
         });
+    }
+
+    public function scopeByType($query, string $type): void
+    {
+        $query->where('type', $type);
+    }
+
+    public function scopeMinor($query): void
+    {
+        $query->where('type', 'minor');
+    }
+
+    public function scopeMajor($query): void
+    {
+        $query->where('type', 'major');
     }
 }

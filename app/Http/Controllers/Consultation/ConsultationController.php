@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Diagnosis;
 use App\Models\Drug;
 use App\Models\LabService;
+use App\Models\MinorProcedureType;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\User;
@@ -101,6 +102,8 @@ class ConsultationController extends Controller
             'prescriptions',
             'labOrders.labService',
             'labOrders.orderedBy:id,name',
+            'procedures.procedureType',
+            'procedures.doctor:id,name',
         ]);
 
         // Get patient history
@@ -172,6 +175,7 @@ class ConsultationController extends Controller
             'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
             'availableDepartments' => Department::active()->opd()->get(['id', 'name', 'code']),
             'availableDiagnoses' => Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);
     }
 

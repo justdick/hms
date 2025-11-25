@@ -16,11 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('code')->unique();
             $table->string('category')->nullable();
+            $table->enum('type', ['minor', 'major'])->default('minor');
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
+            $table->index(['type', 'is_active']);
             $table->index(['category', 'is_active']);
             $table->index('is_active');
         });

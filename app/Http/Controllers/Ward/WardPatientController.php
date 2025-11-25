@@ -50,6 +50,8 @@ class WardPatientController extends Controller
                     'diagnoses',
                     'prescriptions.drug',
                     'labOrders.labService',
+                    'procedures.procedureType',
+                    'procedures.doctor:id,name',
                 ])
                     ->orderBy('round_datetime', 'desc')
                     ->orderBy('id', 'desc');

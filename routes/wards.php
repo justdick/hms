@@ -10,6 +10,7 @@ use App\Http\Controllers\Ward\VitalsScheduleController;
 use App\Http\Controllers\Ward\WardController;
 use App\Http\Controllers\Ward\WardPatientController;
 use App\Http\Controllers\Ward\WardRoundController;
+use App\Http\Controllers\Ward\WardRoundProcedureController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(function () {
@@ -101,6 +102,10 @@ Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.
 
     Route::post('/{admission}/ward-rounds/{wardRound}/lab-orders', [WardRoundController::class, 'addLabOrder'])->name('ward-rounds.lab-orders.store');
     Route::delete('/{admission}/ward-rounds/{wardRound}/lab-orders/{labOrder}', [WardRoundController::class, 'removeLabOrder'])->name('ward-rounds.lab-orders.destroy');
+
+    // Procedure management (Theatre tab)
+    Route::post('/{admission}/ward-rounds/{wardRound}/procedures', [WardRoundProcedureController::class, 'store'])->name('ward-rounds.procedures.store');
+    Route::delete('/{admission}/ward-rounds/{wardRound}/procedures/{procedure}', [WardRoundProcedureController::class, 'destroy'])->name('ward-rounds.procedures.destroy');
 
     // Complete ward round (mark as completed)
     Route::post('/{admission}/ward-rounds/{wardRound}/complete', [WardRoundController::class, 'complete'])->name('ward-rounds.complete');

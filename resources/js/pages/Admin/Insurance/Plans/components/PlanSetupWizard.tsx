@@ -15,7 +15,6 @@ import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import CoveragePresetSelector from './CoveragePresetSelector';
 import { ValidationWarning } from '@/components/Insurance/ValidationWarning';
 import { HelpTooltip } from '@/components/Insurance/HelpTooltip';
 
@@ -23,20 +22,6 @@ interface InsuranceProvider {
     id: number;
     name: string;
     code: string;
-}
-
-interface CoveragePreset {
-    id: string;
-    name: string;
-    description: string;
-    coverages: {
-        consultation: number;
-        drug: number;
-        lab: number;
-        procedure: number;
-        ward: number;
-        nursing: number;
-    } | null;
 }
 
 interface Props {
@@ -101,15 +86,13 @@ export default function PlanSetupWizard({ providers }: Props) {
     });
 
     const [coverageData, setCoverageData] = useState<CoverageData>({
-        consultation: '80',
-        drug: '80',
-        lab: '80',
-        procedure: '80',
-        ward: '80',
-        nursing: '80',
+        consultation: '0',
+        drug: '0',
+        lab: '0',
+        procedure: '0',
+        ward: '0',
+        nursing: '0',
     });
-
-    const [selectedPreset, setSelectedPreset] = useState<CoveragePreset | null>(null);
 
     const steps = [
         { number: 1, title: 'Plan Details', description: 'Basic plan information' },
@@ -193,30 +176,6 @@ export default function PlanSetupWizard({ providers }: Props) {
 
     const handleBack = () => {
         setCurrentStep((prev) => Math.max(prev - 1, 1));
-    };
-
-    const handlePresetSelect = (preset: CoveragePreset) => {
-        setSelectedPreset(preset);
-        if (preset.coverages) {
-            setCoverageData({
-                consultation: preset.coverages.consultation.toString(),
-                drug: preset.coverages.drug.toString(),
-                lab: preset.coverages.lab.toString(),
-                procedure: preset.coverages.procedure.toString(),
-                ward: preset.coverages.ward.toString(),
-                nursing: preset.coverages.nursing.toString(),
-            });
-        } else {
-            // Custom preset - clear all values
-            setCoverageData({
-                consultation: '',
-                drug: '',
-                lab: '',
-                procedure: '',
-                ward: '',
-                nursing: '',
-            });
-        }
     };
 
     const handleCopyToAll = () => {
@@ -513,20 +472,6 @@ export default function PlanSetupWizard({ providers }: Props) {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="requires_referral"
-                                        checked={planData.requires_referral}
-                                        onCheckedChange={(checked) =>
-                                            setPlanData({
-                                                ...planData,
-                                                requires_referral: checked as boolean,
-                                            })
-                                        }
-                                    />
-                                    <Label htmlFor="requires_referral">Requires Referral</Label>
-                                </div>
-
                                 <div className="flex flex-col space-y-2">
                                     <div className="flex items-center space-x-2">
                                         <Checkbox
@@ -583,11 +528,6 @@ export default function PlanSetupWizard({ providers }: Props) {
                     {/* Step 2: Coverage */}
                     {currentStep === 2 && (
                         <div className="space-y-6">
-                            <CoveragePresetSelector
-                                selectedPresetId={selectedPreset?.id}
-                                onPresetSelect={handlePresetSelect}
-                            />
-
                             {/* Coverage Warnings */}
                             {getCoverageWarnings().map((warning, index) => (
                                 <ValidationWarning
@@ -597,7 +537,7 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 />
                             ))}
 
-                            <div className="border-t pt-6 dark:border-gray-700">
+                            <div>
                                 <div className="mb-4 flex items-center justify-between">
                                     <div>
                                         <div className="flex items-center gap-2">

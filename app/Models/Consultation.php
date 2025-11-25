@@ -79,6 +79,11 @@ class Consultation extends Model
         return $this->hasOne(PatientAdmission::class);
     }
 
+    public function procedures(): HasMany
+    {
+        return $this->hasMany(ConsultationProcedure::class);
+    }
+
     public function scopeToday($query): void
     {
         $query->whereDate('started_at', today());

@@ -2,6 +2,7 @@ import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
 import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
+import WardRoundProceduresTab from '@/components/Ward/WardRoundProceduresTab';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -166,6 +167,26 @@ interface PatientAdmission {
     latest_vital_signs?: VitalSigns[];
 }
 
+interface ProcedureType {
+    id: number;
+    name: string;
+    code: string;
+    type: 'minor' | 'major';
+    category: string;
+    price: number;
+}
+
+interface WardRoundProcedure {
+    id: number;
+    procedure_type: ProcedureType;
+    comments: string | null;
+    performed_at: string;
+    doctor: {
+        id: number;
+        name: string;
+    };
+}
+
 interface WardRound {
     id: number;
     presenting_complaint?: string;
@@ -180,6 +201,7 @@ interface WardRound {
     diagnoses: WardRoundDiagnosis[];
     prescriptions: Prescription[];
     lab_orders: LabOrder[];
+    procedures?: WardRoundProcedure[];
 }
 
 interface Props {
@@ -189,6 +211,7 @@ interface Props {
     labServices: LabService[];
     availableDrugs: Drug[];
     availableDiagnoses: Diagnosis[];
+    availableProcedures?: ProcedureType[];
     patientHistories: {
         past_medical_surgical_history: string;
         drug_history: string;
@@ -209,6 +232,7 @@ export default function WardRoundCreate({
     labServices,
     availableDrugs = [],
     availableDiagnoses = [],
+    availableProcedures = [],
     patientHistories,
     patientHistory,
 }: Props) {
@@ -674,7 +698,7 @@ export default function WardRoundCreate({
                     onValueChange={setActiveTab}
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-5">
+                    <TabsList className="grid w-full grid-cols-6">
                         <TabsTrigger
                             value="notes"
                             className="flex items-center gap-2"
@@ -709,6 +733,13 @@ export default function WardRoundCreate({
                         >
                             <TestTube className="h-4 w-4" />
                             Lab Orders
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="theatre"
+                            className="flex items-center gap-2"
+                        >
+                            <Stethoscope className="h-4 w-4" />
+                            Theatre
                         </TabsTrigger>
                     </TabsList>
 
@@ -1221,6 +1252,16 @@ export default function WardRoundCreate({
                                 )}
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    {/* Theatre Procedures Tab */}
+                    <TabsContent value="theatre">
+                        <WardRoundProceduresTab
+                            admissionId={admission.id}
+                            wardRoundId={wardRound.id}
+                            procedures={wardRound.procedures || []}
+                            availableProcedures={availableProcedures || []}
+                        />
                     </TabsContent>
                 </Tabs>
             </div>

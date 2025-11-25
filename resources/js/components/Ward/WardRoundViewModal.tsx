@@ -62,6 +62,25 @@ interface WardRoundDiagnosis {
     };
 }
 
+interface ProcedureType {
+    id: number;
+    name: string;
+    code: string;
+    type: 'minor' | 'major';
+    category: string;
+}
+
+interface WardRoundProcedure {
+    id: number;
+    procedure_type: ProcedureType;
+    comments: string | null;
+    performed_at: string;
+    doctor: {
+        id: number;
+        name: string;
+    };
+}
+
 interface WardRound {
     id: number;
     day_number: number;
@@ -79,6 +98,7 @@ interface WardRound {
     diagnoses?: WardRoundDiagnosis[];
     prescriptions?: Prescription[];
     lab_orders?: LabOrder[];
+    procedures?: WardRoundProcedure[];
 }
 
 interface Props {
@@ -152,7 +172,7 @@ export function WardRoundViewModal({
                         )}
 
                         <Tabs defaultValue="notes" className="w-full">
-                            <TabsList className="grid w-full grid-cols-4">
+                            <TabsList className="grid w-full grid-cols-5">
                                 <TabsTrigger value="notes">
                                     <FileText className="mr-2 h-4 w-4" />
                                     Consultation Notes
@@ -192,6 +212,19 @@ export function WardRoundViewModal({
                                             className="ml-1"
                                         >
                                             {wardRound.lab_orders?.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                                <TabsTrigger value="theatre">
+                                    <Stethoscope className="mr-2 h-4 w-4" />
+                                    Theatre{' '}
+                                    {(wardRound.procedures?.length ?? 0) >
+                                        0 && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="ml-1"
+                                        >
+                                            {wardRound.procedures?.length}
                                         </Badge>
                                     )}
                                 </TabsTrigger>
@@ -659,6 +692,116 @@ export function WardRoundViewModal({
                                         <TestTube className="mx-auto mb-2 h-12 w-12 text-gray-300 dark:text-gray-600" />
                                         <p className="text-gray-500 dark:text-gray-400">
                                             No lab orders recorded
+                                        </p>
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            {/* Theatre Procedures Tab */}
+                            <TabsContent value="theatre" className="mt-4">
+                                {wardRound.procedures &&
+                                wardRound.procedures.length > 0 ? (
+                                    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-50 dark:bg-gray-800">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                                        Procedure
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                                        Type
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                                        Comments
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                                        Performed By
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                                        Date/Time
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                                                {wardRound.procedures.map(
+                                                    (procedure) => (
+                                                        <tr
+                                                            key={procedure.id}
+                                                            className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                        >
+                                                            <td className="px-4 py-3">
+                                                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                                    {
+                                                                        procedure
+                                                                            .procedure_type
+                                                                            .name
+                                                                    }
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {
+                                                                        procedure
+                                                                            .procedure_type
+                                                                            .code
+                                                                    }
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={
+                                                                        procedure
+                                                                            .procedure_type
+                                                                            .type ===
+                                                                        'major'
+                                                                            ? 'border-purple-200 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                                                                            : 'border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                                                    }
+                                                                >
+                                                                    {procedure
+                                                                        .procedure_type
+                                                                        .type ===
+                                                                    'major'
+                                                                        ? 'Major'
+                                                                        : 'Minor'}
+                                                                </Badge>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                {procedure.comments ? (
+                                                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                        {
+                                                                            procedure.comments
+                                                                        }
+                                                                    </p>
+                                                                ) : (
+                                                                    <span className="text-sm text-gray-400 dark:text-gray-500">
+                                                                        No
+                                                                        comments
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                                                {
+                                                                    procedure
+                                                                        .doctor
+                                                                        .name
+                                                                }
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                                                {formatDateTime(
+                                                                    procedure.performed_at,
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ),
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="py-8 text-center">
+                                        <Stethoscope className="mx-auto mb-2 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                                        <p className="text-gray-500 dark:text-gray-400">
+                                            No procedures documented
                                         </p>
                                     </div>
                                 )}

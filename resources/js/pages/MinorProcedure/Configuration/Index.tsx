@@ -14,9 +14,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Bandage, Edit, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bandage, Edit, Plus, Trash2, Stethoscope } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ProcedureTypeModal from './ProcedureTypeModal';
@@ -26,6 +28,7 @@ interface ProcedureType {
     name: string;
     code: string;
     category: string;
+    type: 'minor' | 'major';
     description: string | null;
     price: number;
     is_active: boolean;
@@ -42,6 +45,7 @@ export default function MinorProcedureConfigurationIndex({
 }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingType, setEditingType] = useState<ProcedureType | null>(null);
+    const [activeTab, setActiveTab] = useState<'all' | 'minor' | 'major'>('all');
 
     const handleDelete = (procedureType: ProcedureType) => {
         if (
@@ -62,7 +66,12 @@ export default function MinorProcedureConfigurationIndex({
         });
     };
 
-    const groupedByCategory = procedureTypes.reduce(
+    const filteredProcedures = procedureTypes.filter((type) => {
+        if (activeTab === 'all') return true;
+        return type.type === activeTab;
+    });
+
+    const groupedByCategory = filteredProcedures.reduce(
         (acc, type) => {
             if (!acc[type.category]) {
                 acc[type.category] = [];
@@ -72,6 +81,9 @@ export default function MinorProcedureConfigurationIndex({
         },
         {} as Record<string, ProcedureType[]>,
     );
+
+    const minorCount = procedureTypes.filter((t) => t.type === 'minor').length;
+    const majorCount = procedureTypes.filter((t) => t.type === 'major').length;
 
     return (
         <AppLayout
@@ -111,7 +123,7 @@ export default function MinorProcedureConfigurationIndex({
                 </div>
 
                 {/* Stats Summary */}
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -125,6 +137,40 @@ export default function MinorProcedureConfigurationIndex({
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 Available procedure types
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Minor Procedures
+                            </CardTitle>
+                            <Bandage className="h-4 w-4 text-blue-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-blue-600">
+                                {minorCount}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                OPD procedures
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Major Procedures
+                            </CardTitle>
+                            <Stethoscope className="h-4 w-4 text-purple-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-purple-600">
+                                {majorCount}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Theatre procedures
                             </p>
                         </CardContent>
                     </Card>
@@ -148,27 +194,25 @@ export default function MinorProcedureConfigurationIndex({
                             </p>
                         </CardContent>
                     </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Categories
-                            </CardTitle>
-                            <Bandage className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {categories.length}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Procedure categories
-                            </p>
-                        </CardContent>
-                    </Card>
                 </div>
 
-                {/* Procedure Types by Category */}
-                {Object.entries(groupedByCategory).map(([category, types]) => (
+                {/* Procedure Types Tabs */}
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+                    <TabsList>
+                        <TabsTrigger value="all">
+                            All Procedures ({procedureTypes.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="minor">
+                            Minor ({minorCount})
+                        </TabsTrigger>
+                        <TabsTrigger value="major">
+                            Major/Theatre ({majorCount})
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value={activeTab} className="space-y-6 mt-6">
+                        {/* Procedure Types by Category */}
+                        {Object.entries(groupedByCategory).map(([category, types]) => (
                     <Card key={category}>
                         <CardHeader>
                             <CardTitle className="capitalize">
@@ -185,6 +229,7 @@ export default function MinorProcedureConfigurationIndex({
                                     <TableRow>
                                         <TableHead>Name</TableHead>
                                         <TableHead>Code</TableHead>
+                                        <TableHead>Type</TableHead>
                                         <TableHead>Description</TableHead>
                                         <TableHead className="text-right">
                                             Price (KES)
@@ -205,6 +250,18 @@ export default function MinorProcedureConfigurationIndex({
                                                 <code className="rounded bg-muted px-2 py-1 text-xs">
                                                     {type.code}
                                                 </code>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={
+                                                        type.type === 'major'
+                                                            ? 'border-purple-200 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                                                            : 'border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                                    }
+                                                >
+                                                    {type.type === 'major' ? 'Major' : 'Minor'}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell className="max-w-md truncate text-sm text-muted-foreground">
                                                 {type.description ||
@@ -253,25 +310,29 @@ export default function MinorProcedureConfigurationIndex({
                             </Table>
                         </CardContent>
                     </Card>
-                ))}
+                        ))}
 
-                {procedureTypes.length === 0 && (
-                    <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                            <Bandage className="mb-4 h-12 w-12 text-muted-foreground" />
-                            <h3 className="mb-2 text-lg font-semibold">
-                                No Procedure Types
-                            </h3>
-                            <p className="mb-4 text-center text-sm text-muted-foreground">
-                                Get started by adding your first procedure type
-                            </p>
-                            <Button onClick={() => setShowCreateModal(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Procedure Type
-                            </Button>
-                        </CardContent>
-                    </Card>
-                )}
+                        {filteredProcedures.length === 0 && (
+                            <Card>
+                                <CardContent className="flex flex-col items-center justify-center py-12">
+                                    <Bandage className="mb-4 h-12 w-12 text-muted-foreground" />
+                                    <h3 className="mb-2 text-lg font-semibold">
+                                        No Procedure Types
+                                    </h3>
+                                    <p className="mb-4 text-center text-sm text-muted-foreground">
+                                        {activeTab === 'all'
+                                            ? 'Get started by adding your first procedure type'
+                                            : `No ${activeTab} procedures found`}
+                                    </p>
+                                    <Button onClick={() => setShowCreateModal(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Procedure Type
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <ProcedureTypeModal

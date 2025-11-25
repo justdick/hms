@@ -39,6 +39,7 @@ class MinorProcedureTypeController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:20|unique:minor_procedure_types,code',
             'category' => 'required|string|max:100',
+            'type' => 'required|in:minor,major',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
         ]);
@@ -61,6 +62,7 @@ class MinorProcedureTypeController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:20|unique:minor_procedure_types,code,'.$procedureType->id,
             'category' => 'required|string|max:100',
+            'type' => 'required|in:minor,major',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'is_active' => 'boolean',

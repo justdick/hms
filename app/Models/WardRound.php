@@ -58,6 +58,11 @@ class WardRound extends Model
         return $this->morphMany(AdmissionDiagnosis::class, 'source');
     }
 
+    public function procedures()
+    {
+        return $this->hasMany(WardRoundProcedure::class);
+    }
+
     public function scopeRecent($query): void
     {
         $query->orderBy('round_datetime', 'desc');

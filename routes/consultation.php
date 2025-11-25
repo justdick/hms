@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admission\AdmissionController;
 use App\Http\Controllers\Consultation\ConsultationController;
+use App\Http\Controllers\Consultation\ConsultationProcedureController;
 use App\Http\Controllers\Consultation\ConsultationTransferController;
 use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
@@ -41,6 +42,12 @@ Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultat
         Route::post('/', [LabOrderController::class, 'store'])->name('store');
         Route::patch('/{labOrder}', [LabOrderController::class, 'update'])->name('update');
         Route::post('/{labOrder}/cancel', [LabOrderController::class, 'cancel'])->name('cancel');
+    });
+
+    // Procedure management (Theatre tab)
+    Route::prefix('/{consultation}/procedures')->name('procedures.')->group(function () {
+        Route::post('/', [ConsultationProcedureController::class, 'store'])->name('store');
+        Route::delete('/{procedure}', [ConsultationProcedureController::class, 'destroy'])->name('destroy');
     });
 
     // Lab orders management (for lab technicians)
