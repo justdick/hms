@@ -2,16 +2,23 @@
 
 namespace App\Http\Controllers\Admin\Insurance;
 
+use App\Exports\ClaimsReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Charge;
+use App\Models\Drug;
 use App\Models\InsuranceClaim;
 use App\Models\InsuranceClaimItem;
 use App\Models\InsuranceProvider;
+use App\Models\LabService;
+use App\Models\MinorProcedureType;
+use App\Models\NhisItemMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InsuranceReportController extends Controller
 {
@@ -452,7 +459,7 @@ class InsuranceReportController extends Controller
         ]);
     }
 
-    public function rejectionAnalysis(Request $request): Response
+    public function rejectionAnalysis(Request $request): Response|\Illuminate\Http\JsonResponse
     {
         abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
 
@@ -542,6 +549,11 @@ class InsuranceReportController extends Controller
             ];
         });
 
+        // Support JSON responses for API calls
+        if ($request->wantsJson()) {
+            return response()->json(['data' => $data]);
+        }
+
         $providers = InsuranceProvider::orderBy('name')->get();
 
         return Inertia::render('Admin/Insurance/Reports/RejectionAnalysis', [
@@ -553,5 +565,169 @@ class InsuranceReportController extends Controller
                 'provider_id' => $providerId,
             ],
         ]);
+    }
+
+    /**
+     * Tariff coverage report showing percentage of items mapped to NHIS.
+     * Requirement 18.4
+     */
+    public function tariffCoverage(Request $request)
+    {
+        abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
+
+        $itemType = $request->get('item_type');
+
+        $cacheKey = "tariff_coverage_{$itemType}";
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($itemType) {
+            $coverage = [];
+
+            // Drugs coverage
+            if (! $itemType || $itemType === 'drug') {
+                $totalDrugs = Drug::active()->count();
+                $mappedDrugIds = NhisItemMapping::where('item_type', 'drug')->pluck('item_id');
+                $mappedDrugs = Drug::active()->whereIn('id', $mappedDrugIds)->count();
+
+                $coverage['drugs'] = [
+                    'total' => $totalDrugs,
+                    'mapped' => $mappedDrugs,
+                    'unmapped' => $totalDrugs - $mappedDrugs,
+                    'percentage' => $totalDrugs > 0 ? round(($mappedDrugs / $totalDrugs) * 100, 2) : 0,
+                ];
+            }
+
+            // Lab services coverage
+            if (! $itemType || $itemType === 'lab_service') {
+                $totalLabs = LabService::active()->count();
+                $mappedLabIds = NhisItemMapping::where('item_type', 'lab_service')->pluck('item_id');
+                $mappedLabs = LabService::active()->whereIn('id', $mappedLabIds)->count();
+
+                $coverage['lab_services'] = [
+                    'total' => $totalLabs,
+                    'mapped' => $mappedLabs,
+                    'unmapped' => $totalLabs - $mappedLabs,
+                    'percentage' => $totalLabs > 0 ? round(($mappedLabs / $totalLabs) * 100, 2) : 0,
+                ];
+            }
+
+            // Procedures coverage
+            if (! $itemType || $itemType === 'procedure') {
+                $totalProcedures = MinorProcedureType::active()->count();
+                $mappedProcedureIds = NhisItemMapping::where('item_type', 'procedure')->pluck('item_id');
+                $mappedProcedures = MinorProcedureType::active()->whereIn('id', $mappedProcedureIds)->count();
+
+                $coverage['procedures'] = [
+                    'total' => $totalProcedures,
+                    'mapped' => $mappedProcedures,
+                    'unmapped' => $totalProcedures - $mappedProcedures,
+                    'percentage' => $totalProcedures > 0 ? round(($mappedProcedures / $totalProcedures) * 100, 2) : 0,
+                ];
+            }
+
+            // Calculate overall totals
+            $totalItems = 0;
+            $totalMapped = 0;
+
+            foreach ($coverage as $category) {
+                $totalItems += $category['total'];
+                $totalMapped += $category['mapped'];
+            }
+
+            return [
+                'coverage_by_type' => $coverage,
+                'overall' => [
+                    'total' => $totalItems,
+                    'mapped' => $totalMapped,
+                    'unmapped' => $totalItems - $totalMapped,
+                    'percentage' => $totalItems > 0 ? round(($totalMapped / $totalItems) * 100, 2) : 0,
+                ],
+            ];
+        });
+
+        // Support JSON responses for API calls
+        if ($request->wantsJson()) {
+            return response()->json(['data' => $data]);
+        }
+
+        return Inertia::render('Admin/Insurance/Reports/TariffCoverage', [
+            'data' => $data,
+            'filters' => [
+                'item_type' => $itemType,
+            ],
+        ]);
+    }
+
+    /**
+     * Export claims summary report to Excel.
+     * Requirement 18.5
+     */
+    public function exportClaimsSummary(Request $request): BinaryFileResponse
+    {
+        abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
+
+        $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfMonth()->toDateString());
+        $providerId = $request->get('provider_id');
+
+        $filename = 'claims_summary_'.now()->format('Y-m-d_His').'.xlsx';
+
+        return Excel::download(
+            new ClaimsReportExport('summary', $dateFrom, $dateTo, $providerId),
+            $filename
+        );
+    }
+
+    /**
+     * Export outstanding claims report to Excel.
+     * Requirement 18.5
+     */
+    public function exportOutstandingClaims(Request $request): BinaryFileResponse
+    {
+        abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
+
+        $providerId = $request->get('provider_id');
+
+        $filename = 'outstanding_claims_'.now()->format('Y-m-d_His').'.xlsx';
+
+        return Excel::download(
+            new ClaimsReportExport('outstanding', null, null, $providerId),
+            $filename
+        );
+    }
+
+    /**
+     * Export rejection analysis report to Excel.
+     * Requirement 18.5
+     */
+    public function exportRejectionAnalysis(Request $request): BinaryFileResponse
+    {
+        abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
+
+        $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfMonth()->toDateString());
+        $providerId = $request->get('provider_id');
+
+        $filename = 'rejection_analysis_'.now()->format('Y-m-d_His').'.xlsx';
+
+        return Excel::download(
+            new ClaimsReportExport('rejections', $dateFrom, $dateTo, $providerId),
+            $filename
+        );
+    }
+
+    /**
+     * Export tariff coverage report to Excel.
+     * Requirement 18.5
+     */
+    public function exportTariffCoverage(): BinaryFileResponse
+    {
+        abort_unless(auth()->user()->can('insurance.view-reports') || auth()->user()->can('system.admin'), 403);
+
+        $filename = 'tariff_coverage_'.now()->format('Y-m-d_His').'.xlsx';
+
+        return Excel::download(
+            new ClaimsReportExport('tariff-coverage'),
+            $filename
+        );
     }
 }

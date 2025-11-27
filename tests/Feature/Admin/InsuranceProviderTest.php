@@ -101,7 +101,7 @@ it('displays edit insurance provider page', function () {
     $response->assertInertia(fn ($page) => $page
         ->component('Admin/Insurance/Providers/Edit')
         ->has('provider')
-        ->where('provider.id', $provider->id)
+        ->where('provider.data.id', $provider->id)
     );
 });
 
@@ -162,4 +162,120 @@ it('requires authentication to access provider routes', function () {
     $response = $this->get(route('admin.insurance.providers.index'));
 
     $response->assertRedirect(route('login'));
+});
+
+// NHIS Provider Configuration Tests
+
+it('creates an NHIS provider with is_nhis flag', function () {
+    $data = [
+        'name' => 'National Health Insurance Scheme',
+        'code' => 'NHIS',
+        'contact_person' => 'NHIS Admin',
+        'phone' => '0800000000',
+        'email' => 'info@nhis.gov.gh',
+        'address' => 'NHIS Headquarters',
+        'claim_submission_method' => 'online',
+        'payment_terms_days' => 60,
+        'is_nhis' => true,
+        'notes' => 'National Health Insurance Scheme provider',
+    ];
+
+    $response = $this->post(route('admin.insurance.providers.store'), $data);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    $this->assertDatabaseHas('insurance_providers', [
+        'name' => 'National Health Insurance Scheme',
+        'code' => 'NHIS',
+        'is_nhis' => true,
+    ]);
+});
+
+it('creates a non-NHIS provider with is_nhis flag set to false', function () {
+    $data = [
+        'name' => 'Private Insurance Co.',
+        'code' => 'PRIV001',
+        'claim_submission_method' => 'manual',
+        'is_nhis' => false,
+    ];
+
+    $response = $this->post(route('admin.insurance.providers.store'), $data);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('insurance_providers', [
+        'code' => 'PRIV001',
+        'is_nhis' => false,
+    ]);
+});
+
+it('updates provider to set is_nhis flag', function () {
+    $provider = InsuranceProvider::factory()->create([
+        'is_nhis' => false,
+    ]);
+
+    $response = $this->put(route('admin.insurance.providers.update', $provider), [
+        'name' => $provider->name,
+        'code' => $provider->code,
+        'claim_submission_method' => 'online',
+        'is_nhis' => true,
+    ]);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('insurance_providers', [
+        'id' => $provider->id,
+        'is_nhis' => true,
+    ]);
+});
+
+it('updates provider to unset is_nhis flag', function () {
+    $provider = InsuranceProvider::factory()->nhis()->create();
+
+    $response = $this->put(route('admin.insurance.providers.update', $provider), [
+        'name' => $provider->name,
+        'code' => $provider->code,
+        'claim_submission_method' => 'online',
+        'is_nhis' => false,
+    ]);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('insurance_providers', [
+        'id' => $provider->id,
+        'is_nhis' => false,
+    ]);
+});
+
+it('returns is_nhis flag in provider show response', function () {
+    $provider = InsuranceProvider::factory()->nhis()->create();
+
+    $response = $this->get(route('admin.insurance.providers.show', $provider));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/Insurance/Providers/Show')
+        ->where('provider.is_nhis', true)
+    );
+});
+
+it('returns is_nhis flag in provider edit response', function () {
+    $provider = InsuranceProvider::factory()->nhis()->create();
+
+    $response = $this->get(route('admin.insurance.providers.edit', $provider));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/Insurance/Providers/Edit')
+        ->where('provider.data.is_nhis', true)
+    );
+});
+
+it('identifies NHIS provider correctly using isNhis method', function () {
+    $nhisProvider = InsuranceProvider::factory()->nhis()->create();
+    $regularProvider = InsuranceProvider::factory()->create(['is_nhis' => false]);
+
+    expect($nhisProvider->isNhis())->toBeTrue();
+    expect($regularProvider->isNhis())->toBeFalse();
 });

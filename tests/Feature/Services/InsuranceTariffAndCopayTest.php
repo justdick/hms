@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new InsuranceCoverageService;
+    $this->service = app(InsuranceCoverageService::class);
 });
 
 it('uses tariff amount when set instead of standard price', function () {

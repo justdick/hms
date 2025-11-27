@@ -44,6 +44,8 @@ class InsuranceClaimFactory extends Factory
             'primary_diagnosis_description' => fake()->optional()->sentence(4),
             'secondary_diagnoses' => null,
             'c_drg_code' => fake()->optional()->regexify('[A-Z0-9]{5}'),
+            'gdrg_tariff_id' => null,
+            'gdrg_amount' => null,
             'hin_number' => fake()->optional()->numerify('##########'),
             'total_claim_amount' => fake()->randomFloat(2, 100, 5000),
             'approved_amount' => 0,

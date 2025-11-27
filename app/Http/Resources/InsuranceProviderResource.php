@@ -20,6 +20,7 @@ class InsuranceProviderResource extends JsonResource
             'claim_submission_method' => $this->claim_submission_method,
             'payment_terms_days' => $this->payment_terms_days,
             'is_active' => $this->is_active,
+            'is_nhis' => $this->is_nhis,
             'notes' => $this->notes,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\CoverageExceptionTemplate;
+use App\Exports\NhisCoverageTemplate;
 use App\Http\Controllers\Controller;
 use App\Imports\CoverageExceptionImport;
+use App\Imports\NhisCoverageImport;
 use App\Models\Drug;
 use App\Models\InsuranceCoverageRule;
 use App\Models\InsurancePlan;
@@ -305,5 +307,98 @@ class InsuranceCoverageImportController extends Controller
                 'is_covered' => false,
             ],
         };
+    }
+
+    /**
+     * Download NHIS coverage template with pre-filled NHIS tariff prices from Master.
+     *
+     * Requirements: 6.1, 6.2
+     */
+    public function downloadNhisTemplate(InsurancePlan $plan, string $category)
+    {
+        $this->authorize('manage', $plan);
+
+        // Verify this is an NHIS plan
+        if (! $plan->provider || ! $plan->provider->isNhis()) {
+            return response()->json(['error' => 'This plan is not an NHIS plan'], 400);
+        }
+
+        // Validate category
+        $validCategories = ['drug', 'lab', 'consultation', 'procedure', 'ward', 'nursing'];
+        if (! in_array($category, $validCategories)) {
+            return response()->json(['error' => 'Invalid category'], 400);
+        }
+
+        $fileName = sprintf(
+            'nhis_coverage_template_%s_%s_%s.xlsx',
+            $category,
+            str_replace(' ', '_', $plan->plan_name),
+            now()->format('Y-m-d')
+        );
+
+        return Excel::download(
+            new NhisCoverageTemplate($category, $plan->id),
+            $fileName
+        );
+    }
+
+    /**
+     * Import NHIS coverage CSV - saves ONLY copay amounts.
+     * Tariff values in the CSV are ignored since they come from the NHIS Tariff Master.
+     *
+     * Requirements: 6.3, 6.4
+     */
+    public function importNhisCoverage(Request $request, InsurancePlan $plan)
+    {
+        $this->authorize('manage', $plan);
+
+        // Verify this is an NHIS plan
+        if (! $plan->provider || ! $plan->provider->isNhis()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This plan is not an NHIS plan',
+            ], 400);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:csv,xlsx,xls',
+            'category' => 'required|in:drug,lab,consultation,procedure,ward,nursing',
+        ]);
+
+        try {
+            // Read from the Data sheet (index 1), not Instructions sheet (index 0)
+            $sheets = Excel::toArray([], $request->file('file'));
+            $rows = $sheets[1] ?? $sheets[0]; // Try Data sheet first, fallback to first sheet
+
+            // Skip header row
+            $header = array_shift($rows);
+
+            // Normalize header keys
+            $header = array_map(function ($h) {
+                return strtolower(trim(str_replace(' ', '_', $h)));
+            }, $header);
+
+            // Convert rows to associative arrays
+            $dataRows = [];
+            foreach ($rows as $row) {
+                if (count($row) === count($header)) {
+                    $dataRows[] = array_combine($header, $row);
+                }
+            }
+
+            // Process using NhisCoverageImport
+            $importer = new NhisCoverageImport($plan, $request->category);
+            $results = $importer->processRows($dataRows);
+
+            return response()->json([
+                'success' => true,
+                'results' => $results,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process file: '.$e->getMessage(),
+            ], 500);
+        }
     }
 }

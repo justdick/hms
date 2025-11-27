@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 test('specific rule takes precedence over general rule', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -57,7 +57,7 @@ test('specific rule takes precedence over general rule', function () {
 });
 
 test('general rule fallback when no specific rule exists', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -90,7 +90,7 @@ test('general rule fallback when no specific rule exists', function () {
 });
 
 test('no coverage when no rules exist', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -110,7 +110,7 @@ test('no coverage when no rules exist', function () {
 });
 
 test('effective date filtering works correctly', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -138,7 +138,7 @@ test('effective date filtering works correctly', function () {
 });
 
 test('coverage calculation for all coverage types', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -204,7 +204,7 @@ test('coverage calculation for all coverage types', function () {
 });
 
 test('caches coverage rules', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -281,7 +281,7 @@ test('cache is cleared when rule is deleted', function () {
 });
 
 test('uses insurance tariff when available', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -314,7 +314,7 @@ test('uses insurance tariff when available', function () {
 });
 
 test('calculates coverage with quantity', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -338,7 +338,7 @@ test('calculates coverage with quantity', function () {
 });
 
 test('respects max quantity per visit limit', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -360,7 +360,7 @@ test('respects max quantity per visit limit', function () {
 });
 
 test('respects max amount per visit limit', function () {
-    $service = new InsuranceCoverageService;
+    $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);

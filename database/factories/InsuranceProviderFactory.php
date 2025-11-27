@@ -29,7 +29,19 @@ class InsuranceProviderFactory extends Factory
             'claim_submission_method' => fake()->randomElement(['online', 'manual', 'api']),
             'payment_terms_days' => fake()->randomElement([30, 45, 60, 90]),
             'is_active' => fake()->boolean(90),
+            'is_nhis' => false,
             'notes' => fake()->optional()->sentence(),
         ];
+    }
+
+    /**
+     * Indicate that the provider is an NHIS provider.
+     */
+    public function nhis(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'National Health Insurance Scheme',
+            'is_nhis' => true,
+        ]);
     }
 }

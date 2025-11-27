@@ -206,7 +206,7 @@ class InsurancePlanController extends Controller
 
                 $data[] = [
                     'category' => $category,
-                    'default_coverage' => $generalRule?->coverage_value,
+                    'default_coverage' => $generalRule ? (float) $generalRule->coverage_value : null,
                     'exception_count' => $exceptionCount,
                     'general_rule_id' => $generalRule?->id,
                 ];

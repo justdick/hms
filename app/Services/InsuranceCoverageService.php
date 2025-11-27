@@ -3,12 +3,157 @@
 namespace App\Services;
 
 use App\Models\InsuranceCoverageRule;
+use App\Models\InsurancePlan;
 use App\Models\InsuranceTariff;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class InsuranceCoverageService
 {
+    public function __construct(
+        protected NhisTariffService $nhisTariffService
+    ) {}
+
+    /**
+     * Check if an insurance plan belongs to an NHIS provider.
+     */
+    public function isNhisPlan(int $insurancePlanId): bool
+    {
+        $cacheKey = "is_nhis_plan_{$insurancePlanId}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($insurancePlanId) {
+            $plan = InsurancePlan::with('provider')->find($insurancePlanId);
+
+            if (! $plan || ! $plan->provider) {
+                return false;
+            }
+
+            return $plan->provider->isNhis();
+        });
+    }
+
+    /**
+     * Calculate coverage for NHIS patients.
+     * Uses NHIS Tariff Master prices and only copay from coverage rules.
+     *
+     * @return array{
+     *     is_covered: bool,
+     *     insurance_pays: float,
+     *     patient_pays: float,
+     *     coverage_percentage: float,
+     *     rule_type: string,
+     *     rule_id: ?int,
+     *     coverage_type: string,
+     *     insurance_tariff: float,
+     *     subtotal: float,
+     *     requires_preauthorization: bool,
+     *     exceeded_limit: bool,
+     *     limit_message: ?string,
+     *     nhis_code: ?string,
+     *     is_nhis: bool
+     * }
+     */
+    public function calculateNhisCoverage(
+        int $insurancePlanId,
+        string $category,
+        string $itemCode,
+        int $itemId,
+        string $itemType,
+        float $amount,
+        int $quantity = 1,
+        ?Carbon $date = null
+    ): array {
+        $date = $date ?? now();
+
+        // Look up NHIS tariff from Master via mapping
+        $nhisTariff = $this->nhisTariffService->getTariffForItem($itemType, $itemId);
+
+        // If item is not mapped to NHIS, it's not covered
+        if (! $nhisTariff) {
+            $subtotal = $amount * $quantity;
+
+            return [
+                'is_covered' => false,
+                'insurance_pays' => 0.00,
+                'patient_pays' => $subtotal,
+                'coverage_percentage' => 0.00,
+                'rule_type' => 'none',
+                'rule_id' => null,
+                'coverage_type' => 'nhis_not_mapped',
+                'insurance_tariff' => $amount,
+                'subtotal' => $subtotal,
+                'requires_preauthorization' => false,
+                'exceeded_limit' => false,
+                'limit_message' => null,
+                'nhis_code' => null,
+                'is_nhis' => true,
+            ];
+        }
+
+        // Use NHIS tariff price as the effective price
+        $effectivePrice = (float) $nhisTariff->price;
+        $subtotal = $effectivePrice * $quantity;
+
+        // Get coverage rule for copay amount only
+        $rule = $this->getCoverageRule($insurancePlanId, $category, $itemCode, $date);
+
+        // Calculate copay from coverage rule (only fixed copay for NHIS)
+        $copayAmount = 0.00;
+        if ($rule && $rule->patient_copay_amount) {
+            $copayAmount = (float) $rule->patient_copay_amount * $quantity;
+        }
+
+        // For NHIS: insurance pays the NHIS tariff price, patient pays only copay
+        $insurancePays = $subtotal;
+        $patientPays = $copayAmount;
+
+        // Check limits if rule exists
+        $exceededLimit = false;
+        $limitMessage = null;
+        $requiresPreauthorization = false;
+
+        if ($rule) {
+            $requiresPreauthorization = $rule->requires_preauthorization ?? false;
+
+            if ($rule->max_quantity_per_visit && $quantity > $rule->max_quantity_per_visit) {
+                $exceededLimit = true;
+                $limitMessage = "Quantity {$quantity} exceeds plan limit of {$rule->max_quantity_per_visit} per visit";
+            }
+
+            if ($rule->max_amount_per_visit && $insurancePays > $rule->max_amount_per_visit) {
+                $exceededLimit = true;
+                $limitMessage = "Insurance coverage amount exceeds plan limit of {$rule->max_amount_per_visit} per visit";
+                $insurancePays = $rule->max_amount_per_visit;
+                // Patient pays the difference plus copay
+                $patientPays = ($subtotal - $insurancePays) + $copayAmount;
+            }
+        }
+
+        // Round to 2 decimal places
+        $insurancePays = round($insurancePays, 2);
+        $patientPays = round($patientPays, 2);
+
+        // Calculate effective coverage percentage
+        $coveragePercentage = $subtotal > 0 ? ($insurancePays / $subtotal) * 100 : 0;
+
+        return [
+            'is_covered' => true,
+            'insurance_pays' => $insurancePays,
+            'patient_pays' => $patientPays,
+            'coverage_percentage' => round($coveragePercentage, 2),
+            'rule_type' => $rule ? ($rule->item_code ? 'specific' : 'general') : 'nhis_default',
+            'rule_id' => $rule?->id,
+            'coverage_type' => 'nhis',
+            'insurance_tariff' => $effectivePrice,
+            'subtotal' => $subtotal,
+            'requires_preauthorization' => $requiresPreauthorization,
+            'exceeded_limit' => $exceededLimit,
+            'limit_message' => $limitMessage,
+            'nhis_code' => $nhisTariff->nhis_code,
+            'is_nhis' => true,
+        ];
+    }
+
     /**
      * Get the applicable coverage rule for a specific item
      * Implements the hierarchy: specific rule > general rule > no coverage
@@ -114,7 +259,9 @@ class InsuranceCoverageService
      *     subtotal: float,
      *     requires_preauthorization: bool,
      *     exceeded_limit: bool,
-     *     limit_message: ?string
+     *     limit_message: ?string,
+     *     nhis_code?: ?string,
+     *     is_nhis?: bool
      * }
      */
     public function calculateCoverage(
@@ -123,9 +270,25 @@ class InsuranceCoverageService
         string $itemCode,
         float $amount,
         int $quantity = 1,
-        ?Carbon $date = null
+        ?Carbon $date = null,
+        ?int $itemId = null,
+        ?string $itemType = null
     ): array {
         $date = $date ?? now();
+
+        // Check if this is an NHIS plan and we have item details for NHIS lookup
+        if ($itemId !== null && $itemType !== null && $this->isNhisPlan($insurancePlanId)) {
+            return $this->calculateNhisCoverage(
+                $insurancePlanId,
+                $category,
+                $itemCode,
+                $itemId,
+                $itemType,
+                $amount,
+                $quantity,
+                $date
+            );
+        }
 
         // Get the applicable coverage rule
         $rule = $this->getCoverageRule($insurancePlanId, $category, $itemCode, $date);
@@ -286,5 +449,16 @@ class InsuranceCoverageService
             $cacheKey = "coverage_rule_general_{$insurancePlanId}_{$category}";
             Cache::forget($cacheKey);
         }
+
+        // Also clear NHIS plan cache
+        Cache::forget("is_nhis_plan_{$insurancePlanId}");
+    }
+
+    /**
+     * Clear NHIS plan cache for a specific plan.
+     */
+    public function clearNhisPlanCache(int $insurancePlanId): void
+    {
+        Cache::forget("is_nhis_plan_{$insurancePlanId}");
     }
 }

@@ -24,8 +24,8 @@ class InsuranceClaimPolicy
 
     public function update(User $user, InsuranceClaim $insuranceClaim): bool
     {
-        // Only allow updating draft claims
-        if ($insuranceClaim->status !== 'draft') {
+        // Allow updating draft or rejected claims (for correction before resubmission)
+        if (! in_array($insuranceClaim->status, ['draft', 'rejected'])) {
             return false;
         }
 

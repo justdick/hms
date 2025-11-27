@@ -31,6 +31,7 @@ class StoreInsuranceProviderRequest extends FormRequest
             'claim_submission_method' => ['required', 'in:online,manual,api'],
             'payment_terms_days' => ['nullable', 'integer', 'min:0', 'max:365'],
             'is_active' => ['boolean'],
+            'is_nhis' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }

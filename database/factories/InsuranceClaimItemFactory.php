@@ -40,6 +40,21 @@ class InsuranceClaimItemFactory extends Factory
             'is_approved' => fake()->boolean(80),
             'rejection_reason' => null,
             'notes' => fake()->optional()->sentence(),
+            'nhis_tariff_id' => null,
+            'nhis_code' => null,
+            'nhis_price' => null,
         ];
+    }
+
+    /**
+     * Indicate that the item has NHIS mapping.
+     */
+    public function withNhisMapping(\App\Models\NhisTariff $tariff): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nhis_tariff_id' => $tariff->id,
+            'nhis_code' => $tariff->nhis_code,
+            'nhis_price' => $tariff->price,
+        ]);
     }
 }

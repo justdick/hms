@@ -70,4 +70,24 @@ class PatientInsurance extends Model
             && $this->coverage_start_date <= now()
             && ($this->coverage_end_date === null || $this->coverage_end_date >= now());
     }
+
+    /**
+     * Check if this insurance is NHIS.
+     */
+    public function isNhis(): bool
+    {
+        return $this->plan?->provider?->is_nhis ?? false;
+    }
+
+    /**
+     * Check if the coverage has expired.
+     */
+    public function isExpired(): bool
+    {
+        if ($this->coverage_end_date === null) {
+            return false;
+        }
+
+        return $this->coverage_end_date->isPast();
+    }
 }

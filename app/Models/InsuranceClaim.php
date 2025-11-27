@@ -37,6 +37,8 @@ class InsuranceClaim extends Model
         'primary_diagnosis_description',
         'secondary_diagnoses',
         'c_drg_code',
+        'gdrg_tariff_id',
+        'gdrg_amount',
         'hin_number',
         'total_claim_amount',
         'approved_amount',
@@ -73,6 +75,7 @@ class InsuranceClaim extends Model
             'is_unbundled' => 'boolean',
             'is_pharmacy_included' => 'boolean',
             'secondary_diagnoses' => 'json',
+            'gdrg_amount' => 'decimal:2',
             'total_claim_amount' => 'decimal:2',
             'approved_amount' => 'decimal:2',
             'patient_copay_amount' => 'decimal:2',
@@ -127,5 +130,40 @@ class InsuranceClaim extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InsuranceClaimItem::class);
+    }
+
+    public function claimDiagnoses(): HasMany
+    {
+        return $this->hasMany(InsuranceClaimDiagnosis::class);
+    }
+
+    public function gdrgTariff(): BelongsTo
+    {
+        return $this->belongsTo(GdrgTariff::class);
+    }
+
+    /**
+     * Get the batch items for this claim.
+     */
+    public function batchItems(): HasMany
+    {
+        return $this->hasMany(ClaimBatchItem::class);
+    }
+
+    /**
+     * Check if this claim is for an NHIS patient.
+     */
+    public function isNhisClaim(): bool
+    {
+        return $this->patientInsurance?->plan?->provider?->isNhis() ?? false;
+    }
+
+    /**
+     * Check if this claim requires a G-DRG selection.
+     * NHIS claims require G-DRG selection for approval.
+     */
+    public function requiresGdrg(): bool
+    {
+        return $this->isNhisClaim();
     }
 }

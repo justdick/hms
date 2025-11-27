@@ -21,6 +21,7 @@ class InsuranceProvider extends Model
         'claim_submission_method',
         'payment_terms_days',
         'is_active',
+        'is_nhis',
         'notes',
     ];
 
@@ -28,8 +29,17 @@ class InsuranceProvider extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_nhis' => 'boolean',
             'payment_terms_days' => 'integer',
         ];
+    }
+
+    /**
+     * Check if this provider is an NHIS provider.
+     */
+    public function isNhis(): bool
+    {
+        return $this->is_nhis === true;
     }
 
     public function plans(): HasMany

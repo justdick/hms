@@ -21,4 +21,9 @@ class Diagnosis extends Model
     {
         return $this->hasMany(ConsultationDiagnosis::class);
     }
+
+    public function insuranceClaimDiagnoses(): HasMany
+    {
+        return $this->hasMany(InsuranceClaimDiagnosis::class);
+    }
 }

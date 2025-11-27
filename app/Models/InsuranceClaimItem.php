@@ -28,6 +28,9 @@ class InsuranceClaimItem extends Model
         'is_approved',
         'rejection_reason',
         'notes',
+        'nhis_tariff_id',
+        'nhis_code',
+        'nhis_price',
     ];
 
     protected function casts(): array
@@ -42,6 +45,7 @@ class InsuranceClaimItem extends Model
             'insurance_pays' => 'decimal:2',
             'patient_pays' => 'decimal:2',
             'is_approved' => 'boolean',
+            'nhis_price' => 'decimal:2',
         ];
     }
 
@@ -53,5 +57,10 @@ class InsuranceClaimItem extends Model
     public function charge(): BelongsTo
     {
         return $this->belongsTo(Charge::class);
+    }
+
+    public function nhisTariff(): BelongsTo
+    {
+        return $this->belongsTo(NhisTariff::class);
     }
 }
