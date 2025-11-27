@@ -45,7 +45,9 @@ export function LabsTab({ labOrders }: Props) {
     const labOrdersByStatus = useMemo(() => {
         return {
             pending: labOrders.filter((lab) => lab.status === 'pending'),
-            in_progress: labOrders.filter((lab) => lab.status === 'in_progress'),
+            in_progress: labOrders.filter(
+                (lab) => lab.status === 'in_progress',
+            ),
             completed: labOrders.filter((lab) => lab.status === 'completed'),
             cancelled: labOrders.filter((lab) => lab.status === 'cancelled'),
         };
@@ -67,7 +69,8 @@ export function LabsTab({ labOrders }: Props) {
                             No Lab Orders
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            No laboratory tests have been ordered for this patient yet.
+                            No laboratory tests have been ordered for this
+                            patient yet.
                         </p>
                     </div>
                 </CardContent>
@@ -95,12 +98,16 @@ export function LabsTab({ labOrders }: Props) {
 
             {/* Details Modal */}
             {selectedOrder && (
-                <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+                <Dialog
+                    open={detailsModalOpen}
+                    onOpenChange={setDetailsModalOpen}
+                >
                     <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Lab Order Details</DialogTitle>
                             <DialogDescription>
-                                Detailed information and results for this laboratory test
+                                Detailed information and results for this
+                                laboratory test
                             </DialogDescription>
                         </DialogHeader>
                         <LabResultsDisplay order={selectedOrder} />

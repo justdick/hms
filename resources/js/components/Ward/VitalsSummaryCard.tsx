@@ -46,7 +46,7 @@ export function VitalsSummaryCard({
 
     return (
         <Card
-            className={`cursor-pointer transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 ${
+            className={`cursor-pointer transition-all hover:border-blue-300 hover:shadow-md dark:hover:border-blue-700 ${
                 isOverdue
                     ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20'
                     : ''
@@ -143,8 +143,8 @@ export function VitalsSummaryCard({
                         </p>
                         {vitalsSchedule && vitalsSchedule.is_active && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Schedule: Every {vitalsSchedule.interval_minutes}{' '}
-                                minutes
+                                Schedule: Every{' '}
+                                {vitalsSchedule.interval_minutes} minutes
                             </p>
                         )}
                     </div>

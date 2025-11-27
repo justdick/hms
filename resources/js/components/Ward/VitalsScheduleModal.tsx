@@ -101,7 +101,9 @@ export function VitalsScheduleModal({
         const times: Date[] = [];
 
         for (let i = 1; i <= 3; i++) {
-            const nextTime = new Date(now.getTime() + intervalMinutes * 60000 * i);
+            const nextTime = new Date(
+                now.getTime() + intervalMinutes * 60000 * i,
+            );
             times.push(nextTime);
         }
 

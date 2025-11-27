@@ -83,7 +83,9 @@ export function DiscontinueMedicationModal({
                     onClose();
                 },
                 onError: (errors) => {
-                    toast.error(errors.reason || 'Failed to discontinue medication');
+                    toast.error(
+                        errors.reason || 'Failed to discontinue medication',
+                    );
                 },
                 onFinish: () => {
                     setSubmitting(false);
@@ -113,7 +115,8 @@ export function DiscontinueMedicationModal({
                         Discontinue Medication
                     </DialogTitle>
                     <DialogDescription>
-                        {prescription.drug?.name || prescription.medication_name}
+                        {prescription.drug?.name ||
+                            prescription.medication_name}
                         {prescription.drug?.strength &&
                             ` ${prescription.drug.strength}`}
                     </DialogDescription>
@@ -151,7 +154,7 @@ export function DiscontinueMedicationModal({
                                     </p>
                                 ))}
                                 {futureDoses.length > 5 && (
-                                    <p className="text-sm italic text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground italic">
                                         ... and {futureDoses.length - 5} more
                                     </p>
                                 )}

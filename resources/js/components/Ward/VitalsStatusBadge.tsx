@@ -7,7 +7,7 @@ import {
 import { useTimeRemaining } from '@/hooks/use-time-remaining';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { Activity, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useMemo } from 'react';
 
 export interface VitalsSchedule {
@@ -56,7 +56,9 @@ export function VitalsStatusBadge({
     }
 
     // Get real-time minutes remaining
-    const minutesRemaining = useTimeRemaining(schedule?.next_due_at || status?.next_due_at || null);
+    const minutesRemaining = useTimeRemaining(
+        schedule?.next_due_at || status?.next_due_at || null,
+    );
 
     // Calculate status from schedule if not provided, recalculating when minutesRemaining changes
     const scheduleStatus = useMemo(() => {
@@ -74,7 +76,12 @@ export function VitalsStatusBadge({
         }
     };
 
-    const { variant, icon: Icon, text, timeText } = getStatusConfig(scheduleStatus);
+    const {
+        variant,
+        icon: Icon,
+        text,
+        timeText,
+    } = getStatusConfig(scheduleStatus);
 
     return (
         <Tooltip>
@@ -101,7 +108,8 @@ export function VitalsStatusBadge({
                 <div className="space-y-1">
                     <p className="font-semibold">Vitals Schedule</p>
                     <p className="text-xs">
-                        Interval: {formatInterval(scheduleStatus.interval_minutes)}
+                        Interval:{' '}
+                        {formatInterval(scheduleStatus.interval_minutes)}
                     </p>
                     <p className="text-xs">
                         Next due: {formatDateTime(scheduleStatus.next_due_at)}
@@ -109,13 +117,19 @@ export function VitalsStatusBadge({
                     {scheduleStatus.status === 'upcoming' &&
                         scheduleStatus.time_until_due_minutes !== undefined && (
                             <p className="text-xs">
-                                Due in {formatTimeRemaining(scheduleStatus.time_until_due_minutes)}
+                                Due in{' '}
+                                {formatTimeRemaining(
+                                    scheduleStatus.time_until_due_minutes,
+                                )}
                             </p>
                         )}
                     {scheduleStatus.status === 'overdue' &&
                         scheduleStatus.time_overdue_minutes !== undefined && (
                             <p className="text-xs text-red-200">
-                                Overdue by {formatTimeRemaining(scheduleStatus.time_overdue_minutes)}
+                                Overdue by{' '}
+                                {formatTimeRemaining(
+                                    scheduleStatus.time_overdue_minutes,
+                                )}
                             </p>
                         )}
                     <p className="text-xs italic">Click to record vitals</p>

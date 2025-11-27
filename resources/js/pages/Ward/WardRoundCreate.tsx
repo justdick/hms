@@ -111,6 +111,7 @@ interface Drug {
     strength?: string;
     unit_price: number;
     unit_type: string;
+    bottle_size?: number;
 }
 
 interface Prescription {

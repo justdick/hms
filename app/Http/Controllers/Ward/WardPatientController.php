@@ -8,6 +8,7 @@ use App\Models\PatientAdmission;
 use App\Models\VitalsSchedule;
 use App\Models\Ward as WardModel;
 use App\Services\VitalsScheduleService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -104,5 +105,40 @@ class WardPatientController extends Controller
             'vitalsScheduleStatus' => $vitalsScheduleStatus,
             'scheduleHistory' => $scheduleHistory,
         ]);
+    }
+
+    /**
+     * Discharge a patient from the ward.
+     */
+    public function discharge(Request $request, WardModel $ward, PatientAdmission $admission): RedirectResponse
+    {
+        // Check permission
+        if (! $request->user()->can('admissions.discharge')) {
+            abort(403, 'You do not have permission to discharge patients.');
+        }
+
+        // Ensure the admission belongs to this ward
+        if ($admission->ward_id !== $ward->id && $admission->bed?->ward_id !== $ward->id) {
+            abort(404);
+        }
+
+        // Ensure patient is still admitted
+        if ($admission->status !== 'admitted') {
+            return redirect()->back()->withErrors(['admission' => 'Patient is not currently admitted.']);
+        }
+
+        $request->validate([
+            'discharge_notes' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            $admission->markAsDischarged($request->user(), $request->discharge_notes);
+
+            return redirect()->route('wards.show', $ward)
+                ->with('success', "Patient {$admission->patient->first_name} {$admission->patient->last_name} has been discharged successfully.");
+        } catch (\RuntimeException $e) {
+            // This catches the unpaid copays exception
+            return redirect()->back()->withErrors(['discharge' => $e->getMessage()]);
+        }
     }
 }

@@ -2,8 +2,8 @@ import { DiagnosisSummaryCard } from '@/components/Ward/DiagnosisSummaryCard';
 import { LabsSummaryCard } from '@/components/Ward/LabsSummaryCard';
 import { PrescriptionsSummaryCard } from '@/components/Ward/PrescriptionsSummaryCard';
 import { VitalsSummaryCard } from '@/components/Ward/VitalsSummaryCard';
-import { useMemo } from 'react';
 import { isToday } from 'date-fns';
+import { useMemo } from 'react';
 
 interface Doctor {
     id: number;
@@ -64,7 +64,13 @@ interface MedicationAdministration {
     prescription: Prescription;
     scheduled_time: string;
     administered_at?: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
+    status:
+        | 'scheduled'
+        | 'given'
+        | 'held'
+        | 'refused'
+        | 'omitted'
+        | 'cancelled';
     administered_by?: User;
     notes?: string;
     dosage_given?: string;
@@ -247,9 +253,7 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
     const admissionDayNumber = useMemo(() => {
         const admissionDate = new Date(admission.admitted_at);
         const today = new Date();
-        const diffTime = Math.abs(
-            today.getTime() - admissionDate.getTime(),
-        );
+        const diffTime = Math.abs(today.getTime() - admissionDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays;
     }, [admission.admitted_at]);

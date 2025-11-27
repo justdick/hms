@@ -84,7 +84,8 @@ export const medicationHistoryColumns = (
             return (
                 <div className="flex flex-col gap-1">
                     <div className="font-medium">
-                        {prescription.drug?.name || prescription.medication_name}
+                        {prescription.drug?.name ||
+                            prescription.medication_name}
                     </div>
                     {prescription.drug?.strength && (
                         <div className="text-sm text-muted-foreground">
@@ -100,9 +101,7 @@ export const medicationHistoryColumns = (
         header: 'Frequency',
         cell: ({ row }) => {
             return (
-                <div className="text-sm">
-                    {row.original.frequency || '-'}
-                </div>
+                <div className="text-sm">{row.original.frequency || '-'}</div>
             );
         },
     },

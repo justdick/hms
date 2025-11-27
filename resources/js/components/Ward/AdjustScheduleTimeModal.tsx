@@ -153,7 +153,7 @@ export function AdjustScheduleTimeModal({
                             <span className="text-red-500">*</span>
                         </Label>
                         <div className="relative">
-                            <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Clock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 id="new-time"
                                 type="time"

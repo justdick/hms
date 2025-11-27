@@ -1,4 +1,4 @@
-import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
+import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,12 +15,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { ConfigureScheduleTimesModal } from '@/components/Ward/ConfigureScheduleTimesModal';
-import { ConsultationVitalsCard } from '@/components/Ward/ConsultationVitalsCard';
 import { DiscontinueMedicationModal } from '@/components/Ward/DiscontinueMedicationModal';
+import { LabsTab } from '@/components/Ward/LabsTab';
 import { MedicationAdministrationPanel } from '@/components/Ward/MedicationAdministrationPanel';
 import { MedicationAdministrationRecord } from '@/components/Ward/MedicationAdministrationRecord';
 import { MedicationHistoryTab } from '@/components/Ward/MedicationHistoryTab';
 import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
+import { OverviewTab } from '@/components/Ward/OverviewTab';
 import { PrescriptionScheduleModal } from '@/components/Ward/PrescriptionScheduleModal';
 import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
 import { VitalsChart } from '@/components/Ward/VitalsChart';
@@ -33,10 +34,10 @@ import { VitalsTable } from '@/components/Ward/VitalsTable';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
 import { WardRoundsTable } from '@/components/Ward/WardRoundsTable';
 import { WardRoundViewModal } from '@/components/Ward/WardRoundViewModal';
-import { OverviewTab } from '@/components/Ward/OverviewTab';
-import { LabsTab } from '@/components/Ward/LabsTab';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { isToday } from 'date-fns';
 import {
     Activity,
     AlertCircle,
@@ -52,6 +53,7 @@ import {
     FlaskConical,
     Heart,
     LayoutDashboard,
+    LogOut,
     Pill,
     Plus,
     ShieldCheck,
@@ -62,7 +64,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { isToday } from 'date-fns';
 
 interface InsuranceProvider {
     id: number;
@@ -155,7 +156,13 @@ interface MedicationAdministration {
     prescription: Prescription;
     scheduled_time: string;
     administered_at?: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
+    status:
+        | 'scheduled'
+        | 'given'
+        | 'held'
+        | 'refused'
+        | 'omitted'
+        | 'cancelled';
     administered_by?: User;
     notes?: string;
     dosage_given?: string;
@@ -339,6 +346,9 @@ export default function WardPatientShow({
     pendingCharges = [],
     activeOverride,
 }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const canDischarge = auth.permissions?.admissions?.discharge ?? false;
+
     const [activeTab, setActiveTab] = useState('overview');
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
     const [nursingNotesModalOpen, setNursingNotesModalOpen] = useState(false);
@@ -352,13 +362,22 @@ export default function WardPatientShow({
     const [wardRoundViewModalOpen, setWardRoundViewModalOpen] = useState(false);
     const [vitalsScheduleModalOpen, setVitalsScheduleModalOpen] =
         useState(false);
-    
+
     // Medication scheduling modals
-    const [configureTimesModalOpen, setConfigureTimesModalOpen] = useState(false);
-    const [reconfigureTimesModalOpen, setReconfigureTimesModalOpen] = useState(false);
+    const [configureTimesModalOpen, setConfigureTimesModalOpen] =
+        useState(false);
+    const [reconfigureTimesModalOpen, setReconfigureTimesModalOpen] =
+        useState(false);
     const [viewScheduleModalOpen, setViewScheduleModalOpen] = useState(false);
     const [discontinueModalOpen, setDiscontinueModalOpen] = useState(false);
-    const [selectedPrescription, setSelectedPrescription] = useState<ConsultationPrescription | WardRoundPrescription | null>(null);
+    const [selectedPrescription, setSelectedPrescription] = useState<
+        ConsultationPrescription | WardRoundPrescription | null
+    >(null);
+
+    // Discharge modal
+    const [dischargeModalOpen, setDischargeModalOpen] = useState(false);
+    const [dischargeNotes, setDischargeNotes] = useState('');
+    const [isDischarging, setIsDischarging] = useState(false);
 
     // Note: Vitals alerts are now handled globally in AppLayout
     // No need to fetch or show toasts here
@@ -423,14 +442,13 @@ export default function WardPatientShow({
     const allMedications = admission.medication_administrations || [];
 
     const latestVital = allVitals[0];
-    
+
     // Calculate today's pending medications only (for badge display)
     const todayPendingMeds = allMedications.filter(
         (med) =>
-            med.status === 'scheduled' &&
-            isToday(new Date(med.scheduled_time)),
+            med.status === 'scheduled' && isToday(new Date(med.scheduled_time)),
     );
-    
+
     // Keep all pending meds for other uses
     const pendingMeds = allMedications.filter(
         (med) => med.status === 'scheduled',
@@ -439,7 +457,9 @@ export default function WardPatientShow({
     // Collect all prescriptions from consultation and ward rounds
     const allPrescriptions = [
         ...(admission.consultation?.prescriptions || []),
-        ...(admission.ward_rounds?.flatMap((round) => round.prescriptions || []) || []),
+        ...(admission.ward_rounds?.flatMap(
+            (round) => round.prescriptions || [],
+        ) || []),
     ];
 
     // Collect all lab orders from ward rounds
@@ -548,6 +568,31 @@ export default function WardPatientShow({
         );
     };
 
+    const handleDischarge = () => {
+        setIsDischarging(true);
+        router.post(
+            `/wards/${admission.ward?.id}/patients/${admission.id}/discharge`,
+            { discharge_notes: dischargeNotes },
+            {
+                onSuccess: () => {
+                    toast.success('Patient discharged successfully');
+                    setDischargeModalOpen(false);
+                    setDischargeNotes('');
+                },
+                onError: (errors: any) => {
+                    const errorMessage =
+                        errors.discharge ||
+                        errors.admission ||
+                        'Failed to discharge patient';
+                    toast.error(errorMessage);
+                },
+                onFinish: () => {
+                    setIsDischarging(false);
+                },
+            },
+        );
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -599,16 +644,27 @@ export default function WardPatientShow({
                         </div>
                     </div>
 
-                    {admission.consultation && (
-                        <Link
-                            href={`/consultation/${admission.consultation.id}`}
-                        >
-                            <Button>
-                                <FileText className="mr-2 h-4 w-4" />
-                                View Consultation
+                    <div className="flex items-center gap-2">
+                        {admission.consultation && (
+                            <Link
+                                href={`/consultation/${admission.consultation.id}`}
+                            >
+                                <Button variant="outline">
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    View Consultation
+                                </Button>
+                            </Link>
+                        )}
+                        {admission.status === 'admitted' && canDischarge && (
+                            <Button
+                                variant="destructive"
+                                onClick={() => setDischargeModalOpen(true)}
+                            >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Discharge Patient
                             </Button>
-                        </Link>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Service Block Alert */}
@@ -750,8 +806,7 @@ export default function WardPatientShow({
                                             <span className="font-medium">
                                                 {
                                                     admission.patient
-                                                        .active_insurance
-                                                        .plan
+                                                        .active_insurance.plan
                                                         .provider.name
                                                 }
                                             </span>
@@ -759,14 +814,14 @@ export default function WardPatientShow({
                                         <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {
                                                 admission.patient
-                                                    .active_insurance
-                                                    .plan.plan_name
+                                                    .active_insurance.plan
+                                                    .plan_name
                                             }{' '}
                                             (
                                             {
                                                 admission.patient
-                                                    .active_insurance
-                                                    .plan.plan_type
+                                                    .active_insurance.plan
+                                                    .plan_type
                                             }
                                             )
                                         </p>
@@ -840,7 +895,12 @@ export default function WardPatientShow({
                 )}
 
                 {/* Tabbed Content */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="overview" className="w-full">
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    defaultValue="overview"
+                    className="w-full"
+                >
                     <TabsList>
                         <TabsTrigger
                             value="overview"
@@ -862,11 +922,15 @@ export default function WardPatientShow({
                         >
                             <Pill className="h-4 w-4" />
                             Medication Administration
-                            {todayPendingMeds && todayPendingMeds.length > 0 && (
-                                <Badge variant="destructive" className="ml-1">
-                                    {todayPendingMeds.length}
-                                </Badge>
-                            )}
+                            {todayPendingMeds &&
+                                todayPendingMeds.length > 0 && (
+                                    <Badge
+                                        variant="destructive"
+                                        className="ml-1"
+                                    >
+                                        {todayPendingMeds.length}
+                                    </Badge>
+                                )}
                         </TabsTrigger>
                         <TabsTrigger
                             value="history"
@@ -1206,22 +1270,30 @@ export default function WardPatientShow({
                             patientAdmissionId={admission.id}
                             prescriptions={allPrescriptions}
                             onConfigureTimes={(prescriptionId) => {
-                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
+                                );
                                 setSelectedPrescription(prescription || null);
                                 setConfigureTimesModalOpen(true);
                             }}
                             onReconfigureTimes={(prescriptionId) => {
-                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
+                                );
                                 setSelectedPrescription(prescription || null);
                                 setReconfigureTimesModalOpen(true);
                             }}
                             onViewSchedule={(prescriptionId) => {
-                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
+                                );
                                 setSelectedPrescription(prescription || null);
                                 setViewScheduleModalOpen(true);
                             }}
                             onDiscontinue={(prescriptionId, reason) => {
-                                const prescription = allPrescriptions.find(p => p.id === prescriptionId);
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
+                                );
                                 setSelectedPrescription(prescription || null);
                                 setDiscontinueModalOpen(true);
                             }}
@@ -1424,6 +1496,66 @@ export default function WardPatientShow({
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                                 Delete Note
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Discharge Patient Modal */}
+                <AlertDialog
+                    open={dischargeModalOpen}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setDischargeModalOpen(false);
+                            setDischargeNotes('');
+                        }
+                    }}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Discharge Patient
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to discharge{' '}
+                                <span className="font-semibold">
+                                    {admission.patient.first_name}{' '}
+                                    {admission.patient.last_name}
+                                </span>
+                                ? This will free up the bed and end the
+                                admission.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="py-4">
+                            <label
+                                htmlFor="discharge-notes"
+                                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                Discharge Notes (optional)
+                            </label>
+                            <textarea
+                                id="discharge-notes"
+                                value={dischargeNotes}
+                                onChange={(e) =>
+                                    setDischargeNotes(e.target.value)
+                                }
+                                placeholder="Enter any discharge notes..."
+                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                                rows={3}
+                            />
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDischarging}>
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDischarge}
+                                disabled={isDischarging}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                {isDischarging
+                                    ? 'Discharging...'
+                                    : 'Discharge Patient'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

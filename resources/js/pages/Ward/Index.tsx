@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
+    ArrowRight,
     Bed,
     Building2,
     Edit,
@@ -12,13 +13,12 @@ import {
     Hospital,
     Plus,
     Search,
+    Sparkles,
     ToggleLeft,
     ToggleRight,
     Trash2,
     Users,
     Wrench,
-    Sparkles,
-    ArrowRight,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -46,7 +46,9 @@ interface Props {
 
 export default function WardIndex({ wards }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+    const [statusFilter, setStatusFilter] = useState<
+        'all' | 'active' | 'inactive'
+    >('all');
 
     const handleDelete = (ward: Ward) => {
         if (
@@ -88,22 +90,26 @@ export default function WardIndex({ wards }: Props) {
     const getBedStatusCounts = (ward: Ward) => {
         const occupied = ward.total_beds - ward.available_beds;
         const available = ward.available_beds;
-        const maintenance = ward.beds.filter((b) => b.status === 'maintenance').length;
-        const cleaning = ward.beds.filter((b) => b.status === 'cleaning').length;
+        const maintenance = ward.beds.filter(
+            (b) => b.status === 'maintenance',
+        ).length;
+        const cleaning = ward.beds.filter(
+            (b) => b.status === 'cleaning',
+        ).length;
 
         return { occupied, available, maintenance, cleaning };
     };
 
     const filteredWards = wards.filter((ward) => {
-        const matchesSearch = 
+        const matchesSearch =
             ward.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             ward.code.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        const matchesStatus = 
+
+        const matchesStatus =
             statusFilter === 'all' ||
             (statusFilter === 'active' && ward.is_active) ||
             (statusFilter === 'inactive' && !ward.is_active);
-        
+
         return matchesSearch && matchesStatus;
     });
 
@@ -159,7 +165,10 @@ export default function WardIndex({ wards }: Props) {
                                         Active Wards
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-                                        {wards.filter((w) => w.is_active).length}
+                                        {
+                                            wards.filter((w) => w.is_active)
+                                                .length
+                                        }
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/20">
@@ -177,7 +186,10 @@ export default function WardIndex({ wards }: Props) {
                                         Total Beds
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {wards.reduce((sum, w) => sum + w.total_beds, 0)}
+                                        {wards.reduce(
+                                            (sum, w) => sum + w.total_beds,
+                                            0,
+                                        )}
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900/20">
@@ -195,7 +207,10 @@ export default function WardIndex({ wards }: Props) {
                                         Available Beds
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                                        {wards.reduce((sum, w) => sum + w.available_beds, 0)}
+                                        {wards.reduce(
+                                            (sum, w) => sum + w.available_beds,
+                                            0,
+                                        )}
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900/20">
@@ -212,34 +227,52 @@ export default function WardIndex({ wards }: Props) {
                         <CardContent className="p-4">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="relative flex-1 sm:max-w-sm">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
                                         type="text"
                                         placeholder="Search wards by name or code..."
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
                                         className="pl-10"
                                     />
                                 </div>
                                 <div className="flex gap-2">
                                     <Button
-                                        variant={statusFilter === 'all' ? 'default' : 'outline'}
+                                        variant={
+                                            statusFilter === 'all'
+                                                ? 'default'
+                                                : 'outline'
+                                        }
                                         size="sm"
                                         onClick={() => setStatusFilter('all')}
                                     >
                                         All
                                     </Button>
                                     <Button
-                                        variant={statusFilter === 'active' ? 'default' : 'outline'}
+                                        variant={
+                                            statusFilter === 'active'
+                                                ? 'default'
+                                                : 'outline'
+                                        }
                                         size="sm"
-                                        onClick={() => setStatusFilter('active')}
+                                        onClick={() =>
+                                            setStatusFilter('active')
+                                        }
                                     >
                                         Active
                                     </Button>
                                     <Button
-                                        variant={statusFilter === 'inactive' ? 'default' : 'outline'}
+                                        variant={
+                                            statusFilter === 'inactive'
+                                                ? 'default'
+                                                : 'outline'
+                                        }
                                         size="sm"
-                                        onClick={() => setStatusFilter('inactive')}
+                                        onClick={() =>
+                                            setStatusFilter('inactive')
+                                        }
                                     >
                                         Inactive
                                     </Button>
@@ -273,10 +306,16 @@ export default function WardIndex({ wards }: Props) {
                                                     </p>
                                                 </div>
                                                 <Badge
-                                                    variant={ward.is_active ? 'default' : 'secondary'}
+                                                    variant={
+                                                        ward.is_active
+                                                            ? 'default'
+                                                            : 'secondary'
+                                                    }
                                                     className="shrink-0"
                                                 >
-                                                    {ward.is_active ? 'Active' : 'Inactive'}
+                                                    {ward.is_active
+                                                        ? 'Active'
+                                                        : 'Inactive'}
                                                 </Badge>
                                             </div>
                                         </CardHeader>
@@ -341,22 +380,33 @@ export default function WardIndex({ wards }: Props) {
                                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         Occupancy Rate
                                                     </span>
-                                                    <span className={`text-sm font-bold ${getOccupancyColor(occupancyRate)}`}>
+                                                    <span
+                                                        className={`text-sm font-bold ${getOccupancyColor(occupancyRate)}`}
+                                                    >
                                                         {occupancyRate}%
                                                     </span>
                                                 </div>
                                                 <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                                                     <div
                                                         className={`h-full transition-all ${getOccupancyBgColor(occupancyRate)}`}
-                                                        style={{ width: `${occupancyRate}%` }}
+                                                        style={{
+                                                            width: `${occupancyRate}%`,
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* Actions */}
                                             <div className="flex items-center justify-between gap-2 border-t pt-4 dark:border-gray-700">
-                                                <Link href={`/wards/${ward.id}`} className="flex-1">
-                                                    <Button variant="outline" size="sm" className="w-full gap-2">
+                                                <Link
+                                                    href={`/wards/${ward.id}`}
+                                                    className="flex-1"
+                                                >
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full gap-2"
+                                                    >
                                                         <Eye className="h-4 w-4" />
                                                         View Details
                                                         <ArrowRight className="ml-auto h-4 w-4" />
@@ -364,8 +414,14 @@ export default function WardIndex({ wards }: Props) {
                                                 </Link>
 
                                                 <div className="flex gap-1">
-                                                    <Link href={`/wards/${ward.id}/edit`}>
-                                                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                                                    <Link
+                                                        href={`/wards/${ward.id}/edit`}
+                                                    >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-9 w-9 p-0"
+                                                        >
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
@@ -373,7 +429,11 @@ export default function WardIndex({ wards }: Props) {
                                                         variant="ghost"
                                                         size="sm"
                                                         className="h-9 w-9 p-0"
-                                                        onClick={() => handleToggleStatus(ward)}
+                                                        onClick={() =>
+                                                            handleToggleStatus(
+                                                                ward,
+                                                            )
+                                                        }
                                                     >
                                                         {ward.is_active ? (
                                                             <ToggleLeft className="h-4 w-4 text-orange-600" />
@@ -385,7 +445,9 @@ export default function WardIndex({ wards }: Props) {
                                                         variant="ghost"
                                                         size="sm"
                                                         className="h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-                                                        onClick={() => handleDelete(ward)}
+                                                        onClick={() =>
+                                                            handleDelete(ward)
+                                                        }
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>

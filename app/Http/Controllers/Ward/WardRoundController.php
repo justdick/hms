@@ -118,7 +118,7 @@ class WardRoundController extends Controller
             'labServices' => \App\Models\LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
-            'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
+            'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
             'availableDiagnoses' => \App\Models\Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
             'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);
@@ -204,7 +204,7 @@ class WardRoundController extends Controller
             'labServices' => \App\Models\LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
-            'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
+            'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
             'availableDiagnoses' => \App\Models\Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
             'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);

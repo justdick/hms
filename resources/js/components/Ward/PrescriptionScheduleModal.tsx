@@ -25,7 +25,6 @@ import { cn } from '@/lib/utils';
 import {
     CheckCircle,
     Clock,
-    Edit3,
     Loader2,
     MinusCircle,
     XCircle,
@@ -58,7 +57,13 @@ interface MedicationAdministration {
     id: number;
     scheduled_time: string;
     administered_at?: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
+    status:
+        | 'scheduled'
+        | 'given'
+        | 'held'
+        | 'refused'
+        | 'omitted'
+        | 'cancelled';
     dosage_given?: string;
     route?: string;
     notes?: string;
@@ -132,32 +137,38 @@ export function PrescriptionScheduleModal({
             given: {
                 icon: CheckCircle,
                 label: 'Given',
-                className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                className:
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
             },
             scheduled: {
                 icon: Clock,
                 label: 'Scheduled',
-                className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                className:
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
             },
             held: {
                 icon: MinusCircle,
                 label: 'Held',
-                className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                className:
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
             },
             refused: {
                 icon: XCircle,
                 label: 'Refused',
-                className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+                className:
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
             },
             cancelled: {
                 icon: XCircle,
                 label: 'Cancelled',
-                className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+                className:
+                    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
             },
             omitted: {
                 icon: MinusCircle,
                 label: 'Omitted',
-                className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+                className:
+                    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
             },
         };
 
@@ -180,11 +191,13 @@ export function PrescriptionScheduleModal({
                 <DialogHeader>
                     <DialogTitle>Full Medication Schedule</DialogTitle>
                     <DialogDescription>
-                        {prescription.drug?.name || prescription.medication_name}
+                        {prescription.drug?.name ||
+                            prescription.medication_name}
                         {prescription.drug?.strength &&
                             ` ${prescription.drug.strength}`}{' '}
                         - {prescription.frequency}
-                        {prescription.duration && ` for ${prescription.duration}`}
+                        {prescription.duration &&
+                            ` for ${prescription.duration}`}
                     </DialogDescription>
                 </DialogHeader>
 

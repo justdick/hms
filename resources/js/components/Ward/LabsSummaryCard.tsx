@@ -35,7 +35,7 @@ export function LabsSummaryCard({ labOrders, onClick }: Props) {
 
     return (
         <Card
-            className="cursor-pointer transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700"
+            className="cursor-pointer transition-all hover:border-blue-300 hover:shadow-md dark:hover:border-blue-700"
             onClick={onClick}
         >
             <CardHeader>

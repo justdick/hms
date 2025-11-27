@@ -66,7 +66,7 @@ export function ConfigureScheduleTimesModal({
     useEffect(() => {
         if (isOpen && prescription && !isReconfigure) {
             setLoading(true);
-            
+
             // Use axios which is already configured with CSRF tokens
             axios
                 .get(`/api/prescriptions/${prescription.id}/smart-defaults`)
@@ -81,19 +81,42 @@ export function ConfigureScheduleTimesModal({
                 .catch(() => {
                     // API not available yet, use basic defaults
                     // Parse frequency to determine number of doses
-                    const frequency = prescription.frequency?.toLowerCase() || '';
+                    const frequency =
+                        prescription.frequency?.toLowerCase() || '';
                     let defaultTimes: string[] = ['09:00'];
-                    
-                    if (frequency.includes('twice') || frequency.includes('bid') || frequency.includes('2')) {
+
+                    if (
+                        frequency.includes('twice') ||
+                        frequency.includes('bid') ||
+                        frequency.includes('2')
+                    ) {
                         defaultTimes = ['09:00', '21:00'];
-                    } else if (frequency.includes('three') || frequency.includes('tid') || frequency.includes('3')) {
+                    } else if (
+                        frequency.includes('three') ||
+                        frequency.includes('tid') ||
+                        frequency.includes('3')
+                    ) {
                         defaultTimes = ['09:00', '14:00', '21:00'];
-                    } else if (frequency.includes('four') || frequency.includes('qid') || frequency.includes('4')) {
+                    } else if (
+                        frequency.includes('four') ||
+                        frequency.includes('qid') ||
+                        frequency.includes('4')
+                    ) {
                         defaultTimes = ['09:00', '13:00', '17:00', '21:00'];
-                    } else if (frequency.includes('six') || frequency.includes('6')) {
-                        defaultTimes = ['06:00', '10:00', '14:00', '18:00', '22:00', '02:00'];
+                    } else if (
+                        frequency.includes('six') ||
+                        frequency.includes('6')
+                    ) {
+                        defaultTimes = [
+                            '06:00',
+                            '10:00',
+                            '14:00',
+                            '18:00',
+                            '22:00',
+                            '02:00',
+                        ];
                     }
-                    
+
                     setPattern({
                         day_1: defaultTimes,
                         subsequent: defaultTimes,
@@ -118,7 +141,8 @@ export function ConfigureScheduleTimesModal({
 
                 setPattern({
                     day_1:
-                        existingPattern.day_1 && existingPattern.day_1.length > 0
+                        existingPattern.day_1 &&
+                        existingPattern.day_1.length > 0
                             ? existingPattern.day_1
                             : [''],
                     subsequent:
@@ -231,7 +255,9 @@ export function ConfigureScheduleTimesModal({
         // Day 1
         const day1Doses = pattern.day_1.filter((t) => t).length;
         totalDoses += day1Doses;
-        breakdown.push(`Day 1: ${pattern.day_1.filter((t) => t).join(', ')} (${day1Doses} doses)`);
+        breakdown.push(
+            `Day 1: ${pattern.day_1.filter((t) => t).join(', ')} (${day1Doses} doses)`,
+        );
 
         // Custom days
         customDays.forEach((dayNum) => {
@@ -273,9 +299,11 @@ export function ConfigureScheduleTimesModal({
                         Schedule
                     </DialogTitle>
                     <DialogDescription>
-                        {prescription.drug?.name || prescription.medication_name}{' '}
+                        {prescription.drug?.name ||
+                            prescription.medication_name}{' '}
                         - {prescription.frequency}
-                        {prescription.duration && ` for ${prescription.duration}`}
+                        {prescription.duration &&
+                            ` for ${prescription.duration}`}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -284,7 +312,11 @@ export function ConfigureScheduleTimesModal({
                     <div className="flex items-start gap-2">
                         <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                         <p className="text-sm text-blue-900 dark:text-blue-200">
-                            <span className="font-medium">Tip:</span> Click on the <Clock className="mx-1 inline h-3.5 w-3.5 text-primary" /> clock icon to open a time picker, or type the time directly in HH:MM format.
+                            <span className="font-medium">Tip:</span> Click on
+                            the{' '}
+                            <Clock className="mx-1 inline h-3.5 w-3.5 text-primary" />{' '}
+                            clock icon to open a time picker, or type the time
+                            directly in HH:MM format.
                         </p>
                     </div>
                 </div>
@@ -323,7 +355,7 @@ export function ConfigureScheduleTimesModal({
                                             Dose {index + 1}:
                                         </Label>
                                         <div className="group relative flex-1">
-                                            <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
+                                            <Clock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
                                             <Input
                                                 type="time"
                                                 value={time}
@@ -402,7 +434,7 @@ export function ConfigureScheduleTimesModal({
                                                     Dose {index + 1}:
                                                 </Label>
                                                 <div className="group relative flex-1">
-                                                    <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
+                                                    <Clock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
                                                     <Input
                                                         type="time"
                                                         value={time}
@@ -488,7 +520,7 @@ export function ConfigureScheduleTimesModal({
                                             Dose {index + 1}:
                                         </Label>
                                         <div className="group relative flex-1">
-                                            <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
+                                            <Clock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-primary transition-colors group-hover:text-primary/80" />
                                             <Input
                                                 type="time"
                                                 value={time}
@@ -531,7 +563,10 @@ export function ConfigureScheduleTimesModal({
                                 </h4>
                                 <div className="space-y-1 text-sm">
                                     {preview.breakdown.map((line, index) => (
-                                        <p key={index} className="text-muted-foreground">
+                                        <p
+                                            key={index}
+                                            className="text-muted-foreground"
+                                        >
                                             • {line}
                                         </p>
                                     ))}

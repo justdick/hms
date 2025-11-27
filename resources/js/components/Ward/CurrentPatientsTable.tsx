@@ -1,8 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import {
-    TooltipProvider,
-} from '@/components/ui/tooltip';
-import {
     Table,
     TableBody,
     TableCell,
@@ -10,6 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { VitalsStatusBadge } from '@/components/Ward/VitalsStatusBadge';
 import { Link } from '@inertiajs/react';
 import {
@@ -159,7 +157,9 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                             <TableHead>Admitted</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Vitals Status</TableHead>
-                            <TableHead className="text-center">Alerts</TableHead>
+                            <TableHead className="text-center">
+                                Alerts
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -170,213 +170,224 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                 admission.pending_medications.length > 0;
                             const hasOverdueVitals =
                                 admission.vitals_schedule &&
-                                calculateVitalsStatus(admission.vitals_schedule) === 'overdue';
+                                calculateVitalsStatus(
+                                    admission.vitals_schedule,
+                                ) === 'overdue';
 
                             return (
                                 <TableRow
                                     key={admission.id}
                                     className={`cursor-pointer ${hasOverdueVitals ? 'bg-red-50 dark:bg-red-950/20' : ''}`}
                                 >
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        <div className="font-medium text-gray-900 dark:text-gray-100">
-                                            {admission.patient.first_name}{' '}
-                                            {admission.patient.last_name}
-                                        </div>
-                                        {admission.patient.gender && (
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                {admission.patient.gender}
-                                                {admission.patient
-                                                    .date_of_birth && (
-                                                    <>
-                                                        {' '}
-                                                        •{' '}
-                                                        {new Date(
-                                                            admission.patient.date_of_birth,
-                                                        ).toLocaleDateString()}
-                                                    </>
-                                                )}
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                {admission.patient.first_name}{' '}
+                                                {admission.patient.last_name}
                                             </div>
-                                        )}
-                                    </Link>
-                                </TableCell>
+                                            {admission.patient.gender && (
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {admission.patient.gender}
+                                                    {admission.patient
+                                                        .date_of_birth && (
+                                                        <>
+                                                            {' '}
+                                                            •{' '}
+                                                            {new Date(
+                                                                admission.patient.date_of_birth,
+                                                            ).toLocaleDateString()}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Link>
+                                    </TableCell>
 
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block font-mono text-sm text-gray-700 dark:text-gray-300"
-                                    >
-                                        {admission.admission_number}
-                                    </Link>
-                                </TableCell>
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block font-mono text-sm text-gray-700 dark:text-gray-300"
+                                        >
+                                            {admission.admission_number}
+                                        </Link>
+                                    </TableCell>
 
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        {admission.bed ? (
-                                            <div className="flex items-center gap-2">
-                                                <Bed className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                <span className="font-medium">
-                                                    {admission.bed.bed_number}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                No bed
-                                            </span>
-                                        )}
-                                    </Link>
-                                </TableCell>
-
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        {admission.consultation?.doctor ? (
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Stethoscope className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                <span>
-                                                    Dr.{' '}
-                                                    {
-                                                        admission.consultation
-                                                            .doctor.name
-                                                    }
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                Not assigned
-                                            </span>
-                                        )}
-                                    </Link>
-                                </TableCell>
-
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        {admission.patient.active_insurance?.plan?.provider ? (
-                                            <div className="flex items-center gap-1 text-sm">
-                                                <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            {admission.bed ? (
+                                                <div className="flex items-center gap-2">
+                                                    <Bed className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                                    <span className="font-medium">
                                                         {
-                                                            admission.patient
-                                                                .active_insurance
-                                                                .plan
-                                                                .provider
-                                                                .name
-                                                        }
-                                                    </span>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {
-                                                            admission.patient
-                                                                .active_insurance
-                                                                .plan
-                                                                .plan_name
+                                                            admission.bed
+                                                                .bed_number
                                                         }
                                                     </span>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                None
-                                            </span>
-                                        )}
-                                    </Link>
-                                </TableCell>
-
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block text-sm text-gray-600 dark:text-gray-400"
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="h-3 w-3" />
-                                            {formatDateTime(
-                                                admission.admitted_at,
+                                            ) : (
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                    No bed
+                                                </span>
                                             )}
-                                        </div>
-                                    </Link>
-                                </TableCell>
+                                        </Link>
+                                    </TableCell>
 
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        <Badge variant="default">
-                                            {admission.status
-                                                .replace('_', ' ')
-                                                .toUpperCase()}
-                                        </Badge>
-                                    </Link>
-                                </TableCell>
-
-                                <TableCell>
-                                    {admission.vitals_schedule ? (
-                                        <VitalsStatusBadge
-                                            schedule={admission.vitals_schedule}
-                                            admissionId={admission.id}
-                                            wardId={wardId}
-                                        />
-                                    ) : (
-                                        <span className="text-sm text-gray-400 dark:text-gray-600">
-                                            No schedule
-                                        </span>
-                                    )}
-                                </TableCell>
-
-                                <TableCell>
-                                    <Link
-                                        href={`/wards/${wardId}/patients/${admission.id}`}
-                                        className="block"
-                                    >
-                                        <div className="flex items-center justify-center gap-2">
-                                            {vitalsOverdue && (
-                                                <div
-                                                    className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400"
-                                                    title="Vitals overdue"
-                                                >
-                                                    <AlertCircle className="h-4 w-4" />
-                                                    <span className="hidden xl:inline">
-                                                        Vitals
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {hasPendingMeds && (
-                                                <div
-                                                    className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400"
-                                                    title={`${admission.pending_medications!.length} pending medication(s)`}
-                                                >
-                                                    <Pill className="h-4 w-4" />
-                                                    <span className="hidden xl:inline">
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            {admission.consultation?.doctor ? (
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Stethoscope className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                                    <span>
+                                                        Dr.{' '}
                                                         {
                                                             admission
-                                                                .pending_medications!
-                                                                .length
+                                                                .consultation
+                                                                .doctor.name
                                                         }
                                                     </span>
                                                 </div>
+                                            ) : (
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                    Not assigned
+                                                </span>
                                             )}
-                                            {!vitalsOverdue &&
-                                                !hasPendingMeds && (
-                                                    <span className="text-xs text-gray-400 dark:text-gray-600">
-                                                        -
-                                                    </span>
+                                        </Link>
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            {admission.patient.active_insurance
+                                                ?.plan?.provider ? (
+                                                <div className="flex items-center gap-1 text-sm">
+                                                    <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                            {
+                                                                admission
+                                                                    .patient
+                                                                    .active_insurance
+                                                                    .plan
+                                                                    .provider
+                                                                    .name
+                                                            }
+                                                        </span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {
+                                                                admission
+                                                                    .patient
+                                                                    .active_insurance
+                                                                    .plan
+                                                                    .plan_name
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                    None
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block text-sm text-gray-600 dark:text-gray-400"
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                <Calendar className="h-3 w-3" />
+                                                {formatDateTime(
+                                                    admission.admitted_at,
                                                 )}
-                                        </div>
-                                    </Link>
-                                </TableCell>
-                            </TableRow>
-                        );
+                                            </div>
+                                        </Link>
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            <Badge variant="default">
+                                                {admission.status
+                                                    .replace('_', ' ')
+                                                    .toUpperCase()}
+                                            </Badge>
+                                        </Link>
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {admission.vitals_schedule ? (
+                                            <VitalsStatusBadge
+                                                schedule={
+                                                    admission.vitals_schedule
+                                                }
+                                                admissionId={admission.id}
+                                                wardId={wardId}
+                                            />
+                                        ) : (
+                                            <span className="text-sm text-gray-400 dark:text-gray-600">
+                                                No schedule
+                                            </span>
+                                        )}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <Link
+                                            href={`/wards/${wardId}/patients/${admission.id}`}
+                                            className="block"
+                                        >
+                                            <div className="flex items-center justify-center gap-2">
+                                                {vitalsOverdue && (
+                                                    <div
+                                                        className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400"
+                                                        title="Vitals overdue"
+                                                    >
+                                                        <AlertCircle className="h-4 w-4" />
+                                                        <span className="hidden xl:inline">
+                                                            Vitals
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {hasPendingMeds && (
+                                                    <div
+                                                        className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400"
+                                                        title={`${admission.pending_medications!.length} pending medication(s)`}
+                                                    >
+                                                        <Pill className="h-4 w-4" />
+                                                        <span className="hidden xl:inline">
+                                                            {
+                                                                admission
+                                                                    .pending_medications!
+                                                                    .length
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {!vitalsOverdue &&
+                                                    !hasPendingMeds && (
+                                                        <span className="text-xs text-gray-400 dark:text-gray-600">
+                                                            -
+                                                        </span>
+                                                    )}
+                                            </div>
+                                        </Link>
+                                    </TableCell>
+                                </TableRow>
+                            );
                         })}
                     </TableBody>
                 </Table>

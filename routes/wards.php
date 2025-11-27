@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(
 
     // Patient routes (must come before {ward} routes)
     Route::get('/{ward}/patients/{admission}', [WardPatientController::class, 'show'])->name('patients.show');
+    Route::post('/{ward}/patients/{admission}/discharge', [WardPatientController::class, 'discharge'])->name('patients.discharge');
 
     Route::get('/{ward}', [WardController::class, 'show'])->name('show');
     Route::get('/{ward}/edit', [WardController::class, 'edit'])->name('edit');

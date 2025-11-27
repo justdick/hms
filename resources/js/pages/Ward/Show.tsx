@@ -471,8 +471,6 @@ export default function WardShow({ ward, stats }: Props) {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
-
                 </Tabs>
             </div>
         </AppLayout>

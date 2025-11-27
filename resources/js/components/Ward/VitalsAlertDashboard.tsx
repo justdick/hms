@@ -1,18 +1,18 @@
 /**
  * VitalsAlertDashboard Component
- * 
+ *
  * Displays a comprehensive dashboard of all active vitals schedules with patient information,
  * status indicators, and quick action buttons. Supports filtering by ward and sorting by urgency.
- * 
+ *
  * @example
  * ```tsx
  * import { VitalsAlertDashboard } from '@/components/Ward/VitalsAlertDashboard';
- * 
+ *
  * // Basic usage
  * <VitalsAlertDashboard />
- * 
+ *
  * // With ward filter
- * <VitalsAlertDashboard 
+ * <VitalsAlertDashboard
  *   wards={[
  *     { id: 1, name: 'ICU' },
  *     { id: 2, name: 'General Ward' }
@@ -156,7 +156,9 @@ export function VitalsAlertDashboard({
     const stats = useMemo(() => {
         const overdue = schedules.filter((s) => s.status === 'overdue').length;
         const due = schedules.filter((s) => s.status === 'due').length;
-        const upcoming = schedules.filter((s) => s.status === 'upcoming').length;
+        const upcoming = schedules.filter(
+            (s) => s.status === 'upcoming',
+        ).length;
 
         return { overdue, due, upcoming, total: schedules.length };
     }, [schedules]);
@@ -272,7 +274,7 @@ export function VitalsAlertDashboard({
                         <p className="text-lg font-semibold">
                             No active vitals schedules
                         </p>
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-sm text-muted-foreground">
                             {selectedWardId
                                 ? 'No patients in this ward have active vitals schedules'
                                 : 'No patients have active vitals schedules'}
@@ -308,17 +310,23 @@ export function VitalsAlertDashboard({
                                         )}
                                     >
                                         <TableCell>
-                                            <StatusBadge status={schedule.status} />
+                                            <StatusBadge
+                                                status={schedule.status}
+                                            />
                                         </TableCell>
                                         <TableCell className="font-medium">
                                             {schedule.patient_name}
                                         </TableCell>
-                                        <TableCell>{schedule.bed_number}</TableCell>
+                                        <TableCell>
+                                            {schedule.bed_number}
+                                        </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {schedule.ward_name}
                                         </TableCell>
                                         <TableCell>
-                                            {formatDateTime(schedule.next_due_at)}
+                                            {formatDateTime(
+                                                schedule.next_due_at,
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <TimeDisplay schedule={schedule} />
@@ -329,7 +337,9 @@ export function VitalsAlertDashboard({
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() =>
-                                                        handleViewPatient(schedule)
+                                                        handleViewPatient(
+                                                            schedule,
+                                                        )
                                                     }
                                                 >
                                                     <Eye className="mr-1 h-3 w-3" />
@@ -338,14 +348,18 @@ export function VitalsAlertDashboard({
                                                 <Button
                                                     size="sm"
                                                     variant={
-                                                        schedule.status === 'overdue'
+                                                        schedule.status ===
+                                                        'overdue'
                                                             ? 'destructive'
-                                                            : schedule.status === 'due'
+                                                            : schedule.status ===
+                                                                'due'
                                                               ? 'default'
                                                               : 'outline'
                                                     }
                                                     onClick={() =>
-                                                        handleRecordVitals(schedule)
+                                                        handleRecordVitals(
+                                                            schedule,
+                                                        )
                                                     }
                                                 >
                                                     <Activity className="mr-1 h-3 w-3" />
@@ -405,7 +419,7 @@ function StatusBadge({ status }: { status: 'upcoming' | 'due' | 'overdue' }) {
 function TimeDisplay({ schedule }: { schedule: ScheduleWithStatus }) {
     if (schedule.status === 'upcoming' && schedule.time_until_due_minutes) {
         return (
-            <span className="text-muted-foreground text-sm">
+            <span className="text-sm text-muted-foreground">
                 in {formatTimeRemaining(schedule.time_until_due_minutes)}
             </span>
         );
@@ -435,7 +449,7 @@ function TimeDisplay({ schedule }: { schedule: ScheduleWithStatus }) {
 
     if (schedule.status === 'overdue' && schedule.time_overdue_minutes) {
         return (
-            <span className="font-semibold text-sm text-red-700 dark:text-red-400">
+            <span className="text-sm font-semibold text-red-700 dark:text-red-400">
                 +{formatTimeRemaining(schedule.time_overdue_minutes)}
             </span>
         );

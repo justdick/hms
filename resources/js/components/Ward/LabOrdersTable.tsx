@@ -8,7 +8,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     AlertCircle,
     Calendar,
@@ -46,8 +46,18 @@ interface Props {
     onViewDetails: (order: LabOrder) => void;
 }
 
-type StatusFilter = 'all' | 'pending' | 'in_progress' | 'completed' | 'cancelled';
-type SortColumn = 'test_name' | 'status' | 'priority' | 'ordered_at' | 'ordered_by';
+type StatusFilter =
+    | 'all'
+    | 'pending'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled';
+type SortColumn =
+    | 'test_name'
+    | 'status'
+    | 'priority'
+    | 'ordered_at'
+    | 'ordered_by';
 type SortDirection = 'asc' | 'desc';
 
 export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
@@ -106,7 +116,8 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
         return {
             all: labOrders.length,
             pending: labOrders.filter((o) => o.status === 'pending').length,
-            in_progress: labOrders.filter((o) => o.status === 'in_progress').length,
+            in_progress: labOrders.filter((o) => o.status === 'in_progress')
+                .length,
             completed: labOrders.filter((o) => o.status === 'completed').length,
             cancelled: labOrders.filter((o) => o.status === 'cancelled').length,
         };
@@ -180,7 +191,10 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
     return (
         <div className="space-y-4">
             {/* Status Filter Tabs */}
-            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <Tabs
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            >
                 <TabsList>
                     <TabsTrigger value="all">
                         All ({statusCounts.all})
@@ -238,13 +252,18 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                 Ordered By
                                 <SortIcon column="ordered_by" />
                             </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="text-right">
+                                Actions
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {sortedOrders.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={7}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                                         <FlaskConical className="mb-2 h-8 w-8" />
                                         <p>No lab orders found</p>
@@ -262,7 +281,9 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => toggleRowExpansion(order.id)}
+                                                onClick={() =>
+                                                    toggleRowExpansion(order.id)
+                                                }
                                                 className="h-6 w-6 p-0"
                                             >
                                                 {expandedRows.has(order.id) ? (
@@ -275,7 +296,8 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                         <TableCell className="font-medium">
                                             <div>
                                                 <div className="text-gray-900 dark:text-gray-100">
-                                                    {order.lab_service?.name || 'Unknown Test'}
+                                                    {order.lab_service?.name ||
+                                                        'Unknown Test'}
                                                 </div>
                                                 {order.lab_service?.code && (
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -285,19 +307,31 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge className={getStatusBadgeClasses(order.status)}>
-                                                {order.status.replace('_', ' ').toUpperCase()}
+                                            <Badge
+                                                className={getStatusBadgeClasses(
+                                                    order.status,
+                                                )}
+                                            >
+                                                {order.status
+                                                    .replace('_', ' ')
+                                                    .toUpperCase()}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge className={getPriorityBadgeClasses(order.priority)}>
+                                            <Badge
+                                                className={getPriorityBadgeClasses(
+                                                    order.priority,
+                                                )}
+                                            >
                                                 {order.priority.toUpperCase()}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                                                 <Calendar className="h-4 w-4 text-gray-400" />
-                                                {formatDateTime(order.ordered_at)}
+                                                {formatDateTime(
+                                                    order.ordered_at,
+                                                )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -307,14 +341,18 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                                     {order.ordered_by.name}
                                                 </div>
                                             ) : (
-                                                <span className="text-sm text-gray-400">-</span>
+                                                <span className="text-sm text-gray-400">
+                                                    -
+                                                </span>
                                             )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => onViewDetails(order)}
+                                                onClick={() =>
+                                                    onViewDetails(order)
+                                                }
                                             >
                                                 View Details
                                             </Button>
@@ -322,17 +360,23 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                     </TableRow>
                                     {expandedRows.has(order.id) && (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="bg-gray-50 dark:bg-gray-900">
+                                            <TableCell
+                                                colSpan={7}
+                                                className="bg-gray-50 dark:bg-gray-900"
+                                            >
                                                 <div className="space-y-3 p-4">
                                                     {order.special_instructions && (
                                                         <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
                                                             <AlertCircle className="mt-0.5 h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                                                             <div>
                                                                 <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200">
-                                                                    Special Instructions
+                                                                    Special
+                                                                    Instructions
                                                                 </p>
                                                                 <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                                                                    {order.special_instructions}
+                                                                    {
+                                                                        order.special_instructions
+                                                                    }
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -343,15 +387,20 @@ export function LabOrdersTable({ labOrders, onViewDetails }: Props) {
                                                                 Result Notes
                                                             </p>
                                                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {order.result_notes}
+                                                                {
+                                                                    order.result_notes
+                                                                }
                                                             </p>
                                                         </div>
                                                     )}
-                                                    {!order.special_instructions && !order.result_notes && (
-                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                            No additional information available
-                                                        </p>
-                                                    )}
+                                                    {!order.special_instructions &&
+                                                        !order.result_notes && (
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                                No additional
+                                                                information
+                                                                available
+                                                            </p>
+                                                        )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

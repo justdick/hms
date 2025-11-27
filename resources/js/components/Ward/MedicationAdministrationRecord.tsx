@@ -50,7 +50,13 @@ interface MedicationAdministration {
     id: number;
     prescription: Prescription;
     scheduled_time: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
+    status:
+        | 'scheduled'
+        | 'given'
+        | 'held'
+        | 'refused'
+        | 'omitted'
+        | 'cancelled';
     dosage_given?: string;
     route?: string;
     notes?: string;
@@ -78,13 +84,13 @@ export function MedicationAdministrationRecord({
     // Get today's unique scheduled times, sorted
     const todayTimeSlots = useMemo(() => {
         const times = new Set<string>();
-        
+
         medications.forEach((med) => {
             if (isToday(new Date(med.scheduled_time))) {
                 times.add(format(new Date(med.scheduled_time), 'HH:mm'));
             }
         });
-        
+
         return Array.from(times).sort();
     }, [medications]);
 
@@ -212,7 +218,8 @@ export function MedicationAdministrationRecord({
                                                     Dose:{' '}
                                                 </span>
                                                 <span className="font-medium">
-                                                    {group.prescription.dosage ||
+                                                    {group.prescription
+                                                        .dosage ||
                                                         group.prescription
                                                             .dose_quantity}
                                                 </span>
@@ -393,7 +400,7 @@ function MedicationSlot({
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <pre className="whitespace-pre-wrap text-xs">
+                    <pre className="text-xs whitespace-pre-wrap">
                         {getTooltipContent()}
                     </pre>
                 </TooltipContent>

@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pill } from 'lucide-react';
 
@@ -26,10 +25,7 @@ interface Props {
     onClick: () => void;
 }
 
-export function PrescriptionsSummaryCard({
-    prescriptions,
-    onClick,
-}: Props) {
+export function PrescriptionsSummaryCard({ prescriptions, onClick }: Props) {
     const activePrescriptions = prescriptions.filter(
         (p) => !p.status || p.status === 'active',
     );
@@ -37,7 +33,7 @@ export function PrescriptionsSummaryCard({
 
     return (
         <Card
-            className="cursor-pointer transition-all hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700"
+            className="cursor-pointer transition-all hover:border-blue-300 hover:shadow-md dark:hover:border-blue-700"
             onClick={onClick}
         >
             <CardHeader>

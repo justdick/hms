@@ -27,7 +27,9 @@ export function VitalsAlertToast({ alert, onDismiss }: VitalsAlertToastProps) {
 
     const handleRecordVitals = () => {
         // Navigate to vitals recording form
-        router.visit(`/wards/${alert.ward_id}/patients/${alert.patient_admission_id}`);
+        router.visit(
+            `/wards/${alert.ward_id}/patients/${alert.patient_admission_id}`,
+        );
     };
 
     const handleDismiss = async () => {
@@ -62,10 +64,8 @@ export function VitalsAlertToast({ alert, onDismiss }: VitalsAlertToastProps) {
                         <p
                             className={cn(
                                 'font-semibold',
-                                isOverdue &&
-                                    'text-red-900 dark:text-red-100',
-                                isDue &&
-                                    'text-yellow-900 dark:text-yellow-100',
+                                isOverdue && 'text-red-900 dark:text-red-100',
+                                isDue && 'text-yellow-900 dark:text-yellow-100',
                             )}
                         >
                             {isOverdue ? 'Vitals Overdue' : 'Vitals Due'}
@@ -73,10 +73,8 @@ export function VitalsAlertToast({ alert, onDismiss }: VitalsAlertToastProps) {
                         <div
                             className={cn(
                                 'space-y-0.5 text-sm',
-                                isOverdue &&
-                                    'text-red-800 dark:text-red-200',
-                                isDue &&
-                                    'text-yellow-800 dark:text-yellow-200',
+                                isOverdue && 'text-red-800 dark:text-red-200',
+                                isDue && 'text-yellow-800 dark:text-yellow-200',
                             )}
                         >
                             <p>
@@ -93,7 +91,10 @@ export function VitalsAlertToast({ alert, onDismiss }: VitalsAlertToastProps) {
                             </p>
                             {isOverdue && alert.time_overdue_minutes && (
                                 <p className="font-semibold">
-                                    Overdue by {formatTimeOverdue(alert.time_overdue_minutes)}
+                                    Overdue by{' '}
+                                    {formatTimeOverdue(
+                                        alert.time_overdue_minutes,
+                                    )}
                                 </p>
                             )}
                             {isDue && (

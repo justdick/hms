@@ -82,7 +82,13 @@ interface MedicationAdministration {
     id: number;
     prescription: Prescription;
     scheduled_time: string;
-    status: 'scheduled' | 'given' | 'held' | 'refused' | 'omitted' | 'cancelled';
+    status:
+        | 'scheduled'
+        | 'given'
+        | 'held'
+        | 'refused'
+        | 'omitted'
+        | 'cancelled';
     dosage_given?: string;
     route?: string;
     notes?: string;
@@ -307,11 +313,12 @@ function MedicationCard({
     const now = new Date();
     const isOverdue =
         isPast(scheduledTime) && medication.status === 'scheduled';
-    
+
     // Check if medication is due (past scheduled time or within 30 minutes)
-    const isDue = medication.status === 'scheduled' && 
-        (isPast(scheduledTime) || 
-         (scheduledTime.getTime() - now.getTime()) <= 30 * 60 * 1000);
+    const isDue =
+        medication.status === 'scheduled' &&
+        (isPast(scheduledTime) ||
+            scheduledTime.getTime() - now.getTime() <= 30 * 60 * 1000);
 
     return (
         <Card
@@ -540,7 +547,8 @@ function AdministerMedicationDialog({
                                 <DialogDescription>
                                     <div className="space-y-1">
                                         <div className="font-semibold">
-                                            {medication.prescription.drug?.name ||
+                                            {medication.prescription.drug
+                                                ?.name ||
                                                 medication.prescription
                                                     .medication_name}
                                         </div>

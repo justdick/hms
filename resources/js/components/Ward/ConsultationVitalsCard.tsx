@@ -1,6 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Thermometer, Heart, Wind, Droplets, Weight, Ruler } from 'lucide-react';
+import {
+    Activity,
+    Droplets,
+    Heart,
+    Ruler,
+    Thermometer,
+    Weight,
+    Wind,
+} from 'lucide-react';
 
 interface User {
     id: number;
@@ -42,13 +50,16 @@ export function ConsultationVitalsCard({ vitalSign }: Props) {
             label: 'Temperature',
             value: vitalSign.temperature,
             unit: '°C',
-            show: vitalSign.temperature !== undefined && vitalSign.temperature !== null,
+            show:
+                vitalSign.temperature !== undefined &&
+                vitalSign.temperature !== null,
         },
         {
             icon: Heart,
             label: 'Blood Pressure',
             value:
-                vitalSign.blood_pressure_systolic && vitalSign.blood_pressure_diastolic
+                vitalSign.blood_pressure_systolic &&
+                vitalSign.blood_pressure_diastolic
                     ? `${vitalSign.blood_pressure_systolic}/${vitalSign.blood_pressure_diastolic}`
                     : null,
             unit: 'mmHg',
@@ -63,21 +74,27 @@ export function ConsultationVitalsCard({ vitalSign }: Props) {
             label: 'Pulse Rate',
             value: vitalSign.pulse_rate,
             unit: 'bpm',
-            show: vitalSign.pulse_rate !== undefined && vitalSign.pulse_rate !== null,
+            show:
+                vitalSign.pulse_rate !== undefined &&
+                vitalSign.pulse_rate !== null,
         },
         {
             icon: Wind,
             label: 'Respiratory Rate',
             value: vitalSign.respiratory_rate,
             unit: '/min',
-            show: vitalSign.respiratory_rate !== undefined && vitalSign.respiratory_rate !== null,
+            show:
+                vitalSign.respiratory_rate !== undefined &&
+                vitalSign.respiratory_rate !== null,
         },
         {
             icon: Droplets,
             label: 'Oxygen Saturation',
             value: vitalSign.oxygen_saturation,
             unit: '%',
-            show: vitalSign.oxygen_saturation !== undefined && vitalSign.oxygen_saturation !== null,
+            show:
+                vitalSign.oxygen_saturation !== undefined &&
+                vitalSign.oxygen_saturation !== null,
         },
         {
             icon: Weight,
@@ -157,7 +174,8 @@ export function ConsultationVitalsCard({ vitalSign }: Props) {
                     <div className="py-8 text-center">
                         <Activity className="mx-auto mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
                         <p className="text-gray-600 dark:text-gray-400">
-                            No vitals were recorded during the admission consultation
+                            No vitals were recorded during the admission
+                            consultation
                         </p>
                     </div>
                 )}

@@ -58,11 +58,17 @@ export function LabResultsDisplay({ order }: Props) {
         switch (flag) {
             case 'high':
             case 'critical':
-                return <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />;
+                return (
+                    <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
+                );
             case 'low':
-                return <AlertTriangle className="h-4 w-4 text-orange-500 dark:text-orange-400" />;
+                return (
+                    <AlertTriangle className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                );
             default:
-                return <Check className="h-4 w-4 text-green-500 dark:text-green-400" />;
+                return (
+                    <Check className="h-4 w-4 text-green-500 dark:text-green-400" />
+                );
         }
     };
 
@@ -84,16 +90,18 @@ export function LabResultsDisplay({ order }: Props) {
     }
 
     // Parse result values
-    const results = Object.entries(order.result_values).map(([key, result]: [string, any]) => {
-        const isObject = typeof result === 'object' && result !== null;
-        return {
-            parameter: key.replace(/_/g, ' '),
-            value: isObject ? result.value : result,
-            unit: isObject ? result.unit : '',
-            range: isObject ? result.range : '',
-            flag: isObject ? result.flag : 'normal',
-        };
-    });
+    const results = Object.entries(order.result_values).map(
+        ([key, result]: [string, any]) => {
+            const isObject = typeof result === 'object' && result !== null;
+            return {
+                parameter: key.replace(/_/g, ' '),
+                value: isObject ? result.value : result,
+                unit: isObject ? result.unit : '',
+                range: isObject ? result.range : '',
+                flag: isObject ? result.flag : 'normal',
+            };
+        },
+    );
 
     return (
         <div className="space-y-4">
@@ -142,10 +150,12 @@ export function LabResultsDisplay({ order }: Props) {
                                 key={index}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
-                                <TableCell className="font-medium capitalize text-gray-900 dark:text-gray-100">
+                                <TableCell className="font-medium text-gray-900 capitalize dark:text-gray-100">
                                     {result.parameter}
                                 </TableCell>
-                                <TableCell className={getValueColor(result.flag)}>
+                                <TableCell
+                                    className={getValueColor(result.flag)}
+                                >
                                     {result.value}
                                     {result.unit && (
                                         <span className="ml-1 font-normal text-gray-500 dark:text-gray-400">

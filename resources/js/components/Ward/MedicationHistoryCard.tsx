@@ -100,10 +100,7 @@ export function MedicationHistoryCard({
         }
 
         return (
-            <Badge
-                variant="default"
-                className="bg-green-600 dark:bg-green-700"
-            >
+            <Badge variant="default" className="bg-green-600 dark:bg-green-700">
                 <Pill className="mr-1 h-3 w-3" />
                 Active
             </Badge>
@@ -202,7 +199,7 @@ export function MedicationHistoryCard({
 
                         {/* Instructions */}
                         {prescription.instructions && (
-                            <p className="text-sm italic text-muted-foreground">
+                            <p className="text-sm text-muted-foreground italic">
                                 {prescription.instructions}
                             </p>
                         )}

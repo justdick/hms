@@ -80,7 +80,9 @@ export function ScheduleAdjustmentBadge({
                                 className="space-y-1 border-t pt-2 text-xs first:border-t-0 first:pt-0"
                             >
                                 <p className="font-medium">
-                                    {index === 0 ? 'Latest' : `Change ${sortedAdjustments.length - index}`}
+                                    {index === 0
+                                        ? 'Latest'
+                                        : `Change ${sortedAdjustments.length - index}`}
                                 </p>
                                 <p>
                                     <span className="text-muted-foreground">
