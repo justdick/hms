@@ -101,4 +101,27 @@ class Patient extends Model
                 ->orWhere('phone_number', 'like', "%{$search}%");
         });
     }
+
+    /**
+     * Get the patient's active NHIS insurance if they have one.
+     */
+    public function activeNhisInsurance(): HasOne
+    {
+        return $this->hasOne(PatientInsurance::class)
+            ->whereHas('plan.provider', fn ($q) => $q->where('is_nhis', true))
+            ->where('status', 'active')
+            ->where('coverage_start_date', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('coverage_end_date')
+                    ->orWhere('coverage_end_date', '>=', now());
+            });
+    }
+
+    /**
+     * Check if the patient has valid NHIS coverage.
+     */
+    public function hasValidNhis(): bool
+    {
+        return $this->activeNhisInsurance()->exists();
+    }
 }

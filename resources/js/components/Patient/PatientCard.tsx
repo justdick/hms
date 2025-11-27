@@ -123,7 +123,8 @@ export default function PatientCard({ patient, onCheckin }: PatientCardProps) {
                         </div>
 
                         <div className="text-xs text-muted-foreground">
-                            Last check-in: {formatLastCheckin(patient.recent_checkin)}
+                            Last check-in:{' '}
+                            {formatLastCheckin(patient.recent_checkin)}
                         </div>
                     </div>
                 </div>

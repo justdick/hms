@@ -4,8 +4,8 @@ import PatientRegistrationModal from '@/components/Patient/RegistrationModal';
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { DataTable } from './patients-data-table';
 import { PatientData, patientsColumns } from './patients-columns';
+import { DataTable } from './patients-data-table';
 
 interface Patient {
     id: number;
@@ -74,7 +74,7 @@ export default function PatientsIndex({
     }) => {
         // Close the registration modal
         setRegistrationModalOpen(false);
-        
+
         // Convert the registered patient to the Patient type for the check-in prompt
         const fullPatient: Patient = {
             id: patient.id,

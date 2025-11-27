@@ -41,10 +41,12 @@ interface InsuranceInfo {
             id: number;
             name: string;
             code: string;
+            is_nhis?: boolean;
         };
     };
     coverage_start_date: string;
     coverage_end_date: string | null;
+    is_expired?: boolean;
 }
 
 interface CheckinModalProps {
@@ -200,151 +202,212 @@ export default function CheckinModal({
                                 </DialogDescription>
                             </DialogHeader>
 
-                    <div className="space-y-6">
-                        {/* Patient Information */}
-                        <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                            <h3 className="flex items-center gap-2 font-medium">
-                                <User className="h-4 w-4" />
-                                Patient Information
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Name
-                                    </p>
-                                    <p className="font-medium">
-                                        {patient.full_name}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Patient Number
-                                    </p>
-                                    <p className="font-medium">
-                                        {patient.patient_number}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Age & Gender
-                                    </p>
-                                    <p className="font-medium">
-                                        {patient.age} years, {patient.gender}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Phone
-                                    </p>
-                                    <p className="font-medium">
-                                        {patient.phone_number || 'Not provided'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Insurance Status Alert */}
-                        {checkingInsurance && (
-                            <div className="rounded-lg border bg-muted/50 p-4 text-center">
-                                <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                    Checking insurance coverage...
-                                </p>
-                            </div>
-                        )}
-
-                        {!checkingInsurance && insuranceInfo && (
-                            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                                <p className="text-sm font-medium text-primary">
-                                    ✓ Active Insurance Detected:{' '}
-                                    {insuranceInfo.plan.provider.name}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Check-in Details */}
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 font-medium">
-                                <Calendar className="h-4 w-4" />
-                                Check-in Details
-                            </h3>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="department_id">
-                                    Select Clinic/Department *
-                                </Label>
-                                {departments.length === 0 ? (
-                                    <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-                                        No active departments available. Please contact an administrator.
+                            <div className="space-y-6">
+                                {/* Patient Information */}
+                                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                                    <h3 className="flex items-center gap-2 font-medium">
+                                        <User className="h-4 w-4" />
+                                        Patient Information
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <p className="text-muted-foreground">
+                                                Name
+                                            </p>
+                                            <p className="font-medium">
+                                                {patient.full_name}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-muted-foreground">
+                                                Patient Number
+                                            </p>
+                                            <p className="font-medium">
+                                                {patient.patient_number}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-muted-foreground">
+                                                Age & Gender
+                                            </p>
+                                            <p className="font-medium">
+                                                {patient.age} years,{' '}
+                                                {patient.gender}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-muted-foreground">
+                                                Phone
+                                            </p>
+                                            <p className="font-medium">
+                                                {patient.phone_number ||
+                                                    'Not provided'}
+                                            </p>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <select
-                                        id="department_id"
-                                        value={selectedDepartment}
-                                        onChange={(e) =>
-                                            setSelectedDepartment(e.target.value)
-                                        }
-                                        required
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <option value="">Choose a clinic...</option>
-                                        {departments.map((department) => (
-                                            <option
-                                                key={department.id}
-                                                value={department.id}
-                                            >
-                                                {department.name} -{' '}
-                                                {department.description}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="notes">Notes (Optional)</Label>
-                                <textarea
-                                    id="notes"
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="Any additional notes about the patient's visit..."
-                                    rows={3}
-                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleModalClose}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={() => {
-                                    if (!selectedDepartment) {
-                                        toast.error(
-                                            'Please select a department',
-                                        );
-                                        return;
-                                    }
-                                    handleDepartmentSelected(
-                                        selectedDepartment,
-                                    );
-                                }}
-                                disabled={checkingInsurance || departments.length === 0}
-                            >
+                                {/* Insurance Status Alert */}
                                 {checkingInsurance && (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <div className="rounded-lg border bg-muted/50 p-4 text-center">
+                                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Checking insurance coverage...
+                                        </p>
+                                    </div>
                                 )}
-                                Continue to Check-in
-                            </Button>
-                        </div>
-                    </div>
+
+                                {!checkingInsurance && insuranceInfo && (
+                                    <div
+                                        className={`rounded-lg border p-4 ${
+                                            insuranceInfo.is_expired
+                                                ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20'
+                                                : 'border-primary/20 bg-primary/5'
+                                        }`}
+                                    >
+                                        <p
+                                            className={`text-sm font-medium ${
+                                                insuranceInfo.is_expired
+                                                    ? 'text-amber-700 dark:text-amber-400'
+                                                    : 'text-primary'
+                                            }`}
+                                        >
+                                            {insuranceInfo.is_expired
+                                                ? '⚠️'
+                                                : '✓'}{' '}
+                                            {insuranceInfo.plan.provider.name} -{' '}
+                                            {insuranceInfo.plan.plan_name}
+                                        </p>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            Member ID:{' '}
+                                            {insuranceInfo.membership_id}
+                                            {insuranceInfo.coverage_end_date && (
+                                                <>
+                                                    {' '}
+                                                    • Expires:{' '}
+                                                    {new Date(
+                                                        insuranceInfo.coverage_end_date,
+                                                    ).toLocaleDateString()}
+                                                    {insuranceInfo.is_expired && (
+                                                        <span className="text-amber-600 dark:text-amber-500">
+                                                            {' '}
+                                                            (EXPIRED)
+                                                        </span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </p>
+                                        {insuranceInfo.is_expired && (
+                                            <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                                                ⚠️ Warning: Insurance coverage
+                                                has expired. Insurance payment
+                                                option will not be available.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Check-in Details */}
+                                <div className="space-y-4">
+                                    <h3 className="flex items-center gap-2 font-medium">
+                                        <Calendar className="h-4 w-4" />
+                                        Check-in Details
+                                    </h3>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="department_id">
+                                            Select Clinic/Department *
+                                        </Label>
+                                        {departments.length === 0 ? (
+                                            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                                                No active departments available.
+                                                Please contact an administrator.
+                                            </div>
+                                        ) : (
+                                            <select
+                                                id="department_id"
+                                                value={selectedDepartment}
+                                                onChange={(e) =>
+                                                    setSelectedDepartment(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                required
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">
+                                                    Choose a clinic...
+                                                </option>
+                                                {departments.map(
+                                                    (department) => (
+                                                        <option
+                                                            key={department.id}
+                                                            value={
+                                                                department.id
+                                                            }
+                                                        >
+                                                            {department.name} -{' '}
+                                                            {
+                                                                department.description
+                                                            }
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="notes">
+                                            Notes (Optional)
+                                        </Label>
+                                        <textarea
+                                            id="notes"
+                                            value={notes}
+                                            onChange={(e) =>
+                                                setNotes(e.target.value)
+                                            }
+                                            placeholder="Any additional notes about the patient's visit..."
+                                            rows={3}
+                                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleModalClose}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!selectedDepartment) {
+                                                toast.error(
+                                                    'Please select a department',
+                                                );
+                                                return;
+                                            }
+                                            handleDepartmentSelected(
+                                                selectedDepartment,
+                                            );
+                                        }}
+                                        disabled={
+                                            checkingInsurance ||
+                                            departments.length === 0
+                                        }
+                                    >
+                                        {checkingInsurance && (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        )}
+                                        Continue to Check-in
+                                    </Button>
+                                </div>
+                            </div>
                         </>
                     )}
                 </DialogContent>

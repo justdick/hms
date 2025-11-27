@@ -23,10 +23,12 @@ interface InsuranceInfo {
             id: number;
             name: string;
             code: string;
+            is_nhis?: boolean;
         };
     };
     coverage_start_date: string;
     coverage_end_date: string | null;
+    is_expired?: boolean;
 }
 
 interface InsuranceDialogProps {
@@ -46,6 +48,11 @@ export default function InsuranceDialog({
 }: InsuranceDialogProps) {
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
+
+    // Check if this is an NHIS provider and if coverage is valid (not expired)
+    const isNhisProvider = insurance.plan.provider.is_nhis ?? false;
+    const isExpired = insurance.is_expired ?? false;
+    const canUseInsurance = !isExpired;
 
     const handleUseInsurance = () => {
         if (!claimCheckCode.trim()) {
@@ -154,18 +161,40 @@ export default function InsuranceDialog({
                         </div>
                     </div>
 
+                    {/* Expired Insurance Warning */}
+                    {isExpired && (
+                        <div className="rounded-lg border border-amber-500/50 bg-amber-50 p-4 dark:bg-amber-950/20">
+                            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                                ⚠️ Insurance Coverage Expired
+                            </p>
+                            <p className="mt-1 text-xs text-amber-600 dark:text-amber-500">
+                                Patient's insurance coverage has expired. Please
+                                renew the coverage to use insurance.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Claim Check Code Input */}
-                    <div className="space-y-4 rounded-lg border bg-primary/5 p-4">
+                    <div
+                        className={`space-y-4 rounded-lg border p-4 ${
+                            !canUseInsurance
+                                ? 'bg-muted opacity-50'
+                                : 'bg-primary/5'
+                        }`}
+                    >
                         <div className="flex items-start gap-3">
                             <CreditCard className="mt-1 h-5 w-5 text-primary" />
                             <div className="flex-1 space-y-4">
                                 <div>
                                     <h4 className="font-medium">
-                                        Use Insurance for this Visit
+                                        Use{' '}
+                                        {isNhisProvider ? 'NHIS' : 'Insurance'}{' '}
+                                        for this Visit
                                     </h4>
                                     <p className="text-sm text-muted-foreground">
                                         Enter the Claim Check Code (CCC) to
-                                        process this visit under insurance
+                                        process this visit under{' '}
+                                        {isNhisProvider ? 'NHIS' : 'insurance'}{' '}
                                         coverage.
                                     </p>
                                 </div>
@@ -184,6 +213,7 @@ export default function InsuranceDialog({
                                             setError('');
                                         }}
                                         maxLength={50}
+                                        disabled={!canUseInsurance}
                                         className={
                                             error ? 'border-destructive' : ''
                                         }
@@ -203,9 +233,11 @@ export default function InsuranceDialog({
                                 <Button
                                     onClick={handleUseInsurance}
                                     className="w-full"
+                                    disabled={!canUseInsurance}
                                 >
                                     <Shield className="mr-2 h-4 w-4" />
-                                    Check-in with Insurance
+                                    Check-in with{' '}
+                                    {isNhisProvider ? 'NHIS' : 'Insurance'}
                                 </Button>
                             </div>
                         </div>

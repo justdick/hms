@@ -55,10 +55,7 @@ const getGenderBadgeColor = (gender: string) => {
 };
 
 const getCheckinStatusBadge = (status: string) => {
-    const statusConfig: Record<
-        string,
-        { label: string; className: string }
-    > = {
+    const statusConfig: Record<string, { label: string; className: string }> = {
         checked_in: {
             label: 'Checked In',
             className:
@@ -181,9 +178,7 @@ export const patientsColumns: ColumnDef<PatientData>[] = [
             return (
                 <div className="text-sm">
                     {phone || (
-                        <span className="text-muted-foreground">
-                            No phone
-                        </span>
+                        <span className="text-muted-foreground">No phone</span>
                     )}
                 </div>
             );

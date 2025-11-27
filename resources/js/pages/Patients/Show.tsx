@@ -156,15 +156,14 @@ export default function PatientsShow({
     };
 
     const getStatusBadgeVariant = (status: string) => {
-        const statusMap: Record<string, 'default' | 'secondary' | 'outline'> =
-            {
-                checked_in: 'default',
-                vitals_taken: 'default',
-                awaiting_consultation: 'default',
-                in_consultation: 'default',
-                completed: 'secondary',
-                cancelled: 'outline',
-            };
+        const statusMap: Record<string, 'default' | 'secondary' | 'outline'> = {
+            checked_in: 'default',
+            vitals_taken: 'default',
+            awaiting_consultation: 'default',
+            in_consultation: 'default',
+            completed: 'secondary',
+            cancelled: 'outline',
+        };
         return statusMap[status] || 'outline';
     };
 
@@ -215,7 +214,7 @@ export default function PatientsShow({
                     variant="ghost"
                     size="sm"
                     asChild
-                    className="gap-2 -ml-2"
+                    className="-ml-2 gap-2"
                 >
                     <Link href={patients.index.url()}>
                         <ArrowLeft className="h-4 w-4" />
@@ -242,7 +241,9 @@ export default function PatientsShow({
                                         </h1>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <IdCard className="h-4 w-4" />
-                                            <span>{patient.patient_number}</span>
+                                            <span>
+                                                {patient.patient_number}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-3 text-sm">
@@ -296,7 +297,9 @@ export default function PatientsShow({
                                         asChild
                                         className="gap-2"
                                     >
-                                        <Link href={patients.edit.url(patient.id)}>
+                                        <Link
+                                            href={patients.edit.url(patient.id)}
+                                        >
                                             <Edit className="h-4 w-4" />
                                             Edit Profile
                                         </Link>
@@ -305,7 +308,9 @@ export default function PatientsShow({
                                 {can_checkin && (
                                     <Button
                                         className="gap-2"
-                                        onClick={() => setCheckinModalOpen(true)}
+                                        onClick={() =>
+                                            setCheckinModalOpen(true)
+                                        }
                                     >
                                         <ClipboardPlus className="h-4 w-4" />
                                         Check-in Patient
@@ -357,128 +362,132 @@ export default function PatientsShow({
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                            <div className="grid gap-6">
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                            Date of Birth
-                                        </p>
-                                        <p className="text-sm font-medium">
-                                            {formatDate(patient.date_of_birth)}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                            Gender
-                                        </p>
-                                        <p className="text-sm font-medium">
-                                            {formatGender(patient.gender)}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {patient.national_id && (
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                            National ID
-                                        </p>
-                                        <p className="text-sm font-medium">
-                                            {patient.national_id}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                        Contact Information
-                                    </p>
-                                </div>
-                                {patient.phone_number && (
-                                    <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                                            <Phone className="h-4 w-4 text-muted-foreground" />
+                                    <div className="grid gap-6">
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                    Date of Birth
+                                                </p>
+                                                <p className="text-sm font-medium">
+                                                    {formatDate(
+                                                        patient.date_of_birth,
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                    Gender
+                                                </p>
+                                                <p className="text-sm font-medium">
+                                                    {formatGender(
+                                                        patient.gender,
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs text-muted-foreground">
-                                                Phone Number
-                                            </p>
-                                            <p className="text-sm font-medium">
-                                                {patient.phone_number}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                                {patient.address && (
-                                    <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background">
-                                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs text-muted-foreground">
-                                                Address
-                                            </p>
-                                            <p className="text-sm font-medium">
-                                                {patient.address}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
 
-                            {(patient.emergency_contact_name ||
-                                patient.emergency_contact_phone) && (
-                                <>
+                                        {patient.national_id && (
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                    National ID
+                                                </p>
+                                                <p className="text-sm font-medium">
+                                                    {patient.national_id}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <Separator />
+
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2">
-                                            <AlertCircle className="h-4 w-4 text-destructive" />
-                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                                Emergency Contact
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                Contact Information
                                             </p>
                                         </div>
-                                        {patient.emergency_contact_name && (
-                                            <div className="flex items-center gap-3 rounded-lg bg-destructive/5 p-3">
+                                        {patient.phone_number && (
+                                            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
                                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                                                    <Users className="h-4 w-4 text-destructive" />
+                                                    <Phone className="h-4 w-4 text-muted-foreground" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="text-xs text-muted-foreground">
-                                                        Name
+                                                        Phone Number
                                                     </p>
                                                     <p className="text-sm font-medium">
-                                                        {
-                                                            patient.emergency_contact_name
-                                                        }
+                                                        {patient.phone_number}
                                                     </p>
                                                 </div>
                                             </div>
                                         )}
-                                        {patient.emergency_contact_phone && (
-                                            <div className="flex items-center gap-3 rounded-lg bg-destructive/5 p-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                                                    <Phone className="h-4 w-4 text-destructive" />
+                                        {patient.address && (
+                                            <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background">
+                                                    <MapPin className="h-4 w-4 text-muted-foreground" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="text-xs text-muted-foreground">
-                                                        Phone
+                                                        Address
                                                     </p>
                                                     <p className="text-sm font-medium">
-                                                        {
-                                                            patient.emergency_contact_phone
-                                                        }
+                                                        {patient.address}
                                                     </p>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+
+                                    {(patient.emergency_contact_name ||
+                                        patient.emergency_contact_phone) && (
+                                        <>
+                                            <Separator />
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-2">
+                                                    <AlertCircle className="h-4 w-4 text-destructive" />
+                                                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                                        Emergency Contact
+                                                    </p>
+                                                </div>
+                                                {patient.emergency_contact_name && (
+                                                    <div className="flex items-center gap-3 rounded-lg bg-destructive/5 p-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
+                                                            <Users className="h-4 w-4 text-destructive" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Name
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {
+                                                                    patient.emergency_contact_name
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {patient.emergency_contact_phone && (
+                                                    <div className="flex items-center gap-3 rounded-lg bg-destructive/5 p-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background">
+                                                            <Phone className="h-4 w-4 text-destructive" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Phone
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {
+                                                                    patient.emergency_contact_phone
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
 
                             {/* Quick Stats */}
                             <Card>
@@ -570,149 +579,153 @@ export default function PatientsShow({
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                            {patient.active_insurance ? (
-                                <div className="space-y-6">
-                                    <div className="rounded-lg border-2 border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950/20">
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <Badge
-                                                variant="default"
-                                                className="gap-1.5 bg-green-600"
-                                            >
-                                                <Shield className="h-3 w-3" />
-                                                Active Coverage
-                                            </Badge>
-                                            <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                                                {
-                                                    patient.active_insurance
-                                                        .insurance_plan.name
-                                                }
-                                            </p>
-                                        </div>
-
-                                        <div className="grid gap-6 sm:grid-cols-2">
-                                            <div className="space-y-1">
-                                                <p className="text-xs font-medium text-muted-foreground">
-                                                    Membership ID
-                                                </p>
-                                                <p className="text-sm font-semibold">
+                                {patient.active_insurance ? (
+                                    <div className="space-y-6">
+                                        <div className="rounded-lg border-2 border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950/20">
+                                            <div className="mb-4 flex items-center justify-between">
+                                                <Badge
+                                                    variant="default"
+                                                    className="gap-1.5 bg-green-600"
+                                                >
+                                                    <Shield className="h-3 w-3" />
+                                                    Active Coverage
+                                                </Badge>
+                                                <p className="text-sm font-medium text-green-700 dark:text-green-300">
                                                     {
                                                         patient.active_insurance
-                                                            .membership_id
+                                                            .insurance_plan.name
                                                     }
                                                 </p>
                                             </div>
-                                            {patient.active_insurance
-                                                .policy_number && (
-                                                <div className="space-y-1">
-                                                    <p className="text-xs font-medium text-muted-foreground">
-                                                        Policy Number
-                                                    </p>
-                                                    <p className="text-sm font-semibold">
-                                                        {
-                                                            patient
-                                                                .active_insurance
-                                                                .policy_number
-                                                        }
-                                                    </p>
-                                                </div>
-                                            )}
-                                            {patient.active_insurance
-                                                .card_number && (
-                                                <div className="space-y-1">
-                                                    <p className="text-xs font-medium text-muted-foreground">
-                                                        Card Number
-                                                    </p>
-                                                    <p className="text-sm font-semibold">
-                                                        {
-                                                            patient
-                                                                .active_insurance
-                                                                .card_number
-                                                        }
-                                                    </p>
-                                                </div>
-                                            )}
-                                            <div className="space-y-1">
-                                                <p className="text-xs font-medium text-muted-foreground">
-                                                    Coverage Period
-                                                </p>
-                                                <p className="text-sm font-semibold">
-                                                    {formatDate(
-                                                        patient.active_insurance
-                                                            .coverage_start_date,
-                                                    )}{' '}
-                                                    -{' '}
-                                                    {patient.active_insurance
-                                                        .coverage_end_date
-                                                        ? formatDate(
-                                                              patient
-                                                                  .active_insurance
-                                                                  .coverage_end_date,
-                                                          )
-                                                        : 'No expiry'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {patient.active_insurance.is_dependent && (
-                                        <div className="rounded-lg border bg-background p-4">
-                                            <div className="mb-3 flex items-center gap-2">
-                                                <Users className="h-4 w-4 text-muted-foreground" />
-                                                <h4 className="text-sm font-semibold">
-                                                    Dependent Information
-                                                </h4>
-                                            </div>
-                                            <div className="grid gap-3 sm:grid-cols-2">
+                                            <div className="grid gap-6 sm:grid-cols-2">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Membership ID
+                                                    </p>
+                                                    <p className="text-sm font-semibold">
+                                                        {
+                                                            patient
+                                                                .active_insurance
+                                                                .membership_id
+                                                        }
+                                                    </p>
+                                                </div>
                                                 {patient.active_insurance
-                                                    .principal_member_name && (
+                                                    .policy_number && (
                                                     <div className="space-y-1">
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Principal Member
+                                                        <p className="text-xs font-medium text-muted-foreground">
+                                                            Policy Number
                                                         </p>
-                                                        <p className="text-sm font-medium">
+                                                        <p className="text-sm font-semibold">
                                                             {
                                                                 patient
                                                                     .active_insurance
-                                                                    .principal_member_name
+                                                                    .policy_number
                                                             }
                                                         </p>
                                                     </div>
                                                 )}
                                                 {patient.active_insurance
-                                                    .relationship_to_principal && (
+                                                    .card_number && (
                                                     <div className="space-y-1">
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Relationship
+                                                        <p className="text-xs font-medium text-muted-foreground">
+                                                            Card Number
                                                         </p>
-                                                        <p className="text-sm font-medium">
+                                                        <p className="text-sm font-semibold">
                                                             {
                                                                 patient
                                                                     .active_insurance
-                                                                    .relationship_to_principal
+                                                                    .card_number
                                                             }
                                                         </p>
                                                     </div>
                                                 )}
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Coverage Period
+                                                    </p>
+                                                    <p className="text-sm font-semibold">
+                                                        {formatDate(
+                                                            patient
+                                                                .active_insurance
+                                                                .coverage_start_date,
+                                                        )}{' '}
+                                                        -{' '}
+                                                        {patient
+                                                            .active_insurance
+                                                            .coverage_end_date
+                                                            ? formatDate(
+                                                                  patient
+                                                                      .active_insurance
+                                                                      .coverage_end_date,
+                                                              )
+                                                            : 'No expiry'}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-12">
-                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                                        <Shield className="h-10 w-10 text-muted-foreground/50" />
+
+                                        {patient.active_insurance
+                                            .is_dependent && (
+                                            <div className="rounded-lg border bg-background p-4">
+                                                <div className="mb-3 flex items-center gap-2">
+                                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                                    <h4 className="text-sm font-semibold">
+                                                        Dependent Information
+                                                    </h4>
+                                                </div>
+                                                <div className="grid gap-3 sm:grid-cols-2">
+                                                    {patient.active_insurance
+                                                        .principal_member_name && (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Principal Member
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {
+                                                                    patient
+                                                                        .active_insurance
+                                                                        .principal_member_name
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {patient.active_insurance
+                                                        .relationship_to_principal && (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Relationship
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {
+                                                                    patient
+                                                                        .active_insurance
+                                                                        .relationship_to_principal
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="mt-4 text-sm font-medium">
-                                        No Active Insurance
-                                    </p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        This patient doesn't have active
-                                        insurance coverage
-                                    </p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-12">
+                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                            <Shield className="h-10 w-10 text-muted-foreground/50" />
+                                        </div>
+                                        <p className="mt-4 text-sm font-medium">
+                                            No Active Insurance
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            This patient doesn't have active
+                                            insurance coverage
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* Visit History Tab */}
@@ -732,7 +745,7 @@ export default function PatientsShow({
                                 {patient.checkin_history.length > 0 ? (
                                     <div className="relative space-y-4">
                                         {/* Timeline line */}
-                                        <div className="absolute left-[19px] top-2 h-[calc(100%-2rem)] w-0.5 bg-border" />
+                                        <div className="absolute top-2 left-[19px] h-[calc(100%-2rem)] w-0.5 bg-border" />
 
                                         {patient.checkin_history.map(
                                             (checkin, index) => (
@@ -797,90 +810,91 @@ export default function PatientsShow({
                     {/* Medical History Tab */}
                     {can_view_medical_history && (
                         <TabsContent value="medical" className="space-y-6">
-                            {(patient.past_medical_surgical_history ||
-                                patient.drug_history ||
-                                patient.family_history ||
-                                patient.social_history) ? (
-                            <div className="grid gap-6 lg:grid-cols-2">
-                                {patient.past_medical_surgical_history && (
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2 text-lg">
-                                                <Heart className="h-5 w-5 text-red-500" />
-                                                Past Medical/Surgical History
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm leading-relaxed">
-                                                {
-                                                    patient.past_medical_surgical_history
-                                                }
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                                {patient.drug_history && (
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2 text-lg">
-                                                <Activity className="h-5 w-5 text-blue-500" />
-                                                Drug History
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm leading-relaxed">
-                                                {patient.drug_history}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                                {patient.family_history && (
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2 text-lg">
-                                                <Users className="h-5 w-5 text-purple-500" />
-                                                Family History
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm leading-relaxed">
-                                                {patient.family_history}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                                {patient.social_history && (
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2 text-lg">
-                                                <FileText className="h-5 w-5 text-orange-500" />
-                                                Social History
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm leading-relaxed">
-                                                {patient.social_history}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                            </div>
-                        ) : (
-                            <Card>
-                                <CardContent className="flex flex-col items-center justify-center py-12">
-                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                                        <FileText className="h-10 w-10 text-muted-foreground/50" />
-                                    </div>
-                                    <p className="mt-4 text-sm font-medium">
-                                        No Medical History
-                                    </p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        No medical history has been recorded for
-                                        this patient
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
+                            {patient.past_medical_surgical_history ||
+                            patient.drug_history ||
+                            patient.family_history ||
+                            patient.social_history ? (
+                                <div className="grid gap-6 lg:grid-cols-2">
+                                    {patient.past_medical_surgical_history && (
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    <Heart className="h-5 w-5 text-red-500" />
+                                                    Past Medical/Surgical
+                                                    History
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm leading-relaxed">
+                                                    {
+                                                        patient.past_medical_surgical_history
+                                                    }
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                    {patient.drug_history && (
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    <Activity className="h-5 w-5 text-blue-500" />
+                                                    Drug History
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm leading-relaxed">
+                                                    {patient.drug_history}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                    {patient.family_history && (
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    <Users className="h-5 w-5 text-purple-500" />
+                                                    Family History
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm leading-relaxed">
+                                                    {patient.family_history}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                    {patient.social_history && (
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    <FileText className="h-5 w-5 text-orange-500" />
+                                                    Social History
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm leading-relaxed">
+                                                    {patient.social_history}
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </div>
+                            ) : (
+                                <Card>
+                                    <CardContent className="flex flex-col items-center justify-center py-12">
+                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                            <FileText className="h-10 w-10 text-muted-foreground/50" />
+                                        </div>
+                                        <p className="mt-4 text-sm font-medium">
+                                            No Medical History
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            No medical history has been recorded
+                                            for this patient
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </TabsContent>
                     )}
                 </Tabs>

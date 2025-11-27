@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { router } from '@inertiajs/react';
-import { AlertCircle, ArrowRight, CreditCard, DollarSign, Shield } from 'lucide-react';
+import {
+    AlertCircle,
+    ArrowRight,
+    CreditCard,
+    DollarSign,
+    Shield,
+} from 'lucide-react';
 
 interface Payment {
     date: string;
@@ -85,7 +91,8 @@ export default function BillingSummary({
                                             </p>
                                         </div>
 
-                                        {billingSummary.insurance_covered > 0 && (
+                                        {billingSummary.insurance_covered >
+                                            0 && (
                                             <div className="grid gap-3 sm:grid-cols-2">
                                                 <div className="rounded-lg bg-white/50 p-3 dark:bg-black/20">
                                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -118,7 +125,8 @@ export default function BillingSummary({
                             {billingSummary.has_active_overrides && (
                                 <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900 dark:bg-yellow-950/20">
                                     <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200">
-                                        ⚠️ Active service access override in place
+                                        ⚠️ Active service access override in
+                                        place
                                     </p>
                                 </div>
                             )}

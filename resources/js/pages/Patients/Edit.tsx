@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -7,6 +6,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -91,7 +91,8 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
         national_id: patient.national_id || '',
         // Insurance fields
         has_insurance: !!patient.active_insurance,
-        insurance_plan_id: patient.active_insurance?.insurance_plan_id?.toString() || '',
+        insurance_plan_id:
+            patient.active_insurance?.insurance_plan_id?.toString() || '',
         membership_id: patient.active_insurance?.membership_id || '',
         policy_number: patient.active_insurance?.policy_number || '',
         card_number: patient.active_insurance?.card_number || '',
@@ -148,7 +149,8 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                     Edit Patient
                                 </h1>
                                 <p className="text-muted-foreground">
-                                    {patient.full_name} (#{patient.patient_number})
+                                    {patient.full_name} (#
+                                    {patient.patient_number})
                                 </p>
                             </div>
                         </div>
@@ -174,7 +176,10 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                         id="first_name"
                                         value={data.first_name}
                                         onChange={(e) =>
-                                            setData('first_name', e.target.value)
+                                            setData(
+                                                'first_name',
+                                                e.target.value,
+                                            )
                                         }
                                         required
                                     />
@@ -212,7 +217,13 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                         id="gender"
                                         value={data.gender}
                                         onChange={(e) =>
-                                            setData('gender', e.target.value as 'male' | 'female' | '')
+                                            setData(
+                                                'gender',
+                                                e.target.value as
+                                                    | 'male'
+                                                    | 'female'
+                                                    | '',
+                                            )
                                         }
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                                         required
@@ -278,7 +289,10 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                         id="national_id"
                                         value={data.national_id}
                                         onChange={(e) =>
-                                            setData('national_id', e.target.value)
+                                            setData(
+                                                'national_id',
+                                                e.target.value,
+                                            )
                                         }
                                     />
                                 </div>
@@ -390,7 +404,9 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                                         {insurance_plans.map(
                                                             (plan) => (
                                                                 <SelectItem
-                                                                    key={plan.id}
+                                                                    key={
+                                                                        plan.id
+                                                                    }
                                                                     value={plan.id.toString()}
                                                                 >
                                                                     {

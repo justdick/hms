@@ -344,6 +344,12 @@ class CheckinController extends Controller
 
         $activeInsurance->load(['plan.provider']);
 
+        // Check if this is an NHIS provider
+        $isNhisProvider = $activeInsurance->plan->provider->is_nhis ?? false;
+
+        // Check if coverage has expired
+        $isExpired = $activeInsurance->coverage_end_date && $activeInsurance->coverage_end_date->isPast();
+
         return response()->json([
             'has_insurance' => true,
             'insurance' => [
@@ -358,10 +364,12 @@ class CheckinController extends Controller
                         'id' => $activeInsurance->plan->provider->id,
                         'name' => $activeInsurance->plan->provider->name,
                         'code' => $activeInsurance->plan->provider->code,
+                        'is_nhis' => $isNhisProvider,
                     ],
                 ],
                 'coverage_start_date' => $activeInsurance->coverage_start_date,
                 'coverage_end_date' => $activeInsurance->coverage_end_date,
+                'is_expired' => $isExpired,
             ],
         ]);
     }

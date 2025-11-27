@@ -3,7 +3,6 @@ import {
     AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
-    AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
@@ -45,7 +44,7 @@ export default function CheckinPromptDialog({
                         Patient Registered Successfully!
                     </AlertDialogTitle>
                 </AlertDialogHeader>
-                
+
                 <div className="space-y-4">
                     <div className="rounded-lg border bg-muted/50 p-4">
                         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
@@ -81,16 +80,20 @@ export default function CheckinPromptDialog({
                     </div>
 
                     <p className="text-center text-foreground">
-                        Would you like to check in this patient for
-                        consultation now?
+                        Would you like to check in this patient for consultation
+                        now?
                     </p>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onClose}>Later</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => {
-                        e.preventDefault();
-                        onCheckinNow();
-                    }}>
+                    <AlertDialogCancel onClick={onClose}>
+                        Later
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onCheckinNow();
+                        }}
+                    >
                         Check-in Now
                     </AlertDialogAction>
                 </AlertDialogFooter>
