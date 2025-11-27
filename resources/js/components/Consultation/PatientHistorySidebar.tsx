@@ -198,7 +198,10 @@ export function PatientHistorySidebar({
                 <SheetTrigger asChild>
                     <Button variant="outline" className="gap-2">
                         <History className="h-4 w-4" />
-                        Previous Visits ({previousConsultations.length + previousMinorProcedures.length})
+                        Previous Visits (
+                        {previousConsultations.length +
+                            previousMinorProcedures.length}
+                        )
                     </Button>
                 </SheetTrigger>
                 <SheetContent

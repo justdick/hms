@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -8,8 +9,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -18,8 +17,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
-import { Plus, Trash2, Stethoscope } from 'lucide-react';
+import { Plus, Stethoscope, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -82,9 +82,7 @@ export default function TheatreProceduresTab({
                     setComments('');
                 },
                 onError: (errors) => {
-                    toast.error(
-                        errors.error || 'Failed to add procedure',
-                    );
+                    toast.error(errors.error || 'Failed to add procedure');
                 },
                 onFinish: () => setIsSubmitting(false),
             },
@@ -107,9 +105,7 @@ export default function TheatreProceduresTab({
                     toast.success('Procedure removed successfully');
                 },
                 onError: (errors) => {
-                    toast.error(
-                        errors.error || 'Failed to remove procedure',
-                    );
+                    toast.error(errors.error || 'Failed to remove procedure');
                 },
             },
         );

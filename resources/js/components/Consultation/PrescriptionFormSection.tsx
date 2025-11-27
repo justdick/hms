@@ -245,7 +245,35 @@ export default function PrescriptionFormSection({
                                         className="w-[500px] p-0"
                                         align="start"
                                     >
-                                        <Command>
+                                        <Command
+                                            filter={(value, search) => {
+                                                const searchLower = search.toLowerCase().trim();
+                                                const valueLower = value.toLowerCase();
+                                                
+                                                if (!searchLower) return 1;
+                                                
+                                                // Direct substring match (highest priority)
+                                                if (valueLower.includes(searchLower)) return 1;
+                                                
+                                                // Check if search matches start of any word in value
+                                                const valueWords = valueLower.split(/\s+/);
+                                                const startsWithMatch = valueWords.some(word => 
+                                                    word.startsWith(searchLower)
+                                                );
+                                                if (startsWithMatch) return 0.8;
+                                                
+                                                // Multi-word search: all words must be found
+                                                const searchWords = searchLower.split(/\s+/).filter(Boolean);
+                                                if (searchWords.length > 1) {
+                                                    const allWordsMatch = searchWords.every(word => 
+                                                        valueLower.includes(word)
+                                                    );
+                                                    if (allWordsMatch) return 0.6;
+                                                }
+                                                
+                                                return 0;
+                                            }}
+                                        >
                                             <CommandInput placeholder="Search drugs..." />
                                             <CommandList>
                                                 <CommandEmpty>

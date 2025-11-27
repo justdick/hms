@@ -109,6 +109,7 @@ interface Drug {
     strength?: string;
     unit_price: number;
     unit_type: string;
+    bottle_size?: number;
 }
 
 interface Prescription {
@@ -390,7 +391,7 @@ export default function ConsultationShow({
         }
 
         setIsSaving(true);
-        
+
         try {
             const csrfToken = document
                 .querySelector('meta[name="csrf-token"]')
@@ -400,7 +401,7 @@ export default function ConsultationShow({
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken || '',
                     'X-Requested-With': 'XMLHttpRequest',
                 },

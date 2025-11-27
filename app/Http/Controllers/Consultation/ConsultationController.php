@@ -172,7 +172,7 @@ class ConsultationController extends Controller
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
             'availableWards' => Ward::active()->available()->get(['id', 'name', 'code', 'available_beds']),
-            'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
+            'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
             'availableDepartments' => Department::active()->opd()->get(['id', 'name', 'code']),
             'availableDiagnoses' => Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
             'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
@@ -274,7 +274,7 @@ class ConsultationController extends Controller
         return Inertia::render('Consultation/ShowEnhanced', [
             'consultation' => $consultation,
             'labServices' => $labServices,
-            'drugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'form', 'strength', 'unit_type']),
+            'drugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'form', 'strength', 'unit_type', 'bottle_size']),
             'previousConsultations' => $previousConsultations,
             'medications' => $medications,
             'allergies' => $allergies,
