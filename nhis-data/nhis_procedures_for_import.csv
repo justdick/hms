@@ -1,0 +1,331 @@
+code,name,category,type,price,description,nhis_code
+ASUR01A,Operations of thyroid & parathyroid glands >=12 Yrs,General Surgery,major,,Age category: adult,ASUR01A
+ASUR02A,Surgery for lung and bronchus lesions >=12 Yrs,General Surgery,major,,Age category: adult,ASUR02A
+ASUR03A,Thoracostomy and chest tube insertion >=12 Yrs,General Surgery,major,,Age category: adult,ASUR03A
+ASUR04A,Operations on the oesophagus and diaphragm >=12 Yrs,General Surgery,major,,Age category: adult,ASUR04A
+ASUR05A,Excision of Neck Swellings >=12 Yrs,General Surgery,major,,Age category: adult,ASUR05A
+ASUR06A,Laparotomy for solid organ Surgery >=12 Yrs,General Surgery,major,,Age category: adult,ASUR06A
+ASUR07A,Laparotomy for Gastric Surgery >=12 Yrs,General Surgery,major,,Age category: adult,ASUR07A
+ASUR08A,Laparotomy for peritonitis >=12 Yrs,General Surgery,major,,Age category: adult,ASUR08A
+ASUR09A,Endoscopic surgery for bleeding oesophageal varices >=12 Yrs,General Surgery,major,,Age category: adult,ASUR09A
+ASUR10A,Laparotomy and Small Bowel Resection >=12 Yrs,General Surgery,major,,Age category: adult,ASUR10A
+ASUR11A,Laparotomy and colon resection >=12 Yrs,General Surgery,major,,Age category: adult,ASUR11A
+ASUR12A,Laparotomy for Colostomy or Ileostomy >=12 Yrs,General Surgery,major,,Age category: adult,ASUR12A
+ASUR13A,Laparotomy and AP Resection >=12 Yrs,General Surgery,major,,Age category: adult,ASUR13A
+ASUR14A,Percutaneous Ultrasound Guided Drainage of lesions >=12 Yrs,General Surgery,major,,Age category: adult,ASUR14A
+ASUR15A,Operations on Anus >=12 Yrs,General Surgery,major,,Age category: adult,ASUR15A
+ASUR16A,Laparotomy and drainage of liver >=12 Yrs,General Surgery,major,,Age category: adult,ASUR16A
+ASUR17A,Laparotomy for biliary surgery >=12 Yrs,General Surgery,major,,Age category: adult,ASUR17A
+ASUR18A,Laparotomy and Pancreatic Surgery >=12 Yrs,General Surgery,major,,Age category: adult,ASUR18A
+ASUR19A,Internal Hernia Repair >=12 Yrs,General Surgery,major,,Age category: adult,ASUR19A
+ASUR20A,External Hernia Repair >=12 Yrs,General Surgery,major,,Age category: adult,ASUR20A
+ASUR21A,Operations on the urethra >=12 Yrs,General Surgery,major,,Age category: adult,ASUR21A
+ASUR22A,Surgery on scrotum & tunica vaginalis >=12 Yrs,General Surgery,major,,Age category: adult,ASUR22A
+ASUR23A,Mastectomy >=12 Yrs,General Surgery,major,,Age category: adult,ASUR23A
+ASUR24A,Vascular surgery operations >=12 Yrs,General Surgery,major,,Age category: adult,ASUR24A
+ASUR25A,Stripping and Ligation of veins >=12 Yrs,General Surgery,major,,Age category: adult,ASUR25A
+ASUR27A,Emergency circumcision >=12 Yrs,General Surgery,minor,,Age category: adult,ASUR27A
+ASUR28A,Genitourinary surgery >=12 Yrs,General Surgery,major,,Age category: adult,ASUR28A
+ASUR30A,General Surgery Excision Biopsy >=12 Yrs,General Surgery,minor,,Age category: adult,ASUR30A
+ASUR31A,"Incision, Drainage and Debridement - General Surgery >=12 Yrs",General Surgery,major,,Age category: adult,ASUR31A
+ASUR32A,Closure of colostomy and ileostomy >=12 Yrs,General Surgery,major,,Age category: adult,ASUR32A
+ASUR33A,Laparotomy and Porto-caval Shunt >=12 Yrs,General Surgery,major,,Age category: adult,ASUR33A
+ASUR34A,Conservative management of surgery,General Surgery,minor,,Age category: adult,ASUR34A
+ASUR35A,Surgery for removal of finger/toe >= 12 Yrs,General Surgery,major,,Age category: adult,ASUR35A
+ASUR36A,Surgery for removal of hand or foot >=12 Yrs,General Surgery,major,,Age category: adult,ASUR36A
+ASUR37A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",General Surgery,major,,Age category: adult,ASUR37A
+DENT01A,Forceps Extraction of Tooth >=12 Yrs,Dental,minor,,Age category: adult,DENT01A
+DENT01C,Forceps Extraction of Tooth <12 Yrs,Dental,minor,,Age category: child,DENT01C
+DENT02A,Surgical Removal of Tooth >=12 Yrs,Dental,minor,,Age category: adult,DENT02A
+DENT03A,Temporary Filling >=12 Yrs,Dental,minor,,Age category: adult,DENT03A
+DENT03C,Temporary Filling <12 Yrs,Dental,minor,,Age category: child,DENT03C
+DENT04A,Amalgam Filling >=12 Yrs,Dental,minor,,Age category: adult,DENT04A
+DENT04C,Amalgam Filling <12 Yrs,Dental,minor,,Age category: child,DENT04C
+DENT05A,Composite/GI Filling >=12 Yrs,Dental,minor,,Age category: adult,DENT05A
+DENT05C,Composite/GI Filling <12 Yrs,Dental,minor,,Age category: child,DENT05C
+DENT06A,Scaling & Polishing >=12 Yrs,Dental,minor,,Age category: adult,DENT06A
+DENT06C,Scaling & Polishing <12 Yrs,Dental,minor,,Age category: child,DENT06C
+DENT07A,Gingivectomy >=12 Yrs,Dental,minor,,Age category: adult,DENT07A
+DENT07C,Gingivectomy <12 Yrs,Dental,minor,,Age category: child,DENT07C
+DENT08A,Root Canal Therapy - Single Root (RCT) >=12 Yrs,Dental,minor,,Age category: adult,DENT08A
+DENT08C,Root Canal Therapy - Single Root (RCT) <12 Yrs,Dental,minor,,Age category: child,DENT08C
+DENT09A,Apicectomy >=12 Yrs,Dental,minor,,Age category: adult,DENT09A
+DENT09C,Apicectomy <12 Yrs,Dental,minor,,Age category: child,DENT09C
+DENT10A,Incision and Drainage (I & D) of Oro-Facial Abscess >=12 Yrs,Dental,minor,,Age category: adult,DENT10A
+DENT10C,Incision and Drainage (I & D) of Oro-Facial Abscess <12 Yrs,Dental,minor,,Age category: child,DENT10C
+DENT11A,Surgical Excision of Intraoral Lesions >=12 Yrs,Dental,minor,,Age category: adult,DENT11A
+DENT11C,Surgical Excision of Intraoral Lesions <12 Yrs,Dental,minor,,Age category: child,DENT11C
+DENT12A,Curetage/Sequestrectomy of Facial Bone >=12 Yrs,Dental,minor,,Age category: adult,DENT12A
+DENT12C,Curetage/Sequestrectomy of Facial Bone <12 Yrs,Dental,minor,,Age category: child,DENT12C
+DENT13A,Removal of Stone from Salivary Duct >=12 Yrs,Dental,minor,,Age category: adult,DENT13A
+DENT13C,Removal of Stone from Salivary Duct <12 Yrs,Dental,minor,,Age category: child,DENT13C
+DENT14A,Sialoadenectomy >=12 Yrs,Dental,major,,Age category: adult,DENT14A
+DENT14C,Sialoadenectomy <12 Yrs,Dental,major,,Age category: child,DENT14C
+DENT15A,Suturing of Lacerations of Facial Region >=12 Yrs,Dental,minor,,Age category: adult,DENT15A
+DENT15C,Suturing of Lacerations of Facial Region <12 Yrs,Dental,minor,,Age category: child,DENT15C
+DENT16A,Dressing of Open Facial Wounds >=12 Yrs,Dental,minor,,Age category: adult,DENT16A
+DENT16C,Dressing of Open Facial Wounds <12 Yrs,Dental,minor,,Age category: child,DENT16C
+DENT17A,Frenectomy/Frenotomy >=12 Yrs,Dental,minor,,Age category: adult,DENT17A
+DENT17C,Frenectomy/Frenotomy <12 Yrs,Dental,minor,,Age category: child,DENT17C
+DENT18A,Partial Resection of Facial Bones or Soft Tissues >=12 Yrs,Dental,major,,Age category: adult,DENT18A
+DENT18C,Partial Resection of Facial Bones or Soft Tissues <12 Yrs,Dental,major,,Age category: child,DENT18C
+DENT19A,Total Resection of Facial Bones and Soft Tissues >=12 Yrs,Dental,major,,Age category: adult,DENT19A
+DENT19C,Total Resection of Facial Bones and Soft Tissues <12 Yrs,Dental,major,,Age category: child,DENT19C
+DENT20A,Closed Reduction of Fractures of Facial Bones (IMF) >=12 Yrs,Dental,minor,,Age category: adult,DENT20A
+DENT20C,Closed Reduction of Fractures of Facial Bones (IMF) <12 Yrs,Dental,minor,,Age category: child,DENT20C
+DENT21A,Open Reduction of Facial Fractures >=12 Yrs,Dental,major,,Age category: adult,DENT21A
+DENT21C,Open Reduction of Facial Fractures <12 Yrs,Dental,major,,Age category: child,DENT21C
+DENT22A,Removal of Dental Wiring >=12 Yrs,Dental,minor,,Age category: adult,DENT22A
+DENT22C,Removal of Dental Wiring <12 Yrs,Dental,minor,,Age category: child,DENT22C
+DENT23A,Manual Reduction of TMJ Dislocation >=12 Yrs,Dental,minor,,Age category: adult,DENT23A
+DENT23C,Manual Reduction of TMJ Dislocation <12 Yrs,Dental,minor,,Age category: child,DENT23C
+DENT24A,Dental Examination (Medical Management) >=12 Yrs,Dental,minor,,Age category: adult,DENT24A
+DENT24C,Dental Examination (Medical Management) <12 Yrs,Dental,minor,,Age category: child,DENT24C
+ENTH01A,"Excision and biopsy of swellings of ear, nose and throat >=12 Yrs",ENT,minor,,Age category: adult,ENTH01A
+ENTH01C,"Excision and biopsy of swellings of ear, nose and throat <12 Yrs",ENT,minor,,Age category: child,ENTH01C
+ENTH02A,Surgery for external ear lesions >=12 Yrs,ENT,major,,Age category: adult,ENTH02A
+ENTH02C,Surgery for external ear lesions <12 Yrs,ENT,major,,Age category: child,ENTH02C
+ENTH05A,Surgery for internal ear lesions >=12 Yrs,ENT,major,,Age category: adult,ENTH05A
+ENTH05C,Surgery for internal ear lesions <12 Yrs,ENT,major,,Age category: child,ENTH05C
+ENTH06A,Reconstructive Surgery of ear >=12 Yrs,ENT,major,,Age category: adult,ENTH06A
+ENTH06C,Reconstructive Surgery of ear <12 Yrs,ENT,major,,Age category: child,ENTH06C
+ENTH07A,Sinus Surgery >=12 Yrs,ENT,major,,Age category: adult,ENTH07A
+ENTH07C,Sinus Surgery <12 Yrs,ENT,major,,Age category: child,ENTH07C
+ENTH08A,Surgery of tonsils and adenoids >=12 Yrs,ENT,major,,Age category: adult,ENTH08A
+ENTH08C,Surgery of tonsils and adenoids <12 Yrs,ENT,major,,Age category: child,ENTH08C
+ENTH09A,Surgery of Salivary Glands >=12 Yrs,ENT,major,,Age category: adult,ENTH09A
+ENTH09C,Surgery of Salivary Glands <12 Yrs,ENT,major,,Age category: child,ENTH09C
+ENTH10A,Laryngectomy >=12 Yrs,ENT,major,,Age category: adult,ENTH10A
+ENTH10C,Laryngectomy <12 Yrs,ENT,major,,Age category: child,ENTH10C
+ENTH12A,Excision and Reconstruction of Oro- and Naso-pharynx >=12 Yrs,ENT,major,,Age category: adult,ENTH12A
+ENTH12C,Excision and Reconstruction of Oro- and Naso-pharynx <12 Yrs,ENT,major,,Age category: child,ENTH12C
+ENTH13A,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat >=12 Yrs",ENT,minor,,Age category: adult,ENTH13A
+ENTH13C,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat <12 Yrs",ENT,minor,,Age category: child,ENTH13C
+ENTH14A,"Incision and Drainage of Abscess of ear, nose and throat >=12 Yrs",ENT,minor,,Age category: adult,ENTH14A
+ENTH14C,"Incision and Drainage of Abscess of ear, nose and throat <12 Yrs",ENT,minor,,Age category: child,ENTH14C
+ENTH15A,Manipulation and reduction of fractured nasal bone >=12 Yrs,ENT,major,,Age category: adult,ENTH15A
+ENTH15C,Manipulation and reduction of fractured nasal bone <12 Yrs,ENT,major,,Age category: child,ENTH15C
+ENTH16A,Specific nasal surgery >=12 Yrs,ENT,major,,Age category: adult,ENTH16A
+ENTH16C,Specific nasal surgery <12 Yrs,ENT,major,,Age category: child,ENTH16C
+ENTH17A,Arterial Ligation for Epistaxis >=12 Yrs,ENT,major,,Age category: adult,ENTH17A
+ENTH17C,Arterial Ligation for Epistaxis <12 Yrs,ENT,major,,Age category: child,ENTH17C
+ENTH18A,"Surgery for trauma to ear, nose, throat >=12 Yrs",ENT,major,,Age category: adult,ENTH18A
+ENTH18C,"Surgery for trauma to ear, nose, throat <12 Yrs",ENT,major,,Age category: child,ENTH18C
+ENTH19A,Excision biopsy of swellings of neck >=12 Yrs,ENT,minor,,Age category: adult,ENTH19A
+ENTH19C,Excision biopsy of swellings of neck <12 Yrs,ENT,minor,,Age category: child,ENTH19C
+ENTH20A,ENT OPD Procedures >=12 Yrs,ENT,minor,,Age category: adult,ENTH20A
+ENTH20C,ENT OPD Procedures <12 Yrs,ENT,minor,,Age category: child,ENTH20C
+ENTH21A,Vestibulometry >=12 Yrs,ENT,minor,,Age category: adult,ENTH21A
+ENTH21C,Vestibulometry <12 Yrs,ENT,minor,,Age category: child,ENTH21C
+ENTH22A,Evoked response audiometry >=12 Yrs,ENT,minor,,Age category: adult,ENTH22A
+ENTH22C,Evoked response audiometry <12 Yrs,ENT,minor,,Age category: child,ENTH22C
+ENTH23A,Antral Lavage under Local Anaesthesia >=12 Yrs,ENT,minor,,Age category: adult,ENTH23A
+ENTH23C,Antral Lavage under Local Anaesthesia <12 Yrs,ENT,minor,,Age category: child,ENTH23C
+ENTH24A,Endoscopic ENT Surgery >=12 Yrs,ENT,major,,Age category: adult,ENTH24A
+ENTH24C,Endoscopic ENT Surgery <12 Yrs,ENT,major,,Age category: child,ENTH24C
+OBGY01A,Gynaecological Laparotomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY01A
+OBGY02A,Diagnostic Laparascopy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY02A
+OBGY03A,Operative Laparascopy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY03A
+OBGY04A,Culdocentesis/Culdotomy,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY04A
+OBGY05A,Cauterization,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY05A
+OBGY06A,MVA/EOU,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY06A
+OBGY07A,Suction Curettage,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY07A
+OBGY08A,Manual Removal of Placenta,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY08A
+OBGY09A,Expectant management/Medical Treatment in Obstetrics and Gynaecology,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY09A
+OBGY10A,Marsupialization of Batholin's gland,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY10A
+OBGY11A,Excision of genital lesions,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY11A
+OBGY12A,Incision and drainage in Gynaecology Cases,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY12A
+OBGY13A,Pelvic Floor Repair - Simple,Obstetrics & Gynaecology,major,,Age category: adult,OBGY13A
+OBGY14A,Vaginal Hysterectomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY14A
+OBGY15A,Repair of Enterocele,Obstetrics & Gynaecology,major,,Age category: adult,OBGY15A
+OBGY16A,Vaginal Pessary Insertion,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY16A
+OBGY17A,Colpocleisis,Obstetrics & Gynaecology,major,,Age category: adult,OBGY17A
+OBGY18A,Fistula Repair - Simple,Obstetrics & Gynaecology,major,,Age category: adult,OBGY18A
+OBGY19A,Fistula Repair - Complex,Obstetrics & Gynaecology,major,,Age category: adult,OBGY19A
+OBGY20A,Abdominal Hysterectomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY20A
+OBGY21A,Perineal repair - Complex,Obstetrics & Gynaecology,major,,Age category: adult,OBGY21A
+OBGY22A,Pelvic Floor Repair - Complex,Obstetrics & Gynaecology,major,,Age category: adult,OBGY22A
+OBGY23A,Colposcopy and Biopsy,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY23A
+OBGY24A,Partial Vaginectomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY24A
+OBGY25A,Polypectomy (Avulsion),Obstetrics & Gynaecology,minor,,Age category: adult,OBGY25A
+OBGY26A,Hysteroscopy,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY26A
+OBGY27A,Correction of Malposition of Uterus,Obstetrics & Gynaecology,major,,Age category: adult,OBGY27A
+OBGY28A,Vulvectomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY28A
+OBGY29A,Instrumental delivery,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY29A
+OBGY30A,Internal Podalic Version with Breech Extraction,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY30A
+OBGY31A,Destructive Delivery,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY31A
+OBGY32A,Caesarean Section,Obstetrics & Gynaecology,major,,Age category: adult,OBGY32A
+OBGY34A,Spontaneous Vaginal Delivery with or without Episiotomy,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY34A
+OBGY35A,Cervical Cerclage suture,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY35A
+OBGY36A,Myomectomy,Obstetrics & Gynaecology,major,,Age category: adult,OBGY36A
+OBGY38A,Post Partum Haemorrhage,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY38A
+OBGY39A,Wertheim's Operation,Obstetrics & Gynaecology,major,,Age category: adult,OBGY39A
+OBGY40A,Eclampsia,Obstetrics & Gynaecology,minor,,Age category: adult,OBGY40A
+OPHT01A,Enucleation >=12 Yrs,Ophthalmology,major,,Age category: adult,OPHT01A
+OPHT01C,Enucleation <12 Yrs,Ophthalmology,major,,Age category: child,OPHT01C
+OPHT02A,Evisceration >=12 Yrs,Ophthalmology,major,,Age category: adult,OPHT02A
+OPHT02C,Evisceration <12 Yrs,Ophthalmology,major,,Age category: child,OPHT02C
+OPHT03A,Removal of superficial foreign body >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT03A
+OPHT03C,Removal of superficial foreign body <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT03C
+OPHT04A,Removal of intraocular foreign body >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT04A
+OPHT04C,Removal of intraocular foreign body <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT04C
+OPHT05A,Removal of intraorbital foreign body >=12 Yrs,Ophthalmology,major,,Age category: adult,OPHT05A
+OPHT05C,Removal of intraorbital foreign body <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT05C
+OPHT06A,Eyelid surgery >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT06A
+OPHT06C,Eyelid surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT06C
+OPHT07A,Scleral and Corneal surgery >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT07A
+OPHT07C,Scleral and Corneal surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT07C
+OPHT08A,Anterior chamber washout >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT08A
+OPHT08C,Anterior chamber washout <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT08C
+OPHT09A,Glaucoma surgery >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT09A
+OPHT09C,Glaucoma surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT09C
+OPHT10A,Cataract surgery >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT10A
+OPHT10C,Cataract surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT10C
+OPHT11A,Strabismus surgery >=12 Yrs,Ophthalmology,major,,Age category: adult,OPHT11A
+OPHT11C,Strabismus surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT11C
+OPHT12A,Incision and curettage of eyelid >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT12A
+OPHT12C,Incision and curettage of eyelid <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT12C
+OPHT13A,Reconstructive surgery of eyelid >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT13A
+OPHT13C,Reconstructive surgery of eyelid <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT13C
+OPHT14A,Nasolacrimal drainage system surgery >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT14A
+OPHT14C,Nasolacrimal drainage system surgery <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT14C
+OPHT15A,Incision and drainage of abscesses >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT15A
+OPHT15C,Incision and drainage of abscesses <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT15C
+OPHT16A,Examination under anaesthesia >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT16A
+OPHT16C,Examination under anaesthesia <12 Yrs,Ophthalmology,minor,,Age category: child,OPHT16C
+OPHT17A,Uveitis Management,Ophthalmology,minor,,Age category: adult,OPHT17A
+OPHT18A,Cataract Surgery with Implants >=12 Yrs,Ophthalmology,minor,,Age category: adult,OPHT18A
+ORTH01A,Bandaging/Cast (POP Application) >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH01A
+ORTH01C,Bandaging/Cast (POP Application) <12 Yrs,Orthopaedic,minor,,Age category: child,ORTH01C
+ORTH02A,Bone Biopsy >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH02A
+ORTH02C,Bone Biopsy <12 Yrs,Orthopaedic,minor,,Age category: child,ORTH02C
+ORTH03A,Bone Graft >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH03A
+ORTH03C,Bone Graft <12 Yrs,Orthopaedic,major,,Age category: child,ORTH03C
+ORTH04A,Closed Reduction and Splintage of Fractures and Joints >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH04A
+ORTH04C,Closed Reduction and Splintage of Fractures and Joints <12 Yrs,Orthopaedic,major,,Age category: child,ORTH04C
+ORTH05A,Debridement and Suturing >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH05A
+ORTH05C,Debridement and Suturing <12 Yrs,Orthopaedic,major,,Age category: child,ORTH05C
+ORTH07A,Excision of Soft Tissue Lumps >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH07A
+ORTH07C,Excision of Soft Tissue Lumps <12 Yrs,Orthopaedic,minor,,Age category: child,ORTH07C
+ORTH08A,External Fixation >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH08A
+ORTH08C,External Fixation <12 Yrs,Orthopaedic,major,,Age category: child,ORTH08C
+ORTH09A,Fasciotomy >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH09A
+ORTH09C,Fasciotomy <12 Yrs,Orthopaedic,major,,Age category: child,ORTH09C
+ORTH10A,Hemi-Arthroplasty >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH10A
+ORTH10C,Hemi-Arthroplasty <12 Yrs,Orthopaedic,major,,Age category: child,ORTH10C
+ORTH11A,Incision and Drainage of Abscesses >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH11A
+ORTH11C,Incision and Drainage of Abscesses < 12 Yrs,Orthopaedic,minor,,Age category: child,ORTH11C
+ORTH12A,Internal Fixation of Fractures >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH12A
+ORTH12C,Internal Fixation of Fractures <12 Yrs,Orthopaedic,major,,Age category: child,ORTH12C
+ORTH14A,Major Surgery of Joints >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH14A
+ORTH14C,Major Surgery of Joints <12 Yrs,Orthopaedic,major,,Age category: child,ORTH14C
+ORTH15A,Minor Surgery of Joints >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH15A
+ORTH15C,Minor Surgery of Joints <12 Yrs,Orthopaedic,minor,,Age category: child,ORTH15C
+ORTH16A,Nail Avulsion >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH16A
+ORTH16C,Nail Avulsion <12 Yrs,Orthopaedic,minor,,Age category: child,ORTH16C
+ORTH17A,Open Reduction and Internal Fixation >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH17A
+ORTH17C,Open Reduction and Internal Fixation <12 Yrs,Orthopaedic,major,,Age category: child,ORTH17C
+ORTH18A,Osteotomy >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH18A
+ORTH18C,Osteotomy <12 Yrs,Orthopaedic,major,,Age category: child,ORTH18C
+ORTH19A,Skin traction >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH19A
+ORTH19C,Skin traction <12 Yrs,Orthopaedic,major,,Age category: child,ORTH19C
+ORTH20A,Surgery for Infected Bone >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH20A
+ORTH20C,Surgery for Infected Bone <12 Yrs,Orthopaedic,major,,Age category: child,ORTH20C
+ORTH22A,Synovectomy >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH22A
+ORTH22C,Synovectomy <12 Yrs,Orthopaedic,major,,Age category: child,ORTH22C
+ORTH23A,Tendon Surgery >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH23A
+ORTH23C,Tendon Surgery <12 Yrs,Orthopaedic,major,,Age category: child,ORTH23C
+ORTH24A,Head injury/spinal injury >=12 Yrs,Orthopaedic,minor,,Age category: adult,ORTH24A
+ORTH24C,Head injury/spinal injury >=12 Yrs,Orthopaedic,minor,,Age category: child,ORTH24C
+ORTH25A,Surgery for removal of finger/toe >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH25A
+ORTH25C,Surgery for removal of finger/toe <12 Yrs,Orthopaedic,major,,Age category: child,ORTH25C
+ORTH26A,Surgery for amputation of hand/foot (through or below ankle/wrist joint) >=12 Yrs,Orthopaedic,major,,Age category: adult,ORTH26A
+ORTH26C,Surgery for amputation of hand/foot (through or below ankle/wrist joint) <12 Yrs,Orthopaedic,major,,Age category: child,ORTH26C
+ORTH27A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",Orthopaedic,major,,Age category: adult,ORTH27A
+ORTH27C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",Orthopaedic,major,,Age category: child,ORTH27C
+PSUR01C,Laparotomy and Resection <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR01C
+PSUR02C,Laparotomy and Excision Biopsy <12 Yrs,Paediatric Surgery,minor,,Age category: child,PSUR02C
+PSUR03C,Laparotomy and surgery for upper renal anomalies <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR03C
+PSUR04C,Excision Biopsy deep masses <12 Yrs,Paediatric Surgery,minor,,Age category: child,PSUR04C
+PSUR05C,Excision Biopsy Superficial masses <12 Yrs,Paediatric Surgery,minor,,Age category: child,PSUR05C
+PSUR06C,Incision and Drainage GA <12 Yrs,Paediatric Surgery,minor,,Age category: child,PSUR06C
+PSUR07C,Repair of Minor Abdominal Wall Defects <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR07C
+PSUR08C,Repair of Major Abdominal Wall Defects <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR08C
+PSUR09C,Exploratory Laparotomy <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR09C
+PSUR10C,Gastrostomy <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR10C
+PSUR11C,Laparotomy with Repair <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR11C
+PSUR12C,Laparotomy with Appendicectomy <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR12C
+PSUR14C,Thoracotomy and oesophageal surgery <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR14C
+PSUR15C,Repair of Lower Urinary Tract Malformation <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR15C
+PSUR16C,Repair of Congenital Genito-Urinary Malformations <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR16C
+PSUR17C,Surgery for anal conditions <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR17C
+PSUR18C,Primary Closure and Repair <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR18C
+PSUR19C,Laparatomy for biliary surgery <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR19C
+PSUR20C,Laparotomy with Separation <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR20C
+PSUR21C,Surgery of Scrotal contents and testes <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR21C
+PSUR23C,Laparotomy for Haemoperitoneum <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR23C
+PSUR24C,Laparotomy with Enterostomy Formation and closure <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR24C
+PSUR25C,Posterior Sagittal Anorectoplasty (PSARP) <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR25C
+PSUR26C,Burns - OPD Wound Dressing <12 Yrs,Paediatric Surgery,minor,,Age category: child,PSUR26C
+PSUR27C,Burns - Non operative Management - Inpatient <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR27C
+PSUR28C,Surgery for Burns <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR28C
+PSUR29C,Minor Surgery for Sexual Assault <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR29C
+PSUR30C,Major Surgery for Sexual Assault <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR30C
+PSUR31C,Laparotomy with anastomosis <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR31C
+PSUR33C,Endoscopic surgery for bleeding oesophageal varices <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR33C
+PSUR34C,Thoracostomy and chest tube insertion <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR34C
+PSUR35C,Vascular Surgery Operations <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR35C
+PSUR36C,Conservative management of surgery,Paediatric Surgery,minor,,Age category: child,PSUR36C
+PSUR37C,Surgery for removal of finger/toe <12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR37C
+PSUR38C,Surgery for amputation of hand/foot (through or below ankle or wrist joint) < 12 Yrs,Paediatric Surgery,major,,Age category: child,PSUR38C
+PSUR39C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",Paediatric Surgery,major,,Age category: child,PSUR39C
+RSUR01A,Reconstructive repair >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR01A
+RSUR01C,Reconstructive repair <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR01C
+RSUR02A,Shaving and Skin Grafting >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR02A
+RSUR02C,Shaving and Skin Grafting <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR02C
+RSUR03A,Excisional Debridement and Dressing >=12 Yrs,Reconstructive Surgery,minor,,Age category: adult,RSUR03A
+RSUR03C,Excisional Debridement and Dressing <12 Yrs,Reconstructive Surgery,minor,,Age category: child,RSUR03C
+RSUR04A,Excisional Debridement with Suturing >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR04A
+RSUR04C,Excisional Debridement with Suturing <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR04C
+RSUR05A,Excisional Debridement with Skin Grafting >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR05A
+RSUR05C,Excisional Debridement with Skin Grafting <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR05C
+RSUR06A,Excisional Debridement with Flap Reconstruction >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR06A
+RSUR06C,Excisional Debridement with Flap Reconstruction <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR06C
+RSUR07A,Excision Biopsy >=12 Yrs,Reconstructive Surgery,minor,,Age category: adult,RSUR07A
+RSUR07C,Excision Biopsy <12 Yrs,Reconstructive Surgery,minor,,Age category: child,RSUR07C
+RSUR08A,Escharotomy >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR08A
+RSUR08C,Escharotomy <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR08C
+RSUR09A,Z-plasty >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR09A
+RSUR09C,Z-plasty <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR09C
+RSUR10A,Corrective Osteotomy >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR10A
+RSUR10C,Corrective Osteotomy <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR10C
+RSUR11A,Reconstruction >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR11A
+RSUR11C,Reconstruction <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR11C
+RSUR12A,Release/Excision and Split Skin Grafting >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR12A
+RSUR12C,Release/Excision and Split Skin Grafting <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR12C
+RSUR13A,Release/Excision and Full thickness skin graft >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR13A
+RSUR13C,Release/Excision and Full thickness skin graft <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR13C
+RSUR14A,Debaulking >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR14A
+RSUR14C,Debaulking <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR14C
+RSUR15A,Primary Suturing >=12 Yrs,Reconstructive Surgery,major,,Age category: adult,RSUR15A
+RSUR15C,Primary Suturing <12 Yrs,Reconstructive Surgery,major,,Age category: child,RSUR15C
+ZOOM01A,Endoscopy (Rigid & Flexible) >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM01A
+ZOOM01C,Endoscopy (Rigid & Flexible) <12 Yrs,Minor Procedures,minor,,Age category: child,ZOOM01C
+ZOOM02A,Detention for Observation and Treatment - Adult,Minor Procedures,minor,,Age category: adult,ZOOM02A
+ZOOM02C,Detention for Observation and Treatment - Child,Minor Procedures,minor,,Age category: child,ZOOM02C
+ZOOM03A,Inpatient transfer out/Referral- Adult,Minor Procedures,minor,,Age category: adult,ZOOM03A
+ZOOM03C,Inpatient transfer out/Referral- Child,Minor Procedures,minor,,Age category: child,ZOOM03C
+ZOOM04A,Change of Catheter >= 12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM04A
+ZOOM04C,Change of Catheter <12 Yrs,Minor Procedures,minor,,Age category: child,ZOOM04C
+ZOOM05A,Change of Dressing >= 12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM05A
+ZOOM05C,Change of Dressing < 12 Yrs,Minor Procedures,minor,,Age category: child,ZOOM05C
+ZOOM06A,Male Circumcision >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM06A
+ZOOM06C,Male Circumcision <12 Yrs,Minor Procedures,minor,,Age category: child,ZOOM06C
+ZOOM07A,Dressing And Minor Suturing >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM07A
+ZOOM07C,Dressing And Minor Suturing <=12 Yrs,Minor Procedures,minor,,Age category: child,ZOOM07C
+ZOOM08A,Tubal Ligation,Minor Procedures,minor,,Age category: adult,ZOOM08A
+ZOOM09A,Vasectomy,Minor Procedures,minor,,Age category: adult,ZOOM09A
+ZOOM10A,IUD >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM10A
+ZOOM11A,Implant >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM11A
+ZOOM12A,Injectable (Three Months) >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM12A
+ZOOM13A,Injectable (One Month) >=12 Yrs,Minor Procedures,minor,,Age category: adult,ZOOM13A

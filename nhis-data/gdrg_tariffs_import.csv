@@ -1,0 +1,618 @@
+code,name,mdc_category,tariff_price,age_category
+ASUR01A,Operations of thyroid & parathyroid glands >=12 Yrs,ADULT SURGERY,961.83,adult
+ASUR02A,Surgery for lung and bronchus lesions >=12 Yrs,ADULT SURGERY,1475.61,adult
+ASUR03A,Thoracostomy and chest tube insertion >=12 Yrs,ADULT SURGERY,612.19,adult
+ASUR04A,Operations on the oesophagus and diaphragm >=12 Yrs,ADULT SURGERY,1415.21,adult
+ASUR05A,Excision of Neck Swellings >=12 Yrs,ADULT SURGERY,648.00,adult
+ASUR06A,Laparotomy for solid organ Surgery >=12 Yrs,ADULT SURGERY,1270.15,adult
+ASUR07A,Laparotomy for Gastric Surgery >=12 Yrs,ADULT SURGERY,1030.52,adult
+ASUR08A,Laparotomy for peritonitis >=12 Yrs,ADULT SURGERY,949.34,adult
+ASUR09A,Endoscopic surgery for bleeding oesophageal varices >=12 Yrs,ADULT SURGERY,400.48,adult
+ASUR10A,Laparotomy and Small Bowel Resection >=12 Yrs,ADULT SURGERY,1001.00,adult
+ASUR11A,Laparotomy and colon resection >=12 Yrs,ADULT SURGERY,1436.11,adult
+ASUR12A,Laparotomy for Colostomy or Ileostomy >=12 Yrs,ADULT SURGERY,1136.86,adult
+ASUR13A,Laparotomy and AP Resection >=12 Yrs,ADULT SURGERY,1576.03,adult
+ASUR14A,Percutaneous Ultrasound Guided Drainage of lesions >=12 Yrs,ADULT SURGERY,523.03,adult
+ASUR15A,Operations on Anus >=12 Yrs,ADULT SURGERY,590.13,adult
+ASUR16A,Laparotomy and drainage of liver >=12 Yrs,ADULT SURGERY,1019.11,adult
+ASUR17A,Laparotomy for biliary surgery >=12 Yrs,ADULT SURGERY,1110.71,adult
+ASUR18A,Laparotomy and Pancreatic Surgery >=12 Yrs,ADULT SURGERY,1552.62,adult
+ASUR19A,Internal Hernia Repair >=12 Yrs,ADULT SURGERY,725.26,adult
+ASUR20A,External Hernia Repair >=12 Yrs,ADULT SURGERY,546.34,adult
+ASUR21A,Operations on the urethra >=12 Yrs,ADULT SURGERY,956.35,adult
+ASUR22A,Surgery on scrotum & tunica vaginalis >=12 Yrs,ADULT SURGERY,501.75,adult
+ASUR23A,Mastectomy >=12 Yrs,ADULT SURGERY,1160.21,adult
+ASUR24A,Vascular surgery operations >=12 Yrs,ADULT SURGERY,1428.44,adult
+ASUR25A,Stripping and Ligation of veins >=12 Yrs,ADULT SURGERY,660.85,adult
+ASUR27A,Emergency circumcision >=12 Yrs,ADULT SURGERY,348.29,adult
+ASUR28A,Genitourinary surgery >=12 Yrs,ADULT SURGERY,982.13,adult
+ASUR30A,General Surgery Excision Biopsy >=12 Yrs,ADULT SURGERY,383.58,adult
+ASUR31A,"Incision, Drainage and Debridement - General Surgery >=12 Yrs",ADULT SURGERY,420.80,adult
+ASUR32A,Closure of colostomy and ileostomy >=12 Yrs,ADULT SURGERY,851.61,adult
+ASUR33A,Laparotomy and Porto-caval Shunt >=12 Yrs,ADULT SURGERY,1154.91,adult
+ASUR34A,Conservative management of surgery,ADULT SURGERY,334.18,adult
+ASUR35A,Surgery for removal of finger/toe >= 12 Yrs,ADULT SURGERY,445.86,adult
+ASUR36A,Surgery for removal of hand or foot >=12 Yrs,ADULT SURGERY,704.34,adult
+ASUR37A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",ADULT SURGERY,924.89,adult
+DENT01A,Forceps Extraction of Tooth >=12 Yrs,DENTAL,111.93,adult
+DENT01C,Forceps Extraction of Tooth <12 Yrs,DENTAL,108.71,child
+DENT02A,Surgical Removal of Tooth >=12 Yrs,DENTAL,154.00,adult
+DENT03A,Temporary Filling >=12 Yrs,DENTAL,128.09,adult
+DENT03C,Temporary Filling <12 Yrs,DENTAL,128.88,child
+DENT04A,Amalgam Filling >=12 Yrs,DENTAL,133.33,adult
+DENT04C,Amalgam Filling <12 Yrs,DENTAL,152.39,child
+DENT05A,Composite/GI Filling >=12 Yrs,DENTAL,155.17,adult
+DENT05C,Composite/GI Filling <12 Yrs,DENTAL,138.17,child
+DENT06A,Scaling & Polishing >=12 Yrs,DENTAL,118.51,adult
+DENT06C,Scaling & Polishing <12 Yrs,DENTAL,101.60,child
+DENT07A,Gingivectomy >=12 Yrs,DENTAL,157.34,adult
+DENT07C,Gingivectomy <12 Yrs,DENTAL,157.76,child
+DENT08A,Root Canal Therapy - Single Root (RCT) >=12 Yrs,DENTAL,182.52,adult
+DENT08C,Root Canal Therapy - Single Root (RCT) <12 Yrs,DENTAL,178.83,child
+DENT09A,Apicectomy >=12 Yrs,DENTAL,280.63,adult
+DENT09C,Apicectomy <12 Yrs,DENTAL,245.82,child
+DENT10A,Incision and Drainage (I & D) of Oro-Facial Abscess >=12 Yrs,DENTAL,122.82,adult
+DENT10C,Incision and Drainage (I & D) of Oro-Facial Abscess <12 Yrs,DENTAL,115.72,child
+DENT11A,Surgical Excision of Intraoral Lesions >=12 Yrs,DENTAL,190.29,adult
+DENT11C,Surgical Excision of Intraoral Lesions <12 Yrs,DENTAL,172.57,child
+DENT12A,Curetage/Sequestrectomy of Facial Bone >=12 Yrs,DENTAL,285.39,adult
+DENT12C,Curetage/Sequestrectomy of Facial Bone <12 Yrs,DENTAL,261.00,child
+DENT13A,Removal of Stone from Salivary Duct >=12 Yrs,DENTAL,306.56,adult
+DENT13C,Removal of Stone from Salivary Duct <12 Yrs,DENTAL,255.30,child
+DENT14A,Sialoadenectomy >=12 Yrs,DENTAL,683.52,adult
+DENT14C,Sialoadenectomy <12 Yrs,DENTAL,638.16,child
+DENT15A,Suturing of Lacerations of Facial Region >=12 Yrs,DENTAL,175.99,adult
+DENT15C,Suturing of Lacerations of Facial Region <12 Yrs,DENTAL,148.83,child
+DENT16A,Dressing of Open Facial Wounds >=12 Yrs,DENTAL,140.99,adult
+DENT16C,Dressing of Open Facial Wounds <12 Yrs,DENTAL,129.66,child
+DENT17A,Frenectomy/Frenotomy >=12 Yrs,DENTAL,126.00,adult
+DENT17C,Frenectomy/Frenotomy <12 Yrs,DENTAL,118.95,child
+DENT18A,Partial Resection of Facial Bones or Soft Tissues >=12 Yrs,DENTAL,662.28,adult
+DENT18C,Partial Resection of Facial Bones or Soft Tissues <12 Yrs,DENTAL,604.39,child
+DENT19A,Total Resection of Facial Bones and Soft Tissues >=12 Yrs,DENTAL,834.31,adult
+DENT19C,Total Resection of Facial Bones and Soft Tissues <12 Yrs,DENTAL,734.93,child
+DENT20A,Closed Reduction of Fractures of Facial Bones (IMF) >=12 Yrs,DENTAL,285.73,adult
+DENT20C,Closed Reduction of Fractures of Facial Bones (IMF) <12 Yrs,DENTAL,258.68,child
+DENT21A,Open Reduction of Facial Fractures >=12 Yrs,DENTAL,694.88,adult
+DENT21C,Open Reduction of Facial Fractures <12 Yrs,DENTAL,589.37,child
+DENT22A,Removal of Dental Wiring >=12 Yrs,DENTAL,129.32,adult
+DENT22C,Removal of Dental Wiring <12 Yrs,DENTAL,83.00,child
+DENT23A,Manual Reduction of TMJ Dislocation >=12 Yrs,DENTAL,51.22,adult
+DENT23C,Manual Reduction of TMJ Dislocation <12 Yrs,DENTAL,49.01,child
+DENT24A,Dental Examination (Medical Management) >=12 Yrs,DENTAL,50.10,adult
+DENT24C,Dental Examination (Medical Management) <12 Yrs,DENTAL,48.50,child
+ENTH01A,"Excision and biopsy of swellings of ear, nose and throat >=12 Yrs",EAR NOSE AND THROAT,460.49,adult
+ENTH01C,"Excision and biopsy of swellings of ear, nose and throat <12 Yrs",EAR NOSE AND THROAT,404.28,child
+ENTH02A,Surgery for external ear lesions >=12 Yrs,EAR NOSE AND THROAT,539.25,adult
+ENTH02C,Surgery for external ear lesions <12 Yrs,EAR NOSE AND THROAT,498.77,child
+ENTH05A,Surgery for internal ear lesions >=12 Yrs,EAR NOSE AND THROAT,792.51,adult
+ENTH05C,Surgery for internal ear lesions <12 Yrs,EAR NOSE AND THROAT,779.96,child
+ENTH06A,Reconstructive Surgery of ear >=12 Yrs,EAR NOSE AND THROAT,788.08,adult
+ENTH06C,Reconstructive Surgery of ear <12 Yrs,EAR NOSE AND THROAT,770.41,child
+ENTH07A,Sinus Surgery >=12 Yrs,EAR NOSE AND THROAT,858.57,adult
+ENTH07C,Sinus Surgery <12 Yrs,EAR NOSE AND THROAT,836.67,child
+ENTH08A,Surgery of tonsils and adenoids >=12 Yrs,EAR NOSE AND THROAT,540.58,adult
+ENTH08C,Surgery of tonsils and adenoids <12 Yrs,EAR NOSE AND THROAT,577.62,child
+ENTH09A,Surgery of Salivary Glands >=12 Yrs,EAR NOSE AND THROAT,869.80,adult
+ENTH09C,Surgery of Salivary Glands <12 Yrs,EAR NOSE AND THROAT,727.46,child
+ENTH10A,Laryngectomy >=12 Yrs,EAR NOSE AND THROAT,1573.53,adult
+ENTH10C,Laryngectomy <12 Yrs,EAR NOSE AND THROAT,1426.45,child
+ENTH12A,Excision and Reconstruction of Oro- and Naso-pharynx >=12 Yrs,EAR NOSE AND THROAT,1019.41,adult
+ENTH12C,Excision and Reconstruction of Oro- and Naso-pharynx <12 Yrs,EAR NOSE AND THROAT,805.15,child
+ENTH13A,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat >=12 Yrs",EAR NOSE AND THROAT,395.77,adult
+ENTH13C,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat <12 Yrs",EAR NOSE AND THROAT,391.57,child
+ENTH14A,"Incision and Drainage of Abscess of ear, nose and throat >=12 Yrs",EAR NOSE AND THROAT,496.71,adult
+ENTH14C,"Incision and Drainage of Abscess of ear, nose and throat <12 Yrs",EAR NOSE AND THROAT,425.67,child
+ENTH15A,Manipulation and reduction of fractured nasal bone >=12 Yrs,EAR NOSE AND THROAT,626.91,adult
+ENTH15C,Manipulation and reduction of fractured nasal bone <12 Yrs,EAR NOSE AND THROAT,531.48,child
+ENTH16A,Specific nasal surgery >=12 Yrs,EAR NOSE AND THROAT,590.66,adult
+ENTH16C,Specific nasal surgery <12 Yrs,EAR NOSE AND THROAT,497.63,child
+ENTH17A,Arterial Ligation for Epistaxis >=12 Yrs,EAR NOSE AND THROAT,616.61,adult
+ENTH17C,Arterial Ligation for Epistaxis <12 Yrs,EAR NOSE AND THROAT,525.63,child
+ENTH18A,"Surgery for trauma to ear, nose, throat >=12 Yrs",EAR NOSE AND THROAT,668.11,adult
+ENTH18C,"Surgery for trauma to ear, nose, throat <12 Yrs",EAR NOSE AND THROAT,641.24,child
+ENTH19A,Excision biopsy of swellings of neck >=12 Yrs,EAR NOSE AND THROAT,531.18,adult
+ENTH19C,Excision biopsy of swellings of neck <12 Yrs,EAR NOSE AND THROAT,449.49,child
+ENTH20A,ENT OPD Procedures >=12 Yrs,EAR NOSE AND THROAT,89.19,adult
+ENTH20C,ENT OPD Procedures <12 Yrs,EAR NOSE AND THROAT,87.41,child
+ENTH21A,Vestibulometry >=12 Yrs,EAR NOSE AND THROAT,103.63,adult
+ENTH21C,Vestibulometry <12 Yrs,EAR NOSE AND THROAT,100.90,child
+ENTH22A,Evoked response audiometry >=12 Yrs,EAR NOSE AND THROAT,276.74,adult
+ENTH22C,Evoked response audiometry <12 Yrs,EAR NOSE AND THROAT,271.00,child
+ENTH23A,Antral Lavage under Local Anaesthesia >=12 Yrs,EAR NOSE AND THROAT,306.02,adult
+ENTH23C,Antral Lavage under Local Anaesthesia <12 Yrs,EAR NOSE AND THROAT,300.67,child
+ENTH24A,Endoscopic ENT Surgery >=12 Yrs,EAR NOSE AND THROAT,597.48,adult
+ENTH24C,Endoscopic ENT Surgery <12 Yrs,EAR NOSE AND THROAT,573.72,child
+MEDI01A,Thyroid Diseases >=12 Yrs,ADULT MEDICINE,556.68,adult
+MEDI02A,Diabetes – Simple >=12 Yrs,ADULT MEDICINE,486.00,adult
+MEDI03A,Diabetes – Complicated >=12 Yrs,ADULT MEDICINE,724.45,adult
+MEDI04A,Other Endocrine Diseases >=12 Yrs,ADULT MEDICINE,439.42,adult
+MEDI05A,Malnutrition >=12 Yrs,ADULT MEDICINE,447.41,adult
+MEDI06A,Anaemia >=12 Yrs,ADULT MEDICINE,505.03,adult
+MEDI07A,Heart Disease >=12 Yrs,ADULT MEDICINE,590.97,adult
+MEDI08A,Poisoning >=12 Yrs,ADULT MEDICINE,292.64,adult
+MEDI10A,Non-Traumatic Coma >=12 Yrs,ADULT MEDICINE,549.22,adult
+MEDI11A,Paralytic Conditions >=12 Yrs,ADULT MEDICINE,808.48,adult
+MEDI12A,Seizure Disorders >=12 Yrs,ADULT MEDICINE,454.84,adult
+MEDI13A,Transient Loss of Consciousness >=12 Yrs,ADULT MEDICINE,367.65,adult
+MEDI14A,Cerebro Vascular Accident/Stroke >=12 Yrs,ADULT MEDICINE,412.46,adult
+MEDI15A,Bone Marrow Hypoplasia >=12 Yrs,ADULT MEDICINE,666.46,adult
+MEDI16A,Sickle Cell Disease with Complication/Crisis >=12 Yrs,ADULT MEDICINE,565.94,adult
+MEDI17A,Clotting/Bleeding Disorders >=12 Yrs,ADULT MEDICINE,513.07,adult
+MEDI18A,Diseases of Skin/Subcutaneous Tissues >=12 Yrs,ADULT MEDICINE,553.81,adult
+MEDI19A,Kidney Disease without Renal Failure >=12 Yrs,ADULT MEDICINE,537.63,adult
+MEDI20A,Renal Failure without Dialysis >=12 Yrs,ADULT MEDICINE,699.77,adult
+MEDI21A,Acute Renal Failure with Dialysis >=12 Yrs,ADULT MEDICINE,1900.89,adult
+MEDI22A,Obstructive Airway Disease >=12 Yrs,ADULT MEDICINE,202.33,adult
+MEDI23A,Diarrhoea and Vomiting >=12 Yrs,ADULT MEDICINE,206.09,adult
+MEDI24A,Liver Diseases >=12 Yrs,ADULT MEDICINE,455.61,adult
+MEDI25A,Gastro Intestinal Tract Bleeding >=12 Yrs,ADULT MEDICINE,448.15,adult
+MEDI26A,Non-Specific Abdominal Conditions >=12 Yrs,ADULT MEDICINE,227.01,adult
+MEDI27A,Shock >=12 Yrs,ADULT MEDICINE,678.71,adult
+MEDI28A,Malaria >=12 Yrs,ADULT MEDICINE,147.23,adult
+MEDI29A,Black Water Fever >=12 Yrs,ADULT MEDICINE,615.80,adult
+MEDI30A,Systemic Infections >=12 Yrs,ADULT MEDICINE,528.59,adult
+MEDI31A,Localised Infections >=12 Yrs,ADULT MEDICINE,360.43,adult
+MEDI32A,Hypertension >=12 Yrs,ADULT MEDICINE,317.31,adult
+MEDI33A,Ischaemic Heart Disease >=12 Yrs,ADULT MEDICINE,335.15,adult
+MEDI34A,Pulmonary Embolism >=12 Yrs,ADULT MEDICINE,542.08,adult
+MEDI35A,Ulcer of Skin >=12 Yrs,ADULT MEDICINE,672.17,adult
+MEDI36A,Alcoholism >=12 Yrs,ADULT MEDICINE,493.05,adult
+MEDI37A,Animal Bites >=12 Yrs,ADULT MEDICINE,120.05,adult
+MEDI38A,Retroviral Infection/Immuno Suppression >=12 Yrs,ADULT MEDICINE,510.60,adult
+MEDI41A,Cerebral Malaria,ADULT MEDICINE,625.19,adult
+OBGY01A,Gynaecological Laparotomy,OBSTETRICS AND GYNAECOLOGY,621.60,adult
+OBGY02A,Diagnostic Laparascopy,OBSTETRICS AND GYNAECOLOGY,421.29,adult
+OBGY03A,Operative Laparascopy,OBSTETRICS AND GYNAECOLOGY,517.33,adult
+OBGY04A,Culdocentesis/Culdotomy,OBSTETRICS AND GYNAECOLOGY,280.56,adult
+OBGY05A,Cauterization,OBSTETRICS AND GYNAECOLOGY,268.48,adult
+OBGY06A,MVA/EOU,OBSTETRICS AND GYNAECOLOGY,265.63,adult
+OBGY07A,Suction Curettage,OBSTETRICS AND GYNAECOLOGY,324.14,adult
+OBGY08A,Manual Removal of Placenta,OBSTETRICS AND GYNAECOLOGY,247.47,adult
+OBGY09A,Expectant management/Medical Treatment in Obstetrics and Gynaecology,OBSTETRICS AND GYNAECOLOGY,217.58,adult
+OBGY10A,Marsupialization of Batholin's gland,OBSTETRICS AND GYNAECOLOGY,379.29,adult
+OBGY11A,Excision of genital lesions,OBSTETRICS AND GYNAECOLOGY,337.16,adult
+OBGY12A,Incision and drainage in Gynaecology Cases,OBSTETRICS AND GYNAECOLOGY,263.10,adult
+OBGY13A,Pelvic Floor Repair - Simple,OBSTETRICS AND GYNAECOLOGY,622.25,adult
+OBGY14A,Vaginal Hysterectomy,OBSTETRICS AND GYNAECOLOGY,694.55,adult
+OBGY15A,Repair of Enterocele,OBSTETRICS AND GYNAECOLOGY,617.18,adult
+OBGY16A,Vaginal Pessary Insertion,OBSTETRICS AND GYNAECOLOGY,105.33,adult
+OBGY17A,Colpocleisis,OBSTETRICS AND GYNAECOLOGY,570.22,adult
+OBGY18A,Fistula Repair - Simple,OBSTETRICS AND GYNAECOLOGY,698.13,adult
+OBGY19A,Fistula Repair - Complex,OBSTETRICS AND GYNAECOLOGY,1097.52,adult
+OBGY20A,Abdominal Hysterectomy,OBSTETRICS AND GYNAECOLOGY,733.86,adult
+OBGY21A,Perineal repair - Complex,OBSTETRICS AND GYNAECOLOGY,565.13,adult
+OBGY22A,Pelvic Floor Repair - Complex,OBSTETRICS AND GYNAECOLOGY,867.16,adult
+OBGY23A,Colposcopy and Biopsy,OBSTETRICS AND GYNAECOLOGY,201.51,adult
+OBGY24A,Partial Vaginectomy,OBSTETRICS AND GYNAECOLOGY,669.81,adult
+OBGY25A,Polypectomy (Avulsion),OBSTETRICS AND GYNAECOLOGY,373.76,adult
+OBGY26A,Hysteroscopy,OBSTETRICS AND GYNAECOLOGY,305.78,adult
+OBGY27A,Correction of Malposition of Uterus,OBSTETRICS AND GYNAECOLOGY,522.08,adult
+OBGY28A,Vulvectomy,OBSTETRICS AND GYNAECOLOGY,612.17,adult
+OBGY29A,Instrumental delivery,OBSTETRICS AND GYNAECOLOGY,335.64,adult
+OBGY30A,Internal Podalic Version with Breech Extraction,OBSTETRICS AND GYNAECOLOGY,303.23,adult
+OBGY31A,Destructive Delivery,OBSTETRICS AND GYNAECOLOGY,361.03,adult
+OBGY32A,Caesarean Section,OBSTETRICS AND GYNAECOLOGY,729.17,adult
+OBGY34A,Spontaneous Vaginal Delivery with or without Episiotomy,OBSTETRICS AND GYNAECOLOGY,224.84,adult
+OBGY35A,Cervical Cerclage suture,OBSTETRICS AND GYNAECOLOGY,362.37,adult
+OBGY36A,Myomectomy,OBSTETRICS AND GYNAECOLOGY,673.99,adult
+OBGY38A,Post Partum Haemorrhage,OBSTETRICS AND GYNAECOLOGY,291.74,adult
+OBGY39A,Wertheim's Operation,OBSTETRICS AND GYNAECOLOGY,1105.33,adult
+OBGY40A,Eclampsia,OBSTETRICS AND GYNAECOLOGY,389.40,adult
+OPHT01A,Enucleation >=12 Yrs,OPTHALMOLOGY,619.18,adult
+OPHT01C,Enucleation <12 Yrs,OPTHALMOLOGY,592.02,child
+OPHT02A,Evisceration >=12 Yrs,OPTHALMOLOGY,629.24,adult
+OPHT02C,Evisceration <12 Yrs,OPTHALMOLOGY,557.89,child
+OPHT03A,Removal of superficial foreign body >=12 Yrs,OPTHALMOLOGY,99.12,adult
+OPHT03C,Removal of superficial foreign body <12 Yrs,OPTHALMOLOGY,95.39,child
+OPHT04A,Removal of intraocular foreign body >=12 Yrs,OPTHALMOLOGY,296.42,adult
+OPHT04C,Removal of intraocular foreign body <12 Yrs,OPTHALMOLOGY,290.68,child
+OPHT05A,Removal of intraorbital foreign body >=12 Yrs,OPTHALMOLOGY,439.94,adult
+OPHT05C,Removal of intraorbital foreign body <12 Yrs,OPTHALMOLOGY,358.96,child
+OPHT06A,Eyelid surgery >=12 Yrs,OPTHALMOLOGY,260.21,adult
+OPHT06C,Eyelid surgery <12 Yrs,OPTHALMOLOGY,265.73,child
+OPHT07A,Scleral and Corneal surgery >=12 Yrs,OPTHALMOLOGY,213.92,adult
+OPHT07C,Scleral and Corneal surgery <12 Yrs,OPTHALMOLOGY,211.06,child
+OPHT08A,Anterior chamber washout >=12 Yrs,OPTHALMOLOGY,247.95,adult
+OPHT08C,Anterior chamber washout <12 Yrs,OPTHALMOLOGY,243.83,child
+OPHT09A,Glaucoma surgery >=12 Yrs,OPTHALMOLOGY,258.74,adult
+OPHT09C,Glaucoma surgery <12 Yrs,OPTHALMOLOGY,243.61,child
+OPHT10A,Cataract surgery >=12 Yrs,OPTHALMOLOGY,296.41,adult
+OPHT10C,Cataract surgery <12 Yrs,OPTHALMOLOGY,289.41,child
+OPHT11A,Strabismus surgery >=12 Yrs,OPTHALMOLOGY,441.22,adult
+OPHT11C,Strabismus surgery <12 Yrs,OPTHALMOLOGY,357.92,child
+OPHT12A,Incision and curettage of eyelid >=12 Yrs,OPTHALMOLOGY,190.81,adult
+OPHT12C,Incision and curettage of eyelid <12 Yrs,OPTHALMOLOGY,185.49,child
+OPHT13A,Reconstructive surgery of eyelid >=12 Yrs,OPTHALMOLOGY,210.63,adult
+OPHT13C,Reconstructive surgery of eyelid <12 Yrs,OPTHALMOLOGY,218.12,child
+OPHT14A,Nasolacrimal drainage system surgery >=12 Yrs,OPTHALMOLOGY,268.00,adult
+OPHT14C,Nasolacrimal drainage system surgery <12 Yrs,OPTHALMOLOGY,236.32,child
+OPHT15A,Incision and drainage of abscesses >=12 Yrs,OPTHALMOLOGY,249.62,adult
+OPHT15C,Incision and drainage of abscesses <12 Yrs,OPTHALMOLOGY,246.53,child
+OPHT16A,Examination under anaesthesia >=12 Yrs,OPTHALMOLOGY,108.09,adult
+OPHT16C,Examination under anaesthesia <12 Yrs,OPTHALMOLOGY,103.93,child
+OPHT17A,Uveitis Management,OPTHALMOLOGY,85.93,adult
+OPHT18A,Cataract Surgery with Implants >=12 Yrs,OPTHALMOLOGY,359.22,adult
+ORTH01A,Bandaging/Cast (POP Application) >=12 Yrs,ORTHOPAEDIC,96.31,adult
+ORTH01C,Bandaging/Cast (POP Application) <12 Yrs,ORTHOPAEDIC,148.02,child
+ORTH02A,Bone Biopsy >=12 Yrs,ORTHOPAEDIC,512.58,adult
+ORTH02C,Bone Biopsy <12 Yrs,ORTHOPAEDIC,512.58,child
+ORTH03A,Bone Graft >=12 Yrs,ORTHOPAEDIC,875.12,adult
+ORTH03C,Bone Graft <12 Yrs,ORTHOPAEDIC,819.46,child
+ORTH04A,Closed Reduction and Splintage of Fractures and Joints >=12 Yrs,ORTHOPAEDIC,513.32,adult
+ORTH04C,Closed Reduction and Splintage of Fractures and Joints <12 Yrs,ORTHOPAEDIC,481.14,child
+ORTH05A,Debridement and Suturing >=12 Yrs,ORTHOPAEDIC,526.21,adult
+ORTH05C,Debridement and Suturing <12 Yrs,ORTHOPAEDIC,503.48,child
+ORTH07A,Excision of Soft Tissue Lumps >=12 Yrs,ORTHOPAEDIC,367.21,adult
+ORTH07C,Excision of Soft Tissue Lumps <12 Yrs,ORTHOPAEDIC,340.81,child
+ORTH08A,External Fixation >=12 Yrs,ORTHOPAEDIC,890.87,adult
+ORTH08C,External Fixation <12 Yrs,ORTHOPAEDIC,876.34,child
+ORTH09A,Fasciotomy >=12 Yrs,ORTHOPAEDIC,660.12,adult
+ORTH09C,Fasciotomy <12 Yrs,ORTHOPAEDIC,704.26,child
+ORTH10A,Hemi-Arthroplasty >=12 Yrs,ORTHOPAEDIC,1492.54,adult
+ORTH10C,Hemi-Arthroplasty <12 Yrs,ORTHOPAEDIC,1325.98,child
+ORTH11A,Incision and Drainage of Abscesses >=12 Yrs,ORTHOPAEDIC,298.16,adult
+ORTH11C,Incision and Drainage of Abscesses < 12 Yrs,ORTHOPAEDIC,286.98,child
+ORTH12A,Internal Fixation of Fractures >=12 Yrs,ORTHOPAEDIC,1040.94,adult
+ORTH12C,Internal Fixation of Fractures <12 Yrs,ORTHOPAEDIC,855.73,child
+ORTH14A,Major Surgery of Joints >=12 Yrs,ORTHOPAEDIC,1105.40,adult
+ORTH14C,Major Surgery of Joints <12 Yrs,ORTHOPAEDIC,1045.56,child
+ORTH15A,Minor Surgery of Joints >=12 Yrs,ORTHOPAEDIC,254.99,adult
+ORTH15C,Minor Surgery of Joints <12 Yrs,ORTHOPAEDIC,240.93,child
+ORTH16A,Nail Avulsion >=12 Yrs,ORTHOPAEDIC,162.38,adult
+ORTH16C,Nail Avulsion <12 Yrs,ORTHOPAEDIC,179.34,child
+ORTH17A,Open Reduction and Internal Fixation >=12 Yrs,ORTHOPAEDIC,1088.30,adult
+ORTH17C,Open Reduction and Internal Fixation <12 Yrs,ORTHOPAEDIC,1060.47,child
+ORTH18A,Osteotomy >=12 Yrs,ORTHOPAEDIC,1258.39,adult
+ORTH18C,Osteotomy <12 Yrs,ORTHOPAEDIC,1179.83,child
+ORTH19A,Skin traction >=12 Yrs,ORTHOPAEDIC,539.21,adult
+ORTH19C,Skin traction <12 Yrs,ORTHOPAEDIC,503.38,child
+ORTH20A,Surgery for Infected Bone >=12 Yrs,ORTHOPAEDIC,892.42,adult
+ORTH20C,Surgery for Infected Bone <12 Yrs,ORTHOPAEDIC,945.99,child
+ORTH22A,Synovectomy >=12 Yrs,ORTHOPAEDIC,726.56,adult
+ORTH22C,Synovectomy <12 Yrs,ORTHOPAEDIC,739.70,child
+ORTH23A,Tendon Surgery >=12 Yrs,ORTHOPAEDIC,729.97,adult
+ORTH23C,Tendon Surgery <12 Yrs,ORTHOPAEDIC,759.89,child
+ORTH24A,Head injury/spinal injury >=12 Yrs,ORTHOPAEDIC,206.18,adult
+ORTH24C,Head injury/spinal injury >=12 Yrs,ORTHOPAEDIC,231.04,child
+ORTH25A,Surgery for removal of finger/toe >=12 Yrs,ORTHOPAEDIC,439.41,adult
+ORTH25C,Surgery for removal of finger/toe <12 Yrs,ORTHOPAEDIC,458.23,child
+ORTH26A,Surgery for amputation of hand/foot (through or below ankle/wrist joint) >=12 Yrs,ORTHOPAEDIC,668.06,adult
+ORTH26C,Surgery for amputation of hand/foot (through or below ankle/wrist joint) <12 Yrs,ORTHOPAEDIC,709.03,child
+ORTH27A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",ORTHOPAEDIC,941.51,adult
+ORTH27C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",ORTHOPAEDIC,911.03,child
+PAED01C,Thyroid Diseases <12 Yrs,PAEDIATRICS,313.37,child
+PAED02C,Diabetes - Simple <12 Yrs,PAEDIATRICS,324.73,child
+PAED03C,Diabetes with Complications <12 Yrs,PAEDIATRICS,594.82,child
+PAED04C,Other Endocrine Diseases <12 Yrs,PAEDIATRICS,433.01,child
+PAED05C,Malnutrition <12 Yrs,PAEDIATRICS,487.48,child
+PAED06C,Anaemia <12 Yrs,PAEDIATRICS,493.47,child
+PAED07C,Other Neonatal Diseases,PAEDIATRICS,356.68,child
+PAED08C,Neonatal Jaundice - Severe,PAEDIATRICS,407.85,child
+PAED09C,Neonatal Jaundice - Simple,PAEDIATRICS,335.82,child
+PAED10C,Birth Weight Abnormalities,PAEDIATRICS,754.77,child
+PAED11C,Birth Trauma,PAEDIATRICS,438.29,child
+PAED12C,Neonatal Respiratory Disorders without Ventilation,PAEDIATRICS,452.03,child
+PAED13C,Neonatal Respiratory Disorders with Ventilation,PAEDIATRICS,812.72,child
+PAED14C,Neonatal Septicaemia,PAEDIATRICS,480.68,child
+PAED15C,Heart Disease <12 Yrs,PAEDIATRICS,537.31,child
+PAED16C,Poisoning <12 Yrs,PAEDIATRICS,469.66,child
+PAED18C,Non-Traumatic Coma <12 Yrs,PAEDIATRICS,787.61,child
+PAED19C,Paralytic Conditions <12 Yrs,PAEDIATRICS,744.58,child
+PAED20C,Seizure Disorders <12 Yrs,PAEDIATRICS,479.16,child
+PAED21C,Transient Loss of Consciousness <12 Yrs,PAEDIATRICS,224.94,child
+PAED22C,Cerebro Vascular Accident/Stroke <12 Yrs,PAEDIATRICS,382.05,child
+PAED23C,Bone Marrow Hypoplasia <12 Yrs,PAEDIATRICS,615.48,child
+PAED24C,Sickle Cell Disease with Complication/Crisis <12 Yrs,PAEDIATRICS,462.81,child
+PAED25C,Clotting/Bleeding Disorders <12 Yrs,PAEDIATRICS,493.48,child
+PAED26C,Diseases of Skin/Subcutaneous Tissues <12 Yrs,PAEDIATRICS,663.41,child
+PAED27C,Kidney Disease without Renal Failure <12 Yrs,PAEDIATRICS,592.12,child
+PAED28C,Renal Failure without Dialysis <12 Yrs,PAEDIATRICS,502.89,child
+PAED29C,Acute Renal Failure with Dialysis <12 Yrs,PAEDIATRICS,1682.59,child
+PAED30C,Obstructive Airway Disease <12 Yrs,PAEDIATRICS,337.65,child
+PAED31C,Diarrhoea and Vomiting <12 Yrs,PAEDIATRICS,222.69,child
+PAED32C,Liver Diseases <12 Yrs,PAEDIATRICS,376.54,child
+PAED33C,Gastro Intestinal Tract Bleeding <12 Yrs,PAEDIATRICS,388.65,child
+PAED34C,Non-Specific Abdominal Conditions <12 Yrs,PAEDIATRICS,152.84,child
+PAED35C,Shock <12 Yrs,PAEDIATRICS,523.55,child
+PAED36C,Malaria <12 Yrs,PAEDIATRICS,136.65,child
+PAED37C,Black Water Fever <12 Yrs,PAEDIATRICS,686.29,child
+PAED38C,Severe Infections <12 Yrs,PAEDIATRICS,522.61,child
+PAED39C,Localised Infections <12 Yrs,PAEDIATRICS,248.43,child
+PAED40C,Hypertension <12 Yrs,PAEDIATRICS,384.26,child
+PAED41C,Ischaemic Heart Disease <12 Yrs,PAEDIATRICS,466.58,child
+PAED42C,Pulmonary Embolism <12 Yrs,PAEDIATRICS,597.64,child
+PAED43C,Ulcer of Skin <12 Yrs,PAEDIATRICS,423.39,child
+PAED44C,Animal Bites <12 Yrs,PAEDIATRICS,124.60,child
+PAED45C,Retroviral Infection/Immuno Suppression <12 Yrs,PAEDIATRICS,472.58,child
+PAED46C,Cerebral Malaria,PAEDIATRICS,730.44,child
+PSUR01C,Laparotomy and Resection <12 Yrs,PAEDIATRIC SURGERY,994.19,child
+PSUR02C,Laparotomy and Excision Biopsy <12 Yrs,PAEDIATRIC SURGERY,1135.20,child
+PSUR03C,Laparotomy and surgery for upper renal anomalies <12 Yrs,PAEDIATRIC SURGERY,1229.55,child
+PSUR04C,Excision Biopsy deep masses <12 Yrs,PAEDIATRIC SURGERY,1017.75,child
+PSUR05C,Excision Biopsy Superficial masses <12 Yrs,PAEDIATRIC SURGERY,406.54,child
+PSUR06C,Incision and Drainage GA <12 Yrs,PAEDIATRIC SURGERY,540.71,child
+PSUR07C,Repair of Minor Abdominal Wall Defects <12 Yrs,PAEDIATRIC SURGERY,615.76,child
+PSUR08C,Repair of Major Abdominal Wall Defects <12 Yrs,PAEDIATRIC SURGERY,971.05,child
+PSUR09C,Exploratory Laparotomy <12 Yrs,PAEDIATRIC SURGERY,1016.06,child
+PSUR10C,Gastrostomy <12 Yrs,PAEDIATRIC SURGERY,892.38,child
+PSUR11C,Laparotomy with Repair <12 Yrs,PAEDIATRIC SURGERY,1011.93,child
+PSUR12C,Laparotomy with Appendicectomy <12 Yrs,PAEDIATRIC SURGERY,807.51,child
+PSUR14C,Thoracotomy and oesophageal surgery <12 Yrs,PAEDIATRIC SURGERY,1193.44,child
+PSUR15C,Repair of Lower Urinary Tract Malformation <12 Yrs,PAEDIATRIC SURGERY,863.43,child
+PSUR16C,Repair of Congenital Genito-Urinary Malformations <12 Yrs,PAEDIATRIC SURGERY,1811.01,child
+PSUR17C,Surgery for anal conditions <12 Yrs,PAEDIATRIC SURGERY,721.27,child
+PSUR18C,Primary Closure and Repair <12 Yrs,PAEDIATRIC SURGERY,1129.36,child
+PSUR19C,Laparatomy for biliary surgery <12 Yrs,PAEDIATRIC SURGERY,1354.24,child
+PSUR20C,Laparotomy with Separation <12 Yrs,PAEDIATRIC SURGERY,2613.87,child
+PSUR21C,Surgery of Scrotal contents and testes <12 Yrs,PAEDIATRIC SURGERY,467.91,child
+PSUR23C,Laparotomy for Haemoperitoneum <12 Yrs,PAEDIATRIC SURGERY,995.69,child
+PSUR24C,Laparotomy with Enterostomy Formation and closure <12 Yrs,PAEDIATRIC SURGERY,977.41,child
+PSUR25C,Posterior Sagittal Anorectoplasty (PSARP) <12 Yrs,PAEDIATRIC SURGERY,1121.21,child
+PSUR26C,Burns - OPD Wound Dressing <12 Yrs,PAEDIATRIC SURGERY,579.18,child
+PSUR27C,Burns - Non operative Management - Inpatient <12 Yrs,PAEDIATRIC SURGERY,1540.01,child
+PSUR28C,Surgery for Burns <12 Yrs,PAEDIATRIC SURGERY,1588.10,child
+PSUR29C,Minor Surgery for Sexual Assault <12 Yrs,PAEDIATRIC SURGERY,555.49,child
+PSUR30C,Major Surgery for Sexual Assault <12 Yrs,PAEDIATRIC SURGERY,1025.06,child
+PSUR31C,Laparotomy with anastomosis <12 Yrs,PAEDIATRIC SURGERY,1061.89,child
+PSUR33C,Endoscopic surgery for bleeding oesophageal varices <12 Yrs,PAEDIATRIC SURGERY,682.08,child
+PSUR34C,Thoracostomy and chest tube insertion <12 Yrs,PAEDIATRIC SURGERY,618.18,child
+PSUR35C,Vascular Surgery Operations <12 Yrs,PAEDIATRIC SURGERY,1342.00,child
+PSUR36C,Conservative management of surgery,PAEDIATRIC SURGERY,390.33,child
+PSUR37C,Surgery for removal of finger/toe <12 Yrs,PAEDIATRIC SURGERY,537.20,child
+PSUR38C,Surgery for amputation of hand/foot (through or below ankle or wrist joint) < 12 Yrs,PAEDIATRIC SURGERY,854.93,child
+PSUR39C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",PAEDIATRIC SURGERY,953.85,child
+RSUR01A,Reconstructive repair >=12 Yrs,RECONSTRUCTIVE SURGERY,910.04,adult
+RSUR01C,Reconstructive repair <12 Yrs,RECONSTRUCTIVE SURGERY,866.41,child
+RSUR02A,Shaving and Skin Grafting >=12 Yrs,RECONSTRUCTIVE SURGERY,1277.64,adult
+RSUR02C,Shaving and Skin Grafting <12 Yrs,RECONSTRUCTIVE SURGERY,1237.25,child
+RSUR03A,Excisional Debridement and Dressing >=12 Yrs,RECONSTRUCTIVE SURGERY,1049.10,adult
+RSUR03C,Excisional Debridement and Dressing <12 Yrs,RECONSTRUCTIVE SURGERY,998.22,child
+RSUR04A,Excisional Debridement with Suturing >=12 Yrs,RECONSTRUCTIVE SURGERY,660.95,adult
+RSUR04C,Excisional Debridement with Suturing <12 Yrs,RECONSTRUCTIVE SURGERY,568.97,child
+RSUR05A,Excisional Debridement with Skin Grafting >=12 Yrs,RECONSTRUCTIVE SURGERY,979.25,adult
+RSUR05C,Excisional Debridement with Skin Grafting <12 Yrs,RECONSTRUCTIVE SURGERY,934.00,child
+RSUR06A,Excisional Debridement with Flap Reconstruction >=12 Yrs,RECONSTRUCTIVE SURGERY,1116.91,adult
+RSUR06C,Excisional Debridement with Flap Reconstruction <12 Yrs,RECONSTRUCTIVE SURGERY,1036.74,child
+RSUR07A,Excision Biopsy >=12 Yrs,RECONSTRUCTIVE SURGERY,351.45,adult
+RSUR07C,Excision Biopsy <12 Yrs,RECONSTRUCTIVE SURGERY,333.78,child
+RSUR08A,Escharotomy >=12 Yrs,RECONSTRUCTIVE SURGERY,1096.00,adult
+RSUR08C,Escharotomy <12 Yrs,RECONSTRUCTIVE SURGERY,1052.52,child
+RSUR09A,Z-plasty >=12 Yrs,RECONSTRUCTIVE SURGERY,766.50,adult
+RSUR09C,Z-plasty <12 Yrs,RECONSTRUCTIVE SURGERY,726.84,child
+RSUR10A,Corrective Osteotomy >=12 Yrs,RECONSTRUCTIVE SURGERY,1467.88,adult
+RSUR10C,Corrective Osteotomy <12 Yrs,RECONSTRUCTIVE SURGERY,1258.61,child
+RSUR11A,Reconstruction >=12 Yrs,RECONSTRUCTIVE SURGERY,802.02,adult
+RSUR11C,Reconstruction <12 Yrs,RECONSTRUCTIVE SURGERY,775.13,child
+RSUR12A,Release/Excision and Split Skin Grafting >=12 Yrs,RECONSTRUCTIVE SURGERY,976.58,adult
+RSUR12C,Release/Excision and Split Skin Grafting <12 Yrs,RECONSTRUCTIVE SURGERY,901.40,child
+RSUR13A,Release/Excision and Full thickness skin graft >=12 Yrs,RECONSTRUCTIVE SURGERY,1048.81,adult
+RSUR13C,Release/Excision and Full thickness skin graft <12 Yrs,RECONSTRUCTIVE SURGERY,989.73,child
+RSUR14A,Debaulking >=12 Yrs,RECONSTRUCTIVE SURGERY,1374.84,adult
+RSUR14C,Debaulking <12 Yrs,RECONSTRUCTIVE SURGERY,1302.40,child
+RSUR15A,Primary Suturing >=12 Yrs,RECONSTRUCTIVE SURGERY,656.78,adult
+RSUR15C,Primary Suturing <12 Yrs,RECONSTRUCTIVE SURGERY,614.33,child
+ZOOM01A,Endoscopy (Rigid & Flexible) >=12 Yrs,ZOOM,193.53,adult
+ZOOM01C,Endoscopy (Rigid & Flexible) <12 Yrs,ZOOM,185.39,child
+ZOOM02A,Detention for Observation and Treatment - Adult,ZOOM,97.37,adult
+ZOOM02C,Detention for Observation and Treatment - Child,ZOOM,90.09,child
+ZOOM03A,Inpatient transfer out/Referral- Adult,ZOOM,128.59,adult
+ZOOM03C,Inpatient transfer out/Referral- Child,ZOOM,121.85,child
+ZOOM04A,Change of Catheter >= 12 Yrs,ZOOM,81.99,adult
+ZOOM04C,Change of Catheter <12 Yrs,ZOOM,81.99,child
+ZOOM05A,Change of Dressing >= 12 Yrs,ZOOM,91.85,adult
+ZOOM05C,Change of Dressing < 12 Yrs,ZOOM,91.85,child
+ZOOM06A,Male Circumcision >=12 Yrs,ZOOM,123.32,adult
+ZOOM06C,Male Circumcision <12 Yrs,ZOOM,123.32,child
+ZOOM07A,Dressing And Minor Suturing >=12 Yrs,ZOOM,137.14,adult
+ZOOM07C,Dressing And Minor Suturing <=12 Yrs,ZOOM,134.50,child
+ZOOM08A,Tubal Ligation,ZOOM,121.00,adult
+ZOOM09A,Vasectomy,ZOOM,121.00,adult
+ZOOM10A,IUD >=12 Yrs,ZOOM,13.20,adult
+ZOOM11A,Implant >=12 Yrs,ZOOM,13.20,adult
+ZOOM12A,Injectable (Three Months) >=12 Yrs,ZOOM,6.60,adult
+ZOOM13A,Injectable (One Month) >=12 Yrs,ZOOM,2.20,adult
+OPDC02A,Antenatal/Postnatal,OUT PATIENT,95.59,adult
+OPDC03A,Dental Adult (without procedure),OUT PATIENT,82.54,adult
+OPDC03C,Dental Child (without procedure),OUT PATIENT,83.08,child
+OPDC04A,ENT Adult (without procedure),OUT PATIENT,87.98,adult
+OPDC04C,ENT Child (without procedure),OUT PATIENT,86.53,child
+OPDC05A,Eye Adult (without procedure),OUT PATIENT,86.20,adult
+OPDC05C,Eye Child (without procedure),OUT PATIENT,85.62,child
+OPDC06A,General OPD - Adult,OUT PATIENT,55.06,adult
+OPDC06C,General OPD - Child,OUT PATIENT,54.70,child
+OPDC11A,Unbundled Consultation - Adult,OUT PATIENT,80.72,adult
+OPDC11C,Unbundled Consultation - Child,OUT PATIENT,80.22,child
+OPDC13A,Physiotheraphy-Adult,OUT PATIENT,85.56,adult
+OPDC13C,Physiotheraphy-Child,OUT PATIENT,85.56,child
+INVE01D,2 Hour Post Prandial Blood Glucose,INVESTIGATION,23.41,all
+INVE02D,24hr Urine for Protein,INVESTIGATION,17.33,all
+INVE100,Acid Phosphate,INVESTIGATION,13.67,all
+INVE150,AEC,INVESTIGATION,16.80,all
+INVE03D,Alanine Aminotransferase (ALT),INVESTIGATION,17.48,all
+INVE04D,Alpha Amylase (Serum/Urine),INVESTIGATION,23.19,all
+INVE05D,Alpha-Fetoprotein (AFP),INVESTIGATION,16.29,all
+INVE132,Anti-streptolysin test,INVESTIGATION,26.13,all
+INVE06D,Ap-Prothrombin Time,INVESTIGATION,19.66,all
+INVE07D,Arterial Blood Gas (ABG),INVESTIGATION,27.97,all
+INVE125,A-scan,INVESTIGATION,58.53,all
+INVE154,ASO titre,INVESTIGATION,34.78,all
+INVE08D,Aspartate Aminotransferase (AST),INVESTIGATION,15.28,all
+INVE09D,B/F for Malaria Parasites,INVESTIGATION,10.75,all
+INVE10D,Barium Enema,INVESTIGATION,203.64,all
+INVE11D,Barium Meal,INVESTIGATION,129.05,all
+INVE12D,Barium Meal & Follow Through,INVESTIGATION,139.32,all
+INVE13D,Barium Swallow,INVESTIGATION,118.27,all
+INVE14D,Bilirubin,INVESTIGATION,15.28,all
+INVE152,Biopsy L/A,INVESTIGATION,115.03,all
+INVE15D,Bleeding and Clotting Time,INVESTIGATION,12.01,all
+INVE16D,Blood for C/S,INVESTIGATION,24.48,all
+INVE17D,Blood Grouping,INVESTIGATION,12.88,all
+INVE18D,Blood Grouping & Antibody Screen,INVESTIGATION,16.49,all
+INVE19D,Blood Parasites,INVESTIGATION,16.23,all
+INVE151,Blood Sugar PP,INVESTIGATION,9.26,all
+INVE20D,Blood Urea,INVESTIGATION,24.29,all
+INVE21D,Blood Urea & Electrolytes,INVESTIGATION,26.80,all
+INVE22D,Bone Marrow - Trephine Biopsy,INVESTIGATION,146.45,all
+INVE23D,Bone Marrow Aspirate,INVESTIGATION,96.76,all
+INVE139,Bone Scan,INVESTIGATION,134.81,all
+INVE140,Breast tissue Biopsy,INVESTIGATION,37.49,all
+INVE24D,Bue & Creatinine,INVESTIGATION,28.16,all
+INVE141,C Reactive Protein,INVESTIGATION,24.51,all
+INVE134,Calcium Infusion test,INVESTIGATION,28.16,all
+INVE137,Cancer antigen 19-9,INVESTIGATION,102.77,all
+INVE25D,Carcino Embryonic Antigen (CEA),INVESTIGATION,14.76,all
+INVE26D,Cerebrospinal Fluid For C/S,INVESTIGATION,26.54,all
+INVE101,Chloride,INVESTIGATION,13.99,all
+INVE27D,Clusters of Differentiation Cells (CD4),INVESTIGATION,84.68,all
+INVE28D,Coombs Test (Direct),INVESTIGATION,16.66,all
+INVE29D,Creatine Kinase - Mb (CK - Mb),INVESTIGATION,22.64,all
+INVE30D,Creatine Kinase (CK),INVESTIGATION,18.96,all
+INVE31D,CSF Latex Agglutination,INVESTIGATION,17.67,all
+INVE33D,CT Scan - 1 Region + 1IV Contrast,INVESTIGATION,339.85,all
+INVE32D,CT Scan - 1 Region + 2 Contrast,INVESTIGATION,423.44,all
+INVE34D,CT Scan - 1 Region + No Contrast,INVESTIGATION,121.91,all
+INVE158,CT Scan - 2 Region + 1Contrast,INVESTIGATION,216.55,all
+INVE159,CT Scan - 2 region + 2 contrast,INVESTIGATION,243.76,all
+INVE157,CT Scan - 2 Region with No Contrast,INVESTIGATION,211.69,all
+INVE35D,Cystogram,INVESTIGATION,119.10,all
+INVE36D,Cytology,INVESTIGATION,27.04,all
+INVE130,Demonstration of Heinz bodies,INVESTIGATION,15.72,all
+INVE37D,Digoxin Level,INVESTIGATION,13.05,all
+INVE38D,Dihydroxy Epiandesterone Sulphate (Dhea-S),INVESTIGATION,14.04,all
+INVE102,Direct Bilirubin/Total Bilirubin,INVESTIGATION,17.54,all
+INVE103,Donor Screening for HB & AG,INVESTIGATION,25.55,all
+INVE39D,Doppler Scan,INVESTIGATION,45.33,all
+INVE40D,Ductologram/Galactographyy,INVESTIGATION,93.12,all
+INVE41D,ECG,INVESTIGATION,19.48,all
+INVE142,EEG (Electroencephalogram),INVESTIGATION,75.25,all
+INVE42D,Erythrocyte Sedimentation Rate (ESR),INVESTIGATION,9.75,all
+INVE43D,Estrogen,INVESTIGATION,29.45,all
+INVE44D,Factor IX,INVESTIGATION,36.44,all
+INVE45D,Factor VIII,INVESTIGATION,79.69,all
+INVE46D,Fasting Blood Sugar/Random Blood Sugar,INVESTIGATION,11.01,all
+INVE47D,Fistulogram,INVESTIGATION,164.96,all
+INVE48D,Follicle Stimulating Hormone (FSH),INVESTIGATION,31.66,all
+INVE49D,FT3,INVESTIGATION,36.35,all
+INVE50D,FT4,INVESTIGATION,36.35,all
+INVE51D,Full Blood Count FBC (Auto) & Film Comment,INVESTIGATION,26.69,all
+INVE52D,Full Blood Count FBC (Automation),INVESTIGATION,22.88,all
+INVE53D,Full Blood Count With Film Comment (Manual),INVESTIGATION,25.86,all
+INVE54D,Fungal Cultures,INVESTIGATION,26.32,all
+INVE55D,Gamma Glutamyl Transferase (GGT),INVESTIGATION,22.64,all
+INVE56D,Glucose-6-Phosphate Dehydrogenase (G6PD),INVESTIGATION,15.28,all
+INVE57D,Glycosylated Haemoglobin (HBA 1C),INVESTIGATION,30.92,all
+INVE155,Gonioscopy,INVESTIGATION,15.46,all
+INVE104,Grouping/X' Matching/Unit,INVESTIGATION,15.00,all
+INVE146,Guthrie test,INVESTIGATION,74.76,all
+INVE58D,Haemoglobin A2 & F Estimation,INVESTIGATION,15.24,all
+INVE59D,Haemoglobin Electrophoresis,INVESTIGATION,18.10,all
+INVE60D,Haemoglobin Estimation (HB),INVESTIGATION,11.16,all
+INVE61D,HDL - Cholesterol,INVESTIGATION,17.48,all
+INVE62D,Helicobacter Pylori Test,INVESTIGATION,11.81,all
+INVE156,Hematocrit,INVESTIGATION,22.24,all
+INVE63D,Hepatitis B Surface Antigen (HBSAG) HBV,INVESTIGATION,12.23,all
+INVE64D,Hepatitis B Virus Profile (HBV Profile),INVESTIGATION,27.57,all
+INVE105,Hepatitis C screening,INVESTIGATION,14.72,all
+INVE65D,High Vaginal Swab for C/S,INVESTIGATION,23.74,all
+INVE66D,High Vaginal Swab Routine Examination,INVESTIGATION,13.66,all
+INVE67D,Histopathology,INVESTIGATION,45.75,all
+INVE143,Holter,INVESTIGATION,125.37,all
+INVE68D,Human Immunodeficiency Virus (HIV) Confirmation,INVESTIGATION,23.56,all
+INVE69D,Human Immunodeficiency Virus (HIV) Screening,INVESTIGATION,21.35,all
+INVE70D,Hysterosalpingogram,INVESTIGATION,75.52,all
+INVE71D,Immunostaining,INVESTIGATION,85.21,all
+INVE72D,Intravenous Urography,INVESTIGATION,315.67,all
+INVE106,IOPA Xray,INVESTIGATION,22.08,all
+INVE124,Keratometry,INVESTIGATION,19.20,all
+INVE73D,LDL - Cholesterol,INVESTIGATION,15.72,all
+INVE74D,LFT,INVESTIGATION,36.71,all
+INVE75D,Lipid Profile,INVESTIGATION,34.84,all
+INVE76D,Lupus Erythematosus Cell (Le Cell),INVESTIGATION,18.96,all
+INVE77D,Luteinizing Hormone (LH),INVESTIGATION,31.32,all
+INVE107,Magnesium,INVESTIGATION,15.28,all
+INVE122,Malaria Card Test (Dipstik assay/rapid card),INVESTIGATION,5.52,all
+INVE78D,Mammogram,INVESTIGATION,67.33,all
+INVE79D,"Miscelllaneous Cultures (Fluids, Aspirates & Exudates)",INVESTIGATION,21.72,all
+INVE80D,MRI - 1 Region + Contrast,INVESTIGATION,442.16,all
+INVE81D,MRI - 1 Region + No Contrast,INVESTIGATION,203.62,all
+INVE161,MRI 2 region with + contrast,INVESTIGATION,611.79,all
+INVE160,MRI 2 region with no contrast,INVESTIGATION,480.60,all
+INVE82D,Myelogram - 1 Region,INVESTIGATION,137.29,all
+INVE145,Myocardial perfusion imaging,INVESTIGATION,241.24,all
+INVE108,NA+,INVESTIGATION,14.47,all
+INVE83D,Oral Glucose Tolerance Test (OGTT),INVESTIGATION,28.97,all
+INVE84D,Orthopanthomograph (OPT),INVESTIGATION,62.91,all
+INVE85D,Pancreatic Amylase,INVESTIGATION,20.40,all
+INVE86D,Pap Smear/Fine Needle Aspiration,INVESTIGATION,37.35,all
+INVE87D,Percutaneous Biopsy - CT Scan Guide,INVESTIGATION,144.44,all
+INVE88D,Percutaneous Biopsy - Flouroscopic Guide,INVESTIGATION,113.96,all
+INVE109,Phosphorus,INVESTIGATION,15.30,all
+INVE91D,Plasma Cortisol,INVESTIGATION,13.36,all
+INVE110,Platelet Count,INVESTIGATION,11.39,all
+INVE136,Pleural fluid analysis,INVESTIGATION,20.64,all
+INVE111,Potassium,INVESTIGATION,15.30,all
+INVE92D,Pregnancy Test,INVESTIGATION,12.54,all
+INVE93D,Progesterone (Prog),INVESTIGATION,31.81,all
+INVE94D,Prostate Specific Antigen (PSA),INVESTIGATION,33.68,all
+INVE95D,Prothrombin Time,INVESTIGATION,18.48,all
+INVE135,Pulmonary Function test,INVESTIGATION,59.41,all
+INVE112,Renal Function Test,INVESTIGATION,25.07,all
+INVE96D,Reticulocyte Count (Retics),INVESTIGATION,11.48,all
+INVE123,RH Typing,INVESTIGATION,11.43,all
+INVE97D,Rheumatoid Factor,INVESTIGATION,9.79,all
+INVE98D,Routine Stool Examination,INVESTIGATION,9.36,all
+INVE99D,Routine Urine Examination,INVESTIGATION,10.10,all
+INVE113,Semen Analysis,INVESTIGATION,61.07,all
+INVE01E,Serum Adrenocorticotropic Hormone (ACTH),INVESTIGATION,13.05,all
+INVE02E,Serum Albumin,INVESTIGATION,15.08,all
+INVE03E,Serum Alkalne Phosphatase (ALP),INVESTIGATION,14.32,all
+INVE04E,Serum Beta-Human Chorionic Gonadotropin (HCG),INVESTIGATION,30.15,all
+INVE05E,Serum Calcium,INVESTIGATION,18.96,all
+INVE06E,Serum Creatinine,INVESTIGATION,14.56,all
+INVE07E,"Serum Electrolyte (Na+, K+)",INVESTIGATION,16.16,all
+INVE08E,Serum Ferritin,INVESTIGATION,27.67,all
+INVE09E,Serum Iron (Fe),INVESTIGATION,15.88,all
+INVE10E,Serum Lactate Dehydrogenase (LDH),INVESTIGATION,15.88,all
+INVE11E,Serum Prolactin (PRL),INVESTIGATION,31.34,all
+INVE12E,Serum Total Protein,INVESTIGATION,13.59,all
+INVE13E,Serum Triglyceride,INVESTIGATION,14.69,all
+INVE14E,Serum Uric Acid,INVESTIGATION,17.12,all
+INVE126,"Serum vitamin B12, and folate levels",INVESTIGATION,122.79,all
+INVE15E,Sialogram,INVESTIGATION,98.38,all
+INVE16E,Sickling Test,INVESTIGATION,9.75,all
+INVE17E,Skin Scrapping for Fungal Elements,INVESTIGATION,10.99,all
+INVE18E,Skin Snip,INVESTIGATION,11.02,all
+INVE19E,Stool C/S,INVESTIGATION,23.93,all
+INVE20E,Stool For Occult Blood,INVESTIGATION,11.14,all
+INVE21E,T3,INVESTIGATION,60.08,all
+INVE22E,T4,INVESTIGATION,60.08,all
+INVE23E,Testosterone,INVESTIGATION,37.90,all
+INVE24E,Thyroid Function Test (TSH),INVESTIGATION,36.44,all
+INVE25E,Thyroid Profile,INVESTIGATION,80.78,all
+INVE26E,Total Iron Binding Capacity (TIBC),INVESTIGATION,18.77,all
+INVE114,Total leucocyte count,INVESTIGATION,12.74,all
+INVE115,Total Proteins Blood,INVESTIGATION,11.58,all
+INVE27E,Total Serum Cholesterol,INVESTIGATION,14.04,all
+INVE138,Transhepatic cholangiography (PTC),INVESTIGATION,135.83,all
+INVE28E,Trophozoite Count,INVESTIGATION,16.95,all
+INVE29E,Troponin,INVESTIGATION,27.91,all
+INVE149,Typhi Dot,INVESTIGATION,16.76,all
+INVE30E,Ultrasound,INVESTIGATION,46.09,all
+INVE31E,Ultrasound - 2 Regions,INVESTIGATION,64.50,all
+INVE129,Ultrasound biomicroscopy,INVESTIGATION,61.93,all
+INVE32E,Ultrasound Guided Incision & Drainage,INVESTIGATION,79.51,all
+INVE33E,Urethrogram,INVESTIGATION,94.02,all
+INVE34E,Urine C/S,INVESTIGATION,22.08,all
+INVE35E,Urine For Bence Jones Protein,INVESTIGATION,9.35,all
+INVE116,Urine Sugar,INVESTIGATION,8.95,all
+INVE117,VCT,INVESTIGATION,4.79,all
+INVE36E,Veneral Disease Research Laboratory (VDRL),INVESTIGATION,9.88,all
+INVE37E,Venogram - 1 Region,INVESTIGATION,283.67,all
+INVE133,Viral serology,INVESTIGATION,125.74,all
+INVE118,Vitality Test,INVESTIGATION,29.67,all
+INVE119,VLDL,INVESTIGATION,11.74,all
+INVE120,WBC+Differential,INVESTIGATION,14.59,all
+INVE38E,Widal Test,INVESTIGATION,12.80,all
+INVE89D,X-ray one region,INVESTIGATION,41.59,all
+INVE90D,X-ray two region,INVESTIGATION,64.08,all

@@ -1,0 +1,192 @@
+code,name,price,category,sample_type,turnaround_time,nhis_code
+INVE01D,2 Hour Post Prandial Blood Glucose,,Biochemistry,Blood,4 hours,INVE01D
+INVE02D,24hr Urine for Protein,,Biochemistry,Urine,4 hours,INVE02D
+INVE100,Acid Phosphate,,General,Blood,24 hours,INVE100
+INVE150,AEC,,Hematology,Blood,2 hours,INVE150
+INVE03D,Alanine Aminotransferase (ALT),,Biochemistry,Blood,4 hours,INVE03D
+INVE04D,Alpha Amylase (Serum/Urine),,Biochemistry,Urine,4 hours,INVE04D
+INVE05D,Alpha-Fetoprotein (AFP),,Biochemistry,Blood,4 hours,INVE05D
+INVE132,Anti-streptolysin test,,Serology,Blood,24 hours,INVE132
+INVE06D,Ap-Prothrombin Time,,Hematology,Blood,2 hours,INVE06D
+INVE07D,Arterial Blood Gas (ABG),,Special Tests,Blood,24 hours,INVE07D
+INVE125,A-scan,,Imaging,,2 hours,INVE125
+INVE154,ASO titre,,Serology,Blood,24 hours,INVE154
+INVE08D,Aspartate Aminotransferase (AST),,Biochemistry,Blood,4 hours,INVE08D
+INVE09D,B/F for Malaria Parasites,,Parasitology,Blood,24 hours,INVE09D
+INVE10D,Barium Enema,,Imaging,Blood,2 hours,INVE10D
+INVE11D,Barium Meal,,Imaging,Blood,2 hours,INVE11D
+INVE12D,Barium Meal & Follow Through,,Imaging,Blood,2 hours,INVE12D
+INVE13D,Barium Swallow,,Imaging,Blood,2 hours,INVE13D
+INVE14D,Bilirubin,,Biochemistry,Blood,4 hours,INVE14D
+INVE152,Biopsy L/A,,Histopathology,Tissue,5-7 days,INVE152
+INVE15D,Bleeding and Clotting Time,,Hematology,Blood,2 hours,INVE15D
+INVE16D,Blood for C/S,,Microbiology,Blood,48-72 hours,INVE16D
+INVE17D,Blood Grouping,,Hematology,Blood,2 hours,INVE17D
+INVE18D,Blood Grouping & Antibody Screen,,Hematology,Blood,2 hours,INVE18D
+INVE19D,Blood Parasites,,Parasitology,Blood,24 hours,INVE19D
+INVE151,Blood Sugar PP,,Biochemistry,Blood,4 hours,INVE151
+INVE20D,Blood Urea,,Biochemistry,Blood,4 hours,INVE20D
+INVE21D,Blood Urea & Electrolytes,,Biochemistry,Blood,4 hours,INVE21D
+INVE22D,Bone Marrow - Trephine Biopsy,,Hematology,Tissue,2 hours,INVE22D
+INVE23D,Bone Marrow Aspirate,,Hematology,Tissue,2 hours,INVE23D
+INVE139,Bone Scan,,Imaging,,2 hours,INVE139
+INVE140,Breast tissue Biopsy,,Biochemistry,Tissue,4 hours,INVE140
+INVE24D,Bue & Creatinine,,Biochemistry,Blood,4 hours,INVE24D
+INVE141,C Reactive Protein,,Biochemistry,Blood,4 hours,INVE141
+INVE134,Calcium Infusion test,,Biochemistry,Blood,4 hours,INVE134
+INVE137,Cancer antigen 19-9,,Tumor Markers,Blood,24-48 hours,INVE137
+INVE25D,Carcino Embryonic Antigen (CEA),,Tumor Markers,Blood,24-48 hours,INVE25D
+INVE26D,Cerebrospinal Fluid For C/S,,Microbiology,CSF,48-72 hours,INVE26D
+INVE101,Chloride,,Biochemistry,Blood,4 hours,INVE101
+INVE27D,Clusters of Differentiation Cells (CD4),,Serology,Blood,24 hours,INVE27D
+INVE28D,Coombs Test (Direct),,Hematology,Blood,2 hours,INVE28D
+INVE29D,Creatine Kinase - Mb (CK - Mb),,Cardiac,Blood,4 hours,INVE29D
+INVE30D,Creatine Kinase (CK),,Cardiac,Blood,4 hours,INVE30D
+INVE31D,CSF Latex Agglutination,,Microbiology,CSF,48-72 hours,INVE31D
+INVE33D,CT Scan - 1 Region + 1IV Contrast,,Imaging,,24 hours,INVE33D
+INVE32D,CT Scan - 1 Region + 2 Contrast,,Imaging,,24 hours,INVE32D
+INVE34D,CT Scan - 1 Region + No Contrast,,Imaging,,24 hours,INVE34D
+INVE158,CT Scan - 2 Region + 1Contrast,,Imaging,,24 hours,INVE158
+INVE159,CT Scan - 2 region + 2 contrast,,Imaging,,24 hours,INVE159
+INVE157,CT Scan - 2 Region with No Contrast,,Imaging,,24 hours,INVE157
+INVE35D,Cystogram,,Imaging,Blood,2 hours,INVE35D
+INVE36D,Cytology,,Histopathology,Blood,5-7 days,INVE36D
+INVE130,Demonstration of Heinz bodies,,Special Tests,Blood,24 hours,INVE130
+INVE37D,Digoxin Level,,General,Blood,24 hours,INVE37D
+INVE38D,Dihydroxy Epiandesterone Sulphate (Dhea-S),,Hormones,Blood,24 hours,INVE38D
+INVE102,Direct Bilirubin/Total Bilirubin,,Biochemistry,Blood,4 hours,INVE102
+INVE103,Donor Screening for HB & AG,,General,Blood,24 hours,INVE103
+INVE39D,Doppler Scan,,Imaging,,2 hours,INVE39D
+INVE40D,Ductologram/Galactographyy,,Imaging,Blood,2 hours,INVE40D
+INVE41D,ECG,,Cardiac,,30 minutes,INVE41D
+INVE142,EEG (Electroencephalogram),,Special Tests,,24 hours,INVE142
+INVE42D,Erythrocyte Sedimentation Rate (ESR),,Hematology,Blood,2 hours,INVE42D
+INVE43D,Estrogen,,Hormones,Blood,24 hours,INVE43D
+INVE44D,Factor IX,,Hematology,Blood,2 hours,INVE44D
+INVE45D,Factor VIII,,Hematology,Blood,2 hours,INVE45D
+INVE46D,Fasting Blood Sugar/Random Blood Sugar,,Biochemistry,Blood,4 hours,INVE46D
+INVE47D,Fistulogram,,Imaging,Blood,2 hours,INVE47D
+INVE48D,Follicle Stimulating Hormone (FSH),,Hormones,Blood,24 hours,INVE48D
+INVE49D,FT3,,Hormones,Blood,24 hours,INVE49D
+INVE50D,FT4,,Hormones,Blood,24 hours,INVE50D
+INVE51D,Full Blood Count FBC (Auto) & Film Comment,,Hematology,Blood,2 hours,INVE51D
+INVE52D,Full Blood Count FBC (Automation),,Hematology,Blood,2 hours,INVE52D
+INVE53D,Full Blood Count With Film Comment (Manual),,Hematology,Blood,2 hours,INVE53D
+INVE54D,Fungal Cultures,,Microbiology,Blood,48-72 hours,INVE54D
+INVE55D,Gamma Glutamyl Transferase (GGT),,Biochemistry,Blood,4 hours,INVE55D
+INVE56D,Glucose-6-Phosphate Dehydrogenase (G6PD),,Biochemistry,Blood,4 hours,INVE56D
+INVE57D,Glycosylated Haemoglobin (HBA 1C),,Hematology,Blood,2 hours,INVE57D
+INVE155,Gonioscopy,,Special Tests,Blood,24 hours,INVE155
+INVE104,Grouping/X' Matching/Unit,,Hematology,Blood,2 hours,INVE104
+INVE146,Guthrie test,,Special Tests,Blood,24 hours,INVE146
+INVE58D,Haemoglobin A2 & F Estimation,,Hematology,Blood,2 hours,INVE58D
+INVE59D,Haemoglobin Electrophoresis,,Hematology,Blood,2 hours,INVE59D
+INVE60D,Haemoglobin Estimation (HB),,Hematology,Blood,2 hours,INVE60D
+INVE61D,HDL - Cholesterol,,Biochemistry,Blood,4 hours,INVE61D
+INVE62D,Helicobacter Pylori Test,,Serology,Blood,24 hours,INVE62D
+INVE156,Hematocrit,,Hematology,Blood,2 hours,INVE156
+INVE63D,Hepatitis B Surface Antigen (HBSAG) HBV,,Serology,Blood,24 hours,INVE63D
+INVE64D,Hepatitis B Virus Profile (HBV Profile),,Serology,Blood,24 hours,INVE64D
+INVE105,Hepatitis C screening,,Serology,Blood,24 hours,INVE105
+INVE65D,High Vaginal Swab for C/S,,Microbiology,Swab,48-72 hours,INVE65D
+INVE66D,High Vaginal Swab Routine Examination,,Microbiology,Swab,48-72 hours,INVE66D
+INVE67D,Histopathology,,Histopathology,Blood,5-7 days,INVE67D
+INVE143,Holter,,Cardiac,,4 hours,INVE143
+INVE68D,Human Immunodeficiency Virus (HIV) Confirmation,,Serology,Blood,24 hours,INVE68D
+INVE69D,Human Immunodeficiency Virus (HIV) Screening,,Serology,Blood,24 hours,INVE69D
+INVE70D,Hysterosalpingogram,,Imaging,Blood,2 hours,INVE70D
+INVE71D,Immunostaining,,Histopathology,Blood,5-7 days,INVE71D
+INVE72D,Intravenous Urography,,Imaging,Blood,2 hours,INVE72D
+INVE106,IOPA Xray,,Imaging,,2 hours,INVE106
+INVE124,Keratometry,,Special Tests,Blood,24 hours,INVE124
+INVE73D,LDL - Cholesterol,,Biochemistry,Blood,4 hours,INVE73D
+INVE74D,LFT,,Biochemistry,Blood,4 hours,INVE74D
+INVE75D,Lipid Profile,,Biochemistry,Blood,4 hours,INVE75D
+INVE76D,Lupus Erythematosus Cell (Le Cell),,Serology,Blood,24 hours,INVE76D
+INVE77D,Luteinizing Hormone (LH),,Hormones,Blood,24 hours,INVE77D
+INVE107,Magnesium,,Biochemistry,Blood,4 hours,INVE107
+INVE122,Malaria Card Test (Dipstik assay/rapid card),,Parasitology,Blood,24 hours,INVE122
+INVE78D,Mammogram,,Imaging,,2 hours,INVE78D
+INVE79D,"Miscelllaneous Cultures (Fluids, Aspirates & Exudates)",,Microbiology,Tissue,48-72 hours,INVE79D
+INVE80D,MRI - 1 Region + Contrast,,Imaging,,24 hours,INVE80D
+INVE81D,MRI - 1 Region + No Contrast,,Imaging,,24 hours,INVE81D
+INVE161,MRI 2 region with + contrast,,Imaging,,24 hours,INVE161
+INVE160,MRI 2 region with no contrast,,Imaging,,24 hours,INVE160
+INVE82D,Myelogram - 1 Region,,Imaging,Blood,2 hours,INVE82D
+INVE145,Myocardial perfusion imaging,,Cardiac,Blood,4 hours,INVE145
+INVE108,NA+,,General,Blood,24 hours,INVE108
+INVE83D,Oral Glucose Tolerance Test (OGTT),,Biochemistry,Blood,4 hours,INVE83D
+INVE84D,Orthopanthomograph (OPT),,General,Blood,24 hours,INVE84D
+INVE85D,Pancreatic Amylase,,Biochemistry,Blood,4 hours,INVE85D
+INVE86D,Pap Smear/Fine Needle Aspiration,,Histopathology,Blood,5-7 days,INVE86D
+INVE87D,Percutaneous Biopsy - CT Scan Guide,,Imaging,Tissue,24 hours,INVE87D
+INVE88D,Percutaneous Biopsy - Flouroscopic Guide,,Histopathology,Tissue,5-7 days,INVE88D
+INVE109,Phosphorus,,Biochemistry,Blood,4 hours,INVE109
+INVE91D,Plasma Cortisol,,Hormones,Blood,24 hours,INVE91D
+INVE110,Platelet Count,,Hematology,Blood,2 hours,INVE110
+INVE136,Pleural fluid analysis,,General,Blood,24 hours,INVE136
+INVE111,Potassium,,Biochemistry,Blood,4 hours,INVE111
+INVE92D,Pregnancy Test,,Special Tests,Blood,24 hours,INVE92D
+INVE93D,Progesterone (Prog),,Hormones,Blood,24 hours,INVE93D
+INVE94D,Prostate Specific Antigen (PSA),,Tumor Markers,Blood,24-48 hours,INVE94D
+INVE95D,Prothrombin Time,,Hematology,Blood,2 hours,INVE95D
+INVE135,Pulmonary Function test,,Special Tests,Blood,24 hours,INVE135
+INVE112,Renal Function Test,,Biochemistry,Blood,4 hours,INVE112
+INVE96D,Reticulocyte Count (Retics),,Hematology,Blood,2 hours,INVE96D
+INVE123,RH Typing,,Hematology,Blood,2 hours,INVE123
+INVE97D,Rheumatoid Factor,,Serology,Blood,24 hours,INVE97D
+INVE98D,Routine Stool Examination,,Microbiology,Stool,48-72 hours,INVE98D
+INVE99D,Routine Urine Examination,,Urinalysis,Urine,24 hours,INVE99D
+INVE113,Semen Analysis,,Special Tests,Semen,24 hours,INVE113
+INVE01E,Serum Adrenocorticotropic Hormone (ACTH),,Hormones,Blood,24 hours,INVE01E
+INVE02E,Serum Albumin,,Biochemistry,Blood,4 hours,INVE02E
+INVE03E,Serum Alkalne Phosphatase (ALP),,General,Blood,24 hours,INVE03E
+INVE04E,Serum Beta-Human Chorionic Gonadotropin (HCG),,Hormones,Blood,24 hours,INVE04E
+INVE05E,Serum Calcium,,Biochemistry,Blood,4 hours,INVE05E
+INVE06E,Serum Creatinine,,Biochemistry,Blood,4 hours,INVE06E
+INVE07E,"Serum Electrolyte (Na+, K+)",,Biochemistry,Blood,4 hours,INVE07E
+INVE08E,Serum Ferritin,,Biochemistry,Blood,4 hours,INVE08E
+INVE09E,Serum Iron (Fe),,Biochemistry,Blood,4 hours,INVE09E
+INVE10E,Serum Lactate Dehydrogenase (LDH),,Biochemistry,Blood,4 hours,INVE10E
+INVE11E,Serum Prolactin (PRL),,Hormones,Blood,24 hours,INVE11E
+INVE12E,Serum Total Protein,,Biochemistry,Blood,4 hours,INVE12E
+INVE13E,Serum Triglyceride,,Biochemistry,Blood,4 hours,INVE13E
+INVE14E,Serum Uric Acid,,Biochemistry,Blood,4 hours,INVE14E
+INVE126,"Serum vitamin B12, and folate levels",,General,Blood,24 hours,INVE126
+INVE15E,Sialogram,,Imaging,Blood,2 hours,INVE15E
+INVE16E,Sickling Test,,Hematology,Blood,2 hours,INVE16E
+INVE17E,Skin Scrapping for Fungal Elements,,Microbiology,Skin,48-72 hours,INVE17E
+INVE18E,Skin Snip,,Parasitology,Skin,24 hours,INVE18E
+INVE19E,Stool C/S,,Microbiology,Stool,48-72 hours,INVE19E
+INVE20E,Stool For Occult Blood,,Microbiology,Stool,48-72 hours,INVE20E
+INVE21E,T3,,Hormones,Blood,24 hours,INVE21E
+INVE22E,T4,,Hormones,Blood,24 hours,INVE22E
+INVE23E,Testosterone,,Hormones,Blood,24 hours,INVE23E
+INVE24E,Thyroid Function Test (TSH),,Hormones,Blood,24 hours,INVE24E
+INVE25E,Thyroid Profile,,Hormones,Blood,24 hours,INVE25E
+INVE26E,Total Iron Binding Capacity (TIBC),,Biochemistry,Blood,4 hours,INVE26E
+INVE114,Total leucocyte count,,Hematology,Blood,2 hours,INVE114
+INVE115,Total Proteins Blood,,Biochemistry,Blood,4 hours,INVE115
+INVE27E,Total Serum Cholesterol,,Biochemistry,Blood,4 hours,INVE27E
+INVE138,Transhepatic cholangiography (PTC),,Imaging,Blood,2 hours,INVE138
+INVE28E,Trophozoite Count,,Parasitology,Blood,24 hours,INVE28E
+INVE29E,Troponin,,Cardiac,Blood,4 hours,INVE29E
+INVE149,Typhi Dot,,Serology,Blood,24 hours,INVE149
+INVE30E,Ultrasound,,Imaging,,2 hours,INVE30E
+INVE31E,Ultrasound - 2 Regions,,Imaging,,2 hours,INVE31E
+INVE129,Ultrasound biomicroscopy,,Imaging,,2 hours,INVE129
+INVE32E,Ultrasound Guided Incision & Drainage,,Imaging,,2 hours,INVE32E
+INVE33E,Urethrogram,,Imaging,Blood,2 hours,INVE33E
+INVE34E,Urine C/S,,Microbiology,Urine,48-72 hours,INVE34E
+INVE35E,Urine For Bence Jones Protein,,Biochemistry,Urine,4 hours,INVE35E
+INVE116,Urine Sugar,,Biochemistry,Urine,4 hours,INVE116
+INVE117,VCT,,Special Tests,Blood,24 hours,INVE117
+INVE36E,Veneral Disease Research Laboratory (VDRL),,Serology,Blood,24 hours,INVE36E
+INVE37E,Venogram - 1 Region,,Imaging,Blood,2 hours,INVE37E
+INVE133,Viral serology,,Serology,Blood,24 hours,INVE133
+INVE118,Vitality Test,,Special Tests,Blood,24 hours,INVE118
+INVE119,VLDL,,Biochemistry,Blood,4 hours,INVE119
+INVE120,WBC+Differential,,Hematology,Blood,2 hours,INVE120
+INVE38E,Widal Test,,Serology,Blood,24 hours,INVE38E
+INVE89D,X-ray one region,,Imaging,,2 hours,INVE89D
+INVE90D,X-ray two region,,Imaging,,2 hours,INVE90D

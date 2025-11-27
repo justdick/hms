@@ -1,0 +1,526 @@
+drug_code,name,generic_name,form,strength,unit_price,unit_type,bottle_size,category,min_stock,nhis_code
+ACETAZIN1,"Acetazolamide Injection, 500 mg  Ampoule",Acetazolamide,injection,500 mg,,vial,,other,,ACETAZIN1
+ACETAZTA1,"Acetazolamide Tablet, 250 mg  Tablet",Acetazolamide,tablet,250 mg,,piece,,other,,ACETAZTA1
+ACETYLIN1,"Acetylcysteine Injection, 200 mg/mL  1 mL",Acetylcysteine,injection,200 mg/mL,,vial,1,other,,ACETYLIN1
+ACETYLTA1,"Acetylsalicylic Acid Tablet, 300 mg  Tablet",Acetylsalicylic,tablet,300 mg,,piece,,analgesics,,ACETYLTA1
+ACETYLDT1,"Acetylsalicylic Acid Tablet, 75 mg (Dispersible)  Tablet",Acetylsalicylic,tablet,75 mg,,piece,,analgesics,,ACETYLDT1
+ACTINOIN1,Actinomycin D Injection 0.5 mg Intravenous  Vial,Actinomycin,injection,0.5 mg,,vial,,other,,ACTINOIN1
+ACTCHAPO1,"Activated Charcoal Powder, 50 g  50 G",Activated,other,50 g  50 G,,piece,,other,,ACTCHAPO1
+ACICLOCR1,"Acyclovir Cream, 5%  5G",Acyclovir,cream,5%  5G,,tube,,antivirals,,ACICLOCR1
+ACICLOEO1,"Acyclovir Eye Ointment, 3%  2G",Acyclovir,ointment,3%  2G,,tube,,antivirals,,ACICLOEO1
+ACICLOIN1,"Acyclovir Injection, 250 mg vial  Vial",Acyclovir,injection,250 mg,,vial,,antivirals,,ACICLOIN1
+ACICLOSU2,"Acyclovir Suspension, 200 mg/5 mL  20 mL",Acyclovir,suspension,200 mg/5 mL,,bottle,20,antivirals,,ACICLOSU2
+ACICLOTA1,"Acyclovir Tablet, 200 mg  Tablet",Acyclovir,tablet,200 mg,,piece,,antivirals,,ACICLOTA1
+ADRENAIN1,"Adrenaline Injection, 1 mg/1mL (1:1000)  1 mL",Adrenaline,injection,1 mg/1mL,,vial,1,other,,ADRENAIN1
+ADRENAIN2,"Adrenaline Injection, 1:10,000  Vial",Adrenaline,injection,,,vial,,other,,ADRENAIN2
+ADRIAMIN1,"Adriamycin Injection, 50 mg  Vial",Adriamycin,injection,50 mg,,vial,,other,,ADRIAMIN1
+ALBENDSY1,"Albendazole Syrup, 100 mg/5 mL  20 mL",Albendazole,syrup,100 mg/5 mL,,bottle,20,other,,ALBENDSY1
+ALBENDTA1,"Albendazole Tablet, 200 mg  Tablet",Albendazole,tablet,200 mg,,piece,,other,,ALBENDTA1
+ALBENDTA2,"Albendazole Tablet, 400 mg  Tablet",Albendazole,tablet,400 mg,,piece,,other,,ALBENDTA2
+ALLOPUTA1,"Allopurinol Tablet, 100 mg  Tablet",Allopurinol,tablet,100 mg,,piece,,other,,ALLOPUTA1
+ALLOPUTA2,"Allopurinol Tablet, 300 mg  Tablet",Allopurinol,tablet,300 mg,,piece,,other,,ALLOPUTA2
+AMIACIIN1,"Amino Acid Solution Injection, 10%  200 mL",Amino,injection,10%  200 mL,,vial,200,other,,AMIACIIN1
+AMINOPIN1,"Aminophylline Injection, 250 mg/10 mL  Ampoule",Aminophylline,injection,250 mg/10 mL,,vial,,respiratory,,AMINOPIN1
+AMIODATA1,"Amiodarone Tablet, 200 mg  Tablet",Amiodarone,tablet,200 mg,,piece,,other,,AMIODATA1
+AMITRITA1,"Amitriptyline Tablet, 10 mg  Tablet",Amitriptyline,tablet,10 mg,,piece,,psychiatric,,AMITRITA1
+AMITRITA2,"Amitriptyline Tablet, 25 mg  Tablet",Amitriptyline,tablet,25 mg,,piece,,psychiatric,,AMITRITA2
+AMITRITA3,"Amitriptyline Tablet, 50 mg  Tablet",Amitriptyline,tablet,50 mg,,piece,,psychiatric,,AMITRITA3
+AMLODITA2,"Amlodipine Tablet, 10 mg  Tablet",Amlodipine,tablet,10 mg,,piece,,cardiovascular,,AMLODITA2
+AMLODITA1,"Amlodipine Tablet, 5 mg  Tablet",Amlodipine,tablet,5 mg,,piece,,cardiovascular,,AMLODITA1
+AMOARTPO2,"Amodiaquine + Artesunate Granular Powder, 150",Amodiaquine,other,,,piece,,other,,AMOARTPO2
+AMOARTPO1,"Amodiaquine + Artesunate Granular Powder, 75 mg",Amodiaquine,other,75 mg,,piece,,other,,AMOARTPO1
+AMOARTTA2,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA2
+AMOARTTA4,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA4
+AMOARTTA5,"Amodiaquine + Artesunate Tablet, 270 mg + 100",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA5
+AMOARTTA6,"Amodiaquine + Artesunate Tablet, 270 mg + 100",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA6
+AMOARTTA3,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA3
+AMOARTTA1,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA1
+COAMOXIN2,"Amoxicillin + Clavulanic Acid Injection, 1.2g  Vial",Amoxicillin,injection,1.2g,,vial,,antibiotics,,COAMOXIN2
+COAMOXIN1,"Amoxicillin + Clavulanic Acid Injection, 500 mg +",Amoxicillin,injection,500 mg,,vial,,antibiotics,,COAMOXIN1
+COAMOXSU1,"Amoxicillin + Clavulanic Acid Suspension, 250 mg +",Amoxicillin,suspension,250 mg,,bottle,,antibiotics,,COAMOXSU1
+COAMOXSU2,"Amoxicillin + Clavulanic Acid Suspension, 400 mg +",Amoxicillin,suspension,400 mg,,bottle,,antibiotics,,COAMOXSU2
+COAMOXTA1,"Amoxicillin + Clavulanic Acid Tablet, 500 mg + 125",Amoxicillin,tablet,500 mg,,piece,,antibiotics,,COAMOXTA1
+COAMOXTA2,"Amoxicillin + Clavulanic Acid Tablet, 875 mg + 125",Amoxicillin,tablet,875 mg,,piece,,antibiotics,,COAMOXTA2
+AMOXICDT1,"Amoxicillin 250 mg, Dispersible Tablet  Tablet",Amoxicillin,tablet,250 mg,,piece,,antibiotics,,AMOXICDT1
+AMOXICCA2,"Amoxicillin Capsule, 500 mg  Capsule",Amoxicillin,capsule,500 mg,,piece,,antibiotics,,AMOXICCA2
+AMOXICSU1,"Amoxicillin Suspension, 125 mg/5 mL  100 mL",Amoxicillin,suspension,125 mg/5 mL,,bottle,100,antibiotics,,AMOXICSU1
+AMPICIIN1,"Ampicillin Injection, 500 mg  Vial",Ampicillin,injection,500 mg,,vial,,antibiotics,,AMPICIIN1
+ANASTRTA1,"Anastrozole Tablet, 1 mg  Tablet",Anastrozole,tablet,1 mg,,piece,,other,,ANASTRTA1
+ANIMGLIN1,"Anti RH Immunoglobulin Injection, 1500IU /5ml  Vial",Anti,injection,1500IU /5ml,,vial,,vaccines,,ANIMGLIN1
+ANTESEIN1,Anti Tetanus Serum Injection 1500 IU  Vial,Anti,injection,1500 IU,,vial,,vaccines,,ANTESEIN1
+AQUEOUCR1,Aqueous Cream BP  100 G,Aqueous,cream,100 G,,tube,,other,,AQUEOUCR1
+ARTLUMSU1,"Artemether + Lumefantrine Suspension, (Powder For",Artemether,suspension,,,bottle,,other,,ARTLUMSU1
+ARTLUMTA3,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA3
+ARTLUMTA4,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA4
+ARTLUMTA1,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA1
+ARTLUMTA2,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA2
+ARTEMEIN2,Artemether Injection 80mg/mL  Ampoule,Artemether,injection,80mg/mL,,vial,,other,,ARTEMEIN2
+ARTLUMDT1,"Artermether + Lumefantrine Dispersible, (20 mg +",Artermether,other,20 mg,,piece,,other,,ARTLUMDT1
+ARTESUIN3,Artesunate injection 120mg  Vial,Artesunate,injection,120mg,,vial,,other,,ARTESUIN3
+ARTESUIN1,"Artesunate Injection, 30 mg  Vial",Artesunate,injection,30 mg,,vial,,other,,ARTESUIN1
+ARTESUIN2,"Artesunate Injection, 60 mg  Vial",Artesunate,injection,60 mg,,vial,,other,,ARTESUIN2
+ARTESURE2,Artesunate suppository 100mg  Supp,Artesunate,other,100mg,,piece,,other,,ARTESURE2
+ARTESURE1,"Artesunate Suppository, 50 mg  Supp.",Artesunate,other,50 mg,,piece,,other,,ARTESURE1
+ATEHYDTA2,"Atenolol + Hydrochlorthiazide Tablet, 100 mg + 25",Atenolol,tablet,100 mg,,piece,,cardiovascular,,ATEHYDTA2
+ATEHYDTA1,"Atenolol + Hydrochlorthiazide Tablet, 50 mg + 25",Atenolol,tablet,50 mg,,piece,,cardiovascular,,ATEHYDTA1
+ATENOLIN1,"Atenolol Injection, 500 microgram/10 mL  Ampoule",Atenolol,injection,500 microgram/10 mL,,vial,,cardiovascular,,ATENOLIN1
+ATENOLTA1,"Atenolol Tablet, 25 mg  Tablet",Atenolol,tablet,25 mg,,piece,,cardiovascular,,ATENOLTA1
+ATENOLTA2,"Atenolol Tablet, 50 mg  Tablet",Atenolol,tablet,50 mg,,piece,,cardiovascular,,ATENOLTA2
+ATORVATA1,"Atorvastatin Tablet, 10 mg  Tablet",Atorvastatin,tablet,10 mg,,piece,,other,,ATORVATA1
+ATORVATA2,"Atorvastatin Tablet, 20 mg  Tablet",Atorvastatin,tablet,20 mg,,piece,,other,,ATORVATA2
+ATROPIID1,"Atropine Eye Drops, 1%  10 mL",Atropine,drops,1%  10 mL,,bottle,10,other,,ATROPIID1
+ATROPIIN1,"Atropine Injection, 0.6 mg/mL  1 mL",Atropine,injection,0.6 mg/mL,,vial,1,other,,ATROPIIN1
+AZITHRCA1,"Azithromycin Capsule, 250 mg  Capsule",Azithromycin,capsule,250 mg,,piece,,antibiotics,,AZITHRCA1
+AZITHRSU1,"Azithromycin Oral Suspension, 200 mg/5 mL/15mL  15 mL",Azithromycin,suspension,200 mg/5 mL,,bottle,15,antibiotics,,AZITHRSU1
+AZITHRSU2,"Azithromycin Oral Suspension, 200 mg/5 mL/30mL  30 mL",Azithromycin,suspension,200 mg/5 mL,,bottle,30,antibiotics,,AZITHRSU2
+BADOESIN1,"Badoe's Solution Injection, 1000 mL  1000 mL",Badoe's,injection,,,vial,1000,other,,BADOESIN1
+BECDIPGA2,"Beclometasone  dipropionate Inhaler, 100",Beclometasone,inhaler,,,piece,,other,,BECDIPGA2
+BECDIPGA3,"Beclometasone dipropionate Inhaler, 200",Beclometasone,inhaler,,,piece,,other,,BECDIPGA3
+BECDIPGA1,"Beclometasone  dipropionate Inhaler, 50",Beclometasone,inhaler,,,piece,,other,,BECDIPGA1
+BENDROTA1,"Bendroflumethiazide Tablet, 2.5 mg  Tablet",Bendroflumethiazide,tablet,2.5 mg,,piece,,other,,BENDROTA1
+BENZATIN1,"Benzatropine Injection, 1 mg/mL  1 mL",Benzatropine,injection,1 mg/mL,,vial,1,other,,BENZATIN1
+BENZATTA1,"Benzatropine Tablet, 2 mg  Tablet",Benzatropine,tablet,2 mg,,piece,,other,,BENZATTA1
+BEACSAOI1,"Benzoic Acid + Salicylic Acid Ointment, 6% + 3%  25 G",Benzoic,ointment,6%,,tube,,other,,BEACSAOI1
+BENPERCR2,"Benzoyl Peroxide Cream, 10%  30 G",Benzoyl,cream,10%  30 G,,tube,,dermatological,,BENPERCR2
+BENPERCR1,"Benzoyl Peroxide Cream, 5%  30 G",Benzoyl,cream,5%  30 G,,tube,,dermatological,,BENPERCR1
+BENBENLO1,"Benzyl Benzoate Lotion, 25%  30mL",Benzyl,other,25%  30mL,,piece,30,dermatological,,BENBENLO1
+BENBENLO2,"Benzyl Benzoate Lotion, 25%  100 mL",Benzyl,other,25%  100 mL,,piece,100,dermatological,,BENBENLO2
+BENZYLIN1,"Benzylpenicillin Injection, 1 MU  Vial",Benzylpenicillin,injection,,,vial,,antibiotics,,BENZYLIN1
+BETVALCR2,"Betamethasone Valerate cream, 0.1%  15 G",Betamethasone,cream,0.1%  15 G,,tube,,dermatological,,BETVALCR2
+BETAXOID1,"Betaxolol HCL Eye Drops, 0.5%  5 mL",Betaxolol,drops,0.5%  5 mL,,bottle,5,other,,BETAXOID1
+BISACOTA1,"Bisacodyl Tablet, 5 mg  Tablet",Bisacodyl,tablet,5 mg,,piece,,other,,BISACOTA1
+BISOPRTA2,Bisoprolol Tablet 10 mg  Tablet,Bisoprolol,tablet,10 mg,,piece,,other,,BISOPRTA2
+BISOPRTA1,Bisoprolol Tablet 5 mg  Tablet,Bisoprolol,tablet,5 mg,,piece,,other,,BISOPRTA1
+BROMOCTA1,"Bromocriptine Tablet, 2.5 mg  Tablet",Bromocriptine,tablet,2.5 mg,,piece,,other,,BROMOCTA1
+BUDFORGA2,Budesonide + Formoterol Inhaler 160,Budesonide,inhaler,,,piece,,respiratory,,BUDFORGA2
+BUDFORGA1,Budesonide + Formoterol Inhaler 80 microgram/4.5,Budesonide,inhaler,80 microgram/4,,piece,,respiratory,,BUDFORGA1
+BUDESOGA1,"Budesonide DPI, 100 microgram (100 Doses)  Inhaler",Budesonide,inhaler,100 microgram,,piece,,respiratory,,BUDESOGA1
+BUDESOGA2,"Budesonide DPI, 200 microgram (100 Doses)  Inhaler",Budesonide,inhaler,200 microgram,,piece,,respiratory,,BUDESOGA2
+CALAMICR1,"Calamine Cream, 15%  40 G",Calamine,cream,15%  40 G,,tube,,dermatological,,CALAMICR1
+CALAMILO1,"Calamine Lotion, 15%  200 mL",Calamine,other,15%  200 mL,,piece,200,dermatological,,CALAMILO1
+CALCIFTA1,"Calciferol Tablet, 10,000 units  Tablet",Calciferol,tablet,,,piece,,other,,CALCIFTA1
+CALGLUIN1,"Calcium  Gluconate Injection, 100 mg/mL in 10 mL  Ampoule",Calcium,injection,100 mg/mL,,vial,,vitamins,,CALGLUIN1
+CALCARTA1,"Calcium Carbonate Tablet, 500 mg  Tablet",Calcium,tablet,500 mg,,piece,,vitamins,,CALCARTA1
+CALVITTA1,"Calcium with Vitamin D Tablet, (97 mg + 10",Calcium,tablet,97 mg,,piece,,vitamins,,CALVITTA1
+CAPECITA1,"Capecitabine Tablet, 500 mg  Tablet",Capecitabine,tablet,500 mg,,piece,,other,,CAPECITA1
+CARBAMTA3,"Carbamazepine Sustained -Release Tablet, 200 mg  Tablet",Carbamazepine,tablet,200 mg,,piece,,neurological,,CARBAMTA3
+CARBAMTA4,"Carbamazepine Sustained -Release Tablet, 400 mg  Tablet",Carbamazepine,tablet,400 mg,,piece,,neurological,,CARBAMTA4
+CARBAMTA1,"Carbamazepine Tablet, 100 mg  Tablet",Carbamazepine,tablet,100 mg,,piece,,neurological,,CARBAMTA1
+CARBAMTA2,"Carbamazepine Tablet, 200 mg  Tablet",Carbamazepine,tablet,200 mg,,piece,,neurological,,CARBAMTA2
+CARBIMTA2,"Carbimazole Tablet, 20 mg  Tablet",Carbimazole,tablet,20 mg,,piece,,other,,CARBIMTA2
+CARBOCSY1,"Carbocisteine Paediatric Syrup , 125 mg/5 mL  100 mL",Carbocisteine,syrup,125 mg/5 mL,,bottle,100,other,,CARBOCSY1
+CARBOCSY2,"Carbocisteine Syrup, 250 mg/5 mL  100 mL",Carbocisteine,syrup,250 mg/5 mL,,bottle,100,other,,CARBOCSY2
+CARBOPIN1,"Carboplatin Injection, 150 mg Intravenous  Vial",Carboplatin,injection,150 mg,,vial,,other,,CARBOPIN1
+CARBOPIN2,"Carboplatin Injection, 450 mg Intravenous  Vial",Carboplatin,injection,450 mg,,vial,,other,,CARBOPIN2
+CARVEDTA2,Carvedilol Tablet 12.5 mg  Tablet,Carvedilol,tablet,12.5 mg,,piece,,other,,CARVEDTA2
+CARVEDTA1,Carvedilol Tablet 3.125 mg  Tablet,Carvedilol,tablet,3.125 mg,,piece,,other,,CARVEDTA1
+CEFACLCA1,"Cefaclor Capsule, 250 mg  Capsule",Cefaclor,capsule,250 mg,,piece,,other,,CEFACLCA1
+CEFACLCA2,"Cefaclor Capsule, 500 mg  Capsule",Cefaclor,capsule,500 mg,,piece,,other,,CEFACLCA2
+CEFACLSU1,"Cefaclor Suspension, 125 mg/5 mL  100 mL",Cefaclor,suspension,125 mg/5 mL,,bottle,100,other,,CEFACLSU1
+CEFACLSU2,"Cefaclor Suspension, 250 mg/5 mL  100 mL",Cefaclor,suspension,250 mg/5 mL,,bottle,100,other,,CEFACLSU2
+CEFOTAIN2,"Cefotaxime Injection, 1 g  Vial",Cefotaxime,injection,1 g,,vial,,other,,CEFOTAIN2
+CEFOTAIN1,"Cefotaxime Injection, 500 mg  Vial",Cefotaxime,injection,500 mg,,vial,,other,,CEFOTAIN1
+CEFTRIIN3,"Ceftriazone Injection, 1g  Vial",Ceftriazone,injection,1g,,vial,,other,,CEFTRIIN3
+CEFTRIIN2,"Ceftriazone Injection, 500 mg  Vial",Ceftriazone,injection,500 mg,,vial,,other,,CEFTRIIN2
+CEFUROIN2,Cefuroxime Injection 1.5 g  Vial,Cefuroxime,injection,1.5 g,,vial,,antibiotics,,CEFUROIN2
+CEFUROIN1,"Cefuroxime Injection, 750 mg  Vial",Cefuroxime,injection,750 mg,,vial,,antibiotics,,CEFUROIN1
+CEFUROSU1,"Cefuroxime Suspension, 125 mg/5 mL  50mL",Cefuroxime,suspension,125 mg/5 mL,,bottle,50,antibiotics,,CEFUROSU1
+CEFUROTA1,"Cefuroxime Tablet, 125 mg  Tablet",Cefuroxime,tablet,125 mg,,piece,,antibiotics,,CEFUROTA1
+CEFUROTA2,"Cefuroxime Tablet, 250 mg  Tablet",Cefuroxime,tablet,250 mg,,piece,,antibiotics,,CEFUROTA2
+CELECOTA1,Celecoxib Tablet 100 mg  Tablet,Celecoxib,tablet,100 mg,,piece,,other,,CELECOTA1
+CELECOTA2,Celecoxib Tablet 200 mg  Tablet,Celecoxib,tablet,200 mg,,piece,,other,,CELECOTA2
+CETIRISY1,"Cetirizine Syrup, 5 mg/5 mL  30 mL",Cetirizine,syrup,5 mg/5 mL,,bottle,30,other,,CETIRISY1
+CETRIMSO1,Cetrimide Solution  200 mL,Cetrimide,other,,,piece,200,other,,CETRIMSO1
+CHLORAED1,"Chloramphenicol Ear Drops, 5%  10 mL",Chloramphenicol,drops,5%  10 mL,,bottle,10,antibiotics,,CHLORAED1
+CHLORAID1,"Chloramphenicol Eye Drops, 0.5%  10 mL",Chloramphenicol,drops,0.5%  10 mL,,bottle,10,antibiotics,,CHLORAID1
+CHLORAEO1,"Chloramphenicol Eye Ointment, 1%  5 G",Chloramphenicol,ointment,1%  5 G,,tube,,antibiotics,,CHLORAEO1
+CHLORAIN1,"Chloramphenicol Injection, 1 g  1 G",Chloramphenicol,injection,1 g  1 G,,vial,,antibiotics,,CHLORAIN1
+CHLORASU1,"Chloramphenicol Suspension, 125mg/5mL  100 mL",Chloramphenicol,suspension,125mg/5mL,,bottle,100,antibiotics,,CHLORASU1
+CHLORHCR1,"Chlorhexidine Cream, 1%  15 G",Chlorhexidine,cream,1%  15 G,,tube,,other,,CHLORHCR1
+CHLORHGE1,Chlorhexidine Gel 7.1 % ( digluconate  ) delivering,Chlorhexidine,other,7.1 %,,piece,,other,,CHLORHGE1
+CHLORHMW2,Chlorhexidine Mouth wash 0.12%   300ml,Chlorhexidine,other,0.12%   300ml,,piece,300,other,,CHLORHMW2
+CHLORHSO1,"Chlorhexidine Solution, 2.5%  100 mL",Chlorhexidine,other,2.5%  100 mL,,piece,100,other,,CHLORHSO1
+CHLPHESY1,"Chlorphenamine Syrup, 2 mg/5 mL  100 mL",Chlorphenamine,syrup,2 mg/5 mL,,bottle,100,other,,CHLPHESY1
+CHLPHETA1,"Chlorphenamine Tablet, 4 mg  Tablet",Chlorphenamine,tablet,4 mg,,piece,,other,,CHLPHETA1
+CHLPROIN1,"Chlorpromazine Injection, 25 mg/mL in 2 mL  Ampoule",Chlorpromazine,injection,25 mg/mL,,vial,,psychiatric,,CHLPROIN1
+CHLPROTA3,"Chlorpromazine Tablet, 100 mg  Tablet",Chlorpromazine,tablet,100 mg,,piece,,psychiatric,,CHLPROTA3
+CHLPROTA1,"Chlorpromazine Tablet, 25 mg  Tablet",Chlorpromazine,tablet,25 mg,,piece,,psychiatric,,CHLPROTA1
+CHLPROTA2,"Chlorpromazine Tablet, 50 mg  Tablet",Chlorpromazine,tablet,50 mg,,piece,,psychiatric,,CHLPROTA2
+CHREFLIN2,"Cholera Replacement Fluid Injection, (5:4:1) 1 Litre  1000 mL",Cholera,injection,,,vial,1000,other,,CHREFLIN2
+CHREFLIN1,"Cholera Replacement Fluid Injection, (5:4:1) 500 mL  500 mL",Cholera,injection,,,vial,500,other,,CHREFLIN1
+CIPTINTA1,"Ciprofloxacin + Tinidazole Tablet, 500 mg + 500 mg  Tablet",Ciprofloxacin,tablet,500 mg,,piece,,antibiotics,,CIPTINTA1
+CIPROFID1,"Ciprofloxacin Eye Drops, 0.3%  10 mL",Ciprofloxacin,drops,0.3%  10 mL,,bottle,10,antibiotics,,CIPROFID1
+CIPROFIN1,"Ciprofloxacin Infusion, 2 mg/mL in 100 mL  Bottle",Ciprofloxacin,other,2 mg/mL,,piece,,antibiotics,,CIPROFIN1
+CIPROFTA1,"Ciprofloxacin Tablet, 250 mg  Tablet",Ciprofloxacin,tablet,250 mg,,piece,,antibiotics,,CIPROFTA1
+CLARITCA1,"Clarithromycin Capsule, 250 mg  Capsule",Clarithromycin,capsule,250 mg,,piece,,other,,CLARITCA1
+CLARITCA2,"Clarithromycin Capsule, 500 mg  Capsule",Clarithromycin,capsule,500 mg,,piece,,other,,CLARITCA2
+CLARITSU1,"Clarithromycin Paediatric Suspension, 125 mg/5 mL  100 mL",Clarithromycin,suspension,125 mg/5 mL,,bottle,100,other,,CLARITSU1
+CLINDACA1,"Clindamycin Capsule, 150 mg  Capsule",Clindamycin,capsule,150 mg,,piece,,other,,CLINDACA1
+CLINDAIN1,"Clindamycin Injection, 150 mg/mL in 2 mL  Vial",Clindamycin,injection,150 mg/mL,,vial,,other,,CLINDAIN1
+CLINDASU1,"Clindamycin Suspension, 75 mg/5 mL  100 mL",Clindamycin,suspension,75 mg/5 mL,,bottle,100,other,,CLINDASU1
+CLINDASO1,"Clindamycin Topical Solution, 1%  30 mL",Clindamycin,other,1%  30 mL,,piece,30,other,,CLINDASO1
+CLOPROCR1,"Clobetasol Propionate Cream, 0.05%  15 G",Clobetasol,cream,0.05%  15 G,,tube,,other,,CLOPROCR1
+CLOHYDCR1,"Clotrimazole + Hydrocortisone Cream, 1% + 1%  15 G",Clotrimazole,cream,1%,,tube,,antifungals,,CLOHYDCR1
+CLOTRICR1,"Clotrimazole Cream, 1%  30 G",Clotrimazole,cream,1%  30 G,,tube,,antifungals,,CLOTRICR1
+CLOTRICR2,"Clotrimazole Cream, 2%  30 G",Clotrimazole,cream,2%  30 G,,tube,,antifungals,,CLOTRICR2
+CLOTRIVP1,"Clotrimazole Pessary, 100 mg  6 Pess.",Clotrimazole,other,100 mg  6,,piece,,antifungals,,CLOTRIVP1
+CLOTRIVP2,"Clotrimazole Pessary, 200 mg  3 Pess.",Clotrimazole,other,200 mg  3,,piece,,antifungals,,CLOTRIVP2
+CLOTRIVP3,"Clotrimazole Pessary, 500 mg  1 Pess.",Clotrimazole,other,500 mg  1,,piece,,antifungals,,CLOTRIVP3
+CLOXACIN1,"Cloxacillin Injection, 250 mg  Vial",Cloxacillin,injection,250 mg,,vial,,antibiotics,,CLOXACIN1
+CLOXACIN2,"Cloxacillin Injection, 500 mg  Vial",Cloxacillin,injection,500 mg,,vial,,antibiotics,,CLOXACIN2
+COOENOTA1,"Conjugated Oestrogen + Norgesterol Tablet, 625",Conjugated,tablet,,,piece,,other,,COOENOTA1
+CONOESTA1,"Conjugated Oestrogen Tablet, 625 microgram  Tablet",Conjugated,tablet,625 microgram,,piece,,other,,CONOESTA1
+CONOESVC1,"Conjugated Oestrogen Vaginal cream, 625",Conjugated,cream,,,tube,,other,,CONOESVC1
+CORANTID1,Corticosteroid + Antibiotic Eye Drops  10 mL,Corticosteroid,drops,,,bottle,10,other,,CORANTID1
+CORANTEO1,Corticosteroid + Antibiotic Eye Ointment  10 G,Corticosteroid,ointment,10 G,,tube,,other,,CORANTEO1
+COTRIMTA1,"Cotrimoxazole Tablet, (400+80) mg  Tablet",Cotrimoxazole,tablet,,,piece,,antibiotics,,COTRIMTA1
+CYCLOPID1,"Cyclopentolate Eye Drops, 1%  5 mL",Cyclopentolate,drops,1%  5 mL,,bottle,5,other,,CYCLOPID1
+CYCLOPIN1,"Cyclophosphamide Injection, 500 mg  Vial",Cyclophosphamide,injection,500 mg,,vial,,other,,CYCLOPIN1
+DALSODIN1,"Dalteparin Sodium Injection, 5000 units/0.2 mL  Prefilled",Dalteparin,injection,,,vial,,other,,DALSODIN1
+DARROWIN1,"Darrow's Solution Injection, Half Strength 250 mL  250 mL",Darrow's,injection,,,vial,250,other,,DARROWIN1
+DEXAMEID1,"Dexamethasone Eye Drops, 1%  5 mL",Dexamethasone,drops,1%  5 mL,,bottle,5,other,,DEXAMEID1
+DEXAMEEO1,"Dexamethasone Eye Ointment, 1%  5 G",Dexamethasone,ointment,1%  5 G,,tube,,other,,DEXAMEEO1
+DEXAMEIN1,"Dexamethasone Injection, 4 mg/mL  1mL",Dexamethasone,injection,4 mg/mL,,vial,1,other,,DEXAMEIN1
+DEXAMEIN2,"Dexamethasone Injection, 8 mg/2 mL  2mL",Dexamethasone,injection,8 mg/2 mL,,vial,2,other,,DEXAMEIN2
+DEXAMETA2,"Dexamethasone Tablet, 2 mg  Tablet",Dexamethasone,tablet,2 mg,,piece,,other,,DEXAMETA2
+DEXAMETA3,"Dexamethasone Tablet, 4 mg  Tablet",Dexamethasone,tablet,4 mg,,piece,,other,,DEXAMETA3
+DEXAMETA1,"Dexamethasone Tablet, 500 microgram  Tablet",Dexamethasone,tablet,500 microgram,,piece,,other,,DEXAMETA1
+DEXTROTA1,Dextromethorphan Containing Cough Syrup   100ml,Dextromethorphan,syrup,,,bottle,100,other,,DEXTROTA1
+DESOCHIN1,"Dextrose in Sodium Chloride Intravenous Infusion,",Dextrose,other,,,piece,,other,,DESOCHIN1
+DESOCHIN2,"Dextrose in Sodium Chloride Intravenous Infusion,",Dextrose,other,,,piece,,other,,DESOCHIN2
+DEXTROIN3,"Dextrose Infusion, 10% (250 mL)  250 mL",Dextrose,other,10%,,piece,250,other,,DEXTROIN3
+DEXTROIN4,"Dextrose Infusion, 10% (500 mL)  500 mL",Dextrose,other,10%,,piece,500,other,,DEXTROIN4
+DEXTROIN1,"Dextrose Infusion, 5% (250 mL)  250 mL",Dextrose,other,5%,,piece,250,other,,DEXTROIN1
+DEXTROIN2,"Dextrose Infusion, 5% (500 mL)  500 mL",Dextrose,other,5%,,piece,500,other,,DEXTROIN2
+DEXTROIN6,"Dextrose Infusion, 50% (250 mL)  250 mL",Dextrose,other,50%,,piece,250,other,,DEXTROIN6
+DIAZEPIN1,"Diazepam Injection, 5 mg/mL in 2 mL  Ampoule",Diazepam,injection,5 mg/mL,,vial,,neurological,,DIAZEPIN1
+DIAZEPRS1,"Diazepam Rectal Tubes, 2 mg/mL in 1.25 mL  Rectal",Diazepam,other,2 mg/mL,,piece,,neurological,,DIAZEPRS1
+DIAZEPTA1,"Diazepam Tablet, 5 mg  Tablet",Diazepam,tablet,5 mg,,piece,,neurological,,DIAZEPTA1
+DICLOFCA1,"Diclofenac Capsule, 75 mg  Capsule",Diclofenac,capsule,75 mg,,piece,,analgesics,,DICLOFCA1
+DICLOFGE1,Diclofenac Gel  30 G,Diclofenac,other,30 G,,piece,,analgesics,,DICLOFGE1
+DICLOFIN1,"Diclofenac Injection, 75mg/3mL  Ampoule",Diclofenac,injection,75mg/3mL,,vial,,analgesics,,DICLOFIN1
+DICLOFRE2,"Diclofenac Suppository, 100 mg  Supp.",Diclofenac,other,100 mg,,piece,,analgesics,,DICLOFRE2
+DICLOFRE1,"Diclofenac Suppository, 50 mg  Supp.",Diclofenac,other,50 mg,,piece,,analgesics,,DICLOFRE1
+DICLOFTA2,"Diclofenac Tablet, 50 mg  Tablet",Diclofenac,tablet,50 mg,,piece,,analgesics,,DICLOFTA2
+DIESTITA1,"Diethylstilboestrol Tablet, 1 mg  Tablet",Diethylstilboestrol,tablet,1 mg,,piece,,other,,DIESTITA1
+DIESTITA2,"Diethylstilboestrol Tablet, 5 mg  Tablet",Diethylstilboestrol,tablet,5 mg,,piece,,other,,DIESTITA2
+DIGOXIEL1,"Digoxin Elixir, 50 microgram/mL  60 mL",Digoxin,other,50 microgram/mL,,piece,60,cardiovascular,,DIGOXIEL1
+DIGOXITA2,"Digoxin Tablet, 125 microgram  Tablet",Digoxin,tablet,125 microgram,,piece,,cardiovascular,,DIGOXITA2
+DIGOXITA3,"Digoxin Tablet, 250 microgram  Tablet",Digoxin,tablet,250 microgram,,piece,,cardiovascular,,DIGOXITA3
+DIGOXITA1,"Digoxin Tablet, 62.5 microgram  Tablet",Digoxin,tablet,62.5 microgram,,piece,,cardiovascular,,DIGOXITA1
+DIHPIPPO1,"Dihydroartemisin + Piperaquine Granular Powder,",Dihydroartemisin,other,,,piece,,other,,DIHPIPPO1
+DIHYDRTA1,"Dihydrocodeine Tablet, 30 mg  Tablet",Dihydrocodeine,tablet,30 mg,,piece,,analgesics,,DIHYDRTA1
+DISOPYCA1,"Disopyramide Capsule, 100 mg  Capsule",Disopyramide,capsule,100 mg,,piece,,other,,DISOPYCA1
+DISPHOIN1,"Disopyramide Phosphate Injection, 10 mg/mL in 5",Disopyramide,injection,10 mg/mL,,vial,,other,,DISPHOIN1
+DOCETAIN1,"Docetaxel Injection, 20 mg/mL  Ampoule",Docetaxel,injection,20 mg/mL,,vial,,other,,DOCETAIN1
+DOMPERTA1,"Domperidone Tablet, 10 mg  Tablet",Domperidone,tablet,10 mg,,piece,,gastrointestinal,,DOMPERTA1
+DOPAMIIN1,"Dopamine Injection, 40 mg/mL in 5 mL  Vial",Dopamine,injection,40 mg/mL,,vial,,other,,DOPAMIIN1
+DOXAPRIN1,"Doxapram Injection, 20 mg/mL in 5 mL  Vial",Doxapram,injection,20 mg/mL,,vial,,other,,DOXAPRIN1
+DOXORUIN1,Doxorubicin Injection 50 mg Intravenous  Vial,Doxorubicin,injection,50 mg,,vial,,other,,DOXORUIN1
+ENOSODIN2,"Enoxaparin Sodium Injection, 40 mg/0.4 mL  Prefilled",Enoxaparin,injection,40 mg/0,,vial,,other,,ENOSODIN2
+EPHEDRIN1,"Ephedrine HCI Injection, 30 mg/mL  Ampoule",Ephedrine,injection,30 mg/mL,,vial,,other,,EPHEDRIN1
+EPHEDRND1,"Ephedrine Nasal Drops, 0.5%  10 mL",Ephedrine,drops,0.5%  10 mL,,bottle,10,other,,EPHEDRND1
+EPHEDRND2,"Ephedrine Nasal Drops, 1%  10 mL",Ephedrine,drops,1%  10 mL,,bottle,10,other,,EPHEDRND2
+ERGOMEIN1,"Ergometrine Injection, 0.2 mg/mL  1 mL",Ergometrine,injection,0.2 mg/mL,,vial,1,other,,ERGOMEIN1
+ERGOMEIN2,"Ergometrine Injection, 0.5 mg/ml  1 mL",Ergometrine,injection,0.5 mg/ml,,vial,1,other,,ERGOMEIN2
+ERGOMETA1,"Ergometrine Tablet, 0.5 mg  Tablet",Ergometrine,tablet,0.5 mg,,piece,,other,,ERGOMETA1
+ERGOTATA1,"Ergotamine Tablet, 2 mg  Tablet",Ergotamine,tablet,2 mg,,piece,,other,,ERGOTATA1
+ERYTHRSY1,"Erythromycin Syrup, 125 mg/5 mL  100 mL",Erythromycin,syrup,125 mg/5 mL,,bottle,100,antibiotics,,ERYTHRSY1
+ERYTHRTA1,"Erythromycin Tablet, 250 mg  Tablet",Erythromycin,tablet,250 mg,,piece,,antibiotics,,ERYTHRTA1
+ESOMEPCA1,"Esomeprazole Capsule, 20 mg  Capsule",Esomeprazole,capsule,20 mg,,piece,,gastrointestinal,,ESOMEPCA1
+ESOMEPCA2,"Esomeprazole Capsule, 40 mg  Capsule",Esomeprazole,capsule,40 mg,,piece,,gastrointestinal,,ESOMEPCA2
+ETHOSUSY1,"Ethosuximide Syrup, 250 mg/5 mL  200 mL",Ethosuximide,syrup,250 mg/5 mL,,bottle,200,other,,ETHOSUSY1
+ETHOSUTA1,"Ethosuximide Tablet, 250 mg  Tablet",Ethosuximide,tablet,250 mg,,piece,,other,,ETHOSUTA1
+ETOPOSIN1,Etoposide Injection 100 mg Intravenous  Vial,Etoposide,injection,100 mg,,vial,,other,,ETOPOSIN1
+FEAMCISU1,Ferric Ammonium Citrate Mixture (FAC)  200 mL,Ferric,other,,,piece,200,other,,FEAMCISU1
+FERFUMTA1,"Ferrous Fumarate Tablet, 100 mg (Elemental Iron)  Tablet",Ferrous,tablet,100 mg,,piece,,vitamins,,FERFUMTA1
+FERSULSY1,"Ferrous Sulphate (BPC) Syrup, 60 mg/5 mL  200 mL",Ferrous,syrup,60 mg/5 mL,,bottle,200,vitamins,,FERSULSY1
+FESUFOTA1,"Ferrous Sulphate + Folic Acid Tablet, 50 mg",Ferrous,tablet,50 mg,,piece,,vitamins,,FESUFOTA1
+FERSULTA1,"Ferrous Sulphate Tablet, 60 mg (Elemental Iron)  Tablet",Ferrous,tablet,60 mg,,piece,,vitamins,,FERSULTA1
+FINASTTA1,"Finasteride Tablet, 5 mg  Tablet",Finasteride,tablet,5 mg,,piece,,other,,FINASTTA1
+FLUCLOCA1,"Flucloxacillin Capsule, 250 mg  Capsule",Flucloxacillin,capsule,250 mg,,piece,,antibiotics,,FLUCLOCA1
+FLUCLOIN2,"Flucloxacillin Injection, 500 mg  Vial",Flucloxacillin,injection,500 mg,,vial,,antibiotics,,FLUCLOIN2
+FLUCLOSU1,"Flucloxacillin Suspension, 125 mg/5 mL  100 mL",Flucloxacillin,suspension,125 mg/5 mL,,bottle,100,antibiotics,,FLUCLOSU1
+FLUCONCA1,"Fluconazole Capsule, 150 mg  Capsule",Fluconazole,capsule,150 mg,,piece,,antifungals,,FLUCONCA1
+FLUCONCA2,"Fluconazole Capsule, 200 mg  Capsule",Fluconazole,capsule,200 mg,,piece,,antifungals,,FLUCONCA2
+FLUCONSU1,"Fluconazole Suspension, 10 mg/mL  35 mL",Fluconazole,suspension,10 mg/mL,,bottle,35,antifungals,,FLUCONSU1
+FLUCONSU2,"Fluconazole Suspension, 50 mg/5 mL  35 mL",Fluconazole,suspension,50 mg/5 mL,,bottle,35,antifungals,,FLUCONSU2
+FLUCONTA1,"Fluconazole Tablet, 50 mg  Tablet",Fluconazole,tablet,50 mg,,piece,,antifungals,,FLUCONTA1
+FLUDROTA1,"Fludrocortisone Tablet, 100 microgram  Tablet",Fludrocortisone,tablet,100 microgram,,piece,,other,,FLUDROTA1
+FLUOXECA1,"Fluoxetine Capsule, 20 mg  Capsule",Fluoxetine,capsule,20 mg,,piece,,psychiatric,,FLUOXECA1
+FLUPENTA2,"Flupentixol Tablet, 1mg  Tablet",Flupentixol,tablet,1mg,,piece,,other,,FLUPENTA2
+FLUPENTA1,"Flupentixol Tablet, 500 microgram  Tablet",Flupentixol,tablet,500 microgram,,piece,,other,,FLUPENTA1
+FLUDECIN1,"Fluphenazine Deconoate Injection, 25 mg/mL  1 mL",Fluphenazine,injection,25 mg/mL,,vial,1,other,,FLUDECIN1
+FLUSALGA1,"Fluticasone + Salmeterol Inhaler, 250 microgram/50",Fluticasone,inhaler,250 microgram/50,,piece,,other,,FLUSALGA1
+FLUTICGA2,"Fluticasone MDI, 125 microgram (120 Dose)  Inhaler",Fluticasone,inhaler,125 microgram,,piece,,other,,FLUTICGA2
+FLUTICGA3,"Fluticasone MDI, 250 microgram (120 Dose)  Inhaler",Fluticasone,inhaler,250 microgram,,piece,,other,,FLUTICGA3
+FLUVASCA1,"Fluvastatin Capsule, 20 mg  Capsule",Fluvastatin,capsule,20 mg,,piece,,other,,FLUVASCA1
+FOLACITA1,"Folic Acid Tablet, 5 mg  Tablet",Folic,tablet,5 mg,,piece,,vitamins,,FOLACITA1
+FUROSEIN1,"Furosemide Injection, 10 mg/mL in 2 mL  Ampoule",Furosemide,injection,10 mg/mL,,vial,,cardiovascular,,FUROSEIN1
+FUROSETA1,"Furosemide Tablet, 40 mg  Tablet",Furosemide,tablet,40 mg,,piece,,cardiovascular,,FUROSETA1
+GELATIIN1,Gelatin Infusion (Succinylated Gelatin)  500 mL,Gelatin,other,,,piece,500,other,,GELATIIN1
+GENTAMED1,"Gentamicin Ear Drops, 0.3%  10mL",Gentamicin,drops,0.3%  10mL,,bottle,10,antibiotics,,GENTAMED1
+GENTAMID1,"Gentamicin Eye Drops, 0.3%  10 mL",Gentamicin,drops,0.3%  10 mL,,bottle,10,antibiotics,,GENTAMID1
+GLIBENTA1,"Glibenclamide Tablet, 5 mg  Tablet",Glibenclamide,tablet,5 mg,,piece,,diabetes,,GLIBENTA1
+GLICLATA1,"Gliclazide Tablet, 80 mg  Tablet",Gliclazide,tablet,80 mg,,piece,,diabetes,,GLICLATA1
+GLIMEPTA1,"Glimepiride Tablet, 1 mg  Tablet",Glimepiride,tablet,1 mg,,piece,,diabetes,,GLIMEPTA1
+GLIMEPTA2,"Glimepiride Tablet, 2 mg  Tablet",Glimepiride,tablet,2 mg,,piece,,diabetes,,GLIMEPTA2
+GLIMEPTA3,"Glimepiride Tablet, 3 mg  Tablet",Glimepiride,tablet,3 mg,,piece,,diabetes,,GLIMEPTA3
+GLIMEPTA4,"Glimepiride Tablet, 4 mg  Tablet",Glimepiride,tablet,4 mg,,piece,,diabetes,,GLIMEPTA4
+GLUCAGIN1,"Glucagon Injection, 1 mg  Ampoule",Glucagon,injection,1 mg,,vial,,other,,GLUCAGIN1
+GLTRSUTA1,"Glyceryl Trinitrate Sublingual Tablet, 500 microgram  100",Glyceryl,tablet,500 microgram  100,,piece,,other,,GLTRSUTA1
+GRANISIN1,"Granisetron Injection, 1 mg/1mL  Ampoule",Granisetron,injection,1 mg/1mL,,vial,,other,,GRANISIN1
+GRANISTA1,"Granisetron Tablet, 1 mg  Tablet",Granisetron,tablet,1 mg,,piece,,other,,GRANISTA1
+GRISEOSU1,"Griseofulvin Suspension, 125 mg/5 mL  100 mL",Griseofulvin,suspension,125 mg/5 mL,,bottle,100,antifungals,,GRISEOSU1
+GRISEOTA1,"Griseofulvin Tablet, 125 mg  Tablet",Griseofulvin,tablet,125 mg,,piece,,antifungals,,GRISEOTA1
+GRISEOTA2,"Griseofulvin Tablet, 500 mg  Tablet",Griseofulvin,tablet,500 mg,,piece,,antifungals,,GRISEOTA2
+GUAIFESY1,Guaifenesin Containing Expectorant Syrup   100ml,Guaifenesin,syrup,,,bottle,100,other,,GUAIFESY1
+HALOPEIN1,"Haloperidol Injection, 5 mg/5 mL  Ampoule",Haloperidol,injection,5 mg/5 mL,,vial,,psychiatric,,HALOPEIN1
+HALOPETA1,"Haloperidol Tablet, 0.5 mg  Tablet",Haloperidol,tablet,0.5 mg,,piece,,psychiatric,,HALOPETA1
+HALOPETA2,"Haloperidol Tablet, 5 mg  Tablet",Haloperidol,tablet,5 mg,,piece,,psychiatric,,HALOPETA2
+HALOPETA3,"Haloperidol Tablet, 10 mg  Tablet",Haloperidol,tablet,10 mg,,piece,,psychiatric,,HALOPETA3
+HEPARIIN1,"Heparin Injection, 1000 units/mL in 5 mL  Ampoule",Heparin,injection,,,vial,,cardiovascular,,HEPARIIN1
+HEPARIIN2,"Heparin Injection, 5000 units/mL in 1mL  Ampoule",Heparin,injection,,,vial,,cardiovascular,,HEPARIIN2
+HEPARIIN3,"Heparin Injection, 5000 units/mL in 5 mL  Vial",Heparin,injection,,,vial,,cardiovascular,,HEPARIIN3
+HUIMTEIN1,"Human Immune Tetanus Globulins Injection, 250",Human,injection,,,vial,,vaccines,,HUIMTEIN1
+HYDRALIN1,"Hydralazine Injection, 20 mg  Ampoule",Hydralazine,injection,20 mg,,vial,,other,,HYDRALIN1
+HYDRALTA1,"Hydralazine Tablet, 25 mg  Tablet",Hydralazine,tablet,25 mg,,piece,,other,,HYDRALTA1
+HYDROCCR1,"Hydrocortisone Cream, 1%  15 G",Hydrocortisone,cream,1%  15 G,,tube,,respiratory,,HYDROCCR1
+HYDROCID1,"Hydrocortisone Eye Drops, 1%  5 mL",Hydrocortisone,drops,1%  5 mL,,bottle,5,respiratory,,HYDROCID1
+HYDROCEO1,"Hydrocortisone Eye Ointment, 1%  5 G",Hydrocortisone,ointment,1%  5 G,,tube,,respiratory,,HYDROCEO1
+HYSOSUIN1,"Hydrocortisone Sodium Succinate Injection, 100 mg  Vial",Hydrocortisone,injection,100 mg,,vial,,respiratory,,HYSOSUIN1
+HYDROXIN1,"Hydroxocobalamin Injection, 1 mg/mL  1 mL",Hydroxocobalamin,injection,1 mg/mL,,vial,1,other,,HYDROXIN1
+HYDROXCA1,"Hydroxyurea Capsule, 500mg  Capsule",Hydroxyurea,capsule,500mg,,piece,,other,,HYDROXCA1
+HYOBUTIN1,"Hyoscine Butylbromide Injection, 20 mg/ mL  1 mL",Hyoscine,injection,20 mg/ mL,,vial,1,other,,HYOBUTIN1
+HYOBUTTA1,"Hyoscine Butylbromide  Tablet, 10 mg  Tablet",Hyoscine,tablet,10 mg,,piece,,other,,HYOBUTTA1
+IBUPROSU1,"Ibuprofen Suspension, 100 mg/5 mL  100 mL",Ibuprofen,suspension,100 mg/5 mL,,bottle,100,analgesics,,IBUPROSU1
+IBUPROTA1,"Ibuprofen Tablet, 200 mg  Tablet",Ibuprofen,tablet,200 mg,,piece,,analgesics,,IBUPROTA1
+IBUPROTA2,"Ibuprofen Tablet, 400 mg  Tablet",Ibuprofen,tablet,400 mg,,piece,,analgesics,,IBUPROTA2
+IMIPRATA1,"Imipramine Tablet, 25 mg  Tablet",Imipramine,tablet,25 mg,,piece,,other,,IMIPRATA1
+INPRMIIN1,"Insulin premixed (30/70) HM Injection, 100 units/mL",Insulin,injection,,,vial,,diabetes,,INPRMIIN1
+INSSOLIN1,"Insulin Soluble HM, 100 units/mL in 10 mL  Vial",Insulin,other,,,piece,,diabetes,,INSSOLIN1
+INTRALSO1,Intralipid Solution (for TPN)  500 mL,Intralipid,other,,,piece,500,other,,INTRALSO1
+IPRBROGA1,Ipratropium Bromide Nebulizer 250 micrograms  Dose,Ipratropium,other,250 microgram,,piece,,other,,IPRBROGA1
+IPRBROGA2,Ipratropium Bromide Nebulizer 500 micrograms  Dose,Ipratropium,other,500 microgram,,piece,,other,,IPRBROGA2
+IROPOLCA1,Iron (III) Polymaltose Complex Capsule  Capsule,Iron,capsule,,,piece,,vitamins,,IROPOLCA1
+IROPOLSU1,Iron (III) Polymaltose Complex Suspension  200 mL,Iron,suspension,,,bottle,200,vitamins,,IROPOLSU1
+IRODEXIN1,"Iron Dextran Injection, 100mg/2mL  2 mL",Iron,injection,100mg/2mL,,vial,2,vitamins,,IRODEXIN1
+ISOINSIN1,"Isophane Insulin Injection (HM), 100 units/mL in 10",Isophane,injection,,,vial,,diabetes,,ISOINSIN1
+ISODINTA1,"Isosorbide Dinitrate Tablet, 10 mg  Tablet",Isosorbide,tablet,10 mg,,piece,,other,,ISODINTA1
+ITRACOCA1,"Itraconazole Capsule, 100 mg  Capsule",Itraconazole,capsule,100 mg,,piece,,other,,ITRACOCA1
+ITRACOSU1,"Itraconazole Suspension, 10 mg/mL  30 mL",Itraconazole,suspension,10 mg/mL,,bottle,30,other,,ITRACOSU1
+KETOCOCR1,"Ketoconazole Cream, 30g  Tube",Ketoconazole,cream,30g,,tube,,antifungals,,KETOCOCR1
+KETOCOTA1,"Ketoconazole Tablet, 200 mg  Tablet",Ketoconazole,tablet,200 mg,,piece,,antifungals,,KETOCOTA1
+LABETAIN1,"Labetalol Injection, 5 mg/mL in 20 mL  Ampoule",Labetalol,injection,5 mg/mL,,vial,,other,,LABETAIN1
+LABETATA1,"Labetalol Tablet, 100 mg  Tablet",Labetalol,tablet,100 mg,,piece,,other,,LABETATA1
+LABETATA2,"Labetalol Tablet, 200 mg  Tablet",Labetalol,tablet,200 mg,,piece,,other,,LABETATA2
+LACTULLI1,Lactulose Liquid 3.1 –3.7 g/5 mL  300 mL,Lactulose,other,3.7 g/5 mL,,piece,300,other,,LACTULLI1
+LAMOTRTA1,Lamotrigine Tablet 100 mg  Tablet,Lamotrigine,tablet,100 mg,,piece,,other,,LAMOTRTA1
+LEVOFLIN1,Levofloxacin infusion 500mg  100mL,Levofloxacin,other,500mg  100mL,,piece,100,other,,LEVOFLIN1
+LEVSODTA3,"Levothyroxine Sodium Tablet, 100 microgram  Tablet",Levothyroxine,tablet,100 microgram,,piece,,other,,LEVSODTA3
+LEVSODTA1,"Levothyroxine Sodium Tablet, 25 microgram  Tablet",Levothyroxine,tablet,25 microgram,,piece,,other,,LEVSODTA1
+LEVSODTA2,"Levothyroxine Sodium Tablet, 50 microgram  Tablet",Levothyroxine,tablet,50 microgram,,piece,,other,,LEVSODTA2
+LIDOCACR1,"Lidocaine Cream, 2%  15 G",Lidocaine,cream,2%  15 G,,tube,,other,,LIDOCACR1
+LIDOCAGE1,"Lidocaine Gel, 4%  15 G",Lidocaine,other,4%  15 G,,piece,,other,,LIDOCAGE1
+LISHYDTA1,"Lisinopril + Hydrochlorthiazide Tablet, (10 mg +",Lisinopril,tablet,10 mg,,piece,,cardiovascular,,LISHYDTA1
+LISHYDTA2,"Lisinopril + Hydrochlorthiazide Tablet, (20 mg +",Lisinopril,tablet,20 mg,,piece,,cardiovascular,,LISHYDTA2
+LISINOTA3,"Lisinopril Tablet, 10 mg  Tablet",Lisinopril,tablet,10 mg,,piece,,cardiovascular,,LISINOTA3
+LISINOTA1,"Lisinopril Tablet, 2.5 mg  Tablet",Lisinopril,tablet,2.5 mg,,piece,,cardiovascular,,LISINOTA1
+LISINOTA4,"Lisinopril Tablet, 20 mg Tablet",Lisinopril,tablet,20 mg,,piece,,cardiovascular,,LISINOTA4
+LODOXAID1,"Lodoxamide Eye Drops, 0.1%  10 mL",Lodoxamide,drops,0.1%  10 mL,,bottle,10,other,,LODOXAID1
+LORAZEIN1,"Lorazepam Injection, 4 mg/mL in 1mL  Ampoule",Lorazepam,injection,4 mg/mL,,vial,,other,,LORAZEIN1
+LORAZETA1,"Lorazepam Tablet, 1 mg  Tablet",Lorazepam,tablet,1 mg,,piece,,other,,LORAZETA1
+LORAZETA2,"Lorazepam Tablet, 2 mg  Tablet",Lorazepam,tablet,2 mg,,piece,,other,,LORAZETA2
+LORAZETA3,"Lorazepam Tablet, 2.5 mg  Tablet",Lorazepam,tablet,2.5 mg,,piece,,other,,LORAZETA3
+LOSARTTA3,"Losartan Tablet, 100 mg  Tablet",Losartan,tablet,100 mg,,piece,,cardiovascular,,LOSARTTA3
+LOSARTTA1,"Losartan Tablet, 25 mg  Tablet",Losartan,tablet,25 mg,,piece,,cardiovascular,,LOSARTTA1
+LOSARTTA2,"Losartan Tablet, 50 mg  Tablet",Losartan,tablet,50 mg,,piece,,cardiovascular,,LOSARTTA2
+MAGSULIN1,"Magnesium Sulphate Injection, 20% (10 mL)  Ampoule",Magnesium,injection,20%,,vial,,other,,MAGSULIN1
+MAGSULIN3,"Magnesium Sulphate Injection, 50% (10 mL)  Ampoule",Magnesium,injection,50%,,vial,,other,,MAGSULIN3
+MAGSULPO1,Magnesium Sulphate Salt  1 G,Magnesium,other,1 G,,piece,,other,,MAGSULPO1
+MATRALMI1,Magnesium Trisilicate + Aluminium Hydroxide,Magnesium,other,,,piece,,gastrointestinal,,MATRALMI1
+MATRALTA1,Magnesium Trisilicate + Aluminium Hydroxide Tablet  Tablet,Magnesium,tablet,,,piece,,gastrointestinal,,MATRALTA1
+MAGTRIMI1,Magnesium Trisilicate Mixture  200 mL,Magnesium,other,,,piece,200,gastrointestinal,,MAGTRIMI1
+MAGTRITA1,"Magnesium Trisilicate Tablet, 500 mg  Tablet",Magnesium,tablet,500 mg,,piece,,gastrointestinal,,MAGTRITA1
+MANNITIN1,"Mannitol Injection, 10%  500 mL",Mannitol,injection,10%  500 mL,,vial,500,other,,MANNITIN1
+MANNITIN2,"Mannitol Injection, 20%  500 mL",Mannitol,injection,20%  500 mL,,vial,500,other,,MANNITIN2
+MEBENDSU1,"Mebendazole Suspension, 100 mg/5 mL  30 mL",Mebendazole,suspension,100 mg/5 mL,,bottle,30,other,,MEBENDSU1
+MEBENDTA1,"Mebendazole Tablet, 100 mg  6 Tablets",Mebendazole,tablet,100 mg  6,,piece,,other,,MEBENDTA1
+MEBENDTA2,"Mebendazole Tablet, 500 mg  Tablet",Mebendazole,tablet,500 mg,,piece,,other,,MEBENDTA2
+MEBEVETA1,"Mebeverine Tablet, 135 mg  Tablet",Mebeverine,tablet,135 mg,,piece,,other,,MEBEVETA1
+MEDACETA1,"Medroxyprogesterone Acetate Tablet, 5 mg  Tablet",Medroxyprogesterone,tablet,5 mg,,piece,,other,,MEDACETA1
+MEFACITA1,"Mefenamic Acid Tablet, 500 mg  Tablet",Mefenamic,tablet,500 mg,,piece,,other,,MEFACITA1
+METFORTA1,"Metformin Tablet, 500 mg  Tablet",Metformin,tablet,500 mg,,piece,,diabetes,,METFORTA1
+METHOTIN1,"Methotrexate Injection, 2.5 mg/ mL  Ampoule",Methotrexate,injection,2.5 mg/ mL,,vial,,other,,METHOTIN1
+METHOTIN2,"Methotrexate Injection, 25 mg/ mL in 2mL  Ampoule",Methotrexate,injection,25 mg/ mL,,vial,,other,,METHOTIN2
+METHOTTA2,"Methotrexate Tablet, 10 mg  Tablet",Methotrexate,tablet,10 mg,,piece,,other,,METHOTTA2
+METHOTTA1,"Methotrexate Tablet, 2.5 mg  Tablet",Methotrexate,tablet,2.5 mg,,piece,,other,,METHOTTA1
+METCELID1,"Methyl Cellulose Eye Drops, 0.3%  10 mL",Methyl,drops,0.3%  10 mL,,bottle,10,other,,METCELID1
+METHYLTA1,"Methyldopa Tablet, 250 mg  Tablet",Methyldopa,tablet,250 mg,,piece,,other,,METHYLTA1
+METOCLIN1,"Metoclopramide Injection, 5 mg/mL in 2 mL  Ampoule",Metoclopramide,injection,5 mg/mL,,vial,,gastrointestinal,,METOCLIN1
+METOCLSY1,"Metoclopramide Syrup, 5 mg/5 mL  200 mL",Metoclopramide,syrup,5 mg/5 mL,,bottle,200,gastrointestinal,,METOCLSY1
+METOCLTA1,"Metoclopramide Tablet, 10 mg  Tablet",Metoclopramide,tablet,10 mg,,piece,,gastrointestinal,,METOCLTA1
+METOLATA1,"Metolazone Tablet, 5 mg  Tablet",Metolazone,tablet,5 mg,,piece,,other,,METOLATA1
+METTARTA1,Metoprolol Tartrate Tablet 100 mg  Tablet,Metoprolol,tablet,100 mg,,piece,,other,,METTARTA1
+METRONIN1,"Metronidazole Injection, 5 mg/mL in 100 mL  Bottle",Metronidazole,injection,5 mg/mL,,vial,,antibiotics,,METRONIN1
+METRONRE1,"Metronidazole Suppository, 500 mg  Supp.",Metronidazole,other,500 mg,,piece,,antibiotics,,METRONRE1
+METRONSU1,"Metronidazole Suspension, 100 mg/5 mL (as",Metronidazole,suspension,100 mg/5 mL,,bottle,,antibiotics,,METRONSU1
+METRONSU2,"Metronidazole Suspension, 200 mg/5 mL(as",Metronidazole,suspension,200 mg/5 mL,,bottle,,antibiotics,,METRONSU2
+METRONTA1,"Metronidazole Tablet, 200 mg  Tablet",Metronidazole,tablet,200 mg,,piece,,antibiotics,,METRONTA1
+METRONTA2,"Metronidazole Tablet, 400 mg  Tablet",Metronidazole,tablet,400 mg,,piece,,antibiotics,,METRONTA2
+MICHYDCR1,"Miconazole + Hydrocortisone Cream, 2% + 1%  15 G",Miconazole,cream,2%,,tube,,antifungals,,MICHYDCR1
+MICONACR1,"Miconazole Cream, 2%  15 G",Miconazole,cream,2%  15 G,,tube,,antifungals,,MICONACR1
+MICONAOG1,"Miconazole Oral Gel, 25 mg/mL  40 G",Miconazole,other,25 mg/mL,,piece,,antifungals,,MICONAOG1
+MIDAZOIN1,"Midazolam Injection, 5 mg/5mL  Ampoule",Midazolam,injection,5 mg/5mL,,vial,,other,,MIDAZOIN1
+MIDAZOTA1,"Midazolam Tablet, 15 mg  Tablet",Midazolam,tablet,15 mg,,piece,,other,,MIDAZOTA1
+MORPHIIN1,"Morphine Injection, 10 mg/mL  Ampoule",Morphine,injection,10 mg/mL,,vial,,analgesics,,MORPHIIN1
+MORPHIIN2,"Morphine Injection, 10 mg/mL (Preservative Free)  Ampoule",Morphine,injection,10 mg/mL,,vial,,analgesics,,MORPHIIN2
+MORSULTA1,"Morphine Sulphate Tablet, 10 mg (Slow release)  Tablet",Morphine,tablet,10 mg,,piece,,analgesics,,MORSULTA1
+MORSULTA2,"Morphine Sulphate Tablet, 30 mg (Slow release)  Tablet",Morphine,tablet,30 mg,,piece,,analgesics,,MORSULTA2
+MULTIVDR1,Multivitamin Drops  20 mL,Multivitamin,drops,,,bottle,20,vitamins,,MULTIVDR1
+MULTIVSY1,Multivitamin Syrup  125 mL,Multivitamin,syrup,,,bottle,125,vitamins,,MULTIVSY1
+MULTIVTA1,Multivitamin Tablet  Tablet,Multivitamin,tablet,,,piece,,vitamins,,MULTIVTA1
+NALOXOIN1,"Naloxone Injection, 400 microgram/mL in 1mL  Ampoule",Naloxone,injection,400 microgram/mL,,vial,,other,,NALOXOIN1
+NEOMYCTA1,"Neomycin Tablet, 500 mg  Tablet",Neomycin,tablet,500 mg,,piece,,other,,NEOMYCTA1
+NEOBROTA1,"Neostigmine Bromide Tablet, 15 mg  Tablet",Neostigmine,tablet,15 mg,,piece,,other,,NEOBROTA1
+NEOSTIIN1,"Neostigmine Injection, 2.5 mg/mL  Ampoule",Neostigmine,injection,2.5 mg/mL,,vial,,other,,NEOSTIIN1
+NIFEDICA1,"Nifedipine Capsule, 10 mg  Capsule",Nifedipine,capsule,10 mg,,piece,,cardiovascular,,NIFEDICA1
+NIFEDITA1,"Nifedipine Tablet, 10 mg (slow release)  Tablet",Nifedipine,tablet,10 mg,,piece,,cardiovascular,,NIFEDITA1
+NIFEDITA2,"Nifedipine Tablet, 20 mg (slow release)  Tablet",Nifedipine,tablet,20 mg,,piece,,cardiovascular,,NIFEDITA2
+NIFEDITA3,"Nifedipine Tablet, 30 mg (GITS)  Tablet",Nifedipine,tablet,30 mg,,piece,,cardiovascular,,NIFEDITA3
+NITROFTA1,"Nitrofurantoin Tablet, 100 mg  Tablet",Nitrofurantoin,tablet,100 mg,,piece,,other,,NITROFTA1
+NORETHTA1,"Norethisterone Tablet, 5 mg  Tablet",Norethisterone,tablet,5 mg,,piece,,other,,NORETHTA1
+NYSTATOI1,"Nystatin Ointment, 100,000 IU  30 G",Nystatin,ointment,000 IU  30 G,,tube,,antifungals,,NYSTATOI1
+NYSTATTA1,"Nystatin Pessary, 100,000 IU  Pessary",Nystatin,other,000 IU,,piece,,antifungals,,NYSTATTA1
+NYSTATSU1,"Nystatin Suspension, 100,000 IU/mL  15 mL",Nystatin,suspension,000 IU/mL,,bottle,15,antifungals,,NYSTATSU1
+OLANZATA1,Olanzapine Tablet 10 mg  Tablet,Olanzapine,tablet,10 mg,,piece,,psychiatric,,OLANZATA1
+OMEPRAIN2,"Omeprazole Injection, 40 mg  Vial",Omeprazole,injection,40 mg,,vial,,gastrointestinal,,OMEPRAIN2
+OMEPRATA1,"Omeprazole Tablet, 20 mg  Tablet",Omeprazole,tablet,20 mg,,piece,,gastrointestinal,,OMEPRATA1
+ONDANSTA1,"Ondansetrone Tablet, 4 mg  Tablet",Ondansetrone,tablet,4 mg,,piece,,other,,ONDANSTA1
+ORRESAPO1,Oral Rehydration Salts Powder  Sachet,Oral,other,,,piece,,gastrointestinal,,ORRESAPO1
+OXYTOCIN2,"Oxytocin Injection, 10 units/mL  Ampoule",Oxytocin,injection,,,vial,,other,,OXYTOCIN2
+OXYTOCIN1,"Oxytocin Injection, 5 units/mL  Ampoule",Oxytocin,injection,,,vial,,other,,OXYTOCIN1
+PACLITIN1,"Paclitaxel Injection, 100 mg/16.7mL  Vial",Paclitaxel,injection,100 mg/16,,vial,,other,,PACLITIN1
+PARACERE1,"Paracetamol Suppository, 125 mg  Supp",Paracetamol,other,125 mg,,piece,,analgesics,,PARACERE1
+PARACERE2,"Paracetamol Suppository, 250 mg  Supp",Paracetamol,other,250 mg,,piece,,analgesics,,PARACERE2
+PARACERE3,"Paracetamol Suppository, 500 mg  Supp",Paracetamol,other,500 mg,,piece,,analgesics,,PARACERE3
+PARACESY1,"Paracetamol Syrup, 120 mg/5 mL  125 mL",Paracetamol,syrup,120 mg/5 mL,,bottle,125,analgesics,,PARACESY1
+PARACETA1,"Paracetamol Tablet, 500 mg  Tablet",Paracetamol,tablet,500 mg,,piece,,analgesics,,PARACETA1
+PARAFFLI1,Paraffin Liquid  100 mL,Paraffin,other,,,piece,100,other,,PARAFFLI1
+PETHIDIN1,"Pethidine Injection, 50 mg/mL in 2 mL  Ampoule",Pethidine,injection,50 mg/mL,,vial,,analgesics,,PETHIDIN1
+PHENOBEL1,"Phenobarbital Elixir, 15 mg/5 mL  100 mL",Phenobarbital,other,15 mg/5 mL,,piece,100,neurological,,PHENOBEL1
+PHENOBIN1,"Phenobarbital Injection, 200 mg/mL  Ampoule",Phenobarbital,injection,200 mg/mL,,vial,,neurological,,PHENOBIN1
+PHENOBTA1,"Phenobarbital Tablet, 30 mg  Tablet",Phenobarbital,tablet,30 mg,,piece,,neurological,,PHENOBTA1
+PHENOBTA2,"Phenobarbital Tablet, 60 mg  Tablet",Phenobarbital,tablet,60 mg,,piece,,neurological,,PHENOBTA2
+PHENOLIN1,Phenol 5% in Almond Oil Injection  50 mL,Phenol,injection,5%,,vial,50,other,,PHENOLIN1
+PHEPENTA1,"Phenoxymethyl Penicillin Tablet, 250 mg  Tablet",Phenoxymethyl,tablet,250 mg,,piece,,antibiotics,,PHEPENTA1
+PHENYTIN1,"Phenytoin Injection, 50 mg/mL  in 5 mL  Ampoule",Phenytoin,injection,50 mg/mL,,vial,,neurological,,PHENYTIN1
+PHENYTTA1,"Phenytoin Sodium Tablet, 100 mg  Tablet",Phenytoin,tablet,100 mg,,piece,,neurological,,PHENYTTA1
+PHYTOMIN1,"Phytomenadione Injection, 1 mg/mL (Paediatric)  Ampoule",Phytomenadione,injection,1 mg/mL,,vial,,other,,PHYTOMIN1
+PHYTOMIN2,"Phytomenadione Injection, 10 mg/mL  Ampoule",Phytomenadione,injection,10 mg/mL,,vial,,other,,PHYTOMIN2
+PILOCAID1,"Pilocarpine Eye Drops, 2%  10 mL",Pilocarpine,drops,2%  10 mL,,bottle,10,other,,PILOCAID1
+PILOCAID2,"Pilocarpine Eye Drops, 4%  10 mL",Pilocarpine,drops,4%  10 mL,,bottle,10,other,,PILOCAID2
+PIOGLITA1,"Pioglitazone Tablet, 15 mg  Tablet",Pioglitazone,tablet,15 mg,,piece,,other,,PIOGLITA1
+PIOGLITA2,"Pioglitazone Tablet, 30 mg  Tablet",Pioglitazone,tablet,30 mg,,piece,,other,,PIOGLITA2
+PIRACETA1,"Piracetam Tablet, 800 mg  Tablet",Piracetam,tablet,800 mg,,piece,,other,,PIRACETA1
+POTCHLIN1,"Potassium Chloride Injection, 20 mEq/10 mL  Vial",Potassium,injection,,,vial,,other,,POTCHLIN1
+POTCHLTA1,"Potassium Chloride Tablet, 600 mg (Enteric Coated)  Tablet",Potassium,tablet,600 mg,,piece,,other,,POTCHLTA1
+POTCITMI1,Potassium Citrate Mixture BP  200 mL,Potassium,other,,,piece,200,other,,POTCITMI1
+POVIDOSO1,"Povidone Iodine Aqueous Solution, 10%  100 mL",Povidone,other,10%  100 mL,,piece,100,other,,POVIDOSO1
+POVIDOOI1,"Povidone Iodine Ointment, 10%  10 G",Povidone,ointment,10%  10 G,,tube,,other,,POVIDOOI1
+PRAZIQTA1,"Praziquantel Tablet, 600 mg  Tablet",Praziquantel,tablet,600 mg,,piece,,other,,PRAZIQTA1
+PRAZOSTA1,"Prazosin Tablet, 500 microgram  Tablet",Prazosin,tablet,500 microgram,,piece,,other,,PRAZOSTA1
+PREDNIDT1,Prednisolone 5mg Dispersible Tablets  Tablet,Prednisolone,tablet,5mg,,piece,,respiratory,,PREDNIDT1
+PREDNIID1,"Prednisolone Eye Drops, 0.5%  10 mL",Prednisolone,drops,0.5%  10 mL,,bottle,10,respiratory,,PREDNIID1
+PREDNIID2,"Prednisolone Eye Drops, 1%  10 mL",Prednisolone,drops,1%  10 mL,,bottle,10,respiratory,,PREDNIID2
+PREDNISY1,"Prednisolone Oral Solution, 5mg/5ml  60ml",Prednisolone,other,5mg/5ml,,piece,60,respiratory,,PREDNISY1
+PREDNITA1,"Prednisolone Tablet, 5 mg  Tablet",Prednisolone,tablet,5 mg,,piece,,respiratory,,PREDNITA1
+PRIMIDTA1,"Primidone Tablet, 250 mg  Tablet",Primidone,tablet,250 mg,,piece,,other,,PRIMIDTA1
+PROBENIN1,"Procaine Benzylpenicillin Injection, 4 MU  Vial",Procaine,injection,,,vial,,antibiotics,,PROBENIN1
+PROHYDIN1,"Promethazine Hydrochloride Injection, 25 mg/mL in",Promethazine,injection,25 mg/mL,,vial,,other,,PROHYDIN1
+PROMETTA1,"Promethazine Hydrochloride Tablet, 25 mg  Tablet",Promethazine,tablet,25 mg,,piece,,other,,PROMETTA1
+PROTHETA1,"Promethazine Theoclate  Tablet, 25 mg  Tablet",Promethazine,tablet,25 mg,,piece,,other,,PROTHETA1
+PROPRAIN1,"Propranolol Injection, 1 mg/mL in 1mL  Ampoule",Propranolol,injection,1 mg/mL,,vial,,cardiovascular,,PROPRAIN1
+PROPRATA1,"Propranolol Tablet, 10 mg  Tablet",Propranolol,tablet,10 mg,,piece,,cardiovascular,,PROPRATA1
+PROPRATA2,"Propranolol Tablet, 40 mg  Tablet",Propranolol,tablet,40 mg,,piece,,cardiovascular,,PROPRATA2
+PROPRATA3,"Propranolol Tablet, 80 mg  Tablet",Propranolol,tablet,80 mg,,piece,,cardiovascular,,PROPRATA3
+PROPYLTA1,"Propylthiouracil Tablet, 50 mg  Tablet",Propylthiouracil,tablet,50 mg,,piece,,other,,PROPYLTA1
+PROSULIN1,"Protamine Sulphate Injection, 10 mg/mL in 5 mL  Ampoule",Protamine,injection,10 mg/mL,,vial,,other,,PROSULIN1
+QUINININ1,"Quinine Injection, 300 mg/mL in 2 mL  Ampoule",Quinine,injection,300 mg/mL,,vial,,other,,QUINININ1
+QUININSY1,"Quinine Syrup, 75 mg/5 mL  125 mL",Quinine,syrup,75 mg/5 mL,,bottle,125,other,,QUININSY1
+QUININTA1,"Quinine Tablet, 300 mg  Tablet",Quinine,tablet,300 mg,,piece,,other,,QUININTA1
+RAMIPRTA1,"Ramipril Tablet, 2.5 mg  Tablet",Ramipril,tablet,2.5 mg,,piece,,other,,RAMIPRTA1
+RAMIPRTA2,"Ramipril Tablet, 5 mg  Tablet",Ramipril,tablet,5 mg,,piece,,other,,RAMIPRTA2
+RANITITA1,"Ranitidine Tablet, 150 mg  Tablet",Ranitidine,tablet,150 mg,,piece,,gastrointestinal,,RANITITA1
+RETSOFCA2,"Retinol Soft Capsule, 200,000 IU  Capsule",Retinol,capsule,000 IU,,piece,,other,,RETSOFCA2
+RINLACSO1,"Ringer - Lactate Solution, 500 mL  500 mL",Ringer,other,,,piece,500,other,,RINLACSO1
+RISPERLI1,"Risperidone Liquid, 1 mg/mL  10 mL",Risperidone,other,1 mg/mL,,piece,10,psychiatric,,RISPERLI1
+RISPERTA2,"Risperidone Tablet, 1 mg  Tablet",Risperidone,tablet,1 mg,,piece,,psychiatric,,RISPERTA2
+RISPERTA3,"Risperidone Tablet, 2 mg  Tablet",Risperidone,tablet,2 mg,,piece,,psychiatric,,RISPERTA3
+RISPERTA1,"Risperidone Tablet, 500 microgram  Tablet",Risperidone,tablet,500 microgram,,piece,,psychiatric,,RISPERTA1
+RITUXIIN2,Rituximab Injection 500mg/10ml  Vial,Rituximab,injection,500mg/10ml,,vial,,other,,RITUXIIN2
+SALBUTGA1,"Salbutamol Inhaler, 100 microgram/metered dose,",Salbutamol,inhaler,100 microgram/,,piece,,respiratory,,SALBUTGA1
+SALBUTGA2,"Salbutamol Nebules, 2.5 mg  Dose",Salbutamol,other,2.5 mg,,piece,,respiratory,,SALBUTGA2
+SALBUTGA3,"Salbutamol Nebules, 5 mg  Dose",Salbutamol,other,5 mg,,piece,,respiratory,,SALBUTGA3
+SALSULIN1,"Salbutamol Sulphate Injection, 500 microgram/mL in",Salbutamol,injection,500 microgram/mL,,vial,,respiratory,,SALSULIN1
+SALBUTSY1,"Salbutamol Syrup, 2 mg/5 mL  200 mL",Salbutamol,syrup,2 mg/5 mL,,bottle,200,respiratory,,SALBUTSY1
+SALACIOI1,"Salicylic Acid Ointment, 2%  40G",Salicylic,ointment,2%  40G,,tube,,other,,SALACIOI1
+SECNIDTA1,"Secnidazole Tablet, 500 mg  Tablet",Secnidazole,tablet,500 mg,,piece,,other,,SECNIDTA1
+SELSULSH1,"Selenium Sulphide Shampoo, 2.5%  50 mL",Selenium,other,2.5%  50 mL,,piece,50,other,,SELSULSH1
+SERTRATA2,"Sertraline Tablet, 100 mg  Tablet",Sertraline,tablet,100 mg,,piece,,other,,SERTRATA2
+SERTRATA1,"Sertraline Tablet, 50 mg  Tablet",Sertraline,tablet,50 mg,,piece,,other,,SERTRATA1
+SILSULCR1,"Silver Sulphadiazine Cream, 1%  50 G",Silver,cream,1%  50 G,,tube,,other,,SILSULCR1
+SIMLINSY1,Simple Linctus  BPC (Paediatric)  125mL,Simple,other,,,piece,125,other,,SIMLINSY1
+SIMLINSY2,Simple Linctus BPC  200mL,Simple,other,,,piece,200,other,,SIMLINSY2
+SIMVASTA1,"Simvastatin Tablet, 10 mg  Tablet",Simvastatin,tablet,10 mg,,piece,,other,,SIMVASTA1
+SIMVASTA2,"Simvastatin Tablet, 20 mg  Tablet",Simvastatin,tablet,20 mg,,piece,,other,,SIMVASTA2
+SIMVASTA3,"Simvastatin Tablet, 40 mg  Tablet",Simvastatin,tablet,40 mg,,piece,,other,,SIMVASTA3
+SIMVASTA4,"Simvastatin Tablet, 80 mg  Tablet",Simvastatin,tablet,80 mg,,piece,,other,,SIMVASTA4
+SODBICIN1,"Sodium Bicarbonate Injection, 8.4% in 10 mL  Ampoule",Sodium,injection,8.4%,,vial,,other,,SODBICIN1
+SODCHLIN1,"Sodium Chloride Infusion, 0.45% (250 mL)  250 mL",Sodium,other,0.45%,,piece,250,other,,SODCHLIN1
+SODCHLIN3,"Sodium Chloride Infusion, 0.9% (500 mL)  500 mL",Sodium,other,0.9%,,piece,500,other,,SODCHLIN3
+SODCHLND1,"Sodium Chloride Nasal Drops, 0.9%  10 mL",Sodium,drops,0.9%  10 mL,,bottle,10,other,,SODCHLND1
+SODVALCA1,"Sodium Valproate Capsule, 200 mg  Capsule",Sodium,capsule,200 mg,,piece,,neurological,,SODVALCA1
+SODVALSY1,"Sodium Valproate Syrup, 200 mg/5 Ml  300 mL",Sodium,syrup,200 mg/5 Ml,,bottle,300,neurological,,SODVALSY1
+SODVALTA1,"Sodium Valproate Tablet, 200 mg  Tablet",Sodium,tablet,200 mg,,piece,,neurological,,SODVALTA1
+SOANSTOI1,Soothing Agent + Local Anaesthetic  + Steroid,Soothing,other,,,piece,,other,,SOANSTOI1
+SOANSTRE1,Soothing Agent + Local Anaesthetic + Steroid,Soothing,other,,,piece,,other,,SOANSTRE1
+SOOANAOI1,Soothing Agent + Local Anaesthetic Ointment  15 G,Soothing,ointment,15 G,,tube,,other,,SOOANAOI1
+SOOANARE1,Soothing Agent + Local Anaesthetic Suppository  Supp,Soothing,other,,,piece,,other,,SOOANARE1
+SPIRONTA1,"Spironolactone Tablet, 25 mg  Tablet",Spironolactone,tablet,25 mg,,piece,,vitamins,,SPIRONTA1
+SPIRONTA2,"Spironolactone Tablet, 50 mg  Tablet",Spironolactone,tablet,50 mg,,piece,,vitamins,,SPIRONTA2
+STREPTIN1,"Streptokinase Injection, 100,000 unit -vial Vial",Streptokinase,injection,,,vial,,other,,STREPTIN1
+STREPTIN2,"Streptokinase Injection, 250,000 unit -vial Vial",Streptokinase,injection,,,vial,,other,,STREPTIN2
+STREPTIN3,"Streptokinase Injection, 750,000 unit -vial Vial",Streptokinase,injection,,,vial,,other,,STREPTIN3
+SULFASTA1,"Sulfasalazine Tablet, 500 mg  Tablet",Sulfasalazine,tablet,500 mg,,piece,,other,,SULFASTA1
+TAMOXITA1,"Tamoxifen Tablet, 10 mg  Tablet",Tamoxifen,tablet,10 mg,,piece,,other,,TAMOXITA1
+TAMOXITA2,"Tamoxifen Tablet, 20 mg  Tablet",Tamoxifen,tablet,20 mg,,piece,,other,,TAMOXITA2
+TAMSULCA1,"Tamsulosin Capsule, 400 microgram  Capsule",Tamsulosin,capsule,400 microgram,,piece,,other,,TAMSULCA1
+TERAZOTA1,"Terazosin Tablet, 2 mg  Tablet",Terazosin,tablet,2 mg,,piece,,other,,TERAZOTA1
+TERAZOTA2,"Terazosin Tablet, 5 mg  Tablet",Terazosin,tablet,5 mg,,piece,,other,,TERAZOTA2
+TERBINTA1,"Terbinafine HCl Tablet, 250 mg  Tablet",Terbinafine,tablet,250 mg,,piece,,other,,TERBINTA1
+TETRACCA1,"Tetracycline Capsule, 250 mg  Capsule",Tetracycline,capsule,250 mg,,piece,,antibiotics,,TETRACCA1
+TETRACEO2,"Tetracycline Eye Ointment, 1%  5 G",Tetracycline,ointment,1%  5 G,,tube,,antibiotics,,TETRACEO2
+THEOPHTA1,"Theophylline Tablet, 200 mg (slow release)  Tablet",Theophylline,tablet,200 mg,,piece,,respiratory,,THEOPHTA1
+THIAMITA2,"Thiamine Tablet, 100 mg  Tablet",Thiamine,tablet,100 mg,,piece,,other,,THIAMITA2
+THIAMITA1,"Thiamine Tablet, 50 mg  Tablet",Thiamine,tablet,50 mg,,piece,,other,,THIAMITA1
+TIABENTA1,"Tiabendazole Tablet, 500 mg  Tablet",Tiabendazole,tablet,500 mg,,piece,,other,,TIABENTA1
+TIMMALID1,"Timolol Maleate Eye Drops, 0.5%  10 mL",Timolol,drops,0.5%  10 mL,,bottle,10,other,,TIMMALID1
+TINIDACA1,"Tinidazole Capsule, 500 mg  Capsule",Tinidazole,capsule,500 mg,,piece,,other,,TINIDACA1
+TIROFIIN2,"Tirofiban Infusion, 250 micrograms/ml (concentrate)  100 mL",Tirofiban,other,250 microgram,,piece,100,other,,TIROFIIN2
+TIROFIIN1,"Tirofiban Infusion, 50 micrograms/mL  100 mL",Tirofiban,other,50 microgram,,piece,100,other,,TIROFIIN1
+TOLBUTTA1,"Tolbutamide Tablet, 500 mg  Tablet",Tolbutamide,tablet,500 mg,,piece,,other,,TOLBUTTA1
+TRAACICA1,"Tranexamic Acid Capsule, 250 mg  Capsule",Tranexamic,capsule,250 mg,,piece,,other,,TRAACICA1
+TRAACIIN1,"Tranexamic Acid Injection, 500 mg/5mL  Ampoule",Tranexamic,injection,500 mg/5mL,,vial,,other,,TRAACIIN1
+TRAACITA1,"Tranexamic Acid Tablet, 500 mg  Tablet",Tranexamic,tablet,500 mg,,piece,,other,,TRAACITA1
+TRIHEXTA1,"Trihexyphenidyl Tablet, 2 mg  Tablet",Trihexyphenidyl,tablet,2 mg,,piece,,other,,TRIHEXTA1
+TRIHEXTA2,"Trihexyphenidyl Tablet, 5 mg  Tablet",Trihexyphenidyl,tablet,5 mg,,piece,,other,,TRIHEXTA2
+VERAPATA1,"Verapamil Tablet, 40 mg  Tablet",Verapamil,tablet,40 mg,,piece,,other,,VERAPATA1
+VERAPATA2,"Verapamil Tablet, 80 mg  Tablet",Verapamil,tablet,80 mg,,piece,,other,,VERAPATA2
+VINCRIIN1,Vincristine Injection 1 mg Intravenous  Vial,Vincristine,injection,1 mg,,vial,,other,,VINCRIIN1
+VINCRIIN2,Vincristine Injection 2 mg Intravenous  Vial,Vincristine,injection,2 mg,,vial,,other,,VINCRIIN2
+WARFARTA1,"Warfarin Tablet, 1 mg  Tablet",Warfarin,tablet,1 mg,,piece,,cardiovascular,,WARFARTA1
+WARFARTA2,"Warfarin Tablet, 3 mg  Tablet",Warfarin,tablet,3 mg,,piece,,cardiovascular,,WARFARTA2
+WARFARTA3,"Warfarin Tablet, 5 mg (scored)  Tablet",Warfarin,tablet,5 mg,,piece,,cardiovascular,,WARFARTA3
+WATFORIN1,Water for Injection  10 mL,Water,injection,,,vial,10,other,,WATFORIN1
+ZINCOOTA1,"Zinc Tablet, 10 mg  Tablet",Zinc,tablet,10 mg,,piece,,vitamins,,ZINCOOTA1
