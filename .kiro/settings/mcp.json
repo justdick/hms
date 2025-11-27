@@ -23,17 +23,30 @@
       ]
     },
     "laravel-boost": {
-        "command": "php",
-        "args": [
-            "artisan",
-            "boost:mcp"
-        ]
+      "command": "php",
+      "args": [
+        "artisan",
+        "boost:mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "database-query",
+        "tinker",
+        "database-schema",
+        "application-info",
+        "list-routes"
+      ]
     },
     "shadcn": {
       "command": "npx",
       "args": [
         "shadcn@latest",
         "mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "view_items_in_registries",
+        "get_add_command_for_items"
       ]
     }
   }
