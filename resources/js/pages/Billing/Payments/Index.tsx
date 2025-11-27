@@ -1,16 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { Settings } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { BillAdjustmentModal } from './components/BillAdjustmentModal';
 import { BillingStatsCards } from './components/BillingStatsCards';
+import { BillWaiverModal } from './components/BillWaiverModal';
+import { InlinePaymentForm } from './components/InlinePaymentForm';
+import { PatientBillingDetails } from './components/PatientBillingDetails';
 import { PatientSearchBar } from './components/PatientSearchBar';
 import { PatientSearchResults } from './components/PatientSearchResults';
-import { PatientBillingDetails } from './components/PatientBillingDetails';
-import { InlinePaymentForm } from './components/InlinePaymentForm';
-import { BillWaiverModal } from './components/BillWaiverModal';
-import { BillAdjustmentModal } from './components/BillAdjustmentModal';
 import { ServiceAccessOverrideModal } from './components/ServiceAccessOverrideModal';
 
 interface Patient {
@@ -150,6 +150,8 @@ export default function PaymentIndex({ stats, permissions }: Props) {
     };
 
     const searchPatients = async (query: string) => {
+        setSearchQuery(query);
+        
         if (query.length < 2) {
             setSearchResults([]);
             return;
@@ -363,7 +365,9 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 selectedPatient.patient_id,
                             ) && (
                                 <InlinePaymentForm
-                                    checkinId={selectedPatient.visits[0]?.checkin_id}
+                                    checkinId={
+                                        selectedPatient.visits[0]?.checkin_id
+                                    }
                                     selectedCharges={selectedCharges}
                                     totalAmount={selectedPatient.visits
                                         .flatMap((v) => v.charges)
@@ -399,7 +403,9 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 <>
                                     <BillWaiverModal
                                         isOpen={waiverModalOpen}
-                                        onClose={() => setWaiverModalOpen(false)}
+                                        onClose={() =>
+                                            setWaiverModalOpen(false)
+                                        }
                                         charge={charge}
                                         formatCurrency={formatCurrency}
                                         onSuccess={() => {
@@ -410,7 +416,9 @@ export default function PaymentIndex({ stats, permissions }: Props) {
 
                                     <BillAdjustmentModal
                                         isOpen={adjustmentModalOpen}
-                                        onClose={() => setAdjustmentModalOpen(false)}
+                                        onClose={() =>
+                                            setAdjustmentModalOpen(false)
+                                        }
                                         charge={charge}
                                         formatCurrency={formatCurrency}
                                         onSuccess={() => {
@@ -424,20 +432,25 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     </>
                 )}
 
-                {selectedServiceType && selectedPatient && selectedPatient.visits[0] && (
-                    <ServiceAccessOverrideModal
-                        isOpen={overrideModalOpen}
-                        onClose={() => setOverrideModalOpen(false)}
-                        serviceType={selectedServiceType}
-                        checkinId={selectedPatient.visits[0].checkin_id}
-                        pendingCharges={selectedPatient.visits.flatMap((v) =>
-                            v.charges.filter(
-                                (c) => c.service_type === selectedServiceType,
-                            ),
-                        )}
-                        formatCurrency={formatCurrency}
-                    />
-                )}
+                {selectedServiceType &&
+                    selectedPatient &&
+                    selectedPatient.visits[0] && (
+                        <ServiceAccessOverrideModal
+                            isOpen={overrideModalOpen}
+                            onClose={() => setOverrideModalOpen(false)}
+                            serviceType={selectedServiceType}
+                            checkinId={selectedPatient.visits[0].checkin_id}
+                            pendingCharges={selectedPatient.visits.flatMap(
+                                (v) =>
+                                    v.charges.filter(
+                                        (c) =>
+                                            c.service_type ===
+                                            selectedServiceType,
+                                    ),
+                            )}
+                            formatCurrency={formatCurrency}
+                        />
+                    )}
             </div>
         </AppLayout>
     );

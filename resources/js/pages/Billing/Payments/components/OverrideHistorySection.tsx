@@ -252,7 +252,9 @@ export function OverrideHistorySection({
                                         item.type === 'override' && (
                                             <p className="text-xs text-muted-foreground">
                                                 Expired on:{' '}
-                                                {formatDateTime(item.expires_at)}
+                                                {formatDateTime(
+                                                    item.expires_at,
+                                                )}
                                             </p>
                                         )}
                                 </div>

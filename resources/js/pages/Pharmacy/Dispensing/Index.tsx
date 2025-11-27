@@ -16,12 +16,9 @@ import {
     Phone,
     Pill,
     Search,
-    Stethoscope,
     User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-
-
 
 interface SearchResult {
     id: number;

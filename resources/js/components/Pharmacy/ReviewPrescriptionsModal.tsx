@@ -266,7 +266,8 @@ export function ReviewPrescriptionsModal({
                 <DialogHeader>
                     <DialogTitle>Review Items for Dispensing</DialogTitle>
                     <DialogDescription>
-                        Review stock availability and adjust quantities for prescriptions and supplies before dispensing
+                        Review stock availability and adjust quantities for
+                        prescriptions and supplies before dispensing
                     </DialogDescription>
                 </DialogHeader>
 
@@ -304,12 +305,15 @@ export function ReviewPrescriptionsModal({
                             {prescriptionsData.length > 0 && (
                                 <div className="space-y-3">
                                     <h3 className="text-lg font-semibold">
-                                        Prescriptions ({prescriptionsData.length})
+                                        Prescriptions (
+                                        {prescriptionsData.length})
                                     </h3>
                                     {/* Desktop: Table View */}
                                     <div className="hidden md:block">
                                         <PrescriptionReviewTable
-                                            prescriptionsData={prescriptionsData}
+                                            prescriptionsData={
+                                                prescriptionsData
+                                            }
                                             reviews={reviews}
                                             onUpdateReview={updateReview}
                                             errors={errors}
@@ -319,7 +323,9 @@ export function ReviewPrescriptionsModal({
                                     {/* Mobile: Card View */}
                                     <div className="md:hidden">
                                         <MobileReviewCards
-                                            prescriptionsData={prescriptionsData}
+                                            prescriptionsData={
+                                                prescriptionsData
+                                            }
                                             reviews={reviews}
                                             onUpdateReview={updateReview}
                                             errors={errors}
@@ -332,35 +338,54 @@ export function ReviewPrescriptionsModal({
                             {suppliesData.length > 0 && (
                                 <div className="space-y-3">
                                     <h3 className="text-lg font-semibold">
-                                        Minor Procedure Supplies ({suppliesData.length})
+                                        Minor Procedure Supplies (
+                                        {suppliesData.length})
                                     </h3>
                                     {/* Desktop: Table View */}
                                     <div className="hidden md:block">
                                         <PrescriptionReviewTable
-                                            prescriptionsData={suppliesData.map((sd) => ({
-                                                prescription: {
-                                                    id: sd.supply.id,
-                                                    drug_id: sd.supply.drug_id,
-                                                    drug: sd.supply.drug,
-                                                    quantity: sd.supply.quantity,
-                                                    quantity_to_dispense: sd.supply.quantity_to_dispense,
-                                                    dose_quantity: undefined,
-                                                    frequency: sd.procedure_type,
-                                                    duration: '',
-                                                    status: sd.supply.status,
-                                                    dispensing_notes: sd.supply.dispensing_notes,
-                                                },
-                                                stock_status: sd.stock_status,
-                                                can_dispense_full: sd.can_dispense_full,
-                                                max_dispensable: sd.max_dispensable,
-                                            }))}
-                                            reviews={supplyReviews.map((sr) => ({
-                                                prescription_id: sr.supply_id,
-                                                action: sr.action,
-                                                quantity_to_dispense: sr.quantity_to_dispense,
-                                                notes: sr.notes,
-                                                reason: sr.reason,
-                                            }))}
+                                            prescriptionsData={suppliesData.map(
+                                                (sd) => ({
+                                                    prescription: {
+                                                        id: sd.supply.id,
+                                                        drug_id:
+                                                            sd.supply.drug_id,
+                                                        drug: sd.supply.drug,
+                                                        quantity:
+                                                            sd.supply.quantity,
+                                                        quantity_to_dispense:
+                                                            sd.supply
+                                                                .quantity_to_dispense,
+                                                        dose_quantity:
+                                                            undefined,
+                                                        frequency:
+                                                            sd.procedure_type,
+                                                        duration: '',
+                                                        status: sd.supply
+                                                            .status,
+                                                        dispensing_notes:
+                                                            sd.supply
+                                                                .dispensing_notes,
+                                                    },
+                                                    stock_status:
+                                                        sd.stock_status,
+                                                    can_dispense_full:
+                                                        sd.can_dispense_full,
+                                                    max_dispensable:
+                                                        sd.max_dispensable,
+                                                }),
+                                            )}
+                                            reviews={supplyReviews.map(
+                                                (sr) => ({
+                                                    prescription_id:
+                                                        sr.supply_id,
+                                                    action: sr.action,
+                                                    quantity_to_dispense:
+                                                        sr.quantity_to_dispense,
+                                                    notes: sr.notes,
+                                                    reason: sr.reason,
+                                                }),
+                                            )}
                                             onUpdateReview={updateSupplyReview}
                                             errors={errors}
                                         />
@@ -369,30 +394,48 @@ export function ReviewPrescriptionsModal({
                                     {/* Mobile: Card View */}
                                     <div className="md:hidden">
                                         <MobileReviewCards
-                                            prescriptionsData={suppliesData.map((sd) => ({
-                                                prescription: {
-                                                    id: sd.supply.id,
-                                                    drug_id: sd.supply.drug_id,
-                                                    drug: sd.supply.drug,
-                                                    quantity: sd.supply.quantity,
-                                                    quantity_to_dispense: sd.supply.quantity_to_dispense,
-                                                    dose_quantity: undefined,
-                                                    frequency: sd.procedure_type,
-                                                    duration: '',
-                                                    status: sd.supply.status,
-                                                    dispensing_notes: sd.supply.dispensing_notes,
-                                                },
-                                                stock_status: sd.stock_status,
-                                                can_dispense_full: sd.can_dispense_full,
-                                                max_dispensable: sd.max_dispensable,
-                                            }))}
-                                            reviews={supplyReviews.map((sr) => ({
-                                                prescription_id: sr.supply_id,
-                                                action: sr.action,
-                                                quantity_to_dispense: sr.quantity_to_dispense,
-                                                notes: sr.notes,
-                                                reason: sr.reason,
-                                            }))}
+                                            prescriptionsData={suppliesData.map(
+                                                (sd) => ({
+                                                    prescription: {
+                                                        id: sd.supply.id,
+                                                        drug_id:
+                                                            sd.supply.drug_id,
+                                                        drug: sd.supply.drug,
+                                                        quantity:
+                                                            sd.supply.quantity,
+                                                        quantity_to_dispense:
+                                                            sd.supply
+                                                                .quantity_to_dispense,
+                                                        dose_quantity:
+                                                            undefined,
+                                                        frequency:
+                                                            sd.procedure_type,
+                                                        duration: '',
+                                                        status: sd.supply
+                                                            .status,
+                                                        dispensing_notes:
+                                                            sd.supply
+                                                                .dispensing_notes,
+                                                    },
+                                                    stock_status:
+                                                        sd.stock_status,
+                                                    can_dispense_full:
+                                                        sd.can_dispense_full,
+                                                    max_dispensable:
+                                                        sd.max_dispensable,
+                                                }),
+                                            )}
+                                            reviews={supplyReviews.map(
+                                                (sr) => ({
+                                                    prescription_id:
+                                                        sr.supply_id,
+                                                    action: sr.action,
+                                                    quantity_to_dispense:
+                                                        sr.quantity_to_dispense,
+                                                    notes: sr.notes,
+                                                    reason: sr.reason,
+                                                }),
+                                            )}
                                             onUpdateReview={updateSupplyReview}
                                             errors={errors}
                                         />
@@ -400,11 +443,12 @@ export function ReviewPrescriptionsModal({
                                 </div>
                             )}
 
-                            {prescriptionsData.length === 0 && suppliesData.length === 0 && (
-                                <div className="py-8 text-center text-muted-foreground">
-                                    No items to review
-                                </div>
-                            )}
+                            {prescriptionsData.length === 0 &&
+                                suppliesData.length === 0 && (
+                                    <div className="py-8 text-center text-muted-foreground">
+                                        No items to review
+                                    </div>
+                                )}
                         </div>
                     </ScrollArea>
 

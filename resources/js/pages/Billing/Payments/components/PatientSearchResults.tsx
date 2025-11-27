@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CreditCard, ShieldCheck } from 'lucide-react';
-import React from 'react';
 
 interface Patient {
     id: number;
@@ -95,7 +94,9 @@ export function PatientSearchResults({
                             )}
                             <p className="text-xs text-muted-foreground">
                                 {patient.visits_with_charges} visit
-                                {patient.visits_with_charges !== 1 ? 's' : ''}{' '}
+                                {patient.visits_with_charges !== 1
+                                    ? 's'
+                                    : ''}{' '}
                                 with charges
                             </p>
                         </div>

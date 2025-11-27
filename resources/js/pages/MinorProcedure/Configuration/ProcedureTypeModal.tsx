@@ -128,7 +128,9 @@ export default function ProcedureTypeModal({
                                     </SelectContent>
                                 </Select>
                                 <p className="text-xs text-muted-foreground">
-                                    Minor procedures are performed by nurses at OPD. Major procedures are theatre operations.
+                                    Minor procedures are performed by nurses at
+                                    OPD. Major procedures are theatre
+                                    operations.
                                 </p>
                                 {errors.type && (
                                     <p className="text-sm text-destructive">

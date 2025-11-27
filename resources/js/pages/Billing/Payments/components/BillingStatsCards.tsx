@@ -1,10 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    AlertCircle,
-    DollarSign,
-    TrendingUp,
-    Wallet,
-} from 'lucide-react';
+import { AlertCircle, DollarSign, TrendingUp, Wallet } from 'lucide-react';
 
 interface BillingStats {
     pending_charges_count: number;

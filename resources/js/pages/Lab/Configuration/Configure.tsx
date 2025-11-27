@@ -241,13 +241,18 @@ export default function LabServiceConfigure({ labService }: Props) {
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span>{labService.code}</span>
                                     <span>•</span>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                    >
                                         {labService.category}
                                     </Badge>
                                     {labService.description && (
                                         <>
                                             <span>•</span>
-                                            <span>{labService.description}</span>
+                                            <span>
+                                                {labService.description}
+                                            </span>
                                         </>
                                     )}
                                 </div>

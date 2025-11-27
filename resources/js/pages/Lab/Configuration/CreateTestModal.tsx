@@ -20,22 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { Loader2, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-interface LabService {
-    id: number;
-    name: string;
-    code: string;
-    category: string;
-    price?: number;
-    description?: string;
-    preparation_instructions?: string;
-    sample_type?: string;
-    turnaround_time?: string;
-    normal_range?: string;
-    clinical_significance?: string;
-    is_active?: boolean;
-    test_parameters?: any;
-}
+import { LabService } from './columns';
 
 interface CreateTestModalProps {
     open: boolean;

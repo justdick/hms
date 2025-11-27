@@ -340,8 +340,10 @@ export function PatientBillingDetails({
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
                                 {patient.total_charges} charge
-                                {patient.total_charges !== 1 ? 's' : ''} across{' '}
-                                {patient.visits_with_charges} visit
+                                {patient.total_charges !== 1
+                                    ? 's'
+                                    : ''} across {patient.visits_with_charges}{' '}
+                                visit
                                 {patient.visits_with_charges !== 1 ? 's' : ''}
                             </p>
                         </div>
@@ -562,7 +564,11 @@ export function PatientBillingDetails({
                                                         {item.reason}
                                                     </p>
                                                     <p className="mt-1 text-xs text-muted-foreground">
-                                                        By {item.authorized_by.name}{' '}
+                                                        By{' '}
+                                                        {
+                                                            item.authorized_by
+                                                                .name
+                                                        }{' '}
                                                         •{' '}
                                                         {formatDateTime(
                                                             item.authorized_at,

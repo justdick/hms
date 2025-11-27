@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DrugImportController;
 use App\Http\Controllers\Pharmacy\DispensingController;
 use App\Http\Controllers\Pharmacy\DrugController;
 use App\Http\Controllers\Pharmacy\PharmacyController;
@@ -11,6 +12,10 @@ Route::middleware(['auth', 'verified', 'can:pharmacy.view'])->prefix('pharmacy')
 
     // Drug Management
     Route::resource('drugs', DrugController::class);
+
+    // Drug Import
+    Route::get('drugs-import/template', [DrugImportController::class, 'downloadTemplate'])->name('drugs.import.template');
+    Route::post('drugs-import', [DrugImportController::class, 'import'])->name('drugs.import');
     Route::get('drugs/{drug}/batches', [DrugController::class, 'batches'])->name('drugs.batches')->middleware('can:drugs.manage-batches');
     Route::post('drugs/{drug}/batches', [DrugController::class, 'storeBatch'])->name('drugs.batches.store')->middleware('can:drugs.manage-batches');
 

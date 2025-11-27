@@ -101,7 +101,8 @@ export function DispenseSuppliesModal({
                 onSuccess: () => {
                     // Check if all supplies are now dispensed
                     const allDone = supplies.every(
-                        (sd) => sd.supply.id === supplyId || sd.supply.dispensed,
+                        (sd) =>
+                            sd.supply.id === supplyId || sd.supply.dispensed,
                     );
                     if (allDone) {
                         onOpenChange(false);
@@ -163,7 +164,8 @@ export function DispenseSuppliesModal({
                                         supply.id,
                                     );
                                     const totalAmount =
-                                        supply.drug.unit_price * supply.quantity;
+                                        supply.drug.unit_price *
+                                        supply.quantity;
 
                                     return (
                                         <TableRow key={supply.id}>
@@ -243,7 +245,10 @@ export function DispenseSuppliesModal({
                 </ScrollArea>
 
                 <div className="flex justify-end gap-2 border-t pt-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                    >
                         Close
                     </Button>
                 </div>

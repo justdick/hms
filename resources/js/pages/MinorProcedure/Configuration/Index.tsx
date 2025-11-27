@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -15,11 +16,19 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Bandage, Edit, Plus, Trash2, Stethoscope } from 'lucide-react';
-import { useState } from 'react';
+import {
+    ArrowLeft,
+    Bandage,
+    Download,
+    Edit,
+    Plus,
+    Stethoscope,
+    Trash2,
+    Upload,
+} from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import ProcedureTypeModal from './ProcedureTypeModal';
 
@@ -45,7 +54,37 @@ export default function MinorProcedureConfigurationIndex({
 }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingType, setEditingType] = useState<ProcedureType | null>(null);
-    const [activeTab, setActiveTab] = useState<'all' | 'minor' | 'major'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'minor' | 'major'>(
+        'all',
+    );
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsImporting(true);
+        router.post(
+            '/admin/procedure-types/import',
+            { file },
+            {
+                forceFormData: true,
+                onSuccess: () => {
+                    toast.success('Import completed');
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
+                },
+                onError: (errors) => {
+                    toast.error(errors.file || errors.error || 'Import failed');
+                },
+                onFinish: () => {
+                    setIsImporting(false);
+                },
+            },
+        );
+    };
 
     const handleDelete = (procedureType: ProcedureType) => {
         if (
@@ -116,10 +155,37 @@ export default function MinorProcedureConfigurationIndex({
                             </p>
                         </div>
                     </div>
-                    <Button onClick={() => setShowCreateModal(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Procedure Type
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            asChild
+                        >
+                            <a href="/admin/procedure-types/template">
+                                <Download className="mr-2 h-4 w-4" />
+                                Template
+                            </a>
+                        </Button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            onChange={handleImport}
+                            className="hidden"
+                            id="procedure-import"
+                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isImporting}
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            {isImporting ? 'Importing...' : 'Import'}
+                        </Button>
+                        <Button onClick={() => setShowCreateModal(true)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Procedure Type
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Summary */}
@@ -197,7 +263,10 @@ export default function MinorProcedureConfigurationIndex({
                 </div>
 
                 {/* Procedure Types Tabs */}
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+                <Tabs
+                    value={activeTab}
+                    onValueChange={(v) => setActiveTab(v as any)}
+                >
                     <TabsList>
                         <TabsTrigger value="all">
                             All Procedures ({procedureTypes.length})
@@ -210,107 +279,123 @@ export default function MinorProcedureConfigurationIndex({
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value={activeTab} className="space-y-6 mt-6">
+                    <TabsContent value={activeTab} className="mt-6 space-y-6">
                         {/* Procedure Types by Category */}
-                        {Object.entries(groupedByCategory).map(([category, types]) => (
-                    <Card key={category}>
-                        <CardHeader>
-                            <CardTitle className="capitalize">
-                                {category.replace(/_/g, ' ')}
-                            </CardTitle>
-                            <CardDescription>
-                                {types.length} procedure
-                                {types.length !== 1 ? 's' : ''}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Code</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead className="text-right">
-                                            Price (KES)
-                                        </TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">
-                                            Actions
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {types.map((type) => (
-                                        <TableRow key={type.id}>
-                                            <TableCell className="font-medium">
-                                                {type.name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <code className="rounded bg-muted px-2 py-1 text-xs">
-                                                    {type.code}
-                                                </code>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={
-                                                        type.type === 'major'
-                                                            ? 'border-purple-200 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
-                                                            : 'border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                                    }
-                                                >
-                                                    {type.type === 'major' ? 'Major' : 'Minor'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="max-w-md truncate text-sm text-muted-foreground">
-                                                {type.description ||
-                                                    'No description'}
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono">
-                                                {Number(type.price).toFixed(2)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {type.is_active ? (
-                                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                                                        Active
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                                                        Inactive
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            setEditingType(type)
-                                                        }
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleDelete(type)
-                                                        }
-                                                        className="text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                        ))}
+                        {Object.entries(groupedByCategory).map(
+                            ([category, types]) => (
+                                <Card key={category}>
+                                    <CardHeader>
+                                        <CardTitle className="capitalize">
+                                            {category.replace(/_/g, ' ')}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            {types.length} procedure
+                                            {types.length !== 1 ? 's' : ''}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Code</TableHead>
+                                                    <TableHead>Type</TableHead>
+                                                    <TableHead>
+                                                        Description
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Price (KES)
+                                                    </TableHead>
+                                                    <TableHead>
+                                                        Status
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Actions
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {types.map((type) => (
+                                                    <TableRow key={type.id}>
+                                                        <TableCell className="font-medium">
+                                                            {type.name}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <code className="rounded bg-muted px-2 py-1 text-xs">
+                                                                {type.code}
+                                                            </code>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={
+                                                                    type.type ===
+                                                                    'major'
+                                                                        ? 'border-purple-200 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                                                                        : 'border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                                                }
+                                                            >
+                                                                {type.type ===
+                                                                'major'
+                                                                    ? 'Major'
+                                                                    : 'Minor'}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="max-w-md truncate text-sm text-muted-foreground">
+                                                            {type.description ||
+                                                                'No description'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-mono">
+                                                            {Number(
+                                                                type.price,
+                                                            ).toFixed(2)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {type.is_active ? (
+                                                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                                                                    Active
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                                                    Inactive
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        setEditingType(
+                                                                            type,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            type,
+                                                                        )
+                                                                    }
+                                                                    className="text-destructive hover:text-destructive"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            ),
+                        )}
 
                         {filteredProcedures.length === 0 && (
                             <Card>
@@ -324,7 +409,9 @@ export default function MinorProcedureConfigurationIndex({
                                             ? 'Get started by adding your first procedure type'
                                             : `No ${activeTab} procedures found`}
                                     </p>
-                                    <Button onClick={() => setShowCreateModal(true)}>
+                                    <Button
+                                        onClick={() => setShowCreateModal(true)}
+                                    >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add Procedure Type
                                     </Button>

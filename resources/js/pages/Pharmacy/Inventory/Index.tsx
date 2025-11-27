@@ -1,16 +1,30 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowLeft,
     BarChart3,
     Calendar,
+    Download,
     Package,
     Plus,
     TrendingDown,
+    Upload,
 } from 'lucide-react';
+import { useState } from 'react';
 import { inventoryColumns, type InventoryDrug } from './inventory-columns';
 import { DataTable } from './inventory-data-table';
 
@@ -19,6 +33,26 @@ interface Props {
 }
 
 export default function InventoryIndex({ drugs }: Props) {
+    const [importModalOpen, setImportModalOpen] = useState(false);
+    const { data, setData, post, processing, reset } = useForm<{
+        file: File | null;
+    }>({
+        file: null,
+    });
+
+    const handleImport = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!data.file) return;
+
+        post('/pharmacy/drugs-import', {
+            forceFormData: true,
+            onSuccess: () => {
+                setImportModalOpen(false);
+                reset();
+            },
+        });
+    };
+
     const totalDrugs = drugs.length;
     const lowStockDrugs = drugs.filter((drug) => drug.is_low_stock).length;
     const outOfStockDrugs = drugs.filter(
@@ -70,6 +104,82 @@ export default function InventoryIndex({ drugs }: Props) {
                                 Expiring Soon
                             </Link>
                         </Button>
+                        <Dialog
+                            open={importModalOpen}
+                            onOpenChange={setImportModalOpen}
+                        >
+                            <DialogTrigger asChild>
+                                <Button variant="outline">
+                                    <Upload className="mr-1 h-4 w-4" />
+                                    Import Drugs
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Import Drugs</DialogTitle>
+                                    <DialogDescription>
+                                        Upload a CSV or Excel file to bulk
+                                        import drugs. Download the template for
+                                        the correct format.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleImport}>
+                                    <div className="space-y-4 py-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full"
+                                            asChild
+                                        >
+                                            <a href="/pharmacy/drugs-import/template">
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download Template
+                                            </a>
+                                        </Button>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="file">
+                                                Select File
+                                            </Label>
+                                            <Input
+                                                id="file"
+                                                type="file"
+                                                accept=".csv,.xlsx,.xls"
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'file',
+                                                        e.target.files?.[0] ||
+                                                            null,
+                                                    )
+                                                }
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Supported formats: CSV, Excel
+                                                (.xlsx, .xls)
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                setImportModalOpen(false)
+                                            }
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={!data.file || processing}
+                                        >
+                                            {processing
+                                                ? 'Importing...'
+                                                : 'Import'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                         <Button asChild>
                             <Link href="/pharmacy/drugs/create">
                                 <Plus className="mr-1 h-4 w-4" />

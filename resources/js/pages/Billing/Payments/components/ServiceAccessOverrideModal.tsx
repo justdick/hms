@@ -101,8 +101,8 @@ export function ServiceAccessOverrideModal({
                                                 {formatServiceType(serviceType)}
                                             </p>
                                             <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                                                This service is currently blocked
-                                                due to unpaid charges
+                                                This service is currently
+                                                blocked due to unpaid charges
                                             </p>
                                         </div>
                                     </div>
@@ -194,8 +194,9 @@ export function ServiceAccessOverrideModal({
                                                 This override will expire after{' '}
                                                 {expiryHours} hour
                                                 {expiryHours !== 1 ? 's' : ''}.
-                                                The service will be blocked again
-                                                unless payment is received.
+                                                The service will be blocked
+                                                again unless payment is
+                                                received.
                                             </p>
                                         </div>
                                     </div>
@@ -211,8 +212,8 @@ export function ServiceAccessOverrideModal({
                                             </p>
                                             <ul className="mt-1 list-inside list-disc space-y-1 text-red-700 dark:text-red-300">
                                                 <li>
-                                                    This action will be logged in
-                                                    the audit trail
+                                                    This action will be logged
+                                                    in the audit trail
                                                 </li>
                                                 <li>
                                                     Your name and reason will be
@@ -223,8 +224,8 @@ export function ServiceAccessOverrideModal({
                                                     emergencies
                                                 </li>
                                                 <li>
-                                                    Patient should be directed to
-                                                    billing after service
+                                                    Patient should be directed
+                                                    to billing after service
                                                 </li>
                                             </ul>
                                         </div>

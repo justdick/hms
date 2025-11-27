@@ -1,14 +1,27 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
     CheckCircle2,
+    Download,
     FlaskConical,
     Plus,
     Settings,
+    Upload,
 } from 'lucide-react';
 import { useState } from 'react';
 import { columns, LabService } from './columns';
@@ -25,9 +38,28 @@ export default function LabConfigurationIndex({
     categories,
 }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [importModalOpen, setImportModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<LabService | null>(
         null,
     );
+    const { data, setData, post, processing, reset } = useForm<{
+        file: File | null;
+    }>({
+        file: null,
+    });
+
+    const handleImport = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!data.file) return;
+
+        post('/lab/services/import', {
+            forceFormData: true,
+            onSuccess: () => {
+                setImportModalOpen(false);
+                reset();
+            },
+        });
+    };
 
     const hasParameters = (service: LabService) => {
         return (
@@ -66,10 +98,76 @@ export default function LabConfigurationIndex({
                             </p>
                         </div>
                     </div>
-                    <Button onClick={() => setShowCreateModal(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add New Test
-                    </Button>
+                    <div className="flex gap-2">
+                        <Dialog
+                            open={importModalOpen}
+                            onOpenChange={setImportModalOpen}
+                        >
+                            <DialogTrigger asChild>
+                                <Button variant="outline">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Import Lab Services</DialogTitle>
+                                    <DialogDescription>
+                                        Upload a CSV or Excel file to bulk import
+                                        lab services.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleImport}>
+                                    <div className="space-y-4 py-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full"
+                                            asChild
+                                        >
+                                            <a href="/lab/services/import/template">
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download Template
+                                            </a>
+                                        </Button>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="file">Select File</Label>
+                                            <Input
+                                                id="file"
+                                                type="file"
+                                                accept=".csv,.xlsx,.xls"
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'file',
+                                                        e.target.files?.[0] || null,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setImportModalOpen(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={!data.file || processing}
+                                        >
+                                            {processing ? 'Importing...' : 'Import'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                        <Button onClick={() => setShowCreateModal(true)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add New Test
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Summary */}
