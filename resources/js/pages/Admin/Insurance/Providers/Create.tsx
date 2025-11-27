@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -24,6 +25,7 @@ export default function InsuranceProviderCreate() {
         address: '',
         claim_submission_method: 'email',
         payment_terms_days: 30,
+        is_nhis: false,
         notes: '',
     });
 
@@ -283,6 +285,43 @@ export default function InsuranceProviderCreate() {
                                         )}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* NHIS Configuration */}
+                            <div className="space-y-4 border-t pt-4 dark:border-gray-700">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    NHIS Configuration
+                                </h3>
+                                <div className="flex items-start space-x-3 rounded-lg border bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+                                    <Checkbox
+                                        id="is_nhis"
+                                        checked={data.is_nhis}
+                                        onCheckedChange={(checked) =>
+                                            setData('is_nhis', checked === true)
+                                        }
+                                    />
+                                    <div className="space-y-1">
+                                        <Label
+                                            htmlFor="is_nhis"
+                                            className="cursor-pointer font-medium"
+                                        >
+                                            This is an NHIS Provider
+                                        </Label>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Enable this if this provider is the
+                                            National Health Insurance Scheme
+                                            (NHIS). NHIS providers use the NHIS
+                                            Tariff Master for pricing and
+                                            require G-DRG selection during claim
+                                            vetting.
+                                        </p>
+                                    </div>
+                                </div>
+                                {errors.is_nhis && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.is_nhis}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Additional Notes */}

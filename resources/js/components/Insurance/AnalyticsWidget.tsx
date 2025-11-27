@@ -35,14 +35,14 @@ interface AnalyticsWidgetProps {
 
 /**
  * AnalyticsWidget - Expandable widget component for displaying analytics data
- * 
+ *
  * Features:
  * - Collapsible/expandable interface
  * - Lazy loading support via onExpand callback
  * - Skeleton loading states
  * - Keyboard navigation support (Enter/Space to toggle)
  * - Accessibility compliant with ARIA attributes
- * 
+ *
  * @example
  * ```tsx
  * <AnalyticsWidget
@@ -86,15 +86,12 @@ export default function AnalyticsWidget({
     };
 
     return (
-        <Card className="transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:hover:shadow-primary/10">
+        <Card className="transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:shadow-md dark:hover:shadow-primary/10">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                         <div
-                            className={cn(
-                                'rounded-lg bg-muted p-3',
-                                color,
-                            )}
+                            className={cn('rounded-lg bg-muted p-3', color)}
                             aria-hidden="true"
                         >
                             <Icon className="h-6 w-6" />
@@ -118,7 +115,10 @@ export default function AnalyticsWidget({
                         {isExpanded ? (
                             <ChevronUp className="h-4 w-4" aria-hidden="true" />
                         ) : (
-                            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                            <ChevronDown
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                            />
                         )}
                     </Button>
                 </div>

@@ -39,9 +39,9 @@ export default function ExceptionList({
     searchQuery: externalSearchQuery,
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterType, setFilterType] = useState<'all' | 'full' | 'excluded' | 'custom_tariff'>(
-        'all',
-    );
+    const [filterType, setFilterType] = useState<
+        'all' | 'full' | 'excluded' | 'custom_tariff'
+    >('all');
     const [historyRuleId, setHistoryRuleId] = useState<number | null>(null);
 
     // Use external search query if provided (from global search)
@@ -71,7 +71,8 @@ export default function ExceptionList({
         const exceptionValue =
             exception.coverage_type === 'full'
                 ? 100
-                : exception.coverage_type === 'excluded' || !exception.is_covered
+                : exception.coverage_type === 'excluded' ||
+                    !exception.is_covered
                   ? 0
                   : exception.coverage_value;
 
@@ -97,18 +98,21 @@ export default function ExceptionList({
     // Highlight matching text
     const highlightText = (text: string, query: string) => {
         if (!query) return text;
-        
+
         const parts = text.split(new RegExp(`(${query})`, 'gi'));
         return (
             <>
                 {parts.map((part, index) =>
                     part.toLowerCase() === query.toLowerCase() ? (
-                        <mark key={index} className="bg-yellow-200 dark:bg-yellow-800">
+                        <mark
+                            key={index}
+                            className="bg-yellow-200 dark:bg-yellow-800"
+                        >
                             {part}
                         </mark>
                     ) : (
                         part
-                    )
+                    ),
                 )}
             </>
         );
@@ -173,7 +177,9 @@ export default function ExceptionList({
                         onClick={() => setFilterType('all')}
                         aria-pressed={filterType === 'all'}
                     >
-                        <span className="hidden xs:inline">All ({exceptions.length})</span>
+                        <span className="xs:inline hidden">
+                            All ({exceptions.length})
+                        </span>
                         <span className="xs:hidden">All</span>
                     </Button>
                     <Button
@@ -199,7 +205,9 @@ export default function ExceptionList({
                     <Button
                         size="sm"
                         variant={
-                            filterType === 'custom_tariff' ? 'default' : 'outline'
+                            filterType === 'custom_tariff'
+                                ? 'default'
+                                : 'outline'
                         }
                         onClick={() => setFilterType('custom_tariff')}
                         aria-pressed={filterType === 'custom_tariff'}
@@ -234,16 +242,29 @@ export default function ExceptionList({
                                                 Exception
                                             </Badge>
                                             {exception.tariff && (
-                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-700">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                                                >
                                                     Custom Tariff
                                                 </Badge>
                                             )}
                                             <span className="font-mono text-xs text-gray-600 sm:text-sm dark:text-gray-400">
-                                                {activeSearchQuery ? highlightText(exception.item_code, activeSearchQuery) : exception.item_code}
+                                                {activeSearchQuery
+                                                    ? highlightText(
+                                                          exception.item_code,
+                                                          activeSearchQuery,
+                                                      )
+                                                    : exception.item_code}
                                             </span>
                                         </div>
                                         <p className="mt-1 text-sm font-medium text-gray-900 sm:text-base dark:text-gray-100">
-                                            {activeSearchQuery ? highlightText(exception.item_description, activeSearchQuery) : exception.item_description}
+                                            {activeSearchQuery
+                                                ? highlightText(
+                                                      exception.item_description,
+                                                      activeSearchQuery,
+                                                  )
+                                                : exception.item_description}
                                         </p>
                                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
                                             <span className="font-semibold text-green-700 dark:text-green-400">
@@ -255,7 +276,9 @@ export default function ExceptionList({
                                             </span>
                                             <span className="text-gray-700 dark:text-gray-300">
                                                 Patient Copay:{' '}
-                                                {exception.patient_copay_percentage}
+                                                {
+                                                    exception.patient_copay_percentage
+                                                }
                                                 %
                                             </span>
                                             {exception.tariff && (
@@ -264,7 +287,13 @@ export default function ExceptionList({
                                                         |
                                                     </span>
                                                     <span className="font-semibold text-purple-700 dark:text-purple-400">
-                                                        Tariff: ${parseFloat(String(exception.tariff.insurance_tariff)).toFixed(2)}
+                                                        Tariff: $
+                                                        {parseFloat(
+                                                            String(
+                                                                exception.tariff
+                                                                    .insurance_tariff,
+                                                            ),
+                                                        ).toFixed(2)}
                                                     </span>
                                                 </>
                                             )}
@@ -291,7 +320,9 @@ export default function ExceptionList({
                                             title="View change history"
                                         >
                                             <History className="h-4 w-4" />
-                                            <span className="ml-2 sm:hidden">History</span>
+                                            <span className="ml-2 sm:hidden">
+                                                History
+                                            </span>
                                         </Button>
                                         {onEdit && (
                                             <Button
@@ -303,7 +334,9 @@ export default function ExceptionList({
                                                 aria-label="Edit exception"
                                             >
                                                 <Edit className="h-4 w-4" />
-                                                <span className="ml-2 sm:hidden">Edit</span>
+                                                <span className="ml-2 sm:hidden">
+                                                    Edit
+                                                </span>
                                             </Button>
                                         )}
                                         <Button
@@ -315,7 +348,9 @@ export default function ExceptionList({
                                             aria-label="Delete exception"
                                         >
                                             <Trash2 className="h-4 w-4 text-red-600" />
-                                            <span className="ml-2 sm:hidden">Delete</span>
+                                            <span className="ml-2 sm:hidden">
+                                                Delete
+                                            </span>
                                         </Button>
                                     </div>
                                 </div>

@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import { Head } from '@inertiajs/react';
 import PlanSetupWizard from './components/PlanSetupWizard';
 
 interface InsuranceProvider {
@@ -32,7 +32,8 @@ export default function CreateWithWizard({ providers }: Props) {
                         Create Insurance Plan
                     </h1>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Set up a new insurance plan with coverage rules in just a few steps
+                        Set up a new insurance plan with coverage rules in just
+                        a few steps
                     </p>
                 </div>
 

@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/tooltip';
 import { router } from '@inertiajs/react';
 import { Check, X } from 'lucide-react';
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 interface InlinePercentageEditProps {
     value: number;
@@ -144,7 +144,10 @@ export function InlinePercentageEdit({
                         aria-label="Coverage percentage value"
                         aria-describedby="coverage-help"
                     />
-                    <span id="coverage-help" className="text-sm text-gray-600 dark:text-gray-400">
+                    <span
+                        id="coverage-help"
+                        className="text-sm text-gray-600 dark:text-gray-400"
+                    >
                         %
                     </span>
                 </div>
@@ -157,22 +160,20 @@ export function InlinePercentageEdit({
                             aria-label={`Edit coverage percentage, current value ${displayValue}%`}
                             aria-live="polite"
                             aria-atomic="true"
-                            className={`
-                                inline-flex items-center gap-1 rounded px-2 py-1 text-sm font-medium
-                                transition-all duration-200
-                                hover:bg-gray-100 dark:hover:bg-gray-800
-                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                                disabled:cursor-not-allowed disabled:opacity-50
-                                ${showSuccess ? 'animate-success scale-110' : ''}
-                                ${showError ? 'animate-shake' : ''}
-                            `}
+                            className={`inline-flex items-center gap-1 rounded px-2 py-1 text-sm font-medium transition-all duration-200 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800 ${showSuccess ? 'animate-success scale-110' : ''} ${showError ? 'animate-shake' : ''} `}
                         >
                             <span>{displayValue}%</span>
                             {showSuccess && (
-                                <Check className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden="true" />
+                                <Check
+                                    className="h-4 w-4 text-green-600 dark:text-green-400"
+                                    aria-hidden="true"
+                                />
                             )}
                             {showError && (
-                                <X className="h-4 w-4 text-red-600 dark:text-red-400" aria-hidden="true" />
+                                <X
+                                    className="h-4 w-4 text-red-600 dark:text-red-400"
+                                    aria-hidden="true"
+                                />
                             )}
                         </button>
                     </TooltipTrigger>

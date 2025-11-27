@@ -50,7 +50,8 @@ export default function AddExceptionModal({
     const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
     const [searching, setSearching] = useState(false);
     const [selectedItem, setSelectedItem] = useState<SearchItem | null>(null);
-    const [coverageType, setCoverageType] = useState<CoverageType>('percentage');
+    const [coverageType, setCoverageType] =
+        useState<CoverageType>('percentage');
     const [coverageValue, setCoverageValue] = useState('100');
     const [pricingType, setPricingType] = useState<PricingType>('standard');
     const [tariffPrice, setTariffPrice] = useState('');
@@ -160,35 +161,53 @@ export default function AddExceptionModal({
     // Validation warnings
     const getValidationWarnings = () => {
         const warnings: string[] = [];
-        
+
         if (!selectedItem) return warnings;
 
         const price = parseFloat(String(selectedItem.price));
         const numValue = parseFloat(coverageValue) || 0;
 
         // Warning for 0% coverage
-        if (coverageType === 'excluded' || (coverageType === 'percentage' && numValue === 0)) {
-            warnings.push('This item will not be covered. Patients will pay the full price.');
+        if (
+            coverageType === 'excluded' ||
+            (coverageType === 'percentage' && numValue === 0)
+        ) {
+            warnings.push(
+                'This item will not be covered. Patients will pay the full price.',
+            );
         }
 
         // Warning for very low coverage
         if (coverageType === 'percentage' && numValue > 0 && numValue < 30) {
-            warnings.push('Very low coverage. Patients will pay most of the cost.');
+            warnings.push(
+                'Very low coverage. Patients will pay most of the cost.',
+            );
         }
 
         // Warning for expensive items with low coverage
         if (price > 500 && coverageType === 'percentage' && numValue < 50) {
-            warnings.push(`This is an expensive item ($${price.toFixed(2)}). Consider higher coverage to reduce patient burden.`);
+            warnings.push(
+                `This is an expensive item ($${price.toFixed(2)}). Consider higher coverage to reduce patient burden.`,
+            );
         }
 
         // Warning for fixed amount higher than price
         if (coverageType === 'fixed' && numValue > price) {
-            warnings.push('Fixed amount is higher than the item price. Insurance will only pay up to the item price.');
+            warnings.push(
+                'Fixed amount is higher than the item price. Insurance will only pay up to the item price.',
+            );
         }
 
         // Warning when exception is lower than default
-        if (defaultCoverage !== null && defaultCoverage !== undefined && coverageType === 'percentage' && numValue < defaultCoverage) {
-            warnings.push(`This exception provides less coverage (${numValue}%) than the default (${defaultCoverage}%). Are you sure?`);
+        if (
+            defaultCoverage !== null &&
+            defaultCoverage !== undefined &&
+            coverageType === 'percentage' &&
+            numValue < defaultCoverage
+        ) {
+            warnings.push(
+                `This exception provides less coverage (${numValue}%) than the default (${defaultCoverage}%). Are you sure?`,
+            );
         }
 
         return warnings;
@@ -222,13 +241,16 @@ export default function AddExceptionModal({
                             {/* Global Error Display */}
                             {errors.item_code &&
                                 errors.item_code.includes('already has') && (
-                                    <div 
+                                    <div
                                         className="rounded-lg border-2 border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-950"
                                         role="alert"
                                         aria-live="assertive"
                                     >
                                         <div className="flex items-start gap-2">
-                                            <AlertCircle className="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                                            <AlertCircle
+                                                className="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400"
+                                                aria-hidden="true"
+                                            />
                                             <div className="flex-1">
                                                 <p className="font-semibold text-red-900 dark:text-red-100">
                                                     Duplicate Exception
@@ -251,11 +273,7 @@ export default function AddExceptionModal({
                                 name="coverage_category"
                                 value={category}
                             />
-                            <input
-                                type="hidden"
-                                name="is_active"
-                                value="1"
-                            />
+                            <input type="hidden" name="is_active" value="1" />
 
                             {/* Item Search */}
                             <div className="space-y-2">
@@ -318,7 +336,10 @@ export default function AddExceptionModal({
                                                 </div>
                                                 <div className="text-left sm:text-right">
                                                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                        ${parseFloat(String(item.price)).toFixed(2)}
+                                                        $
+                                                        {parseFloat(
+                                                            String(item.price),
+                                                        ).toFixed(2)}
                                                     </p>
                                                 </div>
                                             </button>
@@ -327,7 +348,11 @@ export default function AddExceptionModal({
                                 )}
 
                                 {errors.item_code && (
-                                    <p className="text-sm text-red-600" role="alert" aria-live="polite">
+                                    <p
+                                        className="text-sm text-red-600"
+                                        role="alert"
+                                        aria-live="polite"
+                                    >
                                         {errors.item_code}
                                     </p>
                                 )}
@@ -351,14 +376,18 @@ export default function AddExceptionModal({
                                             </div>
                                             <p className="mt-1 text-sm text-green-700 dark:text-green-300">
                                                 Current price: $
-                                                {parseFloat(String(selectedItem.price)).toFixed(2)}
+                                                {parseFloat(
+                                                    String(selectedItem.price),
+                                                ).toFixed(2)}
                                             </p>
                                         </div>
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setSelectedItem(null)}
+                                            onClick={() =>
+                                                setSelectedItem(null)
+                                            }
                                         >
                                             Change
                                         </Button>
@@ -381,7 +410,9 @@ export default function AddExceptionModal({
                                 <>
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
-                                            <Label>Coverage for this item</Label>
+                                            <Label>
+                                                Coverage for this item
+                                            </Label>
                                             <HelpTooltip
                                                 content="Choose how insurance will cover this specific item. This overrides the default coverage for this category."
                                                 example="Set Paracetamol to 100% if it should be fully covered"
@@ -457,18 +488,21 @@ export default function AddExceptionModal({
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-2">
                                                 <Label htmlFor="coverage_value">
-                                                    {coverageType === 'percentage'
+                                                    {coverageType ===
+                                                    'percentage'
                                                         ? 'Coverage Percentage'
                                                         : 'Fixed Amount'}
                                                 </Label>
                                                 <HelpTooltip
                                                     content={
-                                                        coverageType === 'percentage'
+                                                        coverageType ===
+                                                        'percentage'
                                                             ? 'Enter the percentage (0-100) that insurance will cover. The patient pays the remaining amount.'
                                                             : 'Enter the fixed dollar amount that insurance will pay, regardless of the actual price.'
                                                     }
                                                     example={
-                                                        coverageType === 'percentage'
+                                                        coverageType ===
+                                                        'percentage'
                                                             ? '80 means insurance pays 80%, patient pays 20%'
                                                             : '$50 means insurance pays $50, patient pays the rest'
                                                     }
@@ -542,7 +576,9 @@ export default function AddExceptionModal({
                                         <RadioGroup
                                             value={pricingType}
                                             onValueChange={(value) =>
-                                                setPricingType(value as PricingType)
+                                                setPricingType(
+                                                    value as PricingType,
+                                                )
                                             }
                                         >
                                             <div className="flex items-center space-x-2">
@@ -554,7 +590,13 @@ export default function AddExceptionModal({
                                                     htmlFor="standard-price"
                                                     className="cursor-pointer font-normal"
                                                 >
-                                                    Use Standard Price (${parseFloat(String(selectedItem.price)).toFixed(2)})
+                                                    Use Standard Price ($
+                                                    {parseFloat(
+                                                        String(
+                                                            selectedItem.price,
+                                                        ),
+                                                    ).toFixed(2)}
+                                                    )
                                                 </Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
@@ -596,7 +638,9 @@ export default function AddExceptionModal({
                                                     min="0"
                                                     value={tariffPrice}
                                                     onChange={(e) =>
-                                                        setTariffPrice(e.target.value)
+                                                        setTariffPrice(
+                                                            e.target.value,
+                                                        )
                                                     }
                                                     className="pl-7"
                                                     placeholder="0.00"
@@ -629,13 +673,15 @@ export default function AddExceptionModal({
                                     {/* Validation Warnings */}
                                     {validationWarnings.length > 0 && (
                                         <div className="space-y-2">
-                                            {validationWarnings.map((warning, index) => (
-                                                <ValidationWarning
-                                                    key={index}
-                                                    message={warning}
-                                                    severity="warning"
-                                                />
-                                            ))}
+                                            {validationWarnings.map(
+                                                (warning, index) => (
+                                                    <ValidationWarning
+                                                        key={index}
+                                                        message={warning}
+                                                        severity="warning"
+                                                    />
+                                                ),
+                                            )}
                                         </div>
                                     )}
 

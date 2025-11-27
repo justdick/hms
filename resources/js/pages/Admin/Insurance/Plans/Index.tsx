@@ -17,7 +17,14 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
-import { ClipboardList, Edit, FileText, MoreVertical, Plus, Settings, Shield } from 'lucide-react';
+import {
+    ClipboardList,
+    FileText,
+    MoreVertical,
+    Plus,
+    Settings,
+    Shield,
+} from 'lucide-react';
 
 interface InsuranceProvider {
     id: number;

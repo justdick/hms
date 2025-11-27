@@ -34,10 +34,12 @@ export function ValidationWarning({
             aria-atomic="true"
         >
             <div className="flex items-start gap-2">
-                <AlertTriangle className={`mt-0.5 h-5 w-5 ${colors.icon}`} aria-hidden="true" />
+                <AlertTriangle
+                    className={`mt-0.5 h-5 w-5 ${colors.icon}`}
+                    aria-hidden="true"
+                />
                 <p className={`text-sm ${colors.text}`}>{message}</p>
             </div>
         </div>
     );
 }
-

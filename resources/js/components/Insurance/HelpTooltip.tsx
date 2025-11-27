@@ -25,7 +25,7 @@ export function HelpTooltip({
             <TooltipTrigger asChild>
                 <button
                     type="button"
-                    className={`inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:hover:text-gray-300 ${className}`}
+                    className={`inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:hover:text-gray-300 ${className}`}
                     onClick={(e) => e.preventDefault()}
                     aria-label="Show help information"
                 >
@@ -37,7 +37,7 @@ export function HelpTooltip({
                 <div className="space-y-2">
                     <p className="text-sm">{content}</p>
                     {example && (
-                        <p className="text-xs italic text-gray-300 dark:text-gray-400">
+                        <p className="text-xs text-gray-300 italic dark:text-gray-400">
                             Example: {example}
                         </p>
                     )}
@@ -54,4 +54,3 @@ export function HelpTooltip({
         </Tooltip>
     );
 }
-

@@ -29,9 +29,16 @@ export function InsuranceCoverageBadge({
     }
 
     // Ensure all values are numbers
-    const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0;
-    const numInsuranceCovered = typeof insuranceCoveredAmount === 'number' ? insuranceCoveredAmount : parseFloat(String(insuranceCoveredAmount)) || 0;
-    const numPatientCopay = typeof patientCopayAmount === 'number' ? patientCopayAmount : parseFloat(String(patientCopayAmount)) || 0;
+    const numAmount =
+        typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0;
+    const numInsuranceCovered =
+        typeof insuranceCoveredAmount === 'number'
+            ? insuranceCoveredAmount
+            : parseFloat(String(insuranceCoveredAmount)) || 0;
+    const numPatientCopay =
+        typeof patientCopayAmount === 'number'
+            ? patientCopayAmount
+            : parseFloat(String(patientCopayAmount)) || 0;
 
     const coveragePercentage =
         numAmount > 0 ? Math.round((numInsuranceCovered / numAmount) * 100) : 0;

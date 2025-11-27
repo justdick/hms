@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface HistoryEntry {
     id: number;
@@ -60,7 +60,7 @@ export default function CoverageRuleHistory({
                 onError: () => {
                     setLoading(false);
                 },
-            }
+            },
         );
     };
 
@@ -134,8 +134,8 @@ export default function CoverageRuleHistory({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-xl">
-                <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-800">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                         Change History
                     </h2>
@@ -159,7 +159,10 @@ export default function CoverageRuleHistory({
                     </button>
                 </div>
 
-                <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+                <div
+                    className="overflow-y-auto p-6"
+                    style={{ maxHeight: 'calc(90vh - 140px)' }}
+                >
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
@@ -175,31 +178,34 @@ export default function CoverageRuleHistory({
                                 const isGrouped =
                                     entry.batch_id &&
                                     index > 0 &&
-                                    history[index - 1].batch_id === entry.batch_id;
+                                    history[index - 1].batch_id ===
+                                        entry.batch_id;
 
                                 return (
                                     <div
                                         key={entry.id}
                                         className={`rounded-lg border ${
                                             isGrouped
-                                                ? 'border-l-4 border-blue-300 dark:border-blue-600 ml-4'
+                                                ? 'ml-4 border-l-4 border-blue-300 dark:border-blue-600'
                                                 : 'border-gray-200 dark:border-gray-700'
-                                        } bg-gray-50 dark:bg-gray-900 p-4`}
+                                        } bg-gray-50 p-4 dark:bg-gray-900`}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-start gap-3">
                                                 <span
                                                     className={`text-2xl ${getActionColor(
-                                                        entry.action
+                                                        entry.action,
                                                     )}`}
                                                 >
-                                                    {getActionIcon(entry.action)}
+                                                    {getActionIcon(
+                                                        entry.action,
+                                                    )}
                                                 </span>
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <span
                                                             className={`font-semibold capitalize ${getActionColor(
-                                                                entry.action
+                                                                entry.action,
                                                             )}`}
                                                         >
                                                             {entry.action}
@@ -215,15 +221,21 @@ export default function CoverageRuleHistory({
                                                             <span>
                                                                 by{' '}
                                                                 <span className="font-medium">
-                                                                    {entry.user.name}
+                                                                    {
+                                                                        entry
+                                                                            .user
+                                                                            .name
+                                                                    }
                                                                 </span>
                                                             </span>
                                                         ) : (
-                                                            <span>by System</span>
+                                                            <span>
+                                                                by System
+                                                            </span>
                                                         )}
                                                         {' • '}
                                                         {new Date(
-                                                            entry.created_at
+                                                            entry.created_at,
                                                         ).toLocaleString()}
                                                     </div>
                                                 </div>
@@ -235,23 +247,25 @@ export default function CoverageRuleHistory({
                                                 {changedFields.map((change) => (
                                                     <div
                                                         key={change.field}
-                                                        className="rounded bg-white dark:bg-gray-800 p-3"
+                                                        className="rounded bg-white p-3 dark:bg-gray-800"
                                                     >
                                                         <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                             {change.label}
                                                         </div>
                                                         <div className="mt-1 flex items-center gap-2 text-sm">
-                                                            <span className="text-red-600 dark:text-red-400 line-through">
+                                                            <span className="text-red-600 line-through dark:text-red-400">
                                                                 {formatValue(
                                                                     change.field,
-                                                                    change.oldValue
+                                                                    change.oldValue,
                                                                 )}
                                                             </span>
-                                                            <span className="text-gray-400">→</span>
-                                                            <span className="text-green-600 dark:text-green-400 font-medium">
+                                                            <span className="text-gray-400">
+                                                                →
+                                                            </span>
+                                                            <span className="font-medium text-green-600 dark:text-green-400">
                                                                 {formatValue(
                                                                     change.field,
-                                                                    change.newValue
+                                                                    change.newValue,
                                                                 )}
                                                             </span>
                                                         </div>
@@ -266,7 +280,7 @@ export default function CoverageRuleHistory({
                     )}
                 </div>
 
-                <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
                     <button
                         onClick={onClose}
                         className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"

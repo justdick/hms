@@ -1,3 +1,4 @@
+import { VettingModal } from '@/components/Insurance';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +11,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -22,7 +22,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Calendar,
     ClipboardList,
     Eye,
     FileCheck,
@@ -31,10 +30,7 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import { FormEvent, lazy, Suspense, useEffect, useState } from 'react';
-
-// Lazy load ClaimsVettingPanel for better performance
-const ClaimsVettingPanel = lazy(() => import('@/components/Insurance/ClaimsVettingPanel'));
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 
 interface InsuranceProvider {
     id: number;
@@ -130,7 +126,9 @@ export default function InsuranceClaimsIndex({
 }: Props) {
     const [showFilters, setShowFilters] = useState(false);
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
-    const [vettingPanelOpen, setVettingPanelOpen] = useState(false);
+
+    // Vetting modal state management
+    const [vettingModalOpen, setVettingModalOpen] = useState(false);
     const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -183,14 +181,30 @@ export default function InsuranceClaimsIndex({
         });
     };
 
-    const handleReviewClaim = (claimId: number) => {
+    /**
+     * Opens the vetting modal for a specific claim
+     * Fetches vetting data on click as per Requirements 8.1
+     */
+    const handleVetClaim = useCallback((claimId: number) => {
         setSelectedClaimId(claimId);
-        setVettingPanelOpen(true);
-    };
+        setVettingModalOpen(true);
+    }, []);
 
-    const handleVetSuccess = () => {
+    /**
+     * Closes the vetting modal and resets selected claim
+     */
+    const handleCloseVettingModal = useCallback(() => {
+        setVettingModalOpen(false);
+        setSelectedClaimId(null);
+    }, []);
+
+    /**
+     * Handles successful vetting action
+     * Refreshes claims list after approval as per Requirements 13.3
+     */
+    const handleVetSuccess = useCallback(() => {
         router.reload({ only: ['claims', 'stats'] });
-    };
+    }, []);
 
     return (
         <AppLayout
@@ -218,7 +232,9 @@ export default function InsuranceClaimsIndex({
                         {hasActiveFilters && (
                             <Badge variant="secondary">
                                 {Object.keys(filters).length} filter
-                                {Object.keys(filters).length > 1 ? 's' : ''}{' '}
+                                {Object.keys(filters).length > 1
+                                    ? 's'
+                                    : ''}{' '}
                                 active
                             </Badge>
                         )}
@@ -511,13 +527,14 @@ export default function InsuranceClaimsIndex({
                                                                 variant="default"
                                                                 size="sm"
                                                                 onClick={() =>
-                                                                    handleReviewClaim(
+                                                                    handleVetClaim(
                                                                         claim.id,
                                                                     )
                                                                 }
+                                                                aria-label={`Vet claim ${claim.claim_check_code}`}
                                                             >
                                                                 <FileCheck className="mr-1 h-4 w-4" />
-                                                                Review
+                                                                Vet Claim
                                                             </Button>
                                                         )}
                                                         <Link
@@ -598,23 +615,13 @@ export default function InsuranceClaimsIndex({
                     )}
             </div>
 
-            {/* Claims Vetting Panel */}
-            <Suspense fallback={
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="rounded-lg bg-white p-6 dark:bg-gray-900">
-                        <Skeleton className="h-8 w-64 mb-4" />
-                        <Skeleton className="h-64 w-96 mb-4" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                </div>
-            }>
-                <ClaimsVettingPanel
-                    claimId={selectedClaimId}
-                    isOpen={vettingPanelOpen}
-                    onClose={() => setVettingPanelOpen(false)}
-                    onVetSuccess={handleVetSuccess}
-                />
-            </Suspense>
+            {/* Vetting Modal for NHIS Claims */}
+            <VettingModal
+                claimId={selectedClaimId}
+                isOpen={vettingModalOpen}
+                onClose={handleCloseVettingModal}
+                onVetSuccess={handleVetSuccess}
+            />
         </AppLayout>
     );
 }

@@ -28,7 +28,7 @@ import {
     User,
     XCircle,
 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface InsuranceProvider {
     id: number;
@@ -126,7 +126,7 @@ interface ClaimsVettingPanelProps {
 
 /**
  * ClaimsVettingPanel - Slide-over panel for reviewing and vetting insurance claims
- * 
+ *
  * Features:
  * - Slide-over interface without page navigation
  * - Displays complete claim details including items, diagnosis, and financial summary
@@ -134,14 +134,14 @@ interface ClaimsVettingPanelProps {
  * - Keyboard shortcuts (Escape to close, Ctrl+Enter to approve)
  * - Focus management and focus trap for accessibility
  * - Loading states and error handling
- * 
+ *
  * Accessibility:
  * - WCAG 2.1 Level AA compliant
  * - Proper ARIA labels and roles
  * - Focus trap within panel
  * - Returns focus to trigger element on close
  * - Screen reader announcements for status changes
- * 
+ *
  * @example
  * ```tsx
  * <ClaimsVettingPanel
@@ -165,7 +165,7 @@ export default function ClaimsVettingPanel({
     >(null);
     const [rejectionReason, setRejectionReason] = useState('');
     const [processing, setProcessing] = useState(false);
-    
+
     // Focus management refs
     const panelRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -205,15 +205,16 @@ export default function ClaimsVettingPanel({
         if (isOpen) {
             // Save the currently focused element
             previousFocusRef.current = document.activeElement as HTMLElement;
-            
+
             // Set focus to the first focusable element in the panel after a short delay
             setTimeout(() => {
                 if (claim && approveButtonRef.current) {
                     approveButtonRef.current.focus();
                 } else if (panelRef.current) {
-                    const firstFocusable = panelRef.current.querySelector<HTMLElement>(
-                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                    );
+                    const firstFocusable =
+                        panelRef.current.querySelector<HTMLElement>(
+                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+                        );
                     firstFocusable?.focus();
                 }
             }, 100);
@@ -232,9 +233,10 @@ export default function ClaimsVettingPanel({
         const handleFocusTrap = (e: KeyboardEvent) => {
             if (e.key !== 'Tab') return;
 
-            const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>(
-                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            );
+            const focusableElements =
+                panelRef.current?.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+                );
 
             if (!focusableElements || focusableElements.length === 0) return;
 
@@ -338,7 +340,7 @@ export default function ClaimsVettingPanel({
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent 
+            <SheetContent
                 ref={panelRef}
                 className="w-full overflow-y-auto sm:max-w-2xl"
                 role="dialog"
@@ -347,20 +349,28 @@ export default function ClaimsVettingPanel({
                 aria-modal="true"
             >
                 {loading ? (
-                    <div 
+                    <div
                         className="flex h-full items-center justify-center"
                         role="status"
                         aria-live="polite"
                         aria-busy="true"
                     >
                         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                        <span className="sr-only">Loading claim details...</span>
+                        <span className="sr-only">
+                            Loading claim details...
+                        </span>
                     </div>
                 ) : claim ? (
                     <>
                         <SheetHeader>
-                            <SheetTitle id="vetting-panel-title" className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" aria-hidden="true" />
+                            <SheetTitle
+                                id="vetting-panel-title"
+                                className="flex items-center gap-2"
+                            >
+                                <FileText
+                                    className="h-5 w-5"
+                                    aria-hidden="true"
+                                />
                                 Claim Vetting - {claim.claim_check_code}
                             </SheetTitle>
                             <SheetDescription id="vetting-panel-description">
@@ -371,8 +381,16 @@ export default function ClaimsVettingPanel({
 
                         <div className="mt-6 space-y-6" role="main">
                             {/* Claim Header */}
-                            <section className="space-y-4" aria-labelledby="patient-info-heading">
-                                <h2 id="patient-info-heading" className="sr-only">Patient Information</h2>
+                            <section
+                                className="space-y-4"
+                                aria-labelledby="patient-info-heading"
+                            >
+                                <h2
+                                    id="patient-info-heading"
+                                    className="sr-only"
+                                >
+                                    Patient Information
+                                </h2>
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -395,7 +413,10 @@ export default function ClaimsVettingPanel({
 
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                                        <User
+                                            className="h-4 w-4 text-gray-500"
+                                            aria-hidden="true"
+                                        />
                                         <span className="text-gray-600 dark:text-gray-400">
                                             Gender:
                                         </span>
@@ -404,7 +425,10 @@ export default function ClaimsVettingPanel({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                                        <Calendar
+                                            className="h-4 w-4 text-gray-500"
+                                            aria-hidden="true"
+                                        />
                                         <span className="text-gray-600 dark:text-gray-400">
                                             DOB:
                                         </span>
@@ -413,7 +437,10 @@ export default function ClaimsVettingPanel({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                                        <Calendar
+                                            className="h-4 w-4 text-gray-500"
+                                            aria-hidden="true"
+                                        />
                                         <span className="text-gray-600 dark:text-gray-400">
                                             Attendance:
                                         </span>
@@ -424,7 +451,10 @@ export default function ClaimsVettingPanel({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <FileText className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                                        <FileText
+                                            className="h-4 w-4 text-gray-500"
+                                            aria-hidden="true"
+                                        />
                                         <span className="text-gray-600 dark:text-gray-400">
                                             Service:
                                         </span>
@@ -434,7 +464,11 @@ export default function ClaimsVettingPanel({
                                     </div>
                                 </div>
 
-                                <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950" role="region" aria-label="Insurance provider information">
+                                <div
+                                    className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950"
+                                    role="region"
+                                    aria-label="Insurance provider information"
+                                >
                                     <div className="text-sm font-medium text-blue-900 dark:text-blue-100">
                                         Insurance Provider
                                     </div>
@@ -454,14 +488,22 @@ export default function ClaimsVettingPanel({
                             {/* Diagnosis */}
                             {claim.primary_diagnosis_description && (
                                 <>
-                                    <section className="space-y-2" aria-labelledby="diagnosis-heading">
-                                        <h4 id="diagnosis-heading" className="font-semibold text-gray-900 dark:text-gray-100">
+                                    <section
+                                        className="space-y-2"
+                                        aria-labelledby="diagnosis-heading"
+                                    >
+                                        <h4
+                                            id="diagnosis-heading"
+                                            className="font-semibold text-gray-900 dark:text-gray-100"
+                                        >
                                             Diagnosis
                                         </h4>
                                         <div className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                                             <div className="text-sm">
                                                 <span className="font-medium">
-                                                    {claim.primary_diagnosis_code}
+                                                    {
+                                                        claim.primary_diagnosis_code
+                                                    }
                                                 </span>
                                                 {' - '}
                                                 <span>
@@ -477,12 +519,21 @@ export default function ClaimsVettingPanel({
                             )}
 
                             {/* Claim Items */}
-                            <section className="space-y-2" aria-labelledby="claim-items-heading">
-                                <h4 id="claim-items-heading" className="font-semibold text-gray-900 dark:text-gray-100">
+                            <section
+                                className="space-y-2"
+                                aria-labelledby="claim-items-heading"
+                            >
+                                <h4
+                                    id="claim-items-heading"
+                                    className="font-semibold text-gray-900 dark:text-gray-100"
+                                >
                                     Claim Items
                                 </h4>
                                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <Table role="table" aria-label="Claim items table">
+                                    <Table
+                                        role="table"
+                                        aria-label="Claim items table"
+                                    >
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>
@@ -539,8 +590,14 @@ export default function ClaimsVettingPanel({
                             <Separator />
 
                             {/* Financial Summary */}
-                            <section className="space-y-2" aria-labelledby="financial-summary-heading">
-                                <h4 id="financial-summary-heading" className="font-semibold text-gray-900 dark:text-gray-100">
+                            <section
+                                className="space-y-2"
+                                aria-labelledby="financial-summary-heading"
+                            >
+                                <h4
+                                    id="financial-summary-heading"
+                                    className="font-semibold text-gray-900 dark:text-gray-100"
+                                >
                                     Financial Summary
                                 </h4>
                                 <div className="space-y-2 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -581,8 +638,14 @@ export default function ClaimsVettingPanel({
 
                             {/* Vetting Actions */}
                             {claim.status === 'pending_vetting' && (
-                                <section className="space-y-4" aria-labelledby="vetting-actions-heading">
-                                    <h4 id="vetting-actions-heading" className="font-semibold text-gray-900 dark:text-gray-100">
+                                <section
+                                    className="space-y-4"
+                                    aria-labelledby="vetting-actions-heading"
+                                >
+                                    <h4
+                                        id="vetting-actions-heading"
+                                        className="font-semibold text-gray-900 dark:text-gray-100"
+                                    >
                                         Vetting Decision
                                     </h4>
 
@@ -606,7 +669,11 @@ export default function ClaimsVettingPanel({
                                         </div>
                                     )}
 
-                                    <div className="flex gap-2" role="group" aria-label="Vetting action buttons">
+                                    <div
+                                        className="flex gap-2"
+                                        role="group"
+                                        aria-label="Vetting action buttons"
+                                    >
                                         <Button
                                             ref={approveButtonRef}
                                             onClick={() => handleVet('approve')}
@@ -616,19 +683,27 @@ export default function ClaimsVettingPanel({
                                         >
                                             {processing ? (
                                                 <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                                                    <Loader2
+                                                        className="mr-2 h-4 w-4 animate-spin"
+                                                        aria-hidden="true"
+                                                    />
                                                     Processing...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <CheckCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                                                    <CheckCircle
+                                                        className="mr-2 h-4 w-4"
+                                                        aria-hidden="true"
+                                                    />
                                                     Approve
                                                 </>
                                             )}
                                         </Button>
                                         <Button
                                             onClick={() => {
-                                                if (vettingAction === 'reject') {
+                                                if (
+                                                    vettingAction === 'reject'
+                                                ) {
                                                     handleVet('reject');
                                                 } else {
                                                     setVettingAction('reject');
@@ -637,16 +712,26 @@ export default function ClaimsVettingPanel({
                                             disabled={processing}
                                             variant="destructive"
                                             className="flex-1"
-                                            aria-label={vettingAction === 'reject' ? 'Confirm rejection' : 'Reject claim'}
+                                            aria-label={
+                                                vettingAction === 'reject'
+                                                    ? 'Confirm rejection'
+                                                    : 'Reject claim'
+                                            }
                                         >
                                             {processing ? (
                                                 <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                                                    <Loader2
+                                                        className="mr-2 h-4 w-4 animate-spin"
+                                                        aria-hidden="true"
+                                                    />
                                                     Processing...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                                                    <XCircle
+                                                        className="mr-2 h-4 w-4"
+                                                        aria-hidden="true"
+                                                    />
                                                     {vettingAction === 'reject'
                                                         ? 'Confirm Reject'
                                                         : 'Reject'}
@@ -668,13 +753,29 @@ export default function ClaimsVettingPanel({
                                         </Button>
                                     )}
 
-                                    <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950" role="note" aria-label="Keyboard shortcuts information">
+                                    <div
+                                        className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950"
+                                        role="note"
+                                        aria-label="Keyboard shortcuts information"
+                                    >
                                         <div className="flex items-start gap-2">
-                                            <AlertCircle className="mt-0.5 h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                                            <AlertCircle
+                                                className="mt-0.5 h-4 w-4 text-blue-600 dark:text-blue-400"
+                                                aria-hidden="true"
+                                            />
                                             <div className="text-sm text-blue-900 dark:text-blue-100">
-                                                <strong>Keyboard shortcuts:</strong>{' '}
-                                                Press <kbd className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs dark:bg-blue-900">Esc</kbd> to close,{' '}
-                                                <kbd className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs dark:bg-blue-900">Ctrl+Enter</kbd> to approve
+                                                <strong>
+                                                    Keyboard shortcuts:
+                                                </strong>{' '}
+                                                Press{' '}
+                                                <kbd className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs dark:bg-blue-900">
+                                                    Esc
+                                                </kbd>{' '}
+                                                to close,{' '}
+                                                <kbd className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs dark:bg-blue-900">
+                                                    Ctrl+Enter
+                                                </kbd>{' '}
+                                                to approve
                                             </div>
                                         </div>
                                     </div>
@@ -682,9 +783,16 @@ export default function ClaimsVettingPanel({
                             )}
 
                             {claim.status !== 'pending_vetting' && (
-                                <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-900" role="alert" aria-live="polite">
+                                <div
+                                    className="rounded-lg bg-gray-50 p-4 dark:bg-gray-900"
+                                    role="alert"
+                                    aria-live="polite"
+                                >
                                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                                        <AlertCircle
+                                            className="h-4 w-4"
+                                            aria-hidden="true"
+                                        />
                                         This claim has already been vetted and
                                         cannot be modified.
                                     </div>
@@ -693,9 +801,16 @@ export default function ClaimsVettingPanel({
                         </div>
                     </>
                 ) : (
-                    <div className="flex h-full items-center justify-center" role="alert" aria-live="assertive">
+                    <div
+                        className="flex h-full items-center justify-center"
+                        role="alert"
+                        aria-live="assertive"
+                    >
                         <div className="text-center">
-                            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" aria-hidden="true" />
+                            <AlertCircle
+                                className="mx-auto mb-4 h-12 w-12 text-gray-400"
+                                aria-hidden="true"
+                            />
                             <p className="text-gray-600 dark:text-gray-400">
                                 Failed to load claim details
                             </p>

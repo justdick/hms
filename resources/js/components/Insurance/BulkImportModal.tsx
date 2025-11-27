@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -14,7 +15,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import axios from 'axios';
 import {
     AlertCircle,
@@ -67,26 +67,29 @@ export default function BulkImportModal({
     const handleDownloadTemplate = async () => {
         setDownloading(true);
         setError(null);
-        
+
         try {
             const response = await axios.get(
                 `/admin/insurance/plans/${planId}/coverage/import-template/${category}`,
-                { responseType: 'blob' }
+                { responseType: 'blob' },
             );
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute(
                 'download',
-                `coverage_template_${category}_${new Date().toISOString().split('T')[0]}.xlsx`
+                `coverage_template_${category}_${new Date().toISOString().split('T')[0]}.xlsx`,
             );
             document.body.appendChild(link);
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to download template. Please try again.');
+            setError(
+                err.response?.data?.error ||
+                    'Failed to download template. Please try again.',
+            );
         } finally {
             setDownloading(false);
         }
@@ -157,7 +160,7 @@ export default function BulkImportModal({
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
-                }
+                },
             );
 
             if (response.data.success) {
@@ -170,7 +173,10 @@ export default function BulkImportModal({
                 }
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to import coverage rules');
+            setError(
+                err.response?.data?.message ||
+                    'Failed to import coverage rules',
+            );
         } finally {
             setImporting(false);
         }
@@ -207,24 +213,44 @@ export default function BulkImportModal({
                 {onCategoryChange && (
                     <div className="space-y-2">
                         <Label htmlFor="category-select">
-                            Select Category <span className="text-red-500">*</span>
+                            Select Category{' '}
+                            <span className="text-red-500">*</span>
                         </Label>
-                        <Select value={category || ''} onValueChange={onCategoryChange}>
-                            <SelectTrigger id="category-select" className={!category ? 'border-red-300' : ''}>
+                        <Select
+                            value={category || ''}
+                            onValueChange={onCategoryChange}
+                        >
+                            <SelectTrigger
+                                id="category-select"
+                                className={!category ? 'border-red-300' : ''}
+                            >
                                 <SelectValue placeholder="Choose a category to import..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="consultation">{categoryLabels.consultation}</SelectItem>
-                                <SelectItem value="drug">{categoryLabels.drug}</SelectItem>
-                                <SelectItem value="lab">{categoryLabels.lab}</SelectItem>
-                                <SelectItem value="procedure">{categoryLabels.procedure}</SelectItem>
-                                <SelectItem value="ward">{categoryLabels.ward}</SelectItem>
-                                <SelectItem value="nursing">{categoryLabels.nursing}</SelectItem>
+                                <SelectItem value="consultation">
+                                    {categoryLabels.consultation}
+                                </SelectItem>
+                                <SelectItem value="drug">
+                                    {categoryLabels.drug}
+                                </SelectItem>
+                                <SelectItem value="lab">
+                                    {categoryLabels.lab}
+                                </SelectItem>
+                                <SelectItem value="procedure">
+                                    {categoryLabels.procedure}
+                                </SelectItem>
+                                <SelectItem value="ward">
+                                    {categoryLabels.ward}
+                                </SelectItem>
+                                <SelectItem value="nursing">
+                                    {categoryLabels.nursing}
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                         {!category && (
                             <p className="text-sm text-red-600 dark:text-red-400">
-                                Please select a category before downloading the template
+                                Please select a category before downloading the
+                                template
                             </p>
                         )}
                     </div>
@@ -238,12 +264,30 @@ export default function BulkImportModal({
                                 New: Pre-populated Templates!
                             </h4>
                             <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                                Download a template with ALL items already filled in from your system inventory
+                                Download a template with ALL items already
+                                filled in from your system inventory
                             </p>
                             <ul className="mt-2 space-y-1 text-sm text-blue-700 dark:text-blue-300">
-                                <li>• All items pre-filled with codes, names, and prices</li>
-                                <li>• Just edit coverage_type and coverage_value columns</li>
-                                <li>• Supports: <span className="font-mono">percentage</span>, <span className="font-mono">fixed_amount</span>, <span className="font-mono">full</span>, <span className="font-mono">excluded</span></li>
+                                <li>
+                                    • All items pre-filled with codes, names,
+                                    and prices
+                                </li>
+                                <li>
+                                    • Just edit coverage_type and coverage_value
+                                    columns
+                                </li>
+                                <li>
+                                    • Supports:{' '}
+                                    <span className="font-mono">
+                                        percentage
+                                    </span>
+                                    ,{' '}
+                                    <span className="font-mono">
+                                        fixed_amount
+                                    </span>
+                                    , <span className="font-mono">full</span>,{' '}
+                                    <span className="font-mono">excluded</span>
+                                </li>
                                 <li>• No manual data entry required!</li>
                             </ul>
                             <Button
@@ -262,7 +306,9 @@ export default function BulkImportModal({
                                 ) : (
                                     <>
                                         <Download className="mr-2 size-4" />
-                                        {!category ? 'Select a category first' : 'Download Pre-populated Template'}
+                                        {!category
+                                            ? 'Select a category first'
+                                            : 'Download Pre-populated Template'}
                                     </>
                                 )}
                             </Button>
@@ -320,7 +366,9 @@ export default function BulkImportModal({
                                     variant="outline"
                                     className="mt-2"
                                     onClick={() =>
-                                        document.getElementById('file-upload')?.click()
+                                        document
+                                            .getElementById('file-upload')
+                                            ?.click()
                                     }
                                     aria-label="Browse and select Excel file for import"
                                 >
@@ -346,7 +394,11 @@ export default function BulkImportModal({
                 <Button type="button" variant="outline" onClick={handleClose}>
                     Cancel
                 </Button>
-                <Button type="button" onClick={handleUpload} disabled={!file || importing}>
+                <Button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={!file || importing}
+                >
                     {importing ? (
                         <>
                             <Loader2 className="mr-2 size-4 animate-spin" />
@@ -360,11 +412,11 @@ export default function BulkImportModal({
         </>
     );
 
-
-
     const renderCompleteStep = () => {
         const hasErrors = importResult && importResult.errors.length > 0;
-        const hasSuccess = importResult && (importResult.created > 0 || importResult.updated > 0);
+        const hasSuccess =
+            importResult &&
+            (importResult.created > 0 || importResult.updated > 0);
 
         return (
             <>
@@ -376,7 +428,7 @@ export default function BulkImportModal({
                     {/* Success Icon */}
                     {hasSuccess && !hasErrors && (
                         <div className="text-center">
-                            <div className="animate-in zoom-in-50 duration-300">
+                            <div className="duration-300 animate-in zoom-in-50">
                                 <CheckCircle2 className="mx-auto size-16 text-green-600 dark:text-green-400" />
                             </div>
                             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -387,7 +439,7 @@ export default function BulkImportModal({
 
                     {/* Summary Stats */}
                     {importResult && (
-                        <div className="grid grid-cols-1 gap-4 xs:grid-cols-3">
+                        <div className="xs:grid-cols-3 grid grid-cols-1 gap-4">
                             <div className="rounded-lg border bg-green-50 p-3 dark:bg-green-950">
                                 <p className="text-sm text-green-600 dark:text-green-400">
                                     Created
@@ -423,8 +475,14 @@ export default function BulkImportModal({
                             </p>
                             <ul className="mt-2 space-y-1 text-sm text-green-800 dark:text-green-200">
                                 <li>• All imported rules are now active</li>
-                                <li>• They will be used immediately for coverage calculations</li>
-                                <li>• You can view them in the coverage dashboard</li>
+                                <li>
+                                    • They will be used immediately for coverage
+                                    calculations
+                                </li>
+                                <li>
+                                    • You can view them in the coverage
+                                    dashboard
+                                </li>
                             </ul>
                         </div>
                     )}
@@ -452,7 +510,8 @@ export default function BulkImportModal({
                                 ))}
                             </div>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                Fix the errors in your file and re-upload to import the skipped rows.
+                                Fix the errors in your file and re-upload to
+                                import the skipped rows.
                             </p>
                         </div>
                     )}

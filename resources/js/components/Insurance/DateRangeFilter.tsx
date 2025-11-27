@@ -29,10 +29,10 @@ interface DateRangeFilterProps {
 
 /**
  * DateRangeFilter - Shared date range filter component for analytics reports
- * 
+ *
  * Provides a consistent interface for filtering reports by date range.
  * Used across all analytics widgets in the Insurance Analytics Dashboard.
- * 
+ *
  * @example
  * ```tsx
  * <DateRangeFilter

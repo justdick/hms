@@ -37,7 +37,7 @@ export function SuccessMessage({
 
     return (
         <div
-            className={`animate-in fade-in slide-in-from-top-2 rounded-lg border-2 border-green-300 bg-green-50 p-4 transition-all duration-300 dark:border-green-700 dark:bg-green-950 ${
+            className={`rounded-lg border-2 border-green-300 bg-green-50 p-4 transition-all duration-300 animate-in fade-in slide-in-from-top-2 dark:border-green-700 dark:bg-green-950 ${
                 !isVisible ? 'animate-out fade-out slide-out-to-top-2' : ''
             } ${className}`}
             role="status"
@@ -45,7 +45,10 @@ export function SuccessMessage({
             aria-atomic="true"
         >
             <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400" aria-hidden="true" />
+                <CheckCircle2
+                    className="mt-0.5 h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400"
+                    aria-hidden="true"
+                />
                 <div className="flex-1">
                     <p className="font-semibold text-green-900 dark:text-green-100">
                         {message}
@@ -62,7 +65,7 @@ export function SuccessMessage({
                             setIsVisible(false);
                             setTimeout(onClose, 300);
                         }}
-                        className="text-green-600 transition-colors hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-green-400 dark:hover:text-green-200"
+                        className="text-green-600 transition-colors hover:text-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none dark:text-green-400 dark:hover:text-green-200"
                         aria-label="Close success message"
                     >
                         <span className="sr-only">Close</span>
@@ -86,4 +89,3 @@ export function SuccessMessage({
         </div>
     );
 }
-

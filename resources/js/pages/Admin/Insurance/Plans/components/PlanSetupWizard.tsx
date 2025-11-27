@@ -1,5 +1,13 @@
+import { HelpTooltip } from '@/components/Insurance/HelpTooltip';
+import { ValidationWarning } from '@/components/Insurance/ValidationWarning';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,8 +23,6 @@ import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import { ValidationWarning } from '@/components/Insurance/ValidationWarning';
-import { HelpTooltip } from '@/components/Insurance/HelpTooltip';
 
 interface InsuranceProvider {
     id: number;
@@ -95,8 +101,16 @@ export default function PlanSetupWizard({ providers }: Props) {
     });
 
     const steps = [
-        { number: 1, title: 'Plan Details', description: 'Basic plan information' },
-        { number: 2, title: 'Coverage', description: 'Set default coverage percentages' },
+        {
+            number: 1,
+            title: 'Plan Details',
+            description: 'Basic plan information',
+        },
+        {
+            number: 2,
+            title: 'Coverage',
+            description: 'Set default coverage percentages',
+        },
         { number: 3, title: 'Review', description: 'Review and create plan' },
     ];
 
@@ -104,7 +118,8 @@ export default function PlanSetupWizard({ providers }: Props) {
         const newErrors: Record<string, string> = {};
 
         if (!planData.insurance_provider_id) {
-            newErrors.insurance_provider_id = 'Please select an insurance provider';
+            newErrors.insurance_provider_id =
+                'Please select an insurance provider';
         }
         if (!planData.plan_name.trim()) {
             newErrors.plan_name = 'Plan name is required';
@@ -135,14 +150,21 @@ export default function PlanSetupWizard({ providers }: Props) {
 
     const getCoverageWarnings = (): string[] => {
         const warnings: string[] = [];
-        
+
         // Check for 0% coverage on essential categories
-        if (coverageData.consultation && parseFloat(coverageData.consultation) === 0) {
-            warnings.push('Consultations are set to 0% coverage. Patients will pay full price for all consultations.');
+        if (
+            coverageData.consultation &&
+            parseFloat(coverageData.consultation) === 0
+        ) {
+            warnings.push(
+                'Consultations are set to 0% coverage. Patients will pay full price for all consultations.',
+            );
         }
-        
+
         if (coverageData.drug && parseFloat(coverageData.drug) === 0) {
-            warnings.push('Drugs are set to 0% coverage. Patients will pay full price for all medications.');
+            warnings.push(
+                'Drugs are set to 0% coverage. Patients will pay full price for all medications.',
+            );
         }
 
         // Check for very low coverage
@@ -150,15 +172,21 @@ export default function PlanSetupWizard({ providers }: Props) {
             if (value !== '') {
                 const numValue = parseFloat(value);
                 if (numValue > 0 && numValue < 30) {
-                    warnings.push(`${categoryLabels[category as keyof CoverageData]} has very low coverage (${numValue}%). Consider increasing for better patient care.`);
+                    warnings.push(
+                        `${categoryLabels[category as keyof CoverageData]} has very low coverage (${numValue}%). Consider increasing for better patient care.`,
+                    );
                 }
             }
         });
 
         // Check if no coverage is set
-        const hasAnyCoverage = Object.values(coverageData).some(v => v !== '');
+        const hasAnyCoverage = Object.values(coverageData).some(
+            (v) => v !== '',
+        );
         if (!hasAnyCoverage) {
-            warnings.push('No coverage percentages have been set. You can set them now or configure them later.');
+            warnings.push(
+                'No coverage percentages have been set. You can set them now or configure them later.',
+            );
         }
 
         return warnings;
@@ -244,7 +272,9 @@ export default function PlanSetupWizard({ providers }: Props) {
                                     {currentStep > step.number ? (
                                         <Check className="h-5 w-5" />
                                     ) : (
-                                        <span className="font-semibold">{step.number}</span>
+                                        <span className="font-semibold">
+                                            {step.number}
+                                        </span>
                                     )}
                                 </div>
                                 <div className="mt-2 text-center">
@@ -282,18 +312,25 @@ export default function PlanSetupWizard({ providers }: Props) {
             <Card className="mx-auto max-w-4xl">
                 <CardHeader>
                     <CardTitle>{steps[currentStep - 1].title}</CardTitle>
-                    <CardDescription>{steps[currentStep - 1].description}</CardDescription>
+                    <CardDescription>
+                        {steps[currentStep - 1].description}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {/* Step 1: Plan Details */}
                     {currentStep === 1 && (
                         <div className="space-y-6">
                             <div>
-                                <Label htmlFor="insurance_provider_id">Insurance Provider *</Label>
+                                <Label htmlFor="insurance_provider_id">
+                                    Insurance Provider *
+                                </Label>
                                 <Select
                                     value={planData.insurance_provider_id}
                                     onValueChange={(value) =>
-                                        setPlanData({ ...planData, insurance_provider_id: value })
+                                        setPlanData({
+                                            ...planData,
+                                            insurance_provider_id: value,
+                                        })
                                     }
                                 >
                                     <SelectTrigger className="mt-1">
@@ -301,8 +338,12 @@ export default function PlanSetupWizard({ providers }: Props) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {providers.map((provider) => (
-                                            <SelectItem key={provider.id} value={provider.id.toString()}>
-                                                {provider.name} ({provider.code})
+                                            <SelectItem
+                                                key={provider.id}
+                                                value={provider.id.toString()}
+                                            >
+                                                {provider.name} ({provider.code}
+                                                )
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -316,24 +357,33 @@ export default function PlanSetupWizard({ providers }: Props) {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="plan_name">Plan Name *</Label>
+                                    <Label htmlFor="plan_name">
+                                        Plan Name *
+                                    </Label>
                                     <Input
                                         id="plan_name"
                                         type="text"
                                         value={planData.plan_name}
                                         onChange={(e) =>
-                                            setPlanData({ ...planData, plan_name: e.target.value })
+                                            setPlanData({
+                                                ...planData,
+                                                plan_name: e.target.value,
+                                            })
                                         }
                                         placeholder="e.g., Gold Coverage Plan"
                                         className="mt-1"
                                     />
                                     {errors.plan_name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.plan_name}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.plan_name}
+                                        </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="plan_code">Plan Code *</Label>
+                                    <Label htmlFor="plan_code">
+                                        Plan Code *
+                                    </Label>
                                     <Input
                                         id="plan_code"
                                         type="text"
@@ -341,7 +391,8 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         onChange={(e) =>
                                             setPlanData({
                                                 ...planData,
-                                                plan_code: e.target.value.toUpperCase(),
+                                                plan_code:
+                                                    e.target.value.toUpperCase(),
                                             })
                                         }
                                         placeholder="e.g., GOLD-01"
@@ -349,46 +400,70 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         className="mt-1"
                                     />
                                     {errors.plan_code && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.plan_code}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.plan_code}
+                                        </p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="plan_type">Plan Type *</Label>
+                                    <Label htmlFor="plan_type">
+                                        Plan Type *
+                                    </Label>
                                     <Select
                                         value={planData.plan_type}
                                         onValueChange={(value) =>
-                                            setPlanData({ ...planData, plan_type: value })
+                                            setPlanData({
+                                                ...planData,
+                                                plan_type: value,
+                                            })
                                         }
                                     >
                                         <SelectTrigger className="mt-1">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="individual">Individual</SelectItem>
-                                            <SelectItem value="family">Family</SelectItem>
-                                            <SelectItem value="corporate">Corporate</SelectItem>
+                                            <SelectItem value="individual">
+                                                Individual
+                                            </SelectItem>
+                                            <SelectItem value="family">
+                                                Family
+                                            </SelectItem>
+                                            <SelectItem value="corporate">
+                                                Corporate
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="coverage_type">Coverage Type *</Label>
+                                    <Label htmlFor="coverage_type">
+                                        Coverage Type *
+                                    </Label>
                                     <Select
                                         value={planData.coverage_type}
                                         onValueChange={(value) =>
-                                            setPlanData({ ...planData, coverage_type: value })
+                                            setPlanData({
+                                                ...planData,
+                                                coverage_type: value,
+                                            })
                                         }
                                     >
                                         <SelectTrigger className="mt-1">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="inpatient">Inpatient Only</SelectItem>
-                                            <SelectItem value="outpatient">Outpatient Only</SelectItem>
-                                            <SelectItem value="comprehensive">Comprehensive</SelectItem>
+                                            <SelectItem value="inpatient">
+                                                Inpatient Only
+                                            </SelectItem>
+                                            <SelectItem value="outpatient">
+                                                Outpatient Only
+                                            </SelectItem>
+                                            <SelectItem value="comprehensive">
+                                                Comprehensive
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -396,14 +471,19 @@ export default function PlanSetupWizard({ providers }: Props) {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <Label htmlFor="annual_limit">Annual Limit</Label>
+                                    <Label htmlFor="annual_limit">
+                                        Annual Limit
+                                    </Label>
                                     <Input
                                         id="annual_limit"
                                         type="number"
                                         step="0.01"
                                         value={planData.annual_limit}
                                         onChange={(e) =>
-                                            setPlanData({ ...planData, annual_limit: e.target.value })
+                                            setPlanData({
+                                                ...planData,
+                                                annual_limit: e.target.value,
+                                            })
                                         }
                                         placeholder="Leave empty for unlimited"
                                         className="mt-1"
@@ -411,13 +491,18 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="visit_limit">Visit Limit</Label>
+                                    <Label htmlFor="visit_limit">
+                                        Visit Limit
+                                    </Label>
                                     <Input
                                         id="visit_limit"
                                         type="number"
                                         value={planData.visit_limit}
                                         onChange={(e) =>
-                                            setPlanData({ ...planData, visit_limit: e.target.value })
+                                            setPlanData({
+                                                ...planData,
+                                                visit_limit: e.target.value,
+                                            })
                                         }
                                         placeholder="Annual visits"
                                         className="mt-1"
@@ -425,16 +510,21 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="default_copay_percentage">Default Co-pay %</Label>
+                                    <Label htmlFor="default_copay_percentage">
+                                        Default Co-pay %
+                                    </Label>
                                     <Input
                                         id="default_copay_percentage"
                                         type="number"
                                         step="0.01"
-                                        value={planData.default_copay_percentage}
+                                        value={
+                                            planData.default_copay_percentage
+                                        }
                                         onChange={(e) =>
                                             setPlanData({
                                                 ...planData,
-                                                default_copay_percentage: e.target.value,
+                                                default_copay_percentage:
+                                                    e.target.value,
                                             })
                                         }
                                         placeholder="0-100"
@@ -445,26 +535,36 @@ export default function PlanSetupWizard({ providers }: Props) {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="effective_from">Effective From</Label>
+                                    <Label htmlFor="effective_from">
+                                        Effective From
+                                    </Label>
                                     <Input
                                         id="effective_from"
                                         type="date"
                                         value={planData.effective_from}
                                         onChange={(e) =>
-                                            setPlanData({ ...planData, effective_from: e.target.value })
+                                            setPlanData({
+                                                ...planData,
+                                                effective_from: e.target.value,
+                                            })
                                         }
                                         className="mt-1"
                                     />
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="effective_to">Effective To</Label>
+                                    <Label htmlFor="effective_to">
+                                        Effective To
+                                    </Label>
                                     <Input
                                         id="effective_to"
                                         type="date"
                                         value={planData.effective_to}
                                         onChange={(e) =>
-                                            setPlanData({ ...planData, effective_to: e.target.value })
+                                            setPlanData({
+                                                ...planData,
+                                                effective_to: e.target.value,
+                                            })
                                         }
                                         className="mt-1"
                                     />
@@ -476,7 +576,9 @@ export default function PlanSetupWizard({ providers }: Props) {
                                     <div className="flex items-center space-x-2">
                                         <Checkbox
                                             id="require_explicit_approval_for_new_items"
-                                            checked={planData.require_explicit_approval_for_new_items}
+                                            checked={
+                                                planData.require_explicit_approval_for_new_items
+                                            }
                                             onCheckedChange={(checked) =>
                                                 setPlanData({
                                                     ...planData,
@@ -486,14 +588,17 @@ export default function PlanSetupWizard({ providers }: Props) {
                                             }
                                         />
                                         <Label htmlFor="require_explicit_approval_for_new_items">
-                                            Require explicit approval for new items
+                                            Require explicit approval for new
+                                            items
                                         </Label>
                                     </div>
                                     <p className="ml-6 text-sm text-gray-600 dark:text-gray-400">
-                                        When enabled, new drugs, lab services, and other items added to the
-                                        system will not be automatically covered by default rules. Insurance
-                                        administrators will need to explicitly review and approve coverage
-                                        for each new item.
+                                        When enabled, new drugs, lab services,
+                                        and other items added to the system will
+                                        not be automatically covered by default
+                                        rules. Insurance administrators will
+                                        need to explicitly review and approve
+                                        coverage for each new item.
                                     </p>
                                 </div>
 
@@ -502,20 +607,30 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         id="is_active"
                                         checked={planData.is_active}
                                         onCheckedChange={(checked) =>
-                                            setPlanData({ ...planData, is_active: checked as boolean })
+                                            setPlanData({
+                                                ...planData,
+                                                is_active: checked as boolean,
+                                            })
                                         }
                                     />
-                                    <Label htmlFor="is_active">Active Plan</Label>
+                                    <Label htmlFor="is_active">
+                                        Active Plan
+                                    </Label>
                                 </div>
                             </div>
 
                             <div>
-                                <Label htmlFor="description">Description (Optional)</Label>
+                                <Label htmlFor="description">
+                                    Description (Optional)
+                                </Label>
                                 <Textarea
                                     id="description"
                                     value={planData.description}
                                     onChange={(e) =>
-                                        setPlanData({ ...planData, description: e.target.value })
+                                        setPlanData({
+                                            ...planData,
+                                            description: e.target.value,
+                                        })
                                     }
                                     placeholder="Plan details and coverage information..."
                                     rows={4}
@@ -541,15 +656,19 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 <div className="mb-4 flex items-center justify-between">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <Label className="text-base">Coverage Percentages</Label>
+                                            <Label className="text-base">
+                                                Coverage Percentages
+                                            </Label>
                                             <HelpTooltip
                                                 content="Set the default coverage percentage for each service category. This applies to all items in that category unless you add specific exceptions later."
                                                 example="80% means insurance pays 80%, patient pays 20%"
                                             />
                                         </div>
                                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                            Set the default coverage percentage for each category. You can
-                                            modify the preset values or leave categories empty.
+                                            Set the default coverage percentage
+                                            for each category. You can modify
+                                            the preset values or leave
+                                            categories empty.
                                         </p>
                                     </div>
                                     <Button
@@ -563,48 +682,60 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {(Object.keys(coverageData) as Array<keyof CoverageData>).map(
-                                        (category) => (
-                                            <div key={category}>
-                                                <Label htmlFor={category}>
-                                                    {categoryLabels[category]}
-                                                </Label>
-                                                <div className="mt-1 flex items-center gap-2">
-                                                    <Input
-                                                        id={category}
-                                                        type="number"
-                                                        min="0"
-                                                        max="100"
-                                                        step="0.01"
-                                                        value={coverageData[category]}
-                                                        onChange={(e) =>
-                                                            setCoverageData({
-                                                                ...coverageData,
-                                                                [category]: e.target.value,
-                                                            })
-                                                        }
-                                                        placeholder="0-100"
-                                                        className="flex-1"
-                                                    />
-                                                    <span className="text-sm text-gray-500">%</span>
-                                                    {coverageData[category] && (
-                                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                            (Copay:{' '}
-                                                            {(
-                                                                100 - parseFloat(coverageData[category])
-                                                            ).toFixed(1)}
-                                                            %)
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {errors[category] && (
-                                                    <p className="mt-1 text-sm text-red-600">
-                                                        {errors[category]}
-                                                    </p>
+                                    {(
+                                        Object.keys(coverageData) as Array<
+                                            keyof CoverageData
+                                        >
+                                    ).map((category) => (
+                                        <div key={category}>
+                                            <Label htmlFor={category}>
+                                                {categoryLabels[category]}
+                                            </Label>
+                                            <div className="mt-1 flex items-center gap-2">
+                                                <Input
+                                                    id={category}
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.01"
+                                                    value={
+                                                        coverageData[category]
+                                                    }
+                                                    onChange={(e) =>
+                                                        setCoverageData({
+                                                            ...coverageData,
+                                                            [category]:
+                                                                e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="0-100"
+                                                    className="flex-1"
+                                                />
+                                                <span className="text-sm text-gray-500">
+                                                    %
+                                                </span>
+                                                {coverageData[category] && (
+                                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                        (Copay:{' '}
+                                                        {(
+                                                            100 -
+                                                            parseFloat(
+                                                                coverageData[
+                                                                    category
+                                                                ],
+                                                            )
+                                                        ).toFixed(1)}
+                                                        %)
+                                                    </span>
                                                 )}
                                             </div>
-                                        ),
-                                    )}
+                                            {errors[category] && (
+                                                <p className="mt-1 text-sm text-red-600">
+                                                    {errors[category]}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -624,7 +755,9 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         </p>
                                         <p className="font-medium text-gray-900 dark:text-gray-100">
                                             {providers.find(
-                                                (p) => p.id.toString() === planData.insurance_provider_id,
+                                                (p) =>
+                                                    p.id.toString() ===
+                                                    planData.insurance_provider_id,
                                             )?.name || 'N/A'}
                                         </p>
                                     </div>
@@ -648,7 +781,7 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Plan Type
                                         </p>
-                                        <p className="font-medium capitalize text-gray-900 dark:text-gray-100">
+                                        <p className="font-medium text-gray-900 capitalize dark:text-gray-100">
                                             {planData.plan_type}
                                         </p>
                                     </div>
@@ -656,14 +789,18 @@ export default function PlanSetupWizard({ providers }: Props) {
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Coverage Type
                                         </p>
-                                        <p className="font-medium capitalize text-gray-900 dark:text-gray-100">
+                                        <p className="font-medium text-gray-900 capitalize dark:text-gray-100">
                                             {planData.coverage_type}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Status
+                                        </p>
                                         <p className="font-medium text-gray-900 dark:text-gray-100">
-                                            {planData.is_active ? 'Active' : 'Inactive'}
+                                            {planData.is_active
+                                                ? 'Active'
+                                                : 'Inactive'}
                                         </p>
                                     </div>
                                 </div>
@@ -674,7 +811,11 @@ export default function PlanSetupWizard({ providers }: Props) {
                                     Default Coverage
                                 </h3>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {(Object.keys(coverageData) as Array<keyof CoverageData>).map(
+                                    {(
+                                        Object.keys(coverageData) as Array<
+                                            keyof CoverageData
+                                        >
+                                    ).map(
                                         (category) =>
                                             coverageData[category] && (
                                                 <div
@@ -682,16 +823,30 @@ export default function PlanSetupWizard({ providers }: Props) {
                                                     className="flex items-center justify-between rounded-lg border p-3 dark:border-gray-700"
                                                 >
                                                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {categoryLabels[category]}
+                                                        {
+                                                            categoryLabels[
+                                                                category
+                                                            ]
+                                                        }
                                                     </span>
                                                     <div className="text-right">
                                                         <p className="text-lg font-bold text-primary">
-                                                            {coverageData[category]}%
+                                                            {
+                                                                coverageData[
+                                                                    category
+                                                                ]
+                                                            }
+                                                            %
                                                         </p>
                                                         <p className="text-xs text-gray-600 dark:text-gray-400">
                                                             Copay:{' '}
                                                             {(
-                                                                100 - parseFloat(coverageData[category])
+                                                                100 -
+                                                                parseFloat(
+                                                                    coverageData[
+                                                                        category
+                                                                    ],
+                                                                )
                                                             ).toFixed(1)}
                                                             %
                                                         </p>
@@ -700,9 +855,12 @@ export default function PlanSetupWizard({ providers }: Props) {
                                             ),
                                     )}
                                 </div>
-                                {Object.values(coverageData).every((v) => v === '') && (
+                                {Object.values(coverageData).every(
+                                    (v) => v === '',
+                                ) && (
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        No default coverage rules will be created. You can add them later.
+                                        No default coverage rules will be
+                                        created. You can add them later.
                                     </p>
                                 )}
                             </div>
@@ -710,7 +868,8 @@ export default function PlanSetupWizard({ providers }: Props) {
                             {Object.keys(errors).length > 0 && (
                                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                                     <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                                        There were errors creating the plan. Please try again.
+                                        There were errors creating the plan.
+                                        Please try again.
                                     </p>
                                 </div>
                             )}
@@ -735,8 +894,14 @@ export default function PlanSetupWizard({ providers }: Props) {
                                 <ChevronRight className="ml-2 h-4 w-4" />
                             </Button>
                         ) : (
-                            <Button type="button" onClick={handleSubmit} disabled={processing}>
-                                {processing ? 'Creating Plan...' : 'Create Plan'}
+                            <Button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={processing}
+                            >
+                                {processing
+                                    ? 'Creating Plan...'
+                                    : 'Create Plan'}
                             </Button>
                         )}
                     </div>

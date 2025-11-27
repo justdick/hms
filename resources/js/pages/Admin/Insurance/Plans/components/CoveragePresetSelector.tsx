@@ -1,5 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
@@ -50,7 +55,9 @@ export default function CoveragePresetSelector({
 
     const fetchPresets = async () => {
         try {
-            const response = await axios.get('/admin/insurance/coverage-presets');
+            const response = await axios.get(
+                '/admin/insurance/coverage-presets',
+            );
             setPresets(response.data.presets);
         } catch (error) {
             console.error('Failed to fetch presets:', error);
@@ -77,7 +84,8 @@ export default function CoveragePresetSelector({
             <div>
                 <Label className="text-base">Choose a Coverage Preset</Label>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Select a preset to quickly configure coverage percentages, or choose Custom to set your own values.
+                    Select a preset to quickly configure coverage percentages,
+                    or choose Custom to set your own values.
                 </p>
             </div>
 
@@ -123,7 +131,12 @@ export default function CoveragePresetSelector({
                                                     className="flex justify-between"
                                                 >
                                                     <span className="text-gray-600 dark:text-gray-400">
-                                                        {categoryLabels[category]}:
+                                                        {
+                                                            categoryLabels[
+                                                                category
+                                                            ]
+                                                        }
+                                                        :
                                                     </span>
                                                     <span className="font-semibold text-gray-900 dark:text-gray-100">
                                                         {percentage}%

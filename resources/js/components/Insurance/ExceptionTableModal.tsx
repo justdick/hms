@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -6,6 +7,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
     Table,
@@ -15,13 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import axios from 'axios';
 import {
     ChevronLeft,
     ChevronRight,
@@ -32,8 +33,7 @@ import {
     Trash2,
     X,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import axios from 'axios';
+import { useMemo, useState } from 'react';
 
 interface CoverageException {
     id: number;
@@ -71,7 +71,8 @@ export default function ExceptionTableModal({
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortColumn, setSortColumn] = useState<keyof CoverageException>('item_code');
+    const [sortColumn, setSortColumn] =
+        useState<keyof CoverageException>('item_code');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
     // Filter and sort
@@ -84,7 +85,7 @@ export default function ExceptionTableModal({
             result = result.filter(
                 (ex) =>
                     ex.item_code.toLowerCase().includes(query) ||
-                    ex.item_description.toLowerCase().includes(query)
+                    ex.item_description.toLowerCase().includes(query),
             );
         }
 
@@ -92,17 +93,17 @@ export default function ExceptionTableModal({
         result.sort((a, b) => {
             const aVal = a[sortColumn];
             const bVal = b[sortColumn];
-            
+
             if (typeof aVal === 'string' && typeof bVal === 'string') {
                 return sortDirection === 'asc'
                     ? aVal.localeCompare(bVal)
                     : bVal.localeCompare(aVal);
             }
-            
+
             if (typeof aVal === 'number' && typeof bVal === 'number') {
                 return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
             }
-            
+
             return 0;
         });
 
@@ -113,7 +114,7 @@ export default function ExceptionTableModal({
     const totalPages = Math.ceil(filteredAndSorted.length / ITEMS_PER_PAGE);
     const paginatedData = filteredAndSorted.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     const handleSort = (column: keyof CoverageException) => {
@@ -129,15 +130,15 @@ export default function ExceptionTableModal({
         try {
             const response = await axios.get(
                 `/admin/insurance/plans/${planId}/coverage/${category}/exceptions/export`,
-                { responseType: 'blob' }
+                { responseType: 'blob' },
             );
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute(
                 'download',
-                `${category}_exceptions_${new Date().toISOString().split('T')[0]}.xlsx`
+                `${category}_exceptions_${new Date().toISOString().split('T')[0]}.xlsx`,
             );
             document.body.appendChild(link);
             link.click();
@@ -153,9 +154,10 @@ export default function ExceptionTableModal({
             case 'percentage':
                 return `${exception.coverage_value}%`;
             case 'fixed':
-                const fixedValue = typeof exception.coverage_value === 'number' 
-                    ? exception.coverage_value 
-                    : parseFloat(exception.coverage_value || '0');
+                const fixedValue =
+                    typeof exception.coverage_value === 'number'
+                        ? exception.coverage_value
+                        : parseFloat(exception.coverage_value || '0');
                 return `$${fixedValue.toFixed(2)}`;
             case 'full':
                 return 'Full Coverage';
@@ -180,7 +182,7 @@ export default function ExceptionTableModal({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+            <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col">
                 <DialogHeader>
                     <DialogTitle className="flex items-center justify-between">
                         <span>{categoryLabel} - Coverage Exceptions</span>
@@ -194,14 +196,16 @@ export default function ExceptionTableModal({
                         </Button>
                     </DialogTitle>
                     <DialogDescription>
-                        Manage coverage exceptions for {categoryLabel.toLowerCase()}. 
-                        {filteredAndSorted.length} exception{filteredAndSorted.length !== 1 ? 's' : ''} configured.
+                        Manage coverage exceptions for{' '}
+                        {categoryLabel.toLowerCase()}.{filteredAndSorted.length}{' '}
+                        exception{filteredAndSorted.length !== 1 ? 's' : ''}{' '}
+                        configured.
                     </DialogDescription>
                 </DialogHeader>
 
                 {/* Search Bar */}
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-500" />
                     <Input
                         type="text"
                         placeholder="Search by item code or name..."
@@ -210,13 +214,13 @@ export default function ExceptionTableModal({
                             setSearchQuery(e.target.value);
                             setCurrentPage(1);
                         }}
-                        className="pl-10 pr-10"
+                        className="pr-10 pl-10"
                     />
                     {searchQuery && (
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+                            className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0"
                             onClick={() => setSearchQuery('')}
                         >
                             <X className="h-4 w-4" />
@@ -225,38 +229,55 @@ export default function ExceptionTableModal({
                 </div>
 
                 {/* Table */}
-                <div className="flex-1 overflow-auto border rounded-lg">
+                <div className="flex-1 overflow-auto rounded-lg border">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead 
+                                <TableHead
                                     className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                                     onClick={() => handleSort('item_code')}
                                 >
-                                    Item Code {sortColumn === 'item_code' && (sortDirection === 'asc' ? '↑' : '↓')}
+                                    Item Code{' '}
+                                    {sortColumn === 'item_code' &&
+                                        (sortDirection === 'asc' ? '↑' : '↓')}
                                 </TableHead>
-                                <TableHead 
+                                <TableHead
                                     className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                                    onClick={() => handleSort('item_description')}
+                                    onClick={() =>
+                                        handleSort('item_description')
+                                    }
                                 >
-                                    Name {sortColumn === 'item_description' && (sortDirection === 'asc' ? '↑' : '↓')}
+                                    Name{' '}
+                                    {sortColumn === 'item_description' &&
+                                        (sortDirection === 'asc' ? '↑' : '↓')}
                                 </TableHead>
                                 <TableHead>Coverage Type</TableHead>
-                                <TableHead 
-                                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 text-right"
+                                <TableHead
+                                    className="cursor-pointer text-right hover:bg-gray-50 dark:hover:bg-gray-800"
                                     onClick={() => handleSort('coverage_value')}
                                 >
-                                    Coverage {sortColumn === 'coverage_value' && (sortDirection === 'asc' ? '↑' : '↓')}
+                                    Coverage{' '}
+                                    {sortColumn === 'coverage_value' &&
+                                        (sortDirection === 'asc' ? '↑' : '↓')}
                                 </TableHead>
-                                <TableHead className="text-right">Patient Copay</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">
+                                    Patient Copay
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Actions
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paginatedData.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                                        {searchQuery ? 'No exceptions match your search.' : 'No exceptions configured.'}
+                                    <TableCell
+                                        colSpan={6}
+                                        className="py-8 text-center text-gray-500"
+                                    >
+                                        {searchQuery
+                                            ? 'No exceptions match your search.'
+                                            : 'No exceptions configured.'}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -265,36 +286,49 @@ export default function ExceptionTableModal({
                                         <TableCell className="font-mono text-sm">
                                             {exception.item_code}
                                         </TableCell>
-                                        <TableCell>{exception.item_description}</TableCell>
                                         <TableCell>
-                                            {getCoverageTypeBadge(exception.coverage_type)}
+                                            {exception.item_description}
+                                        </TableCell>
+                                        <TableCell>
+                                            {getCoverageTypeBadge(
+                                                exception.coverage_type,
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
                                             {getCoverageDisplay(exception)}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {typeof exception.patient_copay_percentage === 'number' 
+                                            {typeof exception.patient_copay_percentage ===
+                                            'number'
                                                 ? `${exception.patient_copay_percentage.toFixed(2)}%`
-                                                : `${parseFloat(exception.patient_copay_percentage || '0').toFixed(2)}%`
-                                            }
+                                                : `${parseFloat(exception.patient_copay_percentage || '0').toFixed(2)}%`}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="sm">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                    >
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem
-                                                        onClick={() => onEdit?.(exception)}
+                                                        onClick={() =>
+                                                            onEdit?.(exception)
+                                                        }
                                                     >
                                                         <Edit className="mr-2 h-4 w-4" />
                                                         Edit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         className="text-red-600"
-                                                        onClick={() => onDelete?.(exception.id)}
+                                                        onClick={() =>
+                                                            onDelete?.(
+                                                                exception.id,
+                                                            )
+                                                        }
                                                     >
                                                         <Trash2 className="mr-2 h-4 w-4" />
                                                         Delete
@@ -314,8 +348,11 @@ export default function ExceptionTableModal({
                     <div className="flex items-center justify-between border-t pt-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                             Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
-                            {Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSorted.length)} of{' '}
-                            {filteredAndSorted.length} exceptions
+                            {Math.min(
+                                currentPage * ITEMS_PER_PAGE,
+                                filteredAndSorted.length,
+                            )}{' '}
+                            of {filteredAndSorted.length} exceptions
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
