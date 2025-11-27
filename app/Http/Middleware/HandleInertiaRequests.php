@@ -49,6 +49,9 @@ class HandleInertiaRequests extends Middleware
                         'inventory' => $request->user()?->can('inventory.view') ?? false,
                         'dispensing' => $request->user()?->can('dispensing.view') ?? false,
                     ],
+                    'admissions' => [
+                        'discharge' => $request->user()?->can('admissions.discharge') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

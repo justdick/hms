@@ -184,6 +184,29 @@ class PermissionSeeder extends Seeder
             'system.admin' => 'Full system administration access',
             'system.reports' => 'Access system reports',
             'system.settings' => 'Manage system settings',
+
+            // Insurance Management
+            'insurance.view' => 'View insurance providers and plans',
+            'insurance.manage' => 'Manage insurance providers and plans',
+            'insurance.vet-claims' => 'Vet and approve insurance claims',
+            'insurance.view-batches' => 'View claim batches',
+            'insurance.manage-batches' => 'Manage claim batches and submissions',
+            'insurance.submit-batches' => 'Submit claim batches to NHIA',
+            'insurance.export-batches' => 'Export claim batches to XML',
+            'insurance.record-batch-responses' => 'Record NHIA responses for batches',
+            'insurance.view-reports' => 'View insurance reports and analytics',
+
+            // NHIS Tariff Management
+            'nhis-tariffs.view' => 'View NHIS tariffs',
+            'nhis-tariffs.manage' => 'Manage NHIS tariffs (create, update, delete, import)',
+
+            // NHIS Mapping Management
+            'nhis-mappings.view' => 'View NHIS item mappings',
+            'nhis-mappings.manage' => 'Manage NHIS item mappings (create, delete, import)',
+
+            // G-DRG Tariff Management
+            'gdrg-tariffs.view' => 'View G-DRG tariffs',
+            'gdrg-tariffs.manage' => 'Manage G-DRG tariffs (create, update, delete, import)',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -237,6 +260,8 @@ class PermissionSeeder extends Seeder
             'consultations.view-dept',
             'wards.view',
             'admissions.view',
+            // Note: admissions.discharge is NOT given to all nurses by default
+            // Admin can assign it to specific nurses (in-charges, duty leaders)
             'nursing-notes.view',
             'nursing-notes.create',
             'nursing-notes.update',
@@ -341,6 +366,28 @@ class PermissionSeeder extends Seeder
             'billing.emergency-override',
             'billing.cancel-charges',
             'billing.view-audit-trail',
+        ]);
+
+        // Create Insurance Officer role
+        $insuranceOfficer = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Insurance Officer',
+            'guard_name' => 'web',
+        ]);
+
+        $insuranceOfficer->syncPermissions([
+            'patients.view-all',
+            'checkins.view-all',
+            'insurance.view',
+            'insurance.manage',
+            'insurance.vet-claims',
+            'insurance.manage-batches',
+            'insurance.view-reports',
+            'nhis-tariffs.view',
+            'nhis-tariffs.manage',
+            'nhis-mappings.view',
+            'nhis-mappings.manage',
+            'gdrg-tariffs.view',
+            'gdrg-tariffs.manage',
         ]);
 
         // Admin gets ALL permissions automatically
