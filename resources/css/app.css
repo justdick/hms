@@ -143,7 +143,7 @@
 
     /* Enhanced focus indicators for accessibility */
     *:focus-visible {
-        @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+        @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
     }
 
     /* Ensure focus indicators are visible in dark mode */

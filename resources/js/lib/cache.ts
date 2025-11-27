@@ -1,9 +1,9 @@
 /**
  * Client-side cache implementation with Time-To-Live (TTL) support
- * 
+ *
  * This cache is used to store API responses and reduce server requests.
  * All cached data is stored in memory and will be cleared on page refresh.
- * 
+ *
  * @example
  * ```typescript
  * // Cache API response for 5 minutes
@@ -12,7 +12,7 @@
  *   const response = await fetchClaimsSummary();
  *   cache.set('claims-summary', response, TTL.FIVE_MINUTES);
  * }
- * 
+ *
  * // Invalidate cache after update
  * cache.invalidate('claims-summary');
  * ```
@@ -38,13 +38,13 @@ class ClientCache {
 
     /**
      * Retrieve cached data if it exists and hasn't expired
-     * 
+     *
      * @param key - Unique cache key
      * @returns Cached data or null if not found or expired
      */
     get<T>(key: string): T | null {
         const entry = this.cache.get(key);
-        
+
         if (!entry) {
             return null;
         }
@@ -63,7 +63,7 @@ class ClientCache {
 
     /**
      * Store data in cache with specified TTL
-     * 
+     *
      * @param key - Unique cache key
      * @param data - Data to cache
      * @param ttl - Time-to-live in milliseconds (default: 5 minutes)
@@ -78,7 +78,7 @@ class ClientCache {
 
     /**
      * Check if a cache entry exists and is still valid
-     * 
+     *
      * @param key - Cache key to check
      * @returns True if entry exists and hasn't expired
      */
@@ -88,7 +88,7 @@ class ClientCache {
 
     /**
      * Remove a specific cache entry
-     * 
+     *
      * @param key - Cache key to remove
      */
     invalidate(key: string): void {
@@ -97,7 +97,7 @@ class ClientCache {
 
     /**
      * Remove all cache entries matching a regex pattern
-     * 
+     *
      * @param pattern - Regex pattern to match cache keys
      * @example
      * ```typescript
@@ -115,7 +115,7 @@ class ClientCache {
             }
         });
 
-        keysToDelete.forEach(key => this.cache.delete(key));
+        keysToDelete.forEach((key) => this.cache.delete(key));
     }
 
     /**
@@ -144,7 +144,7 @@ export const cache = new ClientCache();
 
 /**
  * Common TTL (Time-To-Live) values in milliseconds
- * 
+ *
  * @example
  * ```typescript
  * cache.set('data', response, TTL.FIVE_MINUTES);

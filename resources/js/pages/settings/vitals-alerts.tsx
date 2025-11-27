@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
@@ -66,18 +72,23 @@ export default function VitalsAlerts() {
                         <CardHeader>
                             <CardTitle>Sound alerts</CardTitle>
                             <CardDescription>
-                                Customize how you receive audio notifications when vitals are due or overdue
+                                Customize how you receive audio notifications
+                                when vitals are due or overdue
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {/* Enable/Disable Toggle */}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="sound-enabled" className="text-base">
+                                    <Label
+                                        htmlFor="sound-enabled"
+                                        className="text-base"
+                                    >
                                         Enable sound alerts
                                     </Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Play audio notifications when vitals are due
+                                        Play audio notifications when vitals are
+                                        due
                                     </p>
                                 </div>
                                 <Switch
@@ -90,7 +101,10 @@ export default function VitalsAlerts() {
                             {/* Volume Slider */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="volume" className="text-base">
+                                    <Label
+                                        htmlFor="volume"
+                                        className="text-base"
+                                    >
                                         Volume
                                     </Label>
                                     <span className="text-sm text-muted-foreground">
@@ -123,8 +137,14 @@ export default function VitalsAlerts() {
                                     disabled={!settings.enabled}
                                 >
                                     <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="gentle" id="gentle" />
-                                        <Label htmlFor="gentle" className="font-normal">
+                                        <RadioGroupItem
+                                            value="gentle"
+                                            id="gentle"
+                                        />
+                                        <Label
+                                            htmlFor="gentle"
+                                            className="font-normal"
+                                        >
                                             Gentle
                                             <span className="ml-2 text-sm text-muted-foreground">
                                                 Soft beep for due vitals
@@ -132,11 +152,18 @@ export default function VitalsAlerts() {
                                         </Label>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="urgent" id="urgent" />
-                                        <Label htmlFor="urgent" className="font-normal">
+                                        <RadioGroupItem
+                                            value="urgent"
+                                            id="urgent"
+                                        />
+                                        <Label
+                                            htmlFor="urgent"
+                                            className="font-normal"
+                                        >
                                             Urgent
                                             <span className="ml-2 text-sm text-muted-foreground">
-                                                Prominent tone for overdue vitals
+                                                Prominent tone for overdue
+                                                vitals
                                             </span>
                                         </Label>
                                     </div>
@@ -166,10 +193,15 @@ export default function VitalsAlerts() {
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
                             <p>
-                                Sound alerts help ensure timely vitals recording for admitted patients. When vitals are due, you'll receive a gentle notification. If vitals become overdue (15 minutes past due time), you'll receive a more urgent alert.
+                                Sound alerts help ensure timely vitals recording
+                                for admitted patients. When vitals are due,
+                                you'll receive a gentle notification. If vitals
+                                become overdue (15 minutes past due time),
+                                you'll receive a more urgent alert.
                             </p>
                             <p>
-                                Your preferences are saved locally in your browser and will persist across sessions.
+                                Your preferences are saved locally in your
+                                browser and will persist across sessions.
                             </p>
                         </CardContent>
                     </Card>

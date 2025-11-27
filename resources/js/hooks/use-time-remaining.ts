@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react';
  * Hook to calculate and update time remaining until a target date
  * Updates every minute
  */
-export const useTimeRemaining = (targetDate: string | Date | null): number | null => {
-    const [minutesRemaining, setMinutesRemaining] = useState<number | null>(null);
+export const useTimeRemaining = (
+    targetDate: string | Date | null,
+): number | null => {
+    const [minutesRemaining, setMinutesRemaining] = useState<number | null>(
+        null,
+    );
 
     useEffect(() => {
         if (!targetDate) {
@@ -37,7 +41,9 @@ export const useTimeRemaining = (targetDate: string | Date | null): number | nul
  * Hook to calculate and update time elapsed since a target date
  * Updates every minute
  */
-export const useTimeElapsed = (targetDate: string | Date | null): number | null => {
+export const useTimeElapsed = (
+    targetDate: string | Date | null,
+): number | null => {
     const [minutesElapsed, setMinutesElapsed] = useState<number | null>(null);
 
     useEffect(() => {

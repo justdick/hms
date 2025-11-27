@@ -8,6 +8,9 @@ export interface Auth {
             inventory: boolean;
             dispensing: boolean;
         };
+        admissions?: {
+            discharge: boolean;
+        };
     };
 }
 

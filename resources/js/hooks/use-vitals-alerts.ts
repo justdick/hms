@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type VitalsAlertStatus = 'pending' | 'due' | 'overdue' | 'completed' | 'dismissed';
+export type VitalsAlertStatus =
+    | 'pending'
+    | 'due'
+    | 'overdue'
+    | 'completed'
+    | 'dismissed';
 
 export interface VitalsAlert {
     id: number;
@@ -56,7 +61,10 @@ export const useVitalsAlerts = (
      */
     const fetchAlerts = useCallback(async (): Promise<void> => {
         try {
-            const url = new URL('/api/vitals-alerts/active', window.location.origin);
+            const url = new URL(
+                '/api/vitals-alerts/active',
+                window.location.origin,
+            );
 
             if (wardId) {
                 url.searchParams.append('ward_id', wardId.toString());
@@ -131,37 +139,32 @@ export const useVitalsAlerts = (
     /**
      * Dismiss an alert
      */
-    const dismissAlert = useCallback(
-        async (alertId: number): Promise<void> => {
-            try {
-                const response = await fetch(
-                    `/api/vitals-alerts/${alertId}/dismiss`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            Accept: 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                        credentials: 'same-origin',
+    const dismissAlert = useCallback(async (alertId: number): Promise<void> => {
+        try {
+            const response = await fetch(
+                `/api/vitals-alerts/${alertId}/dismiss`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                     },
-                );
+                    credentials: 'same-origin',
+                },
+            );
 
-                if (!response.ok) {
-                    throw new Error(
-                        `Failed to dismiss alert: ${response.status}`,
-                    );
-                }
-
-                // Remove alert from local state immediately for better UX
-                setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
-            } catch (err) {
-                console.error('Error dismissing alert:', err);
-                throw err;
+            if (!response.ok) {
+                throw new Error(`Failed to dismiss alert: ${response.status}`);
             }
-        },
-        [],
-    );
+
+            // Remove alert from local state immediately for better UX
+            setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
+        } catch (err) {
+            console.error('Error dismissing alert:', err);
+            throw err;
+        }
+    }, []);
 
     /**
      * Set up polling
