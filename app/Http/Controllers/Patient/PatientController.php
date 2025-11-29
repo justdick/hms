@@ -255,6 +255,8 @@ class PatientController extends Controller
                 'emergency_contact_phone' => $patient->emergency_contact_phone,
                 'national_id' => $patient->national_id,
                 'status' => $patient->status,
+                'is_credit_eligible' => $patient->is_credit_eligible,
+                'credit_reason' => $patient->credit_reason,
                 'past_medical_surgical_history' => $canViewMedicalHistory ? $patient->past_medical_surgical_history : null,
                 'drug_history' => $canViewMedicalHistory ? $patient->drug_history : null,
                 'family_history' => $canViewMedicalHistory ? $patient->family_history : null,
@@ -306,6 +308,7 @@ class PatientController extends Controller
             'can_view_medical_history' => $canViewMedicalHistory,
             'billing_summary' => $billingSummary,
             'can_process_payment' => auth()->user()->can('billing.create'),
+            'can_manage_credit' => auth()->user()->can('billing.manage-credit'),
         ]);
     }
 

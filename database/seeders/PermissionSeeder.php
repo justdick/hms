@@ -89,6 +89,16 @@ class PermissionSeeder extends Seeder
             'billing.cancel-charges' => 'Cancel charges',
             'billing.view-audit-trail' => 'View billing audit trail',
 
+            // Granular Billing Permissions (Revenue Collector & Finance Officer)
+            'billing.collect' => 'Process payments and view own collections',
+            'billing.override' => 'Create service overrides for patients',
+            'billing.reconcile' => 'Perform cash reconciliation',
+            'billing.reports' => 'Access financial reports',
+            'billing.statements' => 'Generate patient statements',
+            'billing.manage-credit' => 'Add or remove patient credit tags',
+            'billing.void' => 'Void payments',
+            'billing.refund' => 'Process refunds',
+
             // Department Management
             'departments.view' => 'View departments',
             'departments.create' => 'Create departments',
@@ -349,7 +359,7 @@ class PermissionSeeder extends Seeder
             'prescriptions.view',
         ]);
 
-        // Create Cashier role
+        // Create Cashier role (Revenue Collector)
         $cashier = \Spatie\Permission\Models\Role::firstOrCreate([
             'name' => 'Cashier',
             'guard_name' => 'web',
@@ -361,10 +371,32 @@ class PermissionSeeder extends Seeder
             'billing.view-all',
             'billing.create',
             'billing.update',
+            'billing.collect', // Process payments and view own collections
             'billing.waive-charges',
             'billing.adjust-charges',
             'billing.emergency-override',
             'billing.cancel-charges',
+            'billing.view-audit-trail',
+        ]);
+
+        // Create Finance Officer role (Accountant)
+        $financeOfficer = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Finance Officer',
+            'guard_name' => 'web',
+        ]);
+
+        $financeOfficer->syncPermissions([
+            'patients.view-all',
+            'checkins.view-all',
+            'billing.view-all',
+            'billing.collect', // Can also collect payments
+            'billing.override', // Create service overrides
+            'billing.reconcile', // Perform cash reconciliation
+            'billing.reports', // Access financial reports
+            'billing.statements', // Generate patient statements
+            'billing.manage-credit', // Manage patient credit tags
+            'billing.void', // Void payments
+            'billing.refund', // Process refunds
             'billing.view-audit-trail',
         ]);
 

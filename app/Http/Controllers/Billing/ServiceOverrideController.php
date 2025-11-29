@@ -96,7 +96,7 @@ class ServiceOverrideController extends Controller
             $override->update(['is_active' => false]);
 
             // Log to audit trail
-            $this->overrideAuditService->logOverrideDeactivation($override);
+            $this->overrideAuditService->logOverrideDeactivation($override, auth()->id());
 
             Log::channel('stack')->info('Service access override deactivated', [
                 'override_id' => $override->id,

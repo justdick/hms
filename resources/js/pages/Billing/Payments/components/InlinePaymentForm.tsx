@@ -11,7 +11,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
 import { CreditCard } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ChangeCalculator } from './ChangeCalculator';
 
 interface InlinePaymentFormProps {
     checkinId: number;
@@ -35,6 +36,9 @@ export function InlinePaymentForm({
         notes: '',
     });
 
+    // Track amount tendered for cash payments (for change calculation)
+    const [amountTendered, setAmountTendered] = useState<number>(totalAmount);
+
     // Update form data when selected charges or total amount changes
     useEffect(() => {
         setData({
@@ -42,7 +46,13 @@ export function InlinePaymentForm({
             charges: selectedCharges,
             amount_paid: totalAmount,
         });
+        // Also update amount tendered when total changes
+        setAmountTendered(totalAmount);
     }, [selectedCharges, totalAmount]);
+
+    // Check if cash payment has sufficient amount tendered
+    const isCashPayment = data.payment_method === 'cash';
+    const isCashSufficient = !isCashPayment || amountTendered >= totalAmount;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -84,6 +94,16 @@ export function InlinePaymentForm({
                     </p>
                 )}
             </div>
+
+            {/* Cash Change Calculator - Requirement 4.1, 4.2, 4.3, 4.4 */}
+            {isCashPayment && totalAmount > 0 && (
+                <ChangeCalculator
+                    amountDue={totalAmount}
+                    formatCurrency={formatCurrency}
+                    onAmountTenderedChange={setAmountTendered}
+                    initialAmountTendered={amountTendered}
+                />
+            )}
 
             {/* Amount Input */}
             <div className="space-y-2">
@@ -170,7 +190,8 @@ export function InlinePaymentForm({
                     processing ||
                     selectedCharges.length === 0 ||
                     !data.amount_paid ||
-                    data.amount_paid <= 0
+                    data.amount_paid <= 0 ||
+                    !isCashSufficient
                 }
                 className="w-full"
             >

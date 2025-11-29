@@ -31,6 +31,8 @@ class Charge extends Model
         'charged_at',
         'due_date',
         'paid_at',
+        'receipt_number',
+        'processed_by',
         'metadata',
         'created_by_type',
         'created_by_id',
@@ -85,6 +87,11 @@ class Charge extends Model
         return $this->belongsTo(InsuranceClaimItem::class);
     }
 
+    public function processedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
+
     public function claimItems(): HasMany
     {
         return $this->hasMany(InsuranceClaimItem::class);
@@ -108,6 +115,11 @@ class Charge extends Model
     public function isVoided(): bool
     {
         return $this->status === 'voided';
+    }
+
+    public function isOwing(): bool
+    {
+        return $this->status === 'owing';
     }
 
     public function getRemainingAmount(): float
@@ -143,6 +155,14 @@ class Charge extends Model
         ]);
     }
 
+    public function markAsOwing(?string $reason = null): void
+    {
+        $this->update([
+            'status' => 'owing',
+            'notes' => $reason,
+        ]);
+    }
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -156,6 +176,11 @@ class Charge extends Model
     public function scopeNotVoided($query)
     {
         return $query->where('status', '!=', 'voided');
+    }
+
+    public function scopeOwing($query)
+    {
+        return $query->where('status', 'owing');
     }
 
     public function scopeForService($query, string $serviceType, ?string $serviceCode = null)

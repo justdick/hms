@@ -1,16 +1,22 @@
+import { PatientCreditBadge } from '@/components/Patient/PatientCreditBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import { Settings } from 'lucide-react';
+import { Printer, Settings, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { BillAdjustmentModal } from './components/BillAdjustmentModal';
 import { BillingStatsCards } from './components/BillingStatsCards';
 import { BillWaiverModal } from './components/BillWaiverModal';
+import { ChargeSelectionList, type ChargeItem } from './components/ChargeSelectionList';
 import { InlinePaymentForm } from './components/InlinePaymentForm';
+import { MyCollectionsCard } from './components/MyCollectionsCard';
+import { MyCollectionsModal } from './components/MyCollectionsModal';
 import { PatientBillingDetails } from './components/PatientBillingDetails';
 import { PatientSearchBar } from './components/PatientSearchBar';
 import { PatientSearchResults } from './components/PatientSearchResults';
+import { PaymentModal } from './components/PaymentModal';
+import { ReceiptPreview } from './components/ReceiptPreview';
 import { ServiceAccessOverrideModal } from './components/ServiceAccessOverrideModal';
 
 interface Patient {
@@ -78,7 +84,13 @@ interface OverrideHistoryItem {
 
 interface PatientSearchResult {
     patient_id: number;
-    patient: Patient;
+    patient: Patient & {
+        is_credit_eligible?: boolean;
+        credit_reason?: string | null;
+        credit_authorized_by?: { name: string } | null;
+        credit_authorized_at?: string | null;
+        total_owing?: number;
+    };
     total_pending: number;
     total_patient_owes: number;
     total_insurance_covered: number;
@@ -135,6 +147,10 @@ export default function PaymentIndex({ stats, permissions }: Props) {
     const [waiverModalOpen, setWaiverModalOpen] = useState(false);
     const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
     const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+    const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
+    const [paidChargeIds, setPaidChargeIds] = useState<number[]>([]);
     const [selectedChargeId, setSelectedChargeId] = useState<number | null>(
         null,
     );
@@ -245,6 +261,10 @@ export default function PaymentIndex({ stats, permissions }: Props) {
             {
                 onSuccess: () => {
                     setProcessingPayment(false);
+                    // Store paid charge IDs for receipt printing
+                    setPaidChargeIds(paymentData.charges);
+                    // Show receipt preview option
+                    setReceiptPreviewOpen(true);
                     // Refresh search results
                     searchPatients(searchQuery);
                 },
@@ -252,6 +272,28 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     setProcessingPayment(false);
                 },
             },
+        );
+    };
+
+    const handlePaymentSuccess = (chargeIds: number[]) => {
+        setPaidChargeIds(chargeIds);
+        setPaymentModalOpen(false);
+        setReceiptPreviewOpen(true);
+        searchPatients(searchQuery);
+    };
+
+    const handleChargeSelectionChange = (selectedIds: number[]) => {
+        setSelectedCharges(selectedIds);
+    };
+
+    // Get all charges from selected patient for ChargeSelectionList
+    const getAllChargesFromPatient = (): ChargeItem[] => {
+        if (!selectedPatient) return [];
+        return selectedPatient.visits.flatMap((visit) =>
+            visit.charges.map((charge) => ({
+                ...charge,
+                status: 'pending',
+            })),
         );
     };
 
@@ -283,23 +325,33 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <BillingStatsCards
-                    stats={{
-                        pending_charges_count: stats.pending_charges,
-                        pending_charges_amount: stats.pending_amount,
-                        todays_revenue: stats.paid_today,
-                        total_outstanding: stats.total_outstanding,
-                        collection_rate:
-                            stats.total_outstanding > 0
-                                ? (stats.paid_today /
-                                      (stats.paid_today +
-                                          stats.total_outstanding)) *
-                                  100
-                                : 100,
-                    }}
-                    formatCurrency={formatCurrency}
-                />
+                {/* Stats Cards and My Collections */}
+                <div className="grid gap-6 lg:grid-cols-4">
+                    <div className="lg:col-span-3">
+                        <BillingStatsCards
+                            stats={{
+                                pending_charges_count: stats.pending_charges,
+                                pending_charges_amount: stats.pending_amount,
+                                todays_revenue: stats.paid_today,
+                                total_outstanding: stats.total_outstanding,
+                                collection_rate:
+                                    stats.total_outstanding > 0
+                                        ? (stats.paid_today /
+                                              (stats.paid_today +
+                                                  stats.total_outstanding)) *
+                                          100
+                                        : 100,
+                            }}
+                            formatCurrency={formatCurrency}
+                        />
+                    </div>
+                    <div className="lg:col-span-1">
+                        <MyCollectionsCard
+                            formatCurrency={formatCurrency}
+                            onViewDetails={() => setCollectionsModalOpen(true)}
+                        />
+                    </div>
+                </div>
 
                 {/* Main Content - Single Page Layout */}
                 <div className="space-y-6">
@@ -331,6 +383,43 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     {/* Expandable Patient Details */}
                     {selectedPatient && (
                         <div className="space-y-6">
+                            {/* Credit Badge for eligible patients - Requirement 14.3 */}
+                            {selectedPatient.patient.is_credit_eligible && (
+                                <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
+                                    <CardContent className="flex items-center justify-between p-4">
+                                        <div className="flex items-center gap-3">
+                                            <ShieldCheck className="h-5 w-5 text-amber-600" />
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-amber-700 dark:text-amber-300">
+                                                        Credit Account Patient
+                                                    </span>
+                                                    <PatientCreditBadge
+                                                        isCreditEligible={true}
+                                                        totalOwing={selectedPatient.patient.total_owing}
+                                                        creditReason={selectedPatient.patient.credit_reason}
+                                                        creditAuthorizedBy={selectedPatient.patient.credit_authorized_by?.name}
+                                                        creditAuthorizedAt={selectedPatient.patient.credit_authorized_at}
+                                                        showTooltip={true}
+                                                    />
+                                                </div>
+                                                <p className="text-sm text-amber-600 dark:text-amber-400">
+                                                    Services can proceed without immediate payment
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {selectedPatient.patient.total_owing && selectedPatient.patient.total_owing > 0 && (
+                                            <div className="text-right">
+                                                <p className="text-xs text-muted-foreground">Total Owing</p>
+                                                <p className="text-lg font-bold text-orange-600">
+                                                    {formatCurrency(selectedPatient.patient.total_owing)}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             <PatientBillingDetails
                                 patient={selectedPatient}
                                 isExpanded={expandedPatients.has(
@@ -360,33 +449,48 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 }
                             />
 
-                            {/* Inline Payment Form */}
+                            {/* Charge Selection and Payment Section */}
                             {expandedPatients.has(
                                 selectedPatient.patient_id,
                             ) && (
-                                <InlinePaymentForm
-                                    checkinId={
-                                        selectedPatient.visits[0]?.checkin_id
-                                    }
-                                    selectedCharges={selectedCharges}
-                                    totalAmount={selectedPatient.visits
-                                        .flatMap((v) => v.charges)
-                                        .filter((c) =>
-                                            selectedCharges.includes(c.id),
-                                        )
-                                        .reduce(
-                                            (sum, c) =>
-                                                sum +
-                                                (c.is_insurance_claim
-                                                    ? c.patient_copay_amount
-                                                    : c.amount),
-                                            0,
-                                        )}
-                                    formatCurrency={formatCurrency}
-                                    onSuccess={() => {
-                                        searchPatients(searchQuery);
-                                    }}
-                                />
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Select Charges to Pay</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        {/* Charge Selection List - Requirements 1.1, 1.2, 1.5 */}
+                                        <ChargeSelectionList
+                                            charges={getAllChargesFromPatient()}
+                                            selectedChargeIds={selectedCharges}
+                                            onSelectionChange={handleChargeSelectionChange}
+                                            formatCurrency={formatCurrency}
+                                            showSummary={true}
+                                        />
+
+                                        {/* Payment Actions */}
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <Button
+                                                variant="default"
+                                                size="lg"
+                                                onClick={() => setPaymentModalOpen(true)}
+                                                disabled={selectedCharges.length === 0}
+                                                className="w-full sm:w-auto"
+                                            >
+                                                Process Payment ({selectedCharges.length} charges)
+                                            </Button>
+                                            
+                                            {paidChargeIds.length > 0 && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setReceiptPreviewOpen(true)}
+                                                >
+                                                    <Printer className="mr-2 h-4 w-4" />
+                                                    Print Last Receipt
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
                         </div>
                     )}
@@ -451,6 +555,40 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                             formatCurrency={formatCurrency}
                         />
                     )}
+
+                {/* My Collections Modal */}
+                <MyCollectionsModal
+                    isOpen={collectionsModalOpen}
+                    onClose={() => setCollectionsModalOpen(false)}
+                    formatCurrency={formatCurrency}
+                />
+
+                {/* Payment Modal - Requirement 11.7 */}
+                {selectedPatient && selectedPatient.visits[0] && (
+                    <PaymentModal
+                        isOpen={paymentModalOpen}
+                        onClose={() => setPaymentModalOpen(false)}
+                        checkinId={selectedPatient.visits[0].checkin_id}
+                        charges={getAllChargesFromPatient().filter((c) =>
+                            selectedCharges.includes(c.id),
+                        )}
+                        patientName={`${selectedPatient.patient.first_name} ${selectedPatient.patient.last_name}`}
+                        patientNumber={selectedPatient.patient.patient_number}
+                        formatCurrency={formatCurrency}
+                        onSuccess={handlePaymentSuccess}
+                    />
+                )}
+
+                {/* Receipt Preview - Requirements 3.1, 3.2 */}
+                <ReceiptPreview
+                    isOpen={receiptPreviewOpen}
+                    onClose={() => setReceiptPreviewOpen(false)}
+                    chargeIds={paidChargeIds}
+                    formatCurrency={formatCurrency}
+                    onPrintSuccess={() => {
+                        // Optionally close after print
+                    }}
+                />
             </div>
         </AppLayout>
     );

@@ -140,4 +140,19 @@ class PatientCheckinPolicy
         // Department-based access
         return $user->departments->contains($patientCheckin->department_id);
     }
+
+    /**
+     * Determine whether the user can override service access for a patient check-in.
+     * This allows emergency access to services without payment.
+     */
+    public function overrideService(User $user, PatientCheckin $patientCheckin): bool
+    {
+        // Admin can always override
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // Must have emergency override permission
+        return $user->can('billing.emergency-override');
+    }
 }

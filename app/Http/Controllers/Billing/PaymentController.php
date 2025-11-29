@@ -4,8 +4,15 @@ namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Charge;
+use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Services\BillingService;
+use App\Services\CollectionService;
+use App\Services\CreditService;
+use App\Services\OverrideService;
+use App\Services\ReceiptService;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +20,11 @@ use Inertia\Response;
 class PaymentController extends Controller
 {
     public function __construct(
-        private BillingService $billingService
+        private BillingService $billingService,
+        private CollectionService $collectionService,
+        private ReceiptService $receiptService,
+        private OverrideService $overrideService,
+        private CreditService $creditService
     ) {}
 
     /**
@@ -43,6 +54,23 @@ class PaymentController extends Controller
     }
 
     /**
+     * Get current cashier's collections for today.
+     */
+    public function myCollections(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        $date = $request->query('date') ? Carbon::parse($request->query('date')) : today();
+
+        $summary = $this->collectionService->getCashierCollectionSummary($user, $date);
+        $transactions = $this->collectionService->getCashierTransactions($user, $date);
+
+        return response()->json([
+            'summary' => $summary,
+            'transactions' => $transactions,
+        ]);
+    }
+
+    /**
      * Search patients with pending charges for billing (patient-centric approach)
      */
     public function searchPatients(Request $request)
@@ -59,6 +87,7 @@ class PaymentController extends Controller
                 $q->where('status', 'pending');
             },
             'checkins.department:id,name',
+            'creditAuthorizedByUser:id,name', // Load credit authorization info
         ])
             ->where(function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
@@ -120,6 +149,11 @@ class PaymentController extends Controller
                     return strtotime($b['checked_in_at']) - strtotime($a['checked_in_at']);
                 });
 
+                // Calculate total owing for credit patients (charges with 'owing' status)
+                $totalOwing = Charge::where('patient_id', $patient->id)
+                    ->where('status', 'owing')
+                    ->sum('amount');
+
                 return [
                     'patient_id' => $patient->id,
                     'patient' => [
@@ -128,6 +162,14 @@ class PaymentController extends Controller
                         'last_name' => $patient->last_name,
                         'patient_number' => $patient->patient_number,
                         'phone_number' => $patient->phone_number,
+                        // Credit account information - Requirement 14.3
+                        'is_credit_eligible' => $patient->is_credit_eligible ?? false,
+                        'credit_reason' => $patient->credit_reason,
+                        'credit_authorized_by' => $patient->creditAuthorizedByUser ? [
+                            'name' => $patient->creditAuthorizedByUser->name,
+                        ] : null,
+                        'credit_authorized_at' => $patient->credit_authorized_at?->toISOString(),
+                        'total_owing' => $totalOwing,
                     ],
                     'total_pending' => $totalPending,
                     'total_patient_owes' => $totalPatientOwes,
@@ -455,6 +497,154 @@ class PaymentController extends Controller
         }
     }
 
+    /**
+     * Get receipt data for a charge or group of charges.
+     */
+    public function receipt(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'charge_ids' => 'required|array|min:1',
+            'charge_ids.*' => 'exists:charges,id',
+        ]);
+
+        $charges = Charge::whereIn('id', $validated['charge_ids'])
+            ->whereNotNull('paid_at')
+            ->get();
+
+        if ($charges->isEmpty()) {
+            return response()->json([
+                'error' => 'No paid charges found',
+            ], 404);
+        }
+
+        // Check if charges already have a receipt number
+        $existingReceiptNumber = $charges->first()->receipt_number;
+
+        if (! $existingReceiptNumber) {
+            // Generate and assign receipt number
+            $existingReceiptNumber = $this->receiptService->assignReceiptNumber(
+                $validated['charge_ids'],
+                auth()->user(),
+                $request->ip()
+            );
+        }
+
+        // Get receipt data
+        if (count($validated['charge_ids']) === 1) {
+            $charge = $charges->first();
+            $receiptData = $this->receiptService->getReceiptData($charge);
+        } else {
+            $receiptData = $this->receiptService->getGroupedReceiptData(
+                $validated['charge_ids'],
+                $existingReceiptNumber
+            );
+        }
+
+        return response()->json([
+            'receipt' => $receiptData,
+        ]);
+    }
+
+    /**
+     * Log receipt print action.
+     */
+    public function logReceiptPrint(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'charge_ids' => 'required|array|min:1',
+            'charge_ids.*' => 'exists:charges,id',
+            'receipt_number' => 'required|string',
+        ]);
+
+        $this->receiptService->logReceiptPrint(
+            $validated['charge_ids'],
+            auth()->user(),
+            $validated['receipt_number'],
+            $request->ip()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Receipt print logged successfully',
+        ]);
+    }
+
+    /**
+     * Create a billing override for charges, marking them as owing.
+     * This allows patients to receive services without immediate payment.
+     */
+    public function createBillingOverride(Request $request, PatientCheckin $checkin)
+    {
+        $this->authorize('override', Charge::class);
+
+        $validated = $request->validate([
+            'charge_ids' => 'required|array|min:1',
+            'charge_ids.*' => 'exists:charges,id',
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        // Verify all charges belong to this checkin and are pending
+        $charges = Charge::whereIn('id', $validated['charge_ids'])
+            ->where('patient_checkin_id', $checkin->id)
+            ->where('status', 'pending')
+            ->get();
+
+        if ($charges->isEmpty()) {
+            return back()->withErrors([
+                'charges' => 'No valid pending charges found for this patient',
+            ]);
+        }
+
+        if ($charges->count() !== count($validated['charge_ids'])) {
+            return back()->withErrors([
+                'charges' => 'Some charges are not valid or already processed',
+            ]);
+        }
+
+        try {
+            $overrides = $this->overrideService->createOverridesForCharges(
+                $validated['charge_ids'],
+                auth()->user(),
+                $validated['reason']
+            );
+
+            $totalAmount = $charges->sum('amount');
+
+            return back()->with('success', sprintf(
+                'Override created for %d charge(s) totaling GHS %.2f. Patient can now proceed with services.',
+                $overrides->count(),
+                $totalAmount
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Billing override creation failed', [
+                'patient_checkin_id' => $checkin->id,
+                'charge_ids' => $validated['charge_ids'],
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to create billing override. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Get owing charges for a patient checkin.
+     */
+    public function getOwingCharges(PatientCheckin $checkin): JsonResponse
+    {
+        $owingCharges = $this->overrideService->getOwingCharges($checkin);
+        $totalOwing = $this->overrideService->getTotalOwingAmount($checkin);
+        $activeOverrides = $this->overrideService->getActiveOverrides($checkin);
+
+        return response()->json([
+            'owing_charges' => $owingCharges,
+            'total_owing' => $totalOwing,
+            'active_overrides' => $activeOverrides,
+        ]);
+    }
+
     private function getServiceStatus(PatientCheckin $checkin): array
     {
         return [
@@ -492,5 +682,240 @@ class PaymentController extends Controller
             'notes' => $validated['notes'] ?? null,
             'timestamp' => now(),
         ]);
+    }
+
+    /**
+     * Add credit tag to a patient.
+     */
+    public function addCreditTag(Request $request, Patient $patient)
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        if ($patient->is_credit_eligible) {
+            return back()->withErrors([
+                'error' => 'Patient already has credit privileges',
+            ]);
+        }
+
+        try {
+            $this->creditService->addCreditTag(
+                $patient,
+                auth()->user(),
+                $validated['reason'],
+                $request->ip()
+            );
+
+            return back()->with('success', sprintf(
+                'Credit privileges granted to %s. They can now receive services without immediate payment.',
+                $patient->full_name
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to add credit tag', [
+                'patient_id' => $patient->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to add credit tag. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Remove credit tag from a patient.
+     */
+    public function removeCreditTag(Request $request, Patient $patient)
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        if (! $patient->is_credit_eligible) {
+            return back()->withErrors([
+                'error' => 'Patient does not have credit privileges',
+            ]);
+        }
+
+        try {
+            $this->creditService->removeCreditTag(
+                $patient,
+                auth()->user(),
+                $validated['reason'],
+                $request->ip()
+            );
+
+            return back()->with('success', sprintf(
+                'Credit privileges removed from %s.',
+                $patient->full_name
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to remove credit tag', [
+                'patient_id' => $patient->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to remove credit tag. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Get all credit-eligible patients with their owing amounts.
+     */
+    public function getCreditPatients(): JsonResponse
+    {
+        $patients = Patient::creditEligible()
+            ->with(['creditAuthorizedByUser:id,name'])
+            ->get()
+            ->map(function ($patient) {
+                $totalOwing = $this->creditService->getPatientOwingAmount($patient);
+
+                return [
+                    'id' => $patient->id,
+                    'patient_number' => $patient->patient_number,
+                    'full_name' => $patient->full_name,
+                    'phone_number' => $patient->phone_number,
+                    'is_credit_eligible' => $patient->is_credit_eligible,
+                    'credit_reason' => $patient->credit_reason,
+                    'credit_authorized_by' => $patient->creditAuthorizedByUser?->name,
+                    'credit_authorized_at' => $patient->credit_authorized_at?->format('M j, Y g:i A'),
+                    'total_owing' => $totalOwing,
+                ];
+            });
+
+        return response()->json([
+            'patients' => $patients,
+            'total_count' => $patients->count(),
+            'total_owing' => $patients->sum('total_owing'),
+        ]);
+    }
+
+    /**
+     * Void a payment.
+     * This maintains the original record and marks it as voided.
+     */
+    public function voidPayment(Request $request, Charge $charge)
+    {
+        $this->authorize('void', $charge);
+
+        // Only allow voiding paid or partial charges
+        if (! in_array($charge->status, ['paid', 'partial'])) {
+            return back()->withErrors([
+                'error' => 'Only paid or partially paid charges can be voided',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ]);
+
+        try {
+            \DB::transaction(function () use ($charge, $validated, $request) {
+                // Store original values before update
+                $originalStatus = $charge->status;
+                $originalPaidAmount = $charge->paid_amount;
+
+                // Mark the charge as voided (maintain original record)
+                $charge->update([
+                    'status' => 'voided',
+                    'notes' => "Voided: {$validated['reason']}. Original status: {$originalStatus}, Original paid amount: {$originalPaidAmount}",
+                ]);
+
+                // Create audit log entry
+                \App\Models\PaymentAuditLog::logVoid(
+                    $charge,
+                    auth()->user(),
+                    $validated['reason'],
+                    $request->ip()
+                );
+            });
+
+            return back()->with('success', sprintf(
+                'Payment voided successfully. Receipt #%s has been marked as voided.',
+                $charge->receipt_number ?? $charge->id
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Payment void failed', [
+                'charge_id' => $charge->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to void payment. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Process a refund for a payment.
+     * This maintains the original record and creates a reversal record.
+     */
+    public function refundPayment(Request $request, Charge $charge)
+    {
+        $this->authorize('refund', $charge);
+
+        // Only allow refunding paid or partial charges
+        if (! in_array($charge->status, ['paid', 'partial'])) {
+            return back()->withErrors([
+                'error' => 'Only paid or partially paid charges can be refunded',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+            'refund_amount' => 'nullable|numeric|min:0.01|max:'.$charge->paid_amount,
+        ]);
+
+        $refundAmount = $validated['refund_amount'] ?? $charge->paid_amount;
+
+        try {
+            \DB::transaction(function () use ($charge, $validated, $refundAmount, $request) {
+                // Store original values before update
+                $originalStatus = $charge->status;
+                $originalPaidAmount = $charge->paid_amount;
+
+                // Determine new status based on refund amount
+                $newPaidAmount = $originalPaidAmount - $refundAmount;
+                $newStatus = $newPaidAmount <= 0 ? 'refunded' : 'partial';
+
+                // Update the charge
+                $charge->update([
+                    'status' => $newStatus,
+                    'paid_amount' => max(0, $newPaidAmount),
+                    'notes' => "Refunded: {$validated['reason']}. Refund amount: {$refundAmount}. Original status: {$originalStatus}, Original paid amount: {$originalPaidAmount}",
+                ]);
+
+                // Create audit log entry
+                \App\Models\PaymentAuditLog::logRefund(
+                    $charge,
+                    auth()->user(),
+                    $refundAmount,
+                    $validated['reason'],
+                    $request->ip()
+                );
+            });
+
+            return back()->with('success', sprintf(
+                'Refund of GHS %.2f processed successfully for receipt #%s.',
+                $refundAmount,
+                $charge->receipt_number ?? $charge->id
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Payment refund failed', [
+                'charge_id' => $charge->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to process refund. Please try again.',
+            ]);
+        }
     }
 }

@@ -21,19 +21,109 @@ import {
     FileText,
     FlaskConical,
     FolderSync,
+    History,
     Hospital,
     LayoutGrid,
     Link2,
     Package,
     Pill,
+    Settings,
     Shield,
     Stethoscope,
     TableProperties,
+    UserCheck,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const footerNavItems: NavItem[] = [];
+
+// Build billing navigation items based on permissions
+function buildBillingNavItems(billingPermissions?: {
+    viewAll?: boolean;
+    collect?: boolean;
+    override?: boolean;
+    reconcile?: boolean;
+    reports?: boolean;
+    statements?: boolean;
+    manageCredit?: boolean;
+    void?: boolean;
+    refund?: boolean;
+    configure?: boolean;
+}): NavItem[] | undefined {
+    const items: NavItem[] = [];
+
+    // Payments - available to users with collect permission
+    if (billingPermissions?.collect || billingPermissions?.viewAll) {
+        items.push({
+            title: 'Payments',
+            href: '/billing',
+            icon: Wallet,
+        });
+    }
+
+    // Accounts Dashboard - requires view-all permission
+    if (billingPermissions?.viewAll) {
+        items.push({
+            title: 'Dashboard',
+            href: '/billing/accounts',
+            icon: BarChart3,
+        });
+    }
+
+    // Reconciliation - requires reconcile permission
+    if (billingPermissions?.reconcile) {
+        items.push({
+            title: 'Reconciliation',
+            href: '/billing/accounts/reconciliation',
+            icon: ClipboardList,
+        });
+    }
+
+    // Payment History - requires view-all permission
+    if (billingPermissions?.viewAll) {
+        items.push({
+            title: 'History',
+            href: '/billing/accounts/history',
+            icon: History,
+        });
+    }
+
+    // Reports - requires reports permission
+    if (billingPermissions?.reports) {
+        items.push({
+            title: 'Outstanding',
+            href: '/billing/accounts/reports/outstanding',
+            icon: FileText,
+        });
+        items.push({
+            title: 'Revenue',
+            href: '/billing/accounts/reports/revenue',
+            icon: BarChart3,
+        });
+    }
+
+    // Credit Patients - requires manage-credit permission
+    if (billingPermissions?.manageCredit) {
+        items.push({
+            title: 'Credit Patients',
+            href: '/billing/accounts/credit-patients',
+            icon: UserCheck,
+        });
+    }
+
+    // Configuration - requires configure permission
+    if (billingPermissions?.configure) {
+        items.push({
+            title: 'Configuration',
+            href: '/billing/configuration',
+            icon: Settings,
+        });
+    }
+
+    return items.length > 0 ? items : undefined;
+}
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
@@ -103,6 +193,7 @@ export function AppSidebar() {
             title: 'Billing',
             href: '/billing',
             icon: CreditCard,
+            items: buildBillingNavItems(auth.permissions?.billing),
         },
         {
             title: 'Insurance',

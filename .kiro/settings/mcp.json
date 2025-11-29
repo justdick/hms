@@ -5,7 +5,7 @@
       "args": [
         "@playwright/mcp@latest"
       ],
-      "disabled": true,
+      "disabled": false,
       "autoApprove": [
         "browser_navigate",
         "browser_fill_form",
@@ -34,7 +34,8 @@
         "tinker",
         "database-schema",
         "application-info",
-        "list-routes"
+        "list-routes",
+        "last-error"
       ]
     },
     "shadcn": {

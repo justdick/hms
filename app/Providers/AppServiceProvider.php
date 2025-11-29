@@ -10,6 +10,7 @@ use App\Models\LabService;
 use App\Models\MinorProcedure;
 use App\Models\NhisItemMapping;
 use App\Models\NhisTariff;
+use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\VitalSign;
@@ -25,6 +26,7 @@ use App\Policies\MinorProcedurePolicy;
 use App\Policies\NhisMappingPolicy;
 use App\Policies\NhisTariffPolicy;
 use App\Policies\PatientCheckinPolicy;
+use App\Policies\PatientPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(MinorProcedure::class, MinorProcedurePolicy::class);
         Gate::policy(NhisItemMapping::class, NhisMappingPolicy::class);
         Gate::policy(NhisTariff::class, NhisTariffPolicy::class);
+        Gate::policy(Patient::class, PatientPolicy::class);
         Gate::policy(PatientCheckin::class, PatientCheckinPolicy::class);
 
         // Register observers

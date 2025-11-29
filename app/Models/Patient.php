@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -24,6 +25,10 @@ class Patient extends Model
         'emergency_contact_phone',
         'national_id',
         'status',
+        'is_credit_eligible',
+        'credit_reason',
+        'credit_authorized_by',
+        'credit_authorized_at',
         'past_medical_surgical_history',
         'drug_history',
         'family_history',
@@ -38,6 +43,8 @@ class Patient extends Model
             'date_of_birth' => 'date',
             'status' => 'string',
             'gender' => 'string',
+            'is_credit_eligible' => 'boolean',
+            'credit_authorized_at' => 'datetime',
         ];
     }
 
@@ -123,5 +130,29 @@ class Patient extends Model
     public function hasValidNhis(): bool
     {
         return $this->activeNhisInsurance()->exists();
+    }
+
+    /**
+     * Get the user who authorized the credit tag.
+     */
+    public function creditAuthorizedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'credit_authorized_by');
+    }
+
+    /**
+     * Check if the patient is credit eligible.
+     */
+    public function isCreditEligible(): bool
+    {
+        return $this->is_credit_eligible === true;
+    }
+
+    /**
+     * Scope to get only credit-eligible patients.
+     */
+    public function scopeCreditEligible($query)
+    {
+        return $query->where('is_credit_eligible', true);
     }
 }

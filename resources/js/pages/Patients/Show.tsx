@@ -1,4 +1,5 @@
 import CheckinModal from '@/components/Checkin/CheckinModal';
+import { ManageCreditModal } from '@/components/Patient/ManageCreditModal';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
     MapPin,
     Phone,
     Shield,
+    Star,
     User,
     Users,
 } from 'lucide-react';
@@ -81,6 +83,8 @@ interface Patient {
     emergency_contact_phone: string | null;
     national_id: string | null;
     status: string;
+    is_credit_eligible: boolean;
+    credit_reason: string | null;
     past_medical_surgical_history: string | null;
     drug_history: string | null;
     family_history: string | null;
@@ -120,6 +124,7 @@ interface Props {
     departments?: DepartmentOption[];
     billing_summary?: BillingSummaryData | null;
     can_process_payment?: boolean;
+    can_manage_credit?: boolean;
 }
 
 export default function PatientsShow({
@@ -130,8 +135,10 @@ export default function PatientsShow({
     departments = [],
     billing_summary = null,
     can_process_payment = false,
+    can_manage_credit = false,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
+    const [creditModalOpen, setCreditModalOpen] = useState(false);
 
     const formatGender = (gender: string) => {
         return gender.charAt(0).toUpperCase() + gender.slice(1);
@@ -291,6 +298,16 @@ export default function PatientsShow({
                                 </div>
                             </div>
                             <div className="flex gap-2">
+                                {can_manage_credit && (
+                                    <Button
+                                        variant="outline"
+                                        className={`gap-2 ${patient.is_credit_eligible ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-950' : ''}`}
+                                        onClick={() => setCreditModalOpen(true)}
+                                    >
+                                        <Star className={`h-4 w-4 ${patient.is_credit_eligible ? 'fill-amber-500' : ''}`} />
+                                        {patient.is_credit_eligible ? 'Credit Patient' : 'Add Credit'}
+                                    </Button>
+                                )}
                                 {can_edit && (
                                     <Button
                                         variant="outline"
@@ -908,6 +925,17 @@ export default function PatientsShow({
                     patient={checkinPatient}
                     departments={departments}
                     onSuccess={handleCheckinSuccess}
+                />
+            )}
+
+            {/* Credit Tag Modal */}
+            {can_manage_credit && (
+                <ManageCreditModal
+                    isOpen={creditModalOpen}
+                    onClose={() => setCreditModalOpen(false)}
+                    patientId={patient.id}
+                    patientName={patient.full_name}
+                    isCreditEligible={patient.is_credit_eligible}
                 />
             )}
         </AppLayout>

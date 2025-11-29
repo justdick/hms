@@ -11,6 +11,18 @@ export interface Auth {
         admissions?: {
             discharge: boolean;
         };
+        billing?: {
+            viewAll: boolean;
+            collect: boolean;
+            override: boolean;
+            reconcile: boolean;
+            reports: boolean;
+            statements: boolean;
+            manageCredit: boolean;
+            void: boolean;
+            refund: boolean;
+            configure: boolean;
+        };
     };
 }
 

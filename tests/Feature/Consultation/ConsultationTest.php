@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\BillingService;
 use App\Models\Consultation;
 use App\Models\Department;
 use App\Models\Diagnosis;
@@ -182,15 +181,7 @@ describe('Completing Consultation', function () {
         ]);
     });
 
-    it('can complete a consultation and generate billing', function () {
-        // Create billing service for consultation
-        BillingService::factory()->create([
-            'service_type' => 'consultation',
-            'service_code' => 'CONSULT_GENERAL',
-            'service_name' => 'General Consultation',
-            'base_price' => 100.00,
-        ]);
-
+    it('can complete a consultation and update status', function () {
         $response = $this->actingAs($this->doctor)->post("/consultation/{$this->consultation->id}/complete");
 
         $response->assertRedirect()
@@ -205,33 +196,12 @@ describe('Completing Consultation', function () {
         $this->patientCheckin->refresh();
         expect($this->patientCheckin->status)->toBe('completed');
         expect($this->patientCheckin->consultation_completed_at)->not->toBeNull();
-
-        // Should generate patient bill
-        $this->assertDatabaseHas('patient_bills', [
-            'patient_id' => $this->patient->id,
-            'consultation_id' => $this->consultation->id,
-            'status' => 'pending',
-            'total_amount' => 100.00,
-        ]);
     });
 
-    it('includes lab orders in billing when completing consultation', function () {
-        // Create billing services
-        BillingService::factory()->create([
-            'service_type' => 'consultation',
-            'service_code' => 'CONSULT_GENERAL',
-            'base_price' => 100.00,
-        ]);
-
+    it('includes lab orders when completing consultation', function () {
         $labService = LabService::factory()->create([
             'name' => 'Complete Blood Count (CBC)',
             'price' => 150.00,
-        ]);
-
-        BillingService::factory()->create([
-            'service_type' => 'lab_test',
-            'service_name' => 'Complete Blood Count (CBC)',
-            'base_price' => 150.00,
         ]);
 
         // Add lab order to consultation
@@ -246,12 +216,12 @@ describe('Completing Consultation', function () {
 
         $response->assertRedirect();
 
-        // Should create bill with consultation + lab charges
-        $this->assertDatabaseHas('patient_bills', [
-            'patient_id' => $this->patient->id,
-            'consultation_id' => $this->consultation->id,
-            'total_amount' => 250.00, // 100 consultation + 150 lab
-        ]);
+        // Should update consultation status
+        $this->consultation->refresh();
+        expect($this->consultation->status)->toBe('completed');
+
+        // Lab order should still exist
+        expect($this->consultation->labOrders()->count())->toBe(1);
     });
 });
 

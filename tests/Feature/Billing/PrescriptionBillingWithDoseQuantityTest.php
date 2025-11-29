@@ -6,37 +6,35 @@ use App\Models\Drug;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
-    $this->user->givePermissionTo('consultation:manage');
+    // Create the permission first since we use RefreshDatabase
+    Permission::firstOrCreate(['name' => 'consultations.create', 'guard_name' => 'web']);
 
-    // Create a drug for testing
-    $this->drug = Drug::create([
+    $this->user = User::factory()->create();
+    $this->user->givePermissionTo('consultations.create');
+
+    // Create a drug for testing using factory
+    $this->drug = Drug::factory()->create([
         'name' => 'Paracetamol',
         'form' => 'tablet',
         'strength' => '500mg',
         'drug_code' => 'PARA500',
         'unit_price' => 50.00, // 50 per tablet
         'unit_type' => 'piece',
-        'reorder_level' => 100,
-        'maximum_stock_level' => 1000,
-        'quantity_on_hand' => 500,
         'is_active' => true,
     ]);
 
-    $this->syrup = Drug::create([
+    $this->syrup = Drug::factory()->create([
         'name' => 'Cough Syrup',
         'form' => 'syrup',
         'strength' => '15mg/5ml',
         'drug_code' => 'COUGH15',
         'unit_price' => 200.00, // 200 per bottle
         'unit_type' => 'bottle',
-        'reorder_level' => 50,
-        'maximum_stock_level' => 500,
-        'quantity_on_hand' => 200,
         'is_active' => true,
     ]);
 
@@ -69,7 +67,7 @@ it('creates billing charge for tablet prescription with dose quantity of 2 table
     $charge = Charge::where('prescription_id', $prescription->id)->first();
 
     expect($charge)->not->toBeNull()
-        ->and($charge->amount)->toBe(2100.00) // 42 tablets × 50 = 2100
+        ->and((float) $charge->amount)->toBe(2100.00) // 42 tablets × 50 = 2100
         ->and($charge->description)->toContain('42')
         ->and($charge->service_type)->toBe('pharmacy');
 });
@@ -94,7 +92,7 @@ it('creates billing charge for syrup prescription with dose quantity of 10ml', f
     $charge = Charge::where('prescription_id', $prescription->id)->first();
 
     expect($charge)->not->toBeNull()
-        ->and($charge->amount)->toBe(600.00) // 3 bottles × 200 = 600
+        ->and((float) $charge->amount)->toBe(600.00) // 3 bottles × 200 = 600
         ->and($charge->description)->toContain('3')
         ->and($charge->service_type)->toBe('pharmacy');
 });
@@ -118,26 +116,28 @@ it('uses quantity field for billing calculation, not quantity_to_dispense', func
     $charge = Charge::where('prescription_id', $prescription->id)->first();
 
     expect($charge)->not->toBeNull()
-        ->and($charge->amount)->toBe(1050.00); // 21 tablets × 50 = 1050
+        ->and((float) $charge->amount)->toBe(1050.00); // 21 tablets × 50 = 1050
 });
 
-it('does not create billing charge when quantity is null', function () {
+it('does not create billing charge when quantity is zero', function () {
     actingAs($this->user);
 
-    // This simulates the OLD bug where quantity wasn't set
+    // This simulates a prescription with zero quantity (edge case)
     $prescription = Prescription::create([
-        'consultation_id' => $this->consultation->id,
+        'prescribable_type' => Consultation::class,
+        'prescribable_id' => $this->consultation->id,
         'drug_id' => $this->drug->id,
         'medication_name' => 'Paracetamol 500mg',
         'frequency' => 'Three times daily (TID)',
         'duration' => '7 days',
-        'quantity' => null, // No quantity set - OLD BUG
-        'quantity_to_dispense' => 21,
+        'quantity' => 0, // Zero quantity - no billing expected
+        'quantity_to_dispense' => 0,
         'status' => 'prescribed',
     ]);
 
-    // Check that no charge was created (as expected with the old bug)
+    // Check that no charge was created for zero quantity
     $charge = Charge::where('prescription_id', $prescription->id)->first();
 
-    expect($charge)->toBeNull(); // This proves the bug: no billing when quantity is null
+    // With zero quantity, no charge should be created
+    expect($charge)->toBeNull();
 });

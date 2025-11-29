@@ -70,4 +70,13 @@ class ChargeFactory extends Factory
             'prescription_id' => \App\Models\Prescription::factory(),
         ]);
     }
+
+    public function owing(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'owing',
+            'paid_amount' => 0,
+            'paid_at' => null,
+        ]);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BillingConfiguration;
+use App\Models\BillingOverride;
 use App\Models\Charge;
 use App\Models\DepartmentBilling;
 use App\Models\PatientCheckin;
@@ -119,6 +120,17 @@ class BillingService
             return true;
         }
 
+        // Check for active billing override (charges marked as owing)
+        $activeBillingOverride = $this->getActiveBillingOverride($checkin, $serviceType);
+        if ($activeBillingOverride) {
+            return true;
+        }
+
+        // Check if patient is credit-eligible (VIP/credit account)
+        if ($this->isPatientCreditEligible($checkin)) {
+            return true;
+        }
+
         $rule = ServiceChargeRule::where('service_type', $serviceType)
             ->where(function ($query) use ($serviceCode) {
                 $query->whereNull('service_code')
@@ -131,8 +143,9 @@ class BillingService
             return true;
         }
 
-        // Only check pending charges that are not voided
+        // Only check pending charges that are not voided or owing
         // Voided charges are from cancelled check-ins and shouldn't block service
+        // Owing charges have been approved via override and shouldn't block service
         $charges = Charge::forPatient($checkin->id)
             ->forService($serviceType, $serviceCode)
             ->pending()
@@ -193,6 +206,15 @@ class BillingService
         ?string $serviceCode = null,
         ?array $metadata = null
     ): Charge {
+        // Determine initial status - auto-mark as owing for credit-eligible patients
+        $status = 'pending';
+        $notes = null;
+
+        if ($this->isPatientCreditEligible($checkin)) {
+            $status = 'owing';
+            $notes = 'Auto-marked as owing for credit-eligible patient';
+        }
+
         return Charge::create([
             'patient_checkin_id' => $checkin->id,
             'service_type' => $serviceType,
@@ -200,6 +222,8 @@ class BillingService
             'description' => $description,
             'amount' => $amount,
             'charge_type' => $chargeType,
+            'status' => $status,
+            'notes' => $notes,
             'charged_at' => now(),
             'metadata' => $metadata,
             'created_by_type' => Auth::user()?->getTable() ?? 'system',
@@ -292,6 +316,27 @@ class BillingService
             ->forService($serviceType, $serviceCode);
 
         return $query->first();
+    }
+
+    /**
+     * Get active billing override for a patient check-in and service type.
+     */
+    public function getActiveBillingOverride(PatientCheckin $checkin, string $serviceType): ?BillingOverride
+    {
+        return BillingOverride::active()
+            ->forCheckin($checkin->id)
+            ->forServiceType($serviceType)
+            ->first();
+    }
+
+    /**
+     * Check if patient is credit-eligible (VIP/credit account).
+     */
+    public function isPatientCreditEligible(PatientCheckin $checkin): bool
+    {
+        $patient = $checkin->patient;
+
+        return $patient && $patient->is_credit_eligible === true;
     }
 
     /**

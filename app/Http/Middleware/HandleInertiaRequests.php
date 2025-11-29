@@ -52,6 +52,18 @@ class HandleInertiaRequests extends Middleware
                     'admissions' => [
                         'discharge' => $request->user()?->can('admissions.discharge') ?? false,
                     ],
+                    'billing' => [
+                        'viewAll' => $request->user()?->can('billing.view-all') ?? false,
+                        'collect' => $request->user()?->can('billing.collect') ?? false,
+                        'override' => $request->user()?->can('billing.override') ?? false,
+                        'reconcile' => $request->user()?->can('billing.reconcile') ?? false,
+                        'reports' => $request->user()?->can('billing.reports') ?? false,
+                        'statements' => $request->user()?->can('billing.statements') ?? false,
+                        'manageCredit' => $request->user()?->can('billing.manage-credit') ?? false,
+                        'void' => $request->user()?->can('billing.void') ?? false,
+                        'refund' => $request->user()?->can('billing.refund') ?? false,
+                        'configure' => $request->user()?->can('billing.configure') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

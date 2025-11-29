@@ -103,4 +103,20 @@ class PatientPolicy
         // Users with explicit permission
         return $user->can('patients.view-medical-history');
     }
+
+    /**
+     * Determine whether the user can generate billing statements.
+     */
+    public function generateStatement(User $user): bool
+    {
+        return $user->can('billing.statements') || $user->hasRole('Admin');
+    }
+
+    /**
+     * Determine whether the user can manage patient credit tags.
+     */
+    public function manageCredit(User $user): bool
+    {
+        return $user->can('billing.manage-credit') || $user->hasRole('Admin');
+    }
 }
