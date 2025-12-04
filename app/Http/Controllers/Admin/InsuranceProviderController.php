@@ -62,7 +62,7 @@ class InsuranceProviderController extends Controller
         $this->authorize('update', $provider);
 
         return Inertia::render('Admin/Insurance/Providers/Edit', [
-            'provider' => new InsuranceProviderResource($provider),
+            'provider' => (new InsuranceProviderResource($provider))->resolve(),
         ]);
     }
 

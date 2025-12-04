@@ -80,7 +80,6 @@ class InsuranceClaimController extends Controller
             'filters' => $request->only(['status', 'provider_id', 'date_from', 'date_to', 'search']),
             'stats' => [
                 'total' => InsuranceClaim::count(),
-                'draft' => InsuranceClaim::where('status', 'draft')->count(),
                 'pending_vetting' => InsuranceClaim::where('status', 'pending_vetting')->count(),
                 'vetted' => InsuranceClaim::where('status', 'vetted')->count(),
                 'submitted' => InsuranceClaim::where('status', 'submitted')->count(),

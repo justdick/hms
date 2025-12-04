@@ -60,7 +60,6 @@ interface InsuranceClaim {
     total_claim_amount: string;
     approved_amount: string;
     status:
-        | 'draft'
         | 'pending_vetting'
         | 'vetted'
         | 'submitted'
@@ -81,6 +80,7 @@ interface InsuranceClaim {
 }
 
 interface Filters {
+    [key: string]: string | undefined;
     status?: string;
     provider_id?: string;
     date_from?: string;
@@ -100,7 +100,6 @@ interface Props {
     filters: Filters;
     stats: {
         total: number;
-        draft: number;
         pending_vetting: number;
         vetted: number;
         submitted: number;
@@ -108,7 +107,6 @@ interface Props {
 }
 
 const statusConfig = {
-    draft: { label: 'Draft', color: 'bg-gray-500' },
     pending_vetting: { label: 'Pending Vetting', color: 'bg-yellow-500' },
     vetted: { label: 'Vetted', color: 'bg-blue-500' },
     submitted: { label: 'Submitted', color: 'bg-purple-500' },
@@ -130,6 +128,7 @@ export default function InsuranceClaimsIndex({
     // Vetting modal state management
     const [vettingModalOpen, setVettingModalOpen] = useState(false);
     const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
+    const [modalMode, setModalMode] = useState<'vet' | 'view'>('vet');
 
     useEffect(() => {
         setLocalFilters(filters);
@@ -187,6 +186,16 @@ export default function InsuranceClaimsIndex({
      */
     const handleVetClaim = useCallback((claimId: number) => {
         setSelectedClaimId(claimId);
+        setModalMode('vet');
+        setVettingModalOpen(true);
+    }, []);
+
+    /**
+     * Opens the modal in view-only mode for a specific claim
+     */
+    const handleViewClaim = useCallback((claimId: number) => {
+        setSelectedClaimId(claimId);
+        setModalMode('view');
         setVettingModalOpen(true);
     }, []);
 
@@ -196,6 +205,7 @@ export default function InsuranceClaimsIndex({
     const handleCloseVettingModal = useCallback(() => {
         setVettingModalOpen(false);
         setSelectedClaimId(null);
+        setModalMode('vet');
     }, []);
 
     /**
@@ -249,7 +259,7 @@ export default function InsuranceClaimsIndex({
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -262,22 +272,6 @@ export default function InsuranceClaimsIndex({
                                     </p>
                                 </div>
                                 <FileText className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Draft
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-600">
-                                        {stats.draft}
-                                    </p>
-                                </div>
-                                <FileText className="h-8 w-8 text-gray-600" />
                             </div>
                         </CardContent>
                     </Card>
@@ -380,9 +374,6 @@ export default function InsuranceClaimsIndex({
                                             <SelectContent>
                                                 <SelectItem value="all">
                                                     All statuses
-                                                </SelectItem>
-                                                <SelectItem value="draft">
-                                                    Draft
                                                 </SelectItem>
                                                 <SelectItem value="pending_vetting">
                                                     Pending Vetting
@@ -537,16 +528,18 @@ export default function InsuranceClaimsIndex({
                                                                 Vet Claim
                                                             </Button>
                                                         )}
-                                                        <Link
-                                                            href={`/admin/insurance/claims/${claim.id}`}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleViewClaim(
+                                                                    claim.id,
+                                                                )
+                                                            }
+                                                            aria-label={`View claim ${claim.claim_check_code}`}
                                                         >
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                        </Link>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -615,12 +608,13 @@ export default function InsuranceClaimsIndex({
                     )}
             </div>
 
-            {/* Vetting Modal for NHIS Claims */}
+            {/* Vetting/View Modal for Claims */}
             <VettingModal
                 claimId={selectedClaimId}
                 isOpen={vettingModalOpen}
                 onClose={handleCloseVettingModal}
                 onVetSuccess={handleVetSuccess}
+                mode={modalMode}
             />
         </AppLayout>
     );

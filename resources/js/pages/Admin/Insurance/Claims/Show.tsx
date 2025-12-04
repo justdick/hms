@@ -80,7 +80,6 @@ interface InsuranceClaim {
     patient_copay_amount: string;
     insurance_covered_amount: string;
     status:
-        | 'draft'
         | 'pending_vetting'
         | 'vetted'
         | 'submitted'
@@ -152,7 +151,6 @@ export default function ClaimShow({ claim, can }: Props) {
 
     const getStatusColor = (status: InsuranceClaim['status']) => {
         const colors = {
-            draft: 'bg-gray-500',
             pending_vetting: 'bg-yellow-500',
             vetted: 'bg-blue-500',
             submitted: 'bg-purple-500',

@@ -57,7 +57,9 @@ export function VettingModal({
     isOpen,
     onClose,
     onVetSuccess,
+    mode = 'vet',
 }: VettingModalProps) {
+    const isViewOnly = mode === 'view';
     const [vettingData, setVettingData] = useState<VettingData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -156,7 +158,7 @@ export function VettingModal({
 
     // Calculate updated totals when G-DRG changes
     const calculateTotals = useCallback(() => {
-        if (!vettingData) return vettingData?.totals;
+        if (!vettingData) return null;
 
         const gdrgAmount = selectedGdrg?.tariff_price || 0;
         const grandTotal =
@@ -256,7 +258,7 @@ export function VettingModal({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
-                className="max-h-[90vh] max-w-4xl overflow-hidden p-0"
+                className="max-h-[90vh] w-[90vw] max-w-7xl overflow-hidden p-0 sm:max-w-7xl"
                 aria-labelledby="vetting-modal-title"
                 aria-describedby="vetting-modal-description"
             >
@@ -296,12 +298,13 @@ export function VettingModal({
                                     className="h-5 w-5"
                                     aria-hidden="true"
                                 />
-                                Claim Vetting -{' '}
+                                {isViewOnly ? 'Claim Details' : 'Claim Vetting'} -{' '}
                                 {vettingData.attendance.claim_check_code}
                             </DialogTitle>
                             <DialogDescription id="vetting-modal-description">
-                                Review claim details and approve or reject for
-                                submission
+                                {isViewOnly
+                                    ? 'View claim details and status'
+                                    : 'Review claim details and approve or reject for submission'}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -318,60 +321,55 @@ export function VettingModal({
                                     </div>
                                 )}
 
-                                {/* Patient Information */}
-                                <PatientInfoSection
-                                    patient={vettingData.patient}
-                                />
+                                {/* Row 1: Patient Info (left) | Attendance Details (right) */}
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                    <PatientInfoSection
+                                        patient={vettingData.patient}
+                                    />
+                                    <AttendanceDetailsSection
+                                        attendance={vettingData.attendance}
+                                    />
+                                </div>
 
                                 <Separator />
 
-                                {/* Attendance Details */}
-                                <AttendanceDetailsSection
-                                    attendance={vettingData.attendance}
-                                />
-
-                                <Separator />
-
-                                {/* G-DRG Selection (NHIS only) */}
-                                {vettingData.is_nhis && (
-                                    <>
+                                {/* Row 2: Diagnoses (left) | G-DRG Selection (right) */}
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                    <DiagnosesManager
+                                        diagnoses={diagnoses}
+                                        onChange={handleDiagnosesChange}
+                                        disabled={processing || isViewOnly}
+                                    />
+                                    {vettingData.is_nhis ? (
                                         <GdrgSelector
                                             value={selectedGdrg}
                                             onChange={setSelectedGdrg}
                                             tariffs={vettingData.gdrg_tariffs}
-                                            disabled={processing}
+                                            disabled={processing || isViewOnly}
                                         />
-                                        <Separator />
-                                    </>
-                                )}
-
-                                {/* Diagnoses */}
-                                <DiagnosesManager
-                                    diagnoses={diagnoses}
-                                    onChange={handleDiagnosesChange}
-                                    disabled={processing}
-                                />
+                                    ) : (
+                                        <div />
+                                    )}
+                                </div>
 
                                 <Separator />
 
-                                {/* Claim Items */}
-                                <ClaimItemsTabs
-                                    items={vettingData.items}
-                                    isNhis={vettingData.is_nhis}
-                                />
-
-                                <Separator />
-
-                                {/* Claim Total */}
-                                {updatedTotals && (
-                                    <ClaimTotalDisplay
-                                        totals={updatedTotals}
+                                {/* Row 3: Claim Items (left) | Claim Total (right) */}
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                    <ClaimItemsTabs
+                                        items={vettingData.items}
                                         isNhis={vettingData.is_nhis}
                                     />
-                                )}
+                                    {updatedTotals && (
+                                        <ClaimTotalDisplay
+                                            totals={updatedTotals}
+                                            isNhis={vettingData.is_nhis}
+                                        />
+                                    )}
+                                </div>
 
-                                {/* Rejection Form */}
-                                {showRejectForm && (
+                                {/* Rejection Form (only in vet mode) */}
+                                {!isViewOnly && showRejectForm && (
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="rejection_reason"
@@ -402,14 +400,23 @@ export function VettingModal({
                                     <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono dark:bg-gray-800">
                                         Esc
                                     </kbd>{' '}
-                                    to close,{' '}
-                                    <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono dark:bg-gray-800">
-                                        Ctrl+Enter
-                                    </kbd>{' '}
-                                    to approve
+                                    to close
+                                    {!isViewOnly && (
+                                        <>
+                                            ,{' '}
+                                            <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono dark:bg-gray-800">
+                                                Ctrl+Enter
+                                            </kbd>{' '}
+                                            to approve
+                                        </>
+                                    )}
                                 </div>
                                 <div className="flex gap-2">
-                                    {showRejectForm ? (
+                                    {isViewOnly ? (
+                                        <Button variant="outline" onClick={onClose}>
+                                            Close
+                                        </Button>
+                                    ) : showRejectForm ? (
                                         <>
                                             <Button
                                                 variant="outline"

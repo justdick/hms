@@ -78,7 +78,6 @@ interface Props {
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    draft: { label: 'Draft', color: 'bg-gray-500', icon: <FileText className="h-4 w-4" /> },
     pending_vetting: { label: 'Pending Vetting', color: 'bg-yellow-500', icon: <Clock className="h-4 w-4" /> },
     vetted: { label: 'Vetted', color: 'bg-blue-500', icon: <CheckCircle className="h-4 w-4" /> },
     submitted: { label: 'Submitted', color: 'bg-purple-500', icon: <FileText className="h-4 w-4" /> },

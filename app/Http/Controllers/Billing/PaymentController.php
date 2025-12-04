@@ -150,7 +150,7 @@ class PaymentController extends Controller
                 });
 
                 // Calculate total owing for credit patients (charges with 'owing' status)
-                $totalOwing = Charge::where('patient_id', $patient->id)
+                $totalOwing = Charge::whereIn('patient_checkin_id', $patient->checkins->pluck('id'))
                     ->where('status', 'owing')
                     ->sum('amount');
 

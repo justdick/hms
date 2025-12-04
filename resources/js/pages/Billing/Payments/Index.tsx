@@ -1,23 +1,18 @@
-import { PatientCreditBadge } from '@/components/Patient/PatientCreditBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import { Printer, Settings, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { Settings } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { BillAdjustmentModal } from './components/BillAdjustmentModal';
 import { BillingStatsCards } from './components/BillingStatsCards';
 import { BillWaiverModal } from './components/BillWaiverModal';
-import { ChargeSelectionList, type ChargeItem } from './components/ChargeSelectionList';
-import { InlinePaymentForm } from './components/InlinePaymentForm';
 import { MyCollectionsCard } from './components/MyCollectionsCard';
 import { MyCollectionsModal } from './components/MyCollectionsModal';
-import { PatientBillingDetails } from './components/PatientBillingDetails';
+import { PatientBillingModal } from './components/PatientBillingModal';
 import { PatientSearchBar } from './components/PatientSearchBar';
 import { PatientSearchResults } from './components/PatientSearchResults';
-import { PaymentModal } from './components/PaymentModal';
 import { ReceiptPreview } from './components/ReceiptPreview';
-import { ServiceAccessOverrideModal } from './components/ServiceAccessOverrideModal';
 
 interface Patient {
     id: number;
@@ -25,6 +20,11 @@ interface Patient {
     last_name: string;
     patient_number: string;
     phone_number: string;
+    is_credit_eligible?: boolean;
+    credit_reason?: string | null;
+    credit_authorized_by?: { name: string } | null;
+    credit_authorized_at?: string | null;
+    total_owing?: number;
 }
 
 interface Department {
@@ -41,7 +41,6 @@ interface ChargeItem {
     patient_copay_amount: number;
     service_type: string;
     charged_at: string;
-    status: string;
 }
 
 interface Visit {
@@ -55,50 +54,15 @@ interface Visit {
     charges: ChargeItem[];
 }
 
-interface ServiceAccessStatus {
-    service_type: string;
-    is_blocked: boolean;
-    pending_amount: number;
-    has_active_override: boolean;
-}
-
-interface OverrideHistoryItem {
-    id: number;
-    type: 'override' | 'waiver' | 'adjustment';
-    service_type?: string;
-    charge_description?: string;
-    reason: string;
-    authorized_by: {
-        id: number;
-        name: string;
-    };
-    authorized_at: string;
-    expires_at?: string;
-    is_active?: boolean;
-    remaining_duration?: string;
-    original_amount?: number;
-    adjustment_amount?: number;
-    final_amount?: number;
-    adjustment_type?: string;
-}
-
 interface PatientSearchResult {
     patient_id: number;
-    patient: Patient & {
-        is_credit_eligible?: boolean;
-        credit_reason?: string | null;
-        credit_authorized_by?: { name: string } | null;
-        credit_authorized_at?: string | null;
-        total_owing?: number;
-    };
+    patient: Patient;
     total_pending: number;
     total_patient_owes: number;
     total_insurance_covered: number;
     total_charges: number;
     visits_with_charges: number;
     visits: Visit[];
-    service_access_status?: ServiceAccessStatus[];
-    override_history?: OverrideHistoryItem[];
 }
 
 interface Stats {
@@ -106,14 +70,6 @@ interface Stats {
     pending_amount: number;
     paid_today: number;
     total_outstanding: number;
-}
-
-interface BillingStats {
-    pending_charges_count: number;
-    pending_charges_amount: number;
-    todays_revenue: number;
-    total_outstanding: number;
-    collection_rate: number;
 }
 
 interface BillingPermissions {
@@ -131,32 +87,18 @@ interface Props {
 
 export default function PaymentIndex({ stats, permissions }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<PatientSearchResult[]>(
-        [],
-    );
+    const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [selectedPatient, setSelectedPatient] =
-        useState<PatientSearchResult | null>(null);
-    const [expandedPatients, setExpandedPatients] = useState<Set<number>>(
-        new Set(),
-    );
-    const [selectedCharges, setSelectedCharges] = useState<number[]>([]);
-    const [processingPayment, setProcessingPayment] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState<PatientSearchResult | null>(null);
 
     // Modal states
+    const [billingModalOpen, setBillingModalOpen] = useState(false);
     const [waiverModalOpen, setWaiverModalOpen] = useState(false);
     const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
-    const [overrideModalOpen, setOverrideModalOpen] = useState(false);
     const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
-    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
     const [paidChargeIds, setPaidChargeIds] = useState<number[]>([]);
-    const [selectedChargeId, setSelectedChargeId] = useState<number | null>(
-        null,
-    );
-    const [selectedServiceType, setSelectedServiceType] = useState<
-        string | null
-    >(null);
+    const [selectedChargeId, setSelectedChargeId] = useState<number | null>(null);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-GH', {
@@ -165,9 +107,9 @@ export default function PaymentIndex({ stats, permissions }: Props) {
         }).format(amount);
     };
 
-    const searchPatients = async (query: string) => {
+    const searchPatients = useCallback(async (query: string) => {
         setSearchQuery(query);
-        
+
         if (query.length < 2) {
             setSearchResults([]);
             return;
@@ -186,116 +128,121 @@ export default function PaymentIndex({ stats, permissions }: Props) {
         } finally {
             setIsSearching(false);
         }
-    };
+    }, []);
 
     const handlePatientSelect = (patient: PatientSearchResult) => {
         setSelectedPatient(patient);
-        // Expand the patient details
-        setExpandedPatients((prev) => {
-            const newSet = new Set(prev);
-            newSet.add(patient.patient_id);
-            return newSet;
-        });
-        // Auto-select all charges for this patient
-        const allChargeIds = patient.visits.flatMap((visit) =>
-            visit.charges.map((charge) => charge.id),
-        );
-        setSelectedCharges(allChargeIds);
-    };
-
-    const togglePatientExpanded = (patientId: number) => {
-        setExpandedPatients((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(patientId)) {
-                newSet.delete(patientId);
-            } else {
-                newSet.add(patientId);
-            }
-            return newSet;
-        });
+        setBillingModalOpen(true);
     };
 
     const handleQuickPayAll = (patient: PatientSearchResult) => {
-        // Navigate to most recent visit for quick pay
         const mostRecentVisit = patient.visits[0];
         if (mostRecentVisit) {
             router.post(`/billing/charges/quick-pay-all`, {
                 patient_checkin_id: mostRecentVisit.checkin_id,
                 payment_method: 'cash',
-                charges: patient.visits.flatMap((v) =>
-                    v.charges.map((c) => c.id),
-                ),
+                charges: patient.visits.flatMap((v) => v.charges.map((c) => c.id)),
             });
         }
     };
 
     const handleWaiveCharge = (chargeId: number) => {
         setSelectedChargeId(chargeId);
+        setBillingModalOpen(false);
         setWaiverModalOpen(true);
     };
 
     const handleAdjustCharge = (chargeId: number) => {
         setSelectedChargeId(chargeId);
+        setBillingModalOpen(false);
         setAdjustmentModalOpen(true);
-    };
-
-    const handleOverrideService = (serviceType: string) => {
-        setSelectedServiceType(serviceType);
-        setOverrideModalOpen(true);
-    };
-
-    const handlePaymentSubmit = (paymentData: {
-        charges: number[];
-        payment_method: string;
-        amount_paid: number;
-        notes?: string;
-    }) => {
-        if (!selectedPatient) return;
-
-        setProcessingPayment(true);
-        const mostRecentVisit = selectedPatient.visits[0];
-
-        router.post(
-            `/billing/checkin/${mostRecentVisit.checkin_id}/payment`,
-            paymentData,
-            {
-                onSuccess: () => {
-                    setProcessingPayment(false);
-                    // Store paid charge IDs for receipt printing
-                    setPaidChargeIds(paymentData.charges);
-                    // Show receipt preview option
-                    setReceiptPreviewOpen(true);
-                    // Refresh search results
-                    searchPatients(searchQuery);
-                },
-                onError: () => {
-                    setProcessingPayment(false);
-                },
-            },
-        );
     };
 
     const handlePaymentSuccess = (chargeIds: number[]) => {
         setPaidChargeIds(chargeIds);
-        setPaymentModalOpen(false);
-        setReceiptPreviewOpen(true);
         searchPatients(searchQuery);
     };
 
-    const handleChargeSelectionChange = (selectedIds: number[]) => {
-        setSelectedCharges(selectedIds);
+    const handlePrintReceipt = async (chargeIds: number[]) => {
+        setPaidChargeIds(chargeIds);
+        // Fetch receipt data and trigger print
+        try {
+            const response = await fetch('/billing/receipt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ charge_ids: chargeIds }),
+            });
+            const data = await response.json();
+            if (data.receipt) {
+                // Create a printable window
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(`
+                        <html>
+                        <head><title>Receipt</title>
+                        <style>
+                            body { font-family: monospace; padding: 20px; max-width: 300px; margin: 0 auto; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .amount { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
+                            .details { font-size: 12px; }
+                            .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+                        </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <strong>${data.receipt.facility_name || 'Hospital'}</strong><br/>
+                                Receipt #${data.receipt.receipt_number}
+                            </div>
+                            <div class="details">
+                                Patient: ${data.receipt.patient_name}<br/>
+                                Date: ${new Date().toLocaleDateString()}
+                            </div>
+                            <div class="amount">${formatCurrency(data.receipt.total_amount)}</div>
+                            <div class="details">
+                                Payment: ${data.receipt.payment_method}<br/>
+                                Cashier: ${data.receipt.cashier_name}
+                            </div>
+                            <div class="footer">Thank you!</div>
+                        </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.print();
+                }
+            }
+        } catch (error) {
+            console.error('Print error:', error);
+        }
+        setBillingModalOpen(false);
     };
 
-    // Get all charges from selected patient for ChargeSelectionList
-    const getAllChargesFromPatient = (): ChargeItem[] => {
-        if (!selectedPatient) return [];
-        return selectedPatient.visits.flatMap((visit) =>
-            visit.charges.map((charge) => ({
-                ...charge,
-                status: 'pending',
-            })),
-        );
+    const handleViewReceipt = (chargeIds: number[]) => {
+        setPaidChargeIds(chargeIds);
+        setBillingModalOpen(false);
+        setReceiptPreviewOpen(true);
     };
+
+    const handleWaiverSuccess = () => {
+        setWaiverModalOpen(false);
+        searchPatients(searchQuery);
+        // Reopen billing modal if patient still selected
+        if (selectedPatient) {
+            setBillingModalOpen(true);
+        }
+    };
+
+    const handleAdjustmentSuccess = () => {
+        setAdjustmentModalOpen(false);
+        searchPatients(searchQuery);
+        // Reopen billing modal if patient still selected
+        if (selectedPatient) {
+            setBillingModalOpen(true);
+        }
+    };
+
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Billing', href: '/billing' }]}>
@@ -315,9 +262,7 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     <div className="flex items-center gap-3">
                         <Button
                             variant="outline"
-                            onClick={() =>
-                                router.visit('/billing/configuration')
-                            }
+                            onClick={() => router.visit('/billing/configuration')}
                         >
                             <Settings className="mr-2 h-4 w-4" />
                             Configuration
@@ -336,10 +281,7 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 total_outstanding: stats.total_outstanding,
                                 collection_rate:
                                     stats.total_outstanding > 0
-                                        ? (stats.paid_today /
-                                              (stats.paid_today +
-                                                  stats.total_outstanding)) *
-                                          100
+                                        ? (stats.paid_today / (stats.paid_today + stats.total_outstanding)) * 100
                                         : 100,
                             }}
                             formatCurrency={formatCurrency}
@@ -353,150 +295,41 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     </div>
                 </div>
 
-                {/* Main Content - Single Page Layout */}
-                <div className="space-y-6">
-                    {/* Patient Search Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Search Patient</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <PatientSearchBar
-                                onSearch={searchPatients}
-                                isSearching={isSearching}
-                            />
-                            <div className="mt-4">
-                                <PatientSearchResults
-                                    results={searchResults}
-                                    searchQuery={searchQuery}
-                                    selectedPatientId={
-                                        selectedPatient?.patient_id || null
-                                    }
-                                    onPatientSelect={handlePatientSelect}
-                                    onQuickPayAll={handleQuickPayAll}
-                                    formatCurrency={formatCurrency}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Expandable Patient Details */}
-                    {selectedPatient && (
-                        <div className="space-y-6">
-                            {/* Credit Badge for eligible patients - Requirement 14.3 */}
-                            {selectedPatient.patient.is_credit_eligible && (
-                                <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
-                                    <CardContent className="flex items-center justify-between p-4">
-                                        <div className="flex items-center gap-3">
-                                            <ShieldCheck className="h-5 w-5 text-amber-600" />
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-amber-700 dark:text-amber-300">
-                                                        Credit Account Patient
-                                                    </span>
-                                                    <PatientCreditBadge
-                                                        isCreditEligible={true}
-                                                        totalOwing={selectedPatient.patient.total_owing}
-                                                        creditReason={selectedPatient.patient.credit_reason}
-                                                        creditAuthorizedBy={selectedPatient.patient.credit_authorized_by?.name}
-                                                        creditAuthorizedAt={selectedPatient.patient.credit_authorized_at}
-                                                        showTooltip={true}
-                                                    />
-                                                </div>
-                                                <p className="text-sm text-amber-600 dark:text-amber-400">
-                                                    Services can proceed without immediate payment
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {selectedPatient.patient.total_owing && selectedPatient.patient.total_owing > 0 && (
-                                            <div className="text-right">
-                                                <p className="text-xs text-muted-foreground">Total Owing</p>
-                                                <p className="text-lg font-bold text-orange-600">
-                                                    {formatCurrency(selectedPatient.patient.total_owing)}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            <PatientBillingDetails
-                                patient={selectedPatient}
-                                isExpanded={expandedPatients.has(
-                                    selectedPatient.patient_id,
-                                )}
-                                onToggle={() =>
-                                    togglePatientExpanded(
-                                        selectedPatient.patient_id,
-                                    )
-                                }
-                                permissions={permissions}
+                {/* Patient Search Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Search Patient</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <PatientSearchBar onSearch={searchPatients} isSearching={isSearching} />
+                        <div className="mt-4">
+                            <PatientSearchResults
+                                results={searchResults}
+                                searchQuery={searchQuery}
+                                selectedPatientId={selectedPatient?.patient_id || null}
+                                onPatientSelect={handlePatientSelect}
+                                onQuickPayAll={handleQuickPayAll}
                                 formatCurrency={formatCurrency}
-                                onWaiveCharge={
-                                    permissions.canWaiveCharges
-                                        ? handleWaiveCharge
-                                        : undefined
-                                }
-                                onAdjustCharge={
-                                    permissions.canAdjustCharges
-                                        ? handleAdjustCharge
-                                        : undefined
-                                }
-                                onOverrideService={
-                                    permissions.canOverrideServices
-                                        ? handleOverrideService
-                                        : undefined
-                                }
                             />
-
-                            {/* Charge Selection and Payment Section */}
-                            {expandedPatients.has(
-                                selectedPatient.patient_id,
-                            ) && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-base">Select Charges to Pay</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        {/* Charge Selection List - Requirements 1.1, 1.2, 1.5 */}
-                                        <ChargeSelectionList
-                                            charges={getAllChargesFromPatient()}
-                                            selectedChargeIds={selectedCharges}
-                                            onSelectionChange={handleChargeSelectionChange}
-                                            formatCurrency={formatCurrency}
-                                            showSummary={true}
-                                        />
-
-                                        {/* Payment Actions */}
-                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                            <Button
-                                                variant="default"
-                                                size="lg"
-                                                onClick={() => setPaymentModalOpen(true)}
-                                                disabled={selectedCharges.length === 0}
-                                                className="w-full sm:w-auto"
-                                            >
-                                                Process Payment ({selectedCharges.length} charges)
-                                            </Button>
-                                            
-                                            {paidChargeIds.length > 0 && (
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => setReceiptPreviewOpen(true)}
-                                                >
-                                                    <Printer className="mr-2 h-4 w-4" />
-                                                    Print Last Receipt
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
                         </div>
-                    )}
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* Modals */}
+                {/* Patient Billing Modal */}
+                <PatientBillingModal
+                    isOpen={billingModalOpen}
+                    onClose={() => setBillingModalOpen(false)}
+                    patient={selectedPatient}
+                    permissions={permissions}
+                    formatCurrency={formatCurrency}
+                    onWaiveCharge={permissions.canWaiveCharges ? handleWaiveCharge : undefined}
+                    onAdjustCharge={permissions.canAdjustCharges ? handleAdjustCharge : undefined}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPrintReceipt={handlePrintReceipt}
+                    onViewReceipt={handleViewReceipt}
+                />
+
+                {/* Waiver Modal */}
                 {selectedChargeId && selectedPatient && (
                     <>
                         {(() => {
@@ -507,54 +340,29 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 <>
                                     <BillWaiverModal
                                         isOpen={waiverModalOpen}
-                                        onClose={() =>
-                                            setWaiverModalOpen(false)
-                                        }
+                                        onClose={() => {
+                                            setWaiverModalOpen(false);
+                                            setBillingModalOpen(true);
+                                        }}
                                         charge={charge}
                                         formatCurrency={formatCurrency}
-                                        onSuccess={() => {
-                                            setWaiverModalOpen(false);
-                                            searchPatients(searchQuery);
-                                        }}
+                                        onSuccess={handleWaiverSuccess}
                                     />
-
                                     <BillAdjustmentModal
                                         isOpen={adjustmentModalOpen}
-                                        onClose={() =>
-                                            setAdjustmentModalOpen(false)
-                                        }
+                                        onClose={() => {
+                                            setAdjustmentModalOpen(false);
+                                            setBillingModalOpen(true);
+                                        }}
                                         charge={charge}
                                         formatCurrency={formatCurrency}
-                                        onSuccess={() => {
-                                            setAdjustmentModalOpen(false);
-                                            searchPatients(searchQuery);
-                                        }}
+                                        onSuccess={handleAdjustmentSuccess}
                                     />
                                 </>
                             ) : null;
                         })()}
                     </>
                 )}
-
-                {selectedServiceType &&
-                    selectedPatient &&
-                    selectedPatient.visits[0] && (
-                        <ServiceAccessOverrideModal
-                            isOpen={overrideModalOpen}
-                            onClose={() => setOverrideModalOpen(false)}
-                            serviceType={selectedServiceType}
-                            checkinId={selectedPatient.visits[0].checkin_id}
-                            pendingCharges={selectedPatient.visits.flatMap(
-                                (v) =>
-                                    v.charges.filter(
-                                        (c) =>
-                                            c.service_type ===
-                                            selectedServiceType,
-                                    ),
-                            )}
-                            formatCurrency={formatCurrency}
-                        />
-                    )}
 
                 {/* My Collections Modal */}
                 <MyCollectionsModal
@@ -563,31 +371,13 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     formatCurrency={formatCurrency}
                 />
 
-                {/* Payment Modal - Requirement 11.7 */}
-                {selectedPatient && selectedPatient.visits[0] && (
-                    <PaymentModal
-                        isOpen={paymentModalOpen}
-                        onClose={() => setPaymentModalOpen(false)}
-                        checkinId={selectedPatient.visits[0].checkin_id}
-                        charges={getAllChargesFromPatient().filter((c) =>
-                            selectedCharges.includes(c.id),
-                        )}
-                        patientName={`${selectedPatient.patient.first_name} ${selectedPatient.patient.last_name}`}
-                        patientNumber={selectedPatient.patient.patient_number}
-                        formatCurrency={formatCurrency}
-                        onSuccess={handlePaymentSuccess}
-                    />
-                )}
-
-                {/* Receipt Preview - Requirements 3.1, 3.2 */}
+                {/* Receipt Preview */}
                 <ReceiptPreview
                     isOpen={receiptPreviewOpen}
                     onClose={() => setReceiptPreviewOpen(false)}
                     chargeIds={paidChargeIds}
                     formatCurrency={formatCurrency}
-                    onPrintSuccess={() => {
-                        // Optionally close after print
-                    }}
+                    onPrintSuccess={() => {}}
                 />
             </div>
         </AppLayout>

@@ -93,4 +93,6 @@ export interface VettingModalProps {
     isOpen: boolean;
     onClose: () => void;
     onVetSuccess: () => void;
+    /** Mode: 'vet' for vetting actions, 'view' for read-only viewing */
+    mode?: 'vet' | 'view';
 }

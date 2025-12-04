@@ -49,7 +49,7 @@ class InsuranceClaimService
             'date_of_attendance' => $dateOfAttendance,
             'type_of_service' => $typeOfService,
             'type_of_attendance' => $checkin->visit_type ?? 'routine',
-            'status' => 'draft',
+            'status' => 'pending_vetting',
         ]);
     }
 
@@ -120,20 +120,6 @@ class InsuranceClaimService
     }
 
     /**
-     * Submit claim for vetting
-     */
-    public function submitForVetting(InsuranceClaim $claim): void
-    {
-        if ($claim->status !== 'draft') {
-            throw new \Exception('Only draft claims can be submitted for vetting');
-        }
-
-        $claim->update([
-            'status' => 'pending_vetting',
-        ]);
-    }
-
-    /**
      * Vet a claim (approve/reject items)
      */
     public function vetClaim(
@@ -145,8 +131,8 @@ class InsuranceClaimService
         ?array $secondaryDiagnoses = null,
         ?string $notes = null
     ): void {
-        if (! in_array($claim->status, ['pending_vetting', 'draft'])) {
-            throw new \Exception('Only pending or draft claims can be vetted');
+        if ($claim->status !== 'pending_vetting') {
+            throw new \Exception('Only pending_vetting claims can be vetted');
         }
 
         DB::transaction(function () use ($claim, $vettedById, $itemApprovals, $primaryDiagnosisCode, $primaryDiagnosisDescription, $secondaryDiagnoses, $notes) {
