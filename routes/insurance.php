@@ -47,7 +47,6 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     // Claims
     Route::get('claims', [InsuranceClaimController::class, 'index'])->name('claims.index');
     Route::get('claims/export', [InsuranceClaimController::class, 'export'])->name('claims.export');
-    Route::get('claims/{claim}', [InsuranceClaimController::class, 'show'])->name('claims.show');
     Route::get('claims/{claim}/vetting-data', [InsuranceClaimController::class, 'getVettingData'])->name('claims.vetting-data');
     Route::post('claims/{claim}/vet', [InsuranceClaimController::class, 'vet'])->name('claims.vet');
     Route::post('claims/{claim}/diagnoses', [InsuranceClaimController::class, 'updateDiagnoses'])->name('claims.diagnoses');
