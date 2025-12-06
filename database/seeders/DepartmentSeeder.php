@@ -12,6 +12,9 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Clear existing departments
+        Department::query()->delete();
+
         $departments = [
             [
                 'name' => 'General OPD',
@@ -114,10 +117,7 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $department) {
-            Department::updateOrCreate(
-                ['code' => $department['code']],
-                $department
-            );
+            Department::create($department);
         }
     }
 }
