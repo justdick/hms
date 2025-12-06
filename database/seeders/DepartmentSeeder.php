@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use Illuminate\Database\Seeder;
 
 class DepartmentSeeder extends Seeder
@@ -14,50 +15,109 @@ class DepartmentSeeder extends Seeder
         $departments = [
             [
                 'name' => 'General OPD',
-                'code' => 'GEN_OPD',
+                'code' => 'OPDC',
                 'description' => 'General Outpatient Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
             [
-                'name' => 'Eye Clinic',
-                'code' => 'EYE',
-                'description' => 'Ophthalmology Department',
+                'name' => 'Adult Surgery',
+                'code' => 'ASUR',
+                'description' => 'Adult Surgery Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
             [
-                'name' => 'ENT Clinic',
-                'code' => 'ENT',
-                'description' => 'Ear, Nose & Throat Department',
+                'name' => 'Dental',
+                'code' => 'DENT',
+                'description' => 'Dental Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
             [
-                'name' => 'Maternity',
-                'code' => 'MAT',
-                'description' => 'Maternity & Obstetrics Department',
+                'name' => 'Ear, Nose and Throat',
+                'code' => 'ENTH',
+                'description' => 'ENT Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
             [
-                'name' => 'Pediatrics',
-                'code' => 'PED',
-                'description' => 'Children\'s Department',
+                'name' => 'Medicine',
+                'code' => 'MEDI',
+                'description' => 'Medicine Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
             [
-                'name' => 'Dental Clinic',
-                'code' => 'DENTAL',
-                'description' => 'Dental & Oral Health Department',
+                'name' => 'Obstetrics and Gynaecology',
+                'code' => 'OBGY',
+                'description' => 'Obstetrics and Gynaecology Department',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Orthopaedics',
+                'code' => 'ORTH',
+                'description' => 'Orthopaedics Department',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Antenatal/Postnatal Care',
+                'code' => 'ANCP',
+                'description' => 'Antenatal and Postnatal Care',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Paediatrics',
+                'code' => 'PAED',
+                'description' => 'Paediatrics Department',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Paediatric Surgery',
+                'code' => 'PSUR',
+                'description' => 'Paediatric Surgery Department',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Reconstructive Plastic Surgery',
+                'code' => 'RSUR',
+                'description' => 'Reconstructive Plastic Surgery Department',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Minor Procedures',
+                'code' => 'ZOOM',
+                'description' => 'Circumcisions, Dressings, Catheter Change, etc.',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Ophthalmology',
+                'code' => 'OPTH',
+                'description' => 'Eye Clinic',
+                'type' => 'opd',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Physiotherapy',
+                'code' => 'PHYS',
+                'description' => 'Physiotherapy Department',
                 'type' => 'opd',
                 'is_active' => true,
             ],
         ];
 
         foreach ($departments as $department) {
-            \App\Models\Department::create($department);
+            Department::updateOrCreate(
+                ['code' => $department['code']],
+                $department
+            );
         }
     }
 }
