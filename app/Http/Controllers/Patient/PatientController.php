@@ -506,16 +506,50 @@ class PatientController extends Controller
     private function generatePatientNumber(): string
     {
         // Get configuration from system settings
+        $format = \App\Models\SystemConfiguration::get('patient_number_format', 'prefix_year_number');
         $prefix = \App\Models\SystemConfiguration::get('patient_number_prefix', 'PAT');
         $yearFormat = \App\Models\SystemConfiguration::get('patient_number_year_format', 'YYYY');
         $separator = \App\Models\SystemConfiguration::get('patient_number_separator', '');
-        $padding = \App\Models\SystemConfiguration::get('patient_number_padding', 6);
+        $padding = (int) \App\Models\SystemConfiguration::get('patient_number_padding', 6);
         $resetPolicy = \App\Models\SystemConfiguration::get('patient_number_reset', 'never');
 
         // Generate year based on format
         $year = $yearFormat === 'YYYY' ? date('Y') : date('y');
 
-        // Build the prefix pattern based on reset policy
+        // Build the search pattern based on format and reset policy
+        if ($format === 'number_year') {
+            // Format: 1495/2022 - number comes first
+            $suffixPattern = $separator.$year;
+
+            // For reset policies with number_year format
+            if ($resetPolicy === 'monthly') {
+                $suffixPattern = $separator.date('m').$separator.$year;
+            }
+
+            // Find the last patient number with this year suffix
+            $lastPatient = Patient::where('patient_number', 'like', "%{$suffixPattern}")
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($lastPatient) {
+                // Extract the numeric part from the beginning
+                $numericPart = preg_replace('/[^0-9].*/', '', $lastPatient->patient_number);
+                $lastNumber = (int) $numericPart;
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+
+            $paddedNumber = str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
+
+            if ($resetPolicy === 'monthly') {
+                return $paddedNumber.$separator.date('m').$separator.$year;
+            }
+
+            return $paddedNumber.$separator.$year;
+        }
+
+        // Default format: PAT2025000001 - prefix + year + number
         $basePattern = $prefix.$separator.$year.$separator;
 
         // For reset policies, we need to check monthly or yearly

@@ -1,8 +1,11 @@
 import CheckinModal from '@/components/Checkin/CheckinModal';
 import CheckinPromptDialog from '@/components/Checkin/CheckinPromptDialog';
 import PatientRegistrationModal from '@/components/Patient/RegistrationModal';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head, usePage } from '@inertiajs/react';
+import patientNumbering from '@/routes/patient-numbering';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PatientData, patientsColumns } from './patients-columns';
 import { DataTable } from './patients-data-table';
@@ -109,13 +112,21 @@ export default function PatientsIndex({
 
             <div className="space-y-6">
                 {/* Header */}
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        Patients
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Search and manage patient records
-                    </p>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Patients
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Search and manage patient records
+                        </p>
+                    </div>
+                    <Link href={patientNumbering.index.url()}>
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            Patient Configuration
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* DataTable */}

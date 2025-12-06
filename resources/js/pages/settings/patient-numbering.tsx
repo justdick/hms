@@ -27,6 +27,7 @@ interface Props {
         patient_number_separator: string;
         patient_number_padding: number;
         patient_number_reset: string;
+        patient_number_format: string;
     };
     nextNumber: number;
     currentExample: string;
@@ -38,6 +39,8 @@ export default function PatientNumbering({
     currentExample,
 }: Props) {
     const { data, setData, post, processing, errors } = useForm({
+        patient_number_format:
+            config.patient_number_format || 'prefix_year_number',
         patient_number_prefix: config.patient_number_prefix || 'PAT',
         patient_number_year_format: config.patient_number_year_format || 'YYYY',
         patient_number_separator: config.patient_number_separator || '',
@@ -59,7 +62,14 @@ export default function PatientNumbering({
             '0',
         );
 
-        const previewText = `${data.patient_number_prefix}${separator}${year}${separator}${paddedNumber}`;
+        let previewText: string;
+        if (data.patient_number_format === 'number_year') {
+            // Format: 1495/2022
+            previewText = `${paddedNumber}${separator}${year}`;
+        } else {
+            // Format: PAT2025000001
+            previewText = `${data.patient_number_prefix}${separator}${year}${separator}${paddedNumber}`;
+        }
         setPreview(previewText);
     }, [data, nextNumber]);
 
@@ -96,8 +106,42 @@ export default function PatientNumbering({
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Prefix */}
+                                {/* Format */}
                                 <div className="space-y-2">
+                                    <Label htmlFor="format">Number Format</Label>
+                                    <Select
+                                        value={data.patient_number_format}
+                                        onValueChange={(value) =>
+                                            setData(
+                                                'patient_number_format',
+                                                value,
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger id="format">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="prefix_year_number">
+                                                Prefix + Year + Number (PAT2025000001)
+                                            </SelectItem>
+                                            <SelectItem value="number_year">
+                                                Number + Year (1495/2022)
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.patient_number_format && (
+                                        <p className="text-sm text-red-500">
+                                            {errors.patient_number_format}
+                                        </p>
+                                    )}
+                                    <p className="text-sm text-muted-foreground">
+                                        Choose the overall structure of patient numbers
+                                    </p>
+                                </div>
+
+                                {/* Prefix */}
+                                <div className={`space-y-2 ${data.patient_number_format === 'number_year' ? 'hidden' : ''}`}>
                                     <Label htmlFor="prefix">Prefix</Label>
                                     <Input
                                         id="prefix"
@@ -313,10 +357,23 @@ export default function PatientNumbering({
                                             <strong>Breakdown:</strong>
                                         </p>
                                         <ul className="ml-2 list-inside list-disc space-y-1">
+                                            {data.patient_number_format === 'prefix_year_number' && (
+                                                <li>
+                                                    Prefix:{' '}
+                                                    <code className="rounded bg-muted px-1 py-0.5">
+                                                        {data.patient_number_prefix}
+                                                    </code>
+                                                </li>
+                                            )}
                                             <li>
-                                                Prefix:{' '}
+                                                Number:{' '}
                                                 <code className="rounded bg-muted px-1 py-0.5">
-                                                    {data.patient_number_prefix}
+                                                    {String(
+                                                        nextNumber,
+                                                    ).padStart(
+                                                        data.patient_number_padding,
+                                                        '0',
+                                                    )}
                                                 </code>
                                             </li>
                                             <li>
@@ -328,17 +385,6 @@ export default function PatientNumbering({
                                                         : String(
                                                               new Date().getFullYear(),
                                                           ).slice(-2)}
-                                                </code>
-                                            </li>
-                                            <li>
-                                                Number:{' '}
-                                                <code className="rounded bg-muted px-1 py-0.5">
-                                                    {String(
-                                                        nextNumber,
-                                                    ).padStart(
-                                                        data.patient_number_padding,
-                                                        '0',
-                                                    )}
                                                 </code>
                                             </li>
                                             {data.patient_number_separator && (

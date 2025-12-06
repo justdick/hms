@@ -33,11 +33,12 @@ class PatientNumberingController extends Controller
         $this->authorize('viewAny', Patient::class);
 
         $validated = $request->validate([
-            'patient_number_prefix' => 'required|string|max:10|alpha',
+            'patient_number_prefix' => 'nullable|string|max:10|alpha',
             'patient_number_year_format' => 'required|in:YYYY,YY',
             'patient_number_separator' => 'nullable|string|max:1',
             'patient_number_padding' => 'required|integer|min:3|max:8',
             'patient_number_reset' => 'required|in:never,yearly,monthly',
+            'patient_number_format' => 'required|in:prefix_year_number,number_year',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -61,18 +62,26 @@ class PatientNumberingController extends Controller
     public function preview(Request $request)
     {
         $validated = $request->validate([
-            'prefix' => 'required|string|max:10',
+            'prefix' => 'nullable|string|max:10',
             'yearFormat' => 'required|in:YYYY,YY',
             'separator' => 'nullable|string|max:1',
             'padding' => 'required|integer|min:3|max:8',
             'number' => 'required|integer|min:1',
+            'format' => 'required|in:prefix_year_number,number_year',
         ]);
 
         $year = $validated['yearFormat'] === 'YYYY' ? date('Y') : date('y');
         $separator = $validated['separator'] ?? '';
         $paddedNumber = str_pad($validated['number'], $validated['padding'], '0', STR_PAD_LEFT);
 
-        $preview = $validated['prefix'].$separator.$year.$separator.$paddedNumber;
+        if ($validated['format'] === 'number_year') {
+            // Format: 1495/2022
+            $preview = $paddedNumber.$separator.$year;
+        } else {
+            // Format: PAT2025000001
+            $prefix = $validated['prefix'] ?? '';
+            $preview = $prefix.$separator.$year.$separator.$paddedNumber;
+        }
 
         return response()->json(['preview' => $preview]);
     }
