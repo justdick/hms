@@ -107,7 +107,10 @@ class MigrateDrugsFromMittag extends Command
                 $counter++;
             }
 
-            $drug = Drug::create($drugData);
+            // Disable observers during migration to avoid notification errors
+            $drug = Drug::withoutEvents(function () use ($drugData) {
+                return Drug::create($drugData);
+            });
 
             $this->logMigration($old, $drug->id, $drug->drug_code, 'success');
             $this->migrated++;
@@ -155,20 +158,30 @@ class MigrateDrugsFromMittag extends Command
         $name = strtolower($old->name ?? '');
         $category = strtolower($old->category ?? '');
         
+        // Valid enum values: analgesics, antibiotics, antivirals, antifungals, cardiovascular, 
+        // diabetes, respiratory, gastrointestinal, neurological, psychiatric, dermatological, 
+        // vaccines, vitamins, supplements, other
+
         // Check for cream flag
         if ($old->cream) {
-            return 'topical';
+            return 'dermatological';
         }
 
         // Pattern matching on name/category
         return match (true) {
-            str_contains($name, 'antibiotic') || str_contains($category, 'antibiotic') => 'antibiotic',
-            str_contains($name, 'paracetamol') || str_contains($name, 'ibuprofen') => 'analgesic',
-            str_contains($name, 'vitamin') => 'vitamin',
-            str_contains($name, 'cream') || str_contains($name, 'ointment') => 'topical',
-            str_contains($name, 'syrup') => 'syrup',
-            str_contains($name, 'injection') || str_contains($name, 'inj') => 'injectable',
-            default => 'general',
+            str_contains($name, 'antibiotic') || str_contains($category, 'antibiotic') => 'antibiotics',
+            str_contains($name, 'paracetamol') || str_contains($name, 'ibuprofen') || str_contains($name, 'diclofenac') => 'analgesics',
+            str_contains($name, 'vitamin') => 'vitamins',
+            str_contains($name, 'cream') || str_contains($name, 'ointment') => 'dermatological',
+            str_contains($name, 'antifungal') || str_contains($name, 'fluconazole') => 'antifungals',
+            str_contains($name, 'antiviral') || str_contains($name, 'acyclovir') => 'antivirals',
+            str_contains($name, 'omeprazole') || str_contains($name, 'antacid') => 'gastrointestinal',
+            str_contains($name, 'metformin') || str_contains($name, 'insulin') => 'diabetes',
+            str_contains($name, 'amlodipine') || str_contains($name, 'lisinopril') => 'cardiovascular',
+            str_contains($name, 'salbutamol') || str_contains($name, 'inhaler') => 'respiratory',
+            str_contains($name, 'vaccine') => 'vaccines',
+            str_contains($name, 'supplement') => 'supplements',
+            default => 'other',
         };
     }
 
@@ -191,17 +204,15 @@ class MigrateDrugsFromMittag extends Command
 
     private function mapUnitType(?string $costingUnit): string
     {
+        // Valid enum: piece, bottle, vial, tube, box
         $unit = strtolower(trim($costingUnit ?? ''));
         
         return match (true) {
-            str_contains($unit, 'tab') => 'tablet',
-            str_contains($unit, 'cap') => 'capsule',
             str_contains($unit, 'bottle') || str_contains($unit, 'btl') => 'bottle',
             str_contains($unit, 'vial') => 'vial',
-            str_contains($unit, 'amp') => 'ampoule',
             str_contains($unit, 'tube') => 'tube',
-            str_contains($unit, 'sachet') => 'sachet',
-            default => 'unit',
+            str_contains($unit, 'box') => 'box',
+            default => 'piece',
         };
     }
 

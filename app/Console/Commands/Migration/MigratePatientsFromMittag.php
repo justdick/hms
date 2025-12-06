@@ -149,6 +149,7 @@ class MigratePatientsFromMittag extends Command
         }
 
         return [
+            'patient_number' => $old->folder_id, // Keep original folder_id as patient number
             'first_name' => $firstName,
             'last_name' => $lastName,
             'gender' => $gender,
@@ -157,7 +158,7 @@ class MigratePatientsFromMittag extends Command
             'address' => trim($old->address) ?: null,
             'emergency_contact_name' => trim($old->nok) ?: null,
             'emergency_contact_phone' => $this->cleanPhone($old->nokadd), // nokadd seems to be NOK address/phone
-            'national_id' => $old->folder_id, // Store old folder_id as reference
+            'national_id' => null,
             'status' => 'active',
             // Medical history from old system
             'past_medical_surgical_history' => trim($old->problem) ?: null,
