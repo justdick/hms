@@ -106,7 +106,7 @@ interface Props {
     };
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string }> = {
     pending_vetting: { label: 'Pending Vetting', color: 'bg-yellow-500' },
     vetted: { label: 'Vetted', color: 'bg-blue-500' },
     submitted: { label: 'Submitted', color: 'bg-purple-500' },
@@ -114,6 +114,10 @@ const statusConfig = {
     rejected: { label: 'Rejected', color: 'bg-red-500' },
     paid: { label: 'Paid', color: 'bg-emerald-600' },
     partial: { label: 'Partial Payment', color: 'bg-orange-500' },
+};
+
+const getStatusConfig = (status: string) => {
+    return statusConfig[status] || { label: status, color: 'bg-gray-400' };
 };
 
 export default function InsuranceClaimsIndex({
@@ -498,15 +502,15 @@ export default function InsuranceClaimsIndex({
                                                 <TableCell>
                                                     <Badge
                                                         className={
-                                                            statusConfig[
-                                                                claim.status
-                                                            ].color
+                                                            getStatusConfig(
+                                                                claim.status,
+                                                            ).color
                                                         }
                                                     >
                                                         {
-                                                            statusConfig[
-                                                                claim.status
-                                                            ].label
+                                                            getStatusConfig(
+                                                                claim.status,
+                                                            ).label
                                                         }
                                                     </Badge>
                                                 </TableCell>

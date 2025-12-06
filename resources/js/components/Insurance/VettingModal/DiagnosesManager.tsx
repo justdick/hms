@@ -8,23 +8,20 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import { Label } from '@/components/ui/label';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { Activity, Plus, Star, Trash2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import type { Diagnosis } from './types';
-
-interface DiagnosisOption {
-    id: number;
-    name: string;
-    icd_code: string;
-}
+import { cn } from '@/lib/utils';
+import { Activity, Check, ChevronsUpDown, Plus, Star, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import type { AvailableDiagnosis, Diagnosis } from './types';
 
 interface DiagnosesManagerProps {
     diagnoses: Diagnosis[];
+    availableDiagnoses: AvailableDiagnosis[];
     onChange: (diagnoses: Diagnosis[]) => void;
     disabled?: boolean;
 }
@@ -32,66 +29,31 @@ interface DiagnosesManagerProps {
 /**
  * DiagnosesManager - Component for managing claim diagnoses
  *
- * Features:
- * - Display pre-populated diagnoses from consultation
- * - Add new diagnoses with searchable dropdown
- * - Remove diagnoses from claim
- * - Set primary diagnosis
- * - Changes only affect the claim, not the original consultation
- *
- * @example
- * ```tsx
- * <DiagnosesManager
- *   diagnoses={diagnoses}
- *   onChange={handleDiagnosesChange}
- *   disabled={processing}
- * />
- * ```
+ * Uses pre-loaded diagnoses list with client-side filtering (like consultation page)
  */
 export function DiagnosesManager({
     diagnoses,
+    availableDiagnoses,
     onChange,
     disabled = false,
 }: DiagnosesManagerProps) {
     const [open, setOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<DiagnosisOption[]>([]);
-    const [searching, setSearching] = useState(false);
+    const [selectedDiagnosis, setSelectedDiagnosis] = useState<number | null>(null);
 
-    // Search for diagnoses
-    const handleSearch = useCallback(async (query: string) => {
-        setSearchQuery(query);
+    // Get IDs of already added diagnoses
+    const addedDiagnosisIds = diagnoses.map((d) => d.diagnosis_id);
 
-        if (query.length < 2) {
-            setSearchResults([]);
-            return;
-        }
+    // Filter available diagnoses to exclude already added ones
+    const filteredDiagnoses = availableDiagnoses.filter(
+        (d) => !addedDiagnosisIds.includes(d.id),
+    );
 
-        setSearching(true);
+    const handleAddDiagnosis = () => {
+        if (!selectedDiagnosis) return;
 
-        try {
-            const response = await fetch(
-                `/api/diagnoses/search?q=${encodeURIComponent(query)}`,
-                {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                },
-            );
+        const diagnosis = availableDiagnoses.find((d) => d.id === selectedDiagnosis);
+        if (!diagnosis) return;
 
-            if (response.ok) {
-                const data = await response.json();
-                setSearchResults(data.data || data);
-            }
-        } catch (error) {
-            console.error('Failed to search diagnoses:', error);
-        } finally {
-            setSearching(false);
-        }
-    }, []);
-
-    const handleAddDiagnosis = (diagnosis: DiagnosisOption) => {
         // Check if already added
         if (diagnoses.some((d) => d.diagnosis_id === diagnosis.id)) {
             return;
@@ -100,15 +62,14 @@ export function DiagnosesManager({
         const newDiagnosis: Diagnosis = {
             id: null,
             diagnosis_id: diagnosis.id,
-            name: diagnosis.name,
-            icd_code: diagnosis.icd_code,
+            name: diagnosis.diagnosis,
+            icd_code: diagnosis.icd_10,
             is_primary: diagnoses.length === 0, // First diagnosis is primary
         };
 
         onChange([...diagnoses, newDiagnosis]);
+        setSelectedDiagnosis(null);
         setOpen(false);
-        setSearchQuery('');
-        setSearchResults([]);
     };
 
     const handleRemoveDiagnosis = (diagnosisId: number) => {
@@ -143,97 +104,100 @@ export function DiagnosesManager({
                         {diagnoses.length}
                     </Badge>
                 </h3>
+            </div>
 
-                <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={disabled}
-                            aria-label="Add diagnosis"
-                        >
-                            <Plus className="mr-1 h-4 w-4" />
-                            Add Diagnosis
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0" align="end">
-                        <Command shouldFilter={false}>
-                            <CommandInput
-                                placeholder="Search by name or ICD-10 code..."
-                                value={searchQuery}
-                                onValueChange={handleSearch}
-                            />
-                            <CommandList>
-                                {searching ? (
-                                    <div className="p-4 text-center text-sm text-gray-500">
-                                        Searching...
-                                    </div>
-                                ) : searchQuery.length < 2 ? (
-                                    <div className="p-4 text-center text-sm text-gray-500">
-                                        Type at least 2 characters to search
-                                    </div>
-                                ) : searchResults.length === 0 ? (
-                                    <CommandEmpty>
-                                        No diagnosis found.
-                                    </CommandEmpty>
-                                ) : (
-                                    <CommandGroup>
-                                        {searchResults.map((diagnosis) => {
-                                            const isAdded = diagnoses.some(
-                                                (d) =>
-                                                    d.diagnosis_id ===
-                                                    diagnosis.id,
-                                            );
-                                            return (
+            {/* Add Diagnosis */}
+            {!disabled && (
+                <div className="mb-4 rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-blue-800 dark:from-blue-950/20 dark:to-indigo-950/20">
+                    <Label className="mb-2 block text-sm font-medium">
+                        Add Diagnosis
+                    </Label>
+                    <div className="flex gap-2">
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="flex-1 justify-between"
+                                    disabled={disabled}
+                                >
+                                    {selectedDiagnosis
+                                        ? availableDiagnoses.find(
+                                              (d) => d.id === selectedDiagnosis,
+                                          )?.diagnosis
+                                        : 'Select diagnosis...'}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-[500px] p-0"
+                                align="start"
+                            >
+                                <Command>
+                                    <CommandInput placeholder="Search diagnoses..." />
+                                    <CommandList>
+                                        <CommandEmpty>
+                                            No diagnosis found.
+                                        </CommandEmpty>
+                                        <CommandGroup>
+                                            {filteredDiagnoses.map((diagnosis) => (
                                                 <CommandItem
                                                     key={diagnosis.id}
-                                                    value={diagnosis.icd_code}
-                                                    onSelect={() =>
-                                                        handleAddDiagnosis(
-                                                            diagnosis,
-                                                        )
-                                                    }
-                                                    disabled={isAdded}
-                                                    className={
-                                                        isAdded
-                                                            ? 'opacity-50'
-                                                            : ''
-                                                    }
+                                                    value={`${diagnosis.diagnosis} ${diagnosis.code} ${diagnosis.icd_10}`}
+                                                    onSelect={() => {
+                                                        setSelectedDiagnosis(diagnosis.id);
+                                                        setOpen(false);
+                                                    }}
                                                 >
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium">
-                                                            {diagnosis.name}
-                                                        </span>
-                                                        <span className="text-sm text-gray-500">
-                                                            ICD-10:{' '}
-                                                            {diagnosis.icd_code}
-                                                        </span>
+                                                    <Check
+                                                        className={cn(
+                                                            'mr-2 h-4 w-4',
+                                                            selectedDiagnosis === diagnosis.id
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0',
+                                                        )}
+                                                    />
+                                                    <div className="flex flex-1 flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium">
+                                                                {diagnosis.diagnosis}
+                                                            </span>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="text-xs"
+                                                            >
+                                                                {diagnosis.code}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                            ICD-10: {diagnosis.icd_10} • Group: {diagnosis.g_drg}
+                                                        </div>
                                                     </div>
-                                                    {isAdded && (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="ml-auto"
-                                                        >
-                                                            Added
-                                                        </Badge>
-                                                    )}
                                                 </CommandItem>
-                                            );
-                                        })}
-                                    </CommandGroup>
-                                )}
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
-            </div>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <Button
+                            onClick={handleAddDiagnosis}
+                            disabled={!selectedDiagnosis || disabled}
+                            size="icon"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Diagnoses List */}
             {diagnoses.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center dark:border-gray-700">
                     <Activity className="mx-auto mb-2 h-8 w-8 text-gray-400" />
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No diagnoses added. Click "Add Diagnosis" to add one.
+                        No diagnoses added. Select a diagnosis above to add one.
                     </p>
                 </div>
             ) : (
@@ -253,9 +217,7 @@ export function DiagnosesManager({
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            handleSetPrimary(
-                                                diagnosis.diagnosis_id,
-                                            )
+                                            handleSetPrimary(diagnosis.diagnosis_id)
                                         }
                                         disabled={disabled}
                                         className="text-gray-400 hover:text-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -281,20 +243,19 @@ export function DiagnosesManager({
                                         Primary
                                     </Badge>
                                 )}
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                        handleRemoveDiagnosis(
-                                            diagnosis.diagnosis_id,
-                                        )
-                                    }
-                                    disabled={disabled}
-                                    className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                                    aria-label={`Remove ${diagnosis.name}`}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {!disabled && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                            handleRemoveDiagnosis(diagnosis.diagnosis_id)
+                                        }
+                                        className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                                        aria-label={`Remove ${diagnosis.name}`}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -302,8 +263,7 @@ export function DiagnosesManager({
             )}
 
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Changes to diagnoses only affect this claim, not the original
-                consultation.
+                Changes to diagnoses only affect this claim, not the original consultation.
             </p>
         </section>
     );

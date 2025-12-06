@@ -25,13 +25,14 @@ beforeEach(function () {
     InsuranceClaim::query()->delete();
 
     Permission::firstOrCreate(['name' => 'insurance.vet-claims']);
+    Permission::firstOrCreate(['name' => 'insurance.view-claims']);
     Permission::firstOrCreate(['name' => 'system.admin']);
 });
 
 it('does not persist changes when only fetching vetting data', function () {
     // Arrange
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -77,7 +78,7 @@ it('does not persist changes when only fetching vetting data', function () {
 it('does not persist G-DRG selection until approval is submitted', function () {
     // Arrange
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $nhisProvider = InsuranceProvider::factory()->nhis()->create();
     $nhisPlan = InsurancePlan::factory()->create(['insurance_provider_id' => $nhisProvider->id]);
@@ -116,7 +117,7 @@ it('does not persist G-DRG selection until approval is submitted', function () {
 it('preserves original claim state when modal is closed without approval', function () {
     // Arrange
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -174,7 +175,7 @@ dataset('random_claim_states', function () {
 it('maintains claim state regardless of how many times vetting data is fetched', function (string $initialStatus) {
     // Arrange
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -213,7 +214,7 @@ it('maintains claim state regardless of how many times vetting data is fetched',
 it('only persists changes when approval is explicitly submitted', function () {
     // Arrange
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $nhisProvider = InsuranceProvider::factory()->nhis()->create();
     $nhisPlan = InsurancePlan::factory()->create(['insurance_provider_id' => $nhisProvider->id]);

@@ -54,6 +54,11 @@ class VetClaimRequest extends FormRequest
             ],
             'items.*.is_approved' => ['required', 'boolean'],
             'items.*.rejection_reason' => ['nullable', 'string', 'max:500'],
+            // Attendance details (editable during vetting)
+            'type_of_attendance' => ['nullable', 'string', 'max:10'],
+            'type_of_service' => ['nullable', 'string', 'max:10'],
+            'specialty_attended' => ['nullable', 'string', 'max:10'],
+            'attending_prescriber' => ['nullable', 'string', 'max:255'],
         ];
     }
 

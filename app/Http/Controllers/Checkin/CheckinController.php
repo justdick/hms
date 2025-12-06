@@ -99,14 +99,24 @@ class CheckinController extends Controller
         }
 
         // Auto-complete any in-progress consultations for this patient
-        Consultation::whereHas('patientCheckin', function ($query) use ($validated) {
+        // Also update the associated check-in status
+        $inProgressConsultations = Consultation::whereHas('patientCheckin', function ($query) use ($validated) {
             $query->where('patient_id', $validated['patient_id']);
         })
             ->where('status', 'in_progress')
-            ->update([
+            ->get();
+
+        foreach ($inProgressConsultations as $consultation) {
+            $consultation->update([
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
+
+            $consultation->patientCheckin->update([
+                'status' => 'completed',
+                'consultation_completed_at' => now(),
+            ]);
+        }
 
         // Check if patient has an incomplete check-in (regardless of date)
         $incompleteCheckin = PatientCheckin::where('patient_id', $validated['patient_id'])
@@ -154,7 +164,7 @@ class CheckinController extends Controller
                     'date_of_attendance' => $checkin->checked_in_at,
                     'type_of_service' => 'outpatient',
                     'type_of_attendance' => 'routine',
-                    'status' => 'draft',
+                    'status' => 'pending_vetting',
                     'total_claim_amount' => 0,
                     'approved_amount' => 0,
                     'patient_copay_amount' => 0,

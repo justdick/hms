@@ -42,6 +42,8 @@ class ClaimVettingService
             'patientInsurance.plan.provider',
             'consultation.diagnoses.diagnosis',
             'consultation.doctor',
+            'checkin.department',
+            'checkin.consultation.doctor',
             'admission.wardRounds',
             'claimDiagnoses.diagnosis',
             'items.nhisTariff',
@@ -113,17 +115,118 @@ class ClaimVettingService
      */
     protected function getAttendanceDetails(InsuranceClaim $claim): array
     {
+        // Fall back to consultation doctor if attending_prescriber is not set
+        // Check both direct consultation and via checkin
+        $attendingPrescriber = $claim->attending_prescriber;
+        if (empty($attendingPrescriber)) {
+            $doctor = $claim->consultation?->doctor ?? $claim->checkin?->consultation?->doctor;
+            $attendingPrescriber = $doctor?->name;
+        }
+
+        // Fall back to department-based specialty if not set
+        $specialtyAttended = $claim->specialty_attended;
+        if (empty($specialtyAttended)) {
+            $specialtyAttended = $this->mapDepartmentToSpecialty($claim->checkin?->department);
+        }
+
+        // Map old values to NHIS codes
+        $typeOfAttendance = $this->mapToNhisAttendanceCode($claim->type_of_attendance);
+        $typeOfService = $this->mapToNhisServiceCode($claim->type_of_service);
+
         return [
-            'type_of_attendance' => $claim->type_of_attendance,
+            'type_of_attendance' => $typeOfAttendance,
             'date_of_attendance' => $claim->date_of_attendance,
             'date_of_discharge' => $claim->date_of_discharge,
-            'type_of_service' => $claim->type_of_service,
-            'specialty_attended' => $claim->specialty_attended,
-            'attending_prescriber' => $claim->attending_prescriber,
+            'type_of_service' => $typeOfService,
+            'specialty_attended' => $specialtyAttended ?? 'OPDC',
+            'attending_prescriber' => $attendingPrescriber,
             'claim_check_code' => $claim->claim_check_code,
             'is_unbundled' => $claim->is_unbundled,
             'is_pharmacy_included' => $claim->is_pharmacy_included,
+            // Include NHIS code options for editing
+            'attendance_type_options' => InsuranceClaimService::ATTENDANCE_TYPES,
+            'service_type_options' => InsuranceClaimService::SERVICE_TYPES,
+            'specialty_options' => InsuranceClaimService::SPECIALTY_CODES,
         ];
+    }
+
+    /**
+     * Map old attendance type values to NHIS codes.
+     */
+    protected function mapToNhisAttendanceCode(?string $value): string
+    {
+        if (empty($value)) {
+            return 'EAE';
+        }
+
+        // If already a valid NHIS code, return as-is
+        if (array_key_exists($value, InsuranceClaimService::ATTENDANCE_TYPES)) {
+            return $value;
+        }
+
+        // Map old values to NHIS codes
+        $value = strtolower($value);
+
+        return match (true) {
+            str_contains($value, 'emergency') => 'EAE',
+            str_contains($value, 'acute') => 'EAE',
+            str_contains($value, 'routine') => 'EAE',
+            str_contains($value, 'antenatal') || str_contains($value, 'anc') => 'ANC',
+            str_contains($value, 'postnatal') || str_contains($value, 'pnc') => 'PNC',
+            str_contains($value, 'review') || str_contains($value, 'follow') => 'REV',
+            default => 'EAE',
+        };
+    }
+
+    /**
+     * Map old service type values to NHIS codes.
+     */
+    protected function mapToNhisServiceCode(?string $value): string
+    {
+        if (empty($value)) {
+            return 'OPD';
+        }
+
+        // If already a valid NHIS code, return as-is
+        if (array_key_exists($value, InsuranceClaimService::SERVICE_TYPES)) {
+            return $value;
+        }
+
+        // Map old values to NHIS codes
+        $value = strtolower($value);
+
+        return match (true) {
+            str_contains($value, 'inpatient') || str_contains($value, 'ipd') => 'IPD',
+            default => 'OPD',
+        };
+    }
+
+    /**
+     * Map department to NHIS specialty code.
+     */
+    protected function mapDepartmentToSpecialty($department): string
+    {
+        if (! $department) {
+            return 'OPDC';
+        }
+
+        $name = strtolower($department->name ?? '');
+
+        return match (true) {
+            str_contains($name, 'dental') => 'DENT',
+            str_contains($name, 'ent') => 'ENT',
+            str_contains($name, 'eye') || str_contains($name, 'ophthal') => 'EYE',
+            str_contains($name, 'gynae') || str_contains($name, 'gyna') => 'GYNA',
+            str_contains($name, 'obstet') || str_contains($name, 'maternity') => 'OBST',
+            str_contains($name, 'paed') || str_contains($name, 'child') => 'PAED',
+            str_contains($name, 'surg') => 'SURG',
+            str_contains($name, 'ortho') => 'ORTH',
+            str_contains($name, 'psych') || str_contains($name, 'mental') => 'PSYC',
+            str_contains($name, 'derm') || str_contains($name, 'skin') => 'DERM',
+            str_contains($name, 'physio') => 'PHYS',
+            str_contains($name, 'medicine') || str_contains($name, 'internal') => 'MEDI',
+            default => 'OPDC',
+        };
     }
 
     /**
@@ -378,9 +481,15 @@ class ClaimVettingService
      */
     protected function storeNhisPricesOnItems(InsuranceClaim $claim): void
     {
-        $claim->load('items');
+        // Load items with charge and prescription (the only relationship that exists on Charge)
+        $claim->load(['items.charge.prescription.drug']);
 
         foreach ($claim->items as $item) {
+            // Skip if already has NHIS price
+            if ($item->nhis_price !== null) {
+                continue;
+            }
+
             // Determine item type for NHIS lookup
             $itemType = $this->mapClaimItemTypeToNhisType($item->item_type);
 
@@ -426,11 +535,15 @@ class ClaimVettingService
      */
     protected function getItemIdFromClaimItem(InsuranceClaimItem $item): ?int
     {
-        // Try to get from charge relationship
+        // Try to get from charge metadata first (most reliable for this system)
         if ($item->charge) {
-            $metadata = $item->charge->metadata ?? [];
+            // For pharmacy/drug items, get drug_id from prescription
+            if ($item->charge->prescription?->drug_id) {
+                return (int) $item->charge->prescription->drug_id;
+            }
 
-            // Check for specific item IDs in metadata
+            // Fallback to metadata for all item types
+            $metadata = $item->charge->metadata ?? [];
             if (isset($metadata['drug_id'])) {
                 return (int) $metadata['drug_id'];
             }

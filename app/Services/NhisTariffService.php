@@ -13,6 +13,7 @@ class NhisTariffService
 {
     /**
      * Get the NHIS tariff for a specific item via item mapping.
+     * Checks both nhis_tariff (medicines) and gdrg_tariff (labs/procedures).
      *
      * @param  string  $itemType  The type of item (drug, lab_service, procedure, consumable)
      * @param  int  $itemId  The ID of the item
@@ -22,19 +23,54 @@ class NhisTariffService
     {
         $mapping = NhisItemMapping::query()
             ->forItem($itemType, $itemId)
-            ->with('nhisTariff')
+            ->with(['nhisTariff', 'gdrgTariff'])
             ->first();
 
-        if (! $mapping || ! $mapping->nhisTariff) {
+        if (! $mapping) {
             return null;
         }
 
-        // Only return active tariffs
-        if (! $mapping->nhisTariff->is_active) {
-            return null;
+        // First check NHIS tariff (medicines)
+        if ($mapping->nhisTariff && $mapping->nhisTariff->is_active) {
+            return $mapping->nhisTariff;
         }
 
-        return $mapping->nhisTariff;
+        // Fall back to G-DRG tariff (labs, procedures) - convert to NhisTariff-like object
+        if ($mapping->gdrgTariff && $mapping->gdrgTariff->is_active) {
+            return $this->convertGdrgToNhisTariff($mapping->gdrgTariff);
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert a G-DRG tariff to an NhisTariff-like object for consistent handling.
+     */
+    protected function convertGdrgToNhisTariff($gdrgTariff): NhisTariff
+    {
+        // Create a virtual NhisTariff object (not persisted)
+        $nhisTariff = new NhisTariff;
+        $nhisTariff->id = $gdrgTariff->id;
+        $nhisTariff->nhis_code = $gdrgTariff->code;
+        $nhisTariff->name = $gdrgTariff->name;
+        $nhisTariff->price = $gdrgTariff->tariff_price;
+        $nhisTariff->category = $this->mapGdrgCategoryToNhis($gdrgTariff->mdc_category);
+        $nhisTariff->is_active = $gdrgTariff->is_active;
+        $nhisTariff->exists = false; // Mark as not persisted
+
+        return $nhisTariff;
+    }
+
+    /**
+     * Map G-DRG MDC category to NHIS category.
+     */
+    protected function mapGdrgCategoryToNhis(string $mdcCategory): string
+    {
+        return match (strtoupper($mdcCategory)) {
+            'INVESTIGATION' => 'lab',
+            'ADULT SURGERY', 'PAEDIATRIC SURGERY', 'SURGERY' => 'procedure',
+            default => 'procedure',
+        };
     }
 
     /**
@@ -52,18 +88,22 @@ class NhisTariffService
     }
 
     /**
-     * Check if an item has an NHIS mapping.
+     * Check if an item has an NHIS mapping (either NHIS tariff or G-DRG tariff).
      *
      * @param  string  $itemType  The type of item (drug, lab_service, procedure, consumable)
      * @param  int  $itemId  The ID of the item
-     * @return bool True if the item is mapped to an NHIS tariff
+     * @return bool True if the item is mapped to an NHIS or G-DRG tariff
      */
     public function isItemMapped(string $itemType, int $itemId): bool
     {
         return NhisItemMapping::query()
             ->forItem($itemType, $itemId)
-            ->whereHas('nhisTariff', function ($query) {
-                $query->where('is_active', true);
+            ->where(function ($query) {
+                $query->whereHas('nhisTariff', function ($q) {
+                    $q->where('is_active', true);
+                })->orWhereHas('gdrgTariff', function ($q) {
+                    $q->where('is_active', true);
+                });
             })
             ->exists();
     }

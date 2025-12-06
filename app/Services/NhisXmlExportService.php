@@ -6,12 +6,13 @@ use App\Models\ClaimBatch;
 use App\Models\InsuranceClaim;
 use App\Models\InsuranceClaimDiagnosis;
 use App\Models\InsuranceClaimItem;
-use App\Models\SystemConfiguration;
 use DOMDocument;
 use DOMElement;
 
 /**
  * Service for generating NHIA-compliant XML exports for claim batches.
+ *
+ * Generates XML in the exact format required by NHIS portal submission.
  *
  * _Requirements: 15.1, 15.2, 15.3_
  */
@@ -32,23 +33,9 @@ class NhisXmlExportService
         $this->dom = new DOMDocument('1.0', 'UTF-8');
         $this->dom->formatOutput = true;
 
-        // Create root element
-        $root = $this->dom->createElement('NHIAClaimBatch');
-        $root->setAttribute('xmlns', 'http://nhia.gov.gh/claims');
-        $root->setAttribute('version', '1.0');
+        // Create root element - NHIS uses simple <claims> root
+        $root = $this->dom->createElement('claims');
         $this->dom->appendChild($root);
-
-        // Add facility information
-        $facilityElement = $this->createFacilityElement();
-        $root->appendChild($facilityElement);
-
-        // Add batch details
-        $batchElement = $this->createBatchElement($batch);
-        $root->appendChild($batchElement);
-
-        // Add claims
-        $claimsElement = $this->dom->createElement('Claims');
-        $claimsElement->setAttribute('count', (string) $batch->total_claims);
 
         // Load batch items with related claims
         $batchItems = $batch->batchItems()
@@ -57,57 +44,22 @@ class NhisXmlExportService
                 'insuranceClaim.gdrgTariff',
                 'insuranceClaim.claimDiagnoses.diagnosis',
                 'insuranceClaim.items.nhisTariff',
+                'insuranceClaim.items.charge.prescription.drug',
             ])
             ->get();
 
         foreach ($batchItems as $batchItem) {
             if ($batchItem->insuranceClaim) {
                 $claimElement = $this->generateClaimElement($batchItem->insuranceClaim);
-                $claimsElement->appendChild($claimElement);
+                $root->appendChild($claimElement);
             }
         }
-
-        $root->appendChild($claimsElement);
 
         return $this->dom->saveXML();
     }
 
     /**
-     * Create the facility information element.
-     */
-    protected function createFacilityElement(): DOMElement
-    {
-        $facility = $this->dom->createElement('Facility');
-
-        // Get facility code from system configuration
-        $facilityCode = SystemConfiguration::get('nhis_facility_code', 'FACILITY-001');
-        $facilityName = SystemConfiguration::get('facility_name', 'Hospital');
-
-        $facility->appendChild($this->dom->createElement('FacilityCode', $this->escapeXml($facilityCode)));
-        $facility->appendChild($this->dom->createElement('FacilityName', $this->escapeXml($facilityName)));
-
-        return $facility;
-    }
-
-    /**
-     * Create the batch details element.
-     */
-    protected function createBatchElement(ClaimBatch $batch): DOMElement
-    {
-        $batchElement = $this->dom->createElement('BatchDetails');
-
-        $batchElement->appendChild($this->dom->createElement('BatchNumber', $this->escapeXml($batch->batch_number)));
-        $batchElement->appendChild($this->dom->createElement('BatchName', $this->escapeXml($batch->name)));
-        $batchElement->appendChild($this->dom->createElement('SubmissionPeriod', $batch->submission_period->format('Y-m')));
-        $batchElement->appendChild($this->dom->createElement('TotalClaims', (string) $batch->total_claims));
-        $batchElement->appendChild($this->dom->createElement('TotalAmount', number_format((float) $batch->total_amount, 2, '.', '')));
-        $batchElement->appendChild($this->dom->createElement('GeneratedAt', now()->toIso8601String()));
-
-        return $batchElement;
-    }
-
-    /**
-     * Generate a claim element for the XML.
+     * Generate a claim element for the XML in NHIS format.
      *
      * @param  InsuranceClaim  $claim  The claim to generate XML for
      * @return DOMElement The claim element
@@ -116,118 +68,241 @@ class NhisXmlExportService
      */
     public function generateClaimElement(InsuranceClaim $claim): DOMElement
     {
-        $claimElement = $this->dom->createElement('Claim');
-        $claimElement->setAttribute('id', $claim->claim_check_code ?? '');
+        $claimElement = $this->dom->createElement('claim');
 
-        // Patient information - Get NHIS member ID from claim's membership_id or PatientInsurance
-        $patientElement = $this->dom->createElement('Patient');
+        // Basic claim identifiers
+        $this->appendElement($claimElement, 'claimID', $claim->id);
+        $this->appendElement($claimElement, 'claimCheckCode', $claim->claim_check_code ?? '');
+        $this->appendElement($claimElement, 'preAuthorizationCodes', '');
+        $this->appendElement($claimElement, 'physicianID', '');
+
+        // Patient information - flat structure
         $nhisMemberId = $claim->membership_id ?? $claim->patientInsurance?->membership_id ?? '';
-        $patientElement->appendChild($this->dom->createElement('NhisMemberId', $this->escapeXml($nhisMemberId)));
-        $patientElement->appendChild($this->dom->createElement('Surname', $this->escapeXml($claim->patient_surname ?? '')));
-        $patientElement->appendChild($this->dom->createElement('OtherNames', $this->escapeXml($claim->patient_other_names ?? '')));
-        $patientElement->appendChild($this->dom->createElement('DateOfBirth', $claim->patient_dob?->format('Y-m-d') ?? ''));
-        $patientElement->appendChild($this->dom->createElement('Gender', $this->escapeXml($claim->patient_gender ?? '')));
-        $patientElement->appendChild($this->dom->createElement('FolderId', $this->escapeXml($claim->folder_id ?? '')));
-        $claimElement->appendChild($patientElement);
+        $this->appendElement($claimElement, 'memberNo', $nhisMemberId);
+        $this->appendElement($claimElement, 'cardSerialNo', '');
+        $this->appendElement($claimElement, 'surname', $claim->patient_surname ?? '');
+        $this->appendElement($claimElement, 'otherNames', $claim->patient_other_names ?? '');
+        $this->appendElement($claimElement, 'dateOfBirth', $claim->patient_dob?->format('Y-m-d') ?? '');
+        $this->appendElement($claimElement, 'gender', $this->formatGender($claim->patient_gender));
+        $this->appendElement($claimElement, 'hospitalRecNo', $claim->folder_id ?? '');
+        $this->appendElement($claimElement, 'isDependant', '0');
 
-        // Attendance details
-        $attendanceElement = $this->dom->createElement('Attendance');
-        $attendanceElement->appendChild($this->dom->createElement('DateOfAttendance', $claim->date_of_attendance?->format('Y-m-d') ?? ''));
-        $attendanceElement->appendChild($this->dom->createElement('DateOfDischarge', $claim->date_of_discharge?->format('Y-m-d') ?? ''));
-        $attendanceElement->appendChild($this->dom->createElement('TypeOfAttendance', $this->escapeXml($claim->type_of_attendance ?? '')));
-        $attendanceElement->appendChild($this->dom->createElement('TypeOfService', $this->escapeXml($claim->type_of_service ?? '')));
-        $attendanceElement->appendChild($this->dom->createElement('SpecialtyAttended', $this->escapeXml($claim->specialty_attended ?? '')));
-        $attendanceElement->appendChild($this->dom->createElement('AttendingPrescriber', $this->escapeXml($claim->attending_prescriber ?? '')));
-        $claimElement->appendChild($attendanceElement);
+        // Service information
+        $this->appendElement($claimElement, 'typeOfService', $claim->type_of_service ?? 'OPD');
+        $this->appendElement($claimElement, 'isUnbundled', $claim->is_unbundled ? '1' : '0');
+        $this->appendElement($claimElement, 'includesPharmacy', $this->hasPharmacyItems($claim) ? '1' : '0');
+        $this->appendElement($claimElement, 'typeOfAttendance', $claim->type_of_attendance ?? 'EAE');
+        $this->appendElement($claimElement, 'serviceOutcome', 'DISC');
 
-        // G-DRG information
-        $gdrgElement = $this->dom->createElement('GDRG');
-        $gdrgElement->appendChild($this->dom->createElement('Code', $this->escapeXml($claim->gdrgTariff?->code ?? $claim->c_drg_code ?? '')));
-        $gdrgElement->appendChild($this->dom->createElement('Name', $this->escapeXml($claim->gdrgTariff?->name ?? '')));
-        $gdrgElement->appendChild($this->dom->createElement('Amount', number_format((float) ($claim->gdrg_amount ?? 0), 2, '.', '')));
-        $claimElement->appendChild($gdrgElement);
+        // Date of service (appears twice in NHIS format)
+        $serviceDate = $claim->date_of_attendance?->format('Y-m-d') ?? '';
+        $this->appendElement($claimElement, 'dateOfService', $serviceDate);
+        $this->appendElement($claimElement, 'dateOfService', $claim->date_of_discharge?->format('Y-m-d') ?? $serviceDate);
 
-        // Diagnoses
-        $diagnosesElement = $this->dom->createElement('Diagnoses');
-        $claimDiagnoses = $claim->claimDiagnoses ?? collect();
+        $this->appendElement($claimElement, 'specialtyAttended', $claim->specialty_attended ?? 'OPDC');
 
-        foreach ($claimDiagnoses as $claimDiagnosis) {
-            $diagnosisElement = $this->createDiagnosisElement($claimDiagnosis);
-            $diagnosesElement->appendChild($diagnosisElement);
-        }
+        // Add procedures (if any)
+        $this->addProcedures($claimElement, $claim);
 
-        // If no claim diagnoses, use primary diagnosis from claim
-        if ($claimDiagnoses->isEmpty() && $claim->primary_diagnosis_code) {
-            $primaryDiag = $this->dom->createElement('Diagnosis');
-            $primaryDiag->setAttribute('isPrimary', 'true');
-            $primaryDiag->appendChild($this->dom->createElement('ICD10Code', $this->escapeXml($claim->primary_diagnosis_code)));
-            $primaryDiag->appendChild($this->dom->createElement('Description', $this->escapeXml($claim->primary_diagnosis_description ?? '')));
-            $diagnosesElement->appendChild($primaryDiag);
-        }
+        // Add diagnoses
+        $this->addDiagnoses($claimElement, $claim);
 
-        $claimElement->appendChild($diagnosesElement);
+        // Add medicines
+        $this->addMedicines($claimElement, $claim);
 
-        // Claim items
-        $itemsElement = $this->dom->createElement('Items');
-        $claimItems = $claim->items ?? collect();
-
-        foreach ($claimItems as $item) {
-            $itemElement = $this->generateItemElement($item);
-            $itemsElement->appendChild($itemElement);
-        }
-
-        $claimElement->appendChild($itemsElement);
-
-        // Totals
-        $totalsElement = $this->dom->createElement('Totals');
-        $totalsElement->appendChild($this->dom->createElement('TotalClaimAmount', number_format((float) ($claim->total_claim_amount ?? 0), 2, '.', '')));
-        $totalsElement->appendChild($this->dom->createElement('InsuranceCoveredAmount', number_format((float) ($claim->insurance_covered_amount ?? 0), 2, '.', '')));
-        $totalsElement->appendChild($this->dom->createElement('PatientCopayAmount', number_format((float) ($claim->patient_copay_amount ?? 0), 2, '.', '')));
-        $claimElement->appendChild($totalsElement);
+        // Add referral info (always present, can be empty)
+        $this->addReferralInfo($claimElement);
 
         return $claimElement;
     }
 
     /**
-     * Create a diagnosis element.
+     * Add procedure elements to the claim.
      */
-    protected function createDiagnosisElement(InsuranceClaimDiagnosis $claimDiagnosis): DOMElement
+    protected function addProcedures(DOMElement $claimElement, InsuranceClaim $claim): void
     {
-        $diagnosisElement = $this->dom->createElement('Diagnosis');
-        $diagnosisElement->setAttribute('isPrimary', $claimDiagnosis->is_primary ? 'true' : 'false');
+        // Get procedure items from claim items
+        $procedureItems = $claim->items?->filter(fn ($item) => $item->item_type === 'procedure') ?? collect();
 
+        foreach ($procedureItems as $item) {
+            $procedureElement = $this->dom->createElement('procedure');
+
+            $this->appendElement($procedureElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
+            $this->appendElement($procedureElement, 'gdrgCode', $claim->gdrgTariff?->code ?? $claim->c_drg_code ?? '');
+            $this->appendElement($procedureElement, 'ICD10', $claim->primary_diagnosis_code ?? '-');
+
+            $claimElement->appendChild($procedureElement);
+        }
+    }
+
+    /**
+     * Add diagnosis elements to the claim.
+     */
+    protected function addDiagnoses(DOMElement $claimElement, InsuranceClaim $claim): void
+    {
+        $claimDiagnoses = $claim->claimDiagnoses ?? collect();
+        $gdrgCode = $claim->gdrgTariff?->code ?? $claim->c_drg_code ?? '';
+        $serviceDate = $claim->date_of_attendance?->format('Y-m-d') ?? '';
+
+        if ($claimDiagnoses->isNotEmpty()) {
+            foreach ($claimDiagnoses as $claimDiagnosis) {
+                $diagnosisElement = $this->createDiagnosisElement($claimDiagnosis, $gdrgCode, $serviceDate);
+                $claimElement->appendChild($diagnosisElement);
+            }
+        } elseif ($claim->primary_diagnosis_code || $claim->primary_diagnosis_description) {
+            // Fallback to primary diagnosis from claim
+            $diagnosisElement = $this->dom->createElement('diagnosis');
+            $this->appendElement($diagnosisElement, 'serviceDate', $serviceDate);
+            $this->appendElement($diagnosisElement, 'gdrgCode', $gdrgCode);
+            $this->appendElement($diagnosisElement, 'ICD10', $claim->primary_diagnosis_code ?? '-');
+            $this->appendElement($diagnosisElement, 'diagnosis', $claim->primary_diagnosis_description ?? '');
+            $claimElement->appendChild($diagnosisElement);
+        }
+    }
+
+    /**
+     * Create a diagnosis element in NHIS format.
+     */
+    protected function createDiagnosisElement(InsuranceClaimDiagnosis $claimDiagnosis, string $gdrgCode, string $serviceDate): DOMElement
+    {
+        $diagnosisElement = $this->dom->createElement('diagnosis');
         $diagnosis = $claimDiagnosis->diagnosis;
-        $diagnosisElement->appendChild($this->dom->createElement('ICD10Code', $this->escapeXml($diagnosis?->icd_10 ?? $diagnosis?->code ?? '')));
-        $diagnosisElement->appendChild($this->dom->createElement('Description', $this->escapeXml($diagnosis?->diagnosis ?? '')));
+
+        $this->appendElement($diagnosisElement, 'serviceDate', $serviceDate);
+        $this->appendElement($diagnosisElement, 'gdrgCode', $gdrgCode);
+        $this->appendElement($diagnosisElement, 'ICD10', $diagnosis?->icd_10 ?? $diagnosis?->code ?? '-');
+        $this->appendElement($diagnosisElement, 'diagnosis', $diagnosis?->diagnosis ?? '');
 
         return $diagnosisElement;
     }
 
     /**
-     * Generate an item element for the XML.
-     *
-     * @param  InsuranceClaimItem  $item  The item to generate XML for
-     * @return DOMElement The item element
-     *
-     * _Requirements: 15.3_
+     * Add medicine elements to the claim.
      */
-    public function generateItemElement(InsuranceClaimItem $item): DOMElement
+    protected function addMedicines(DOMElement $claimElement, InsuranceClaim $claim): void
     {
-        $itemElement = $this->dom->createElement('Item');
-        $itemElement->setAttribute('type', $item->item_type ?? '');
+        // Get drug items from claim items
+        $drugItems = $claim->items?->filter(fn ($item) => $item->item_type === 'drug') ?? collect();
 
-        $itemElement->appendChild($this->dom->createElement('ItemDate', $item->item_date?->format('Y-m-d') ?? ''));
-        $itemElement->appendChild($this->dom->createElement('NhisCode', $this->escapeXml($item->nhis_code ?? '')));
-        $itemElement->appendChild($this->dom->createElement('HospitalCode', $this->escapeXml($item->code ?? '')));
-        $itemElement->appendChild($this->dom->createElement('Description', $this->escapeXml($item->description ?? '')));
-        $itemElement->appendChild($this->dom->createElement('Quantity', (string) ($item->quantity ?? 1)));
-        $itemElement->appendChild($this->dom->createElement('UnitPrice', number_format((float) ($item->nhis_price ?? $item->unit_tariff ?? 0), 2, '.', '')));
-        $itemElement->appendChild($this->dom->createElement('Subtotal', number_format((float) ($item->subtotal ?? 0), 2, '.', '')));
-        $itemElement->appendChild($this->dom->createElement('IsCovered', $item->is_covered ? 'true' : 'false'));
-        $itemElement->appendChild($this->dom->createElement('InsurancePays', number_format((float) ($item->insurance_pays ?? 0), 2, '.', '')));
-        $itemElement->appendChild($this->dom->createElement('PatientPays', number_format((float) ($item->patient_pays ?? 0), 2, '.', '')));
+        foreach ($drugItems as $item) {
+            $medicineElement = $this->createMedicineElement($item, $claim);
+            $claimElement->appendChild($medicineElement);
+        }
+    }
 
-        return $itemElement;
+    /**
+     * Create a medicine element in NHIS format.
+     */
+    protected function createMedicineElement(InsuranceClaimItem $item, InsuranceClaim $claim): DOMElement
+    {
+        $medicineElement = $this->dom->createElement('medicine');
+
+        // Get NHIS code from tariff or item
+        $nhisCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
+        $this->appendElement($medicineElement, 'medicineCode', $nhisCode);
+        $this->appendElement($medicineElement, 'dispensedQty', (string) ($item->quantity ?? 1));
+        $this->appendElement($medicineElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
+
+        // Add prescription details
+        $prescriptionElement = $this->dom->createElement('prescription');
+        $prescription = $item->charge?->prescription;
+
+        $this->appendElement($prescriptionElement, 'dose', '');
+        $this->appendElement($prescriptionElement, 'frequency', '');
+        $this->appendElement($prescriptionElement, 'duration', '');
+
+        // Build unparsed prescription string
+        $unparsed = $this->buildPrescriptionUnparsed($prescription);
+        $this->appendElement($prescriptionElement, 'unparsed', $unparsed);
+
+        $medicineElement->appendChild($prescriptionElement);
+
+        return $medicineElement;
+    }
+
+    /**
+     * Build the unparsed prescription string in NHIS format.
+     * Format: "DOSE FREQUENCY X DURATION" e.g., "2 BD X 5DAYS"
+     */
+    protected function buildPrescriptionUnparsed($prescription): string
+    {
+        if (! $prescription) {
+            return '';
+        }
+
+        $parts = [];
+
+        // Add dose quantity if available
+        if ($prescription->dose_quantity) {
+            $parts[] = $prescription->dose_quantity;
+        }
+
+        // Add frequency
+        if ($prescription->frequency) {
+            $parts[] = strtoupper($prescription->frequency);
+        }
+
+        // Add duration
+        if ($prescription->duration) {
+            $parts[] = 'X '.strtoupper($prescription->duration);
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * Add referral info element (always present, can be empty).
+     */
+    protected function addReferralInfo(DOMElement $claimElement): void
+    {
+        $referralElement = $this->dom->createElement('referralInfo');
+
+        $this->appendElement($referralElement, 'claimCheckCode', '');
+        $this->appendElement($referralElement, 'facilityID', '');
+        $this->appendElement($referralElement, 'facilityName', '');
+
+        $claimElement->appendChild($referralElement);
+    }
+
+    /**
+     * Check if claim has pharmacy/drug items.
+     */
+    protected function hasPharmacyItems(InsuranceClaim $claim): bool
+    {
+        return $claim->is_pharmacy_included
+            || ($claim->items?->contains(fn ($item) => $item->item_type === 'drug') ?? false);
+    }
+
+    /**
+     * Format gender to single character (M/F).
+     */
+    protected function formatGender(?string $gender): string
+    {
+        if (! $gender) {
+            return '';
+        }
+
+        $gender = strtoupper(trim($gender));
+
+        if (in_array($gender, ['M', 'MALE'])) {
+            return 'M';
+        }
+
+        if (in_array($gender, ['F', 'FEMALE'])) {
+            return 'F';
+        }
+
+        return $gender;
+    }
+
+    /**
+     * Append a child element with text content.
+     */
+    protected function appendElement(DOMElement $parent, string $tagName, string $value): void
+    {
+        $element = $this->dom->createElement($tagName);
+        $element->appendChild($this->dom->createTextNode($this->escapeXml($value)));
+        $parent->appendChild($element);
     }
 
     /**
@@ -243,6 +318,28 @@ class NhisXmlExportService
     }
 
     /**
+     * Generate an item element for the XML (kept for backward compatibility).
+     *
+     * @param  InsuranceClaimItem  $item  The item to generate XML for
+     * @return DOMElement The item element
+     */
+    public function generateItemElement(InsuranceClaimItem $item): DOMElement
+    {
+        // For medicines, use the medicine format
+        if ($item->item_type === 'drug') {
+            return $this->createMedicineElement($item, $item->claim);
+        }
+
+        // For procedures, create a procedure element
+        $procedureElement = $this->dom->createElement('procedure');
+        $this->appendElement($procedureElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? '');
+        $this->appendElement($procedureElement, 'gdrgCode', $item->nhis_code ?? $item->code ?? '');
+        $this->appendElement($procedureElement, 'ICD10', '-');
+
+        return $procedureElement;
+    }
+
+    /**
      * Parse XML string back to structured data for validation.
      * This is useful for round-trip testing.
      *
@@ -254,47 +351,8 @@ class NhisXmlExportService
         $dom = new DOMDocument;
         $dom->loadXML($xml);
 
-        $result = [
-            'facility' => $this->parseFacilityElement($dom),
-            'batch' => $this->parseBatchElement($dom),
+        return [
             'claims' => $this->parseClaimsElement($dom),
-        ];
-
-        return $result;
-    }
-
-    /**
-     * Parse facility element from XML.
-     */
-    protected function parseFacilityElement(DOMDocument $dom): array
-    {
-        $facility = $dom->getElementsByTagName('Facility')->item(0);
-        if (! $facility) {
-            return [];
-        }
-
-        return [
-            'facility_code' => $this->getElementText($facility, 'FacilityCode'),
-            'facility_name' => $this->getElementText($facility, 'FacilityName'),
-        ];
-    }
-
-    /**
-     * Parse batch element from XML.
-     */
-    protected function parseBatchElement(DOMDocument $dom): array
-    {
-        $batch = $dom->getElementsByTagName('BatchDetails')->item(0);
-        if (! $batch) {
-            return [];
-        }
-
-        return [
-            'batch_number' => $this->getElementText($batch, 'BatchNumber'),
-            'batch_name' => $this->getElementText($batch, 'BatchName'),
-            'submission_period' => $this->getElementText($batch, 'SubmissionPeriod'),
-            'total_claims' => (int) $this->getElementText($batch, 'TotalClaims'),
-            'total_amount' => (float) $this->getElementText($batch, 'TotalAmount'),
         ];
     }
 
@@ -304,7 +362,7 @@ class NhisXmlExportService
     protected function parseClaimsElement(DOMDocument $dom): array
     {
         $claims = [];
-        $claimElements = $dom->getElementsByTagName('Claim');
+        $claimElements = $dom->getElementsByTagName('claim');
 
         foreach ($claimElements as $claimElement) {
             $claims[] = $this->parseClaimElement($claimElement);
@@ -319,86 +377,61 @@ class NhisXmlExportService
     protected function parseClaimElement(DOMElement $claimElement): array
     {
         $claim = [
-            'claim_check_code' => $claimElement->getAttribute('id'),
-            'patient' => [],
-            'attendance' => [],
-            'gdrg' => [],
+            'claimID' => $this->getElementText($claimElement, 'claimID'),
+            'claimCheckCode' => $this->getElementText($claimElement, 'claimCheckCode'),
+            'memberNo' => $this->getElementText($claimElement, 'memberNo'),
+            'surname' => $this->getElementText($claimElement, 'surname'),
+            'otherNames' => $this->getElementText($claimElement, 'otherNames'),
+            'dateOfBirth' => $this->getElementText($claimElement, 'dateOfBirth'),
+            'gender' => $this->getElementText($claimElement, 'gender'),
+            'hospitalRecNo' => $this->getElementText($claimElement, 'hospitalRecNo'),
+            'typeOfService' => $this->getElementText($claimElement, 'typeOfService'),
+            'includesPharmacy' => $this->getElementText($claimElement, 'includesPharmacy'),
+            'typeOfAttendance' => $this->getElementText($claimElement, 'typeOfAttendance'),
+            'specialtyAttended' => $this->getElementText($claimElement, 'specialtyAttended'),
             'diagnoses' => [],
-            'items' => [],
-            'totals' => [],
+            'medicines' => [],
+            'procedures' => [],
         ];
 
-        // Parse patient
-        $patientElement = $claimElement->getElementsByTagName('Patient')->item(0);
-        if ($patientElement) {
-            $claim['patient'] = [
-                'nhis_member_id' => $this->getElementText($patientElement, 'NhisMemberId'),
-                'surname' => $this->getElementText($patientElement, 'Surname'),
-                'other_names' => $this->getElementText($patientElement, 'OtherNames'),
-                'date_of_birth' => $this->getElementText($patientElement, 'DateOfBirth'),
-                'gender' => $this->getElementText($patientElement, 'Gender'),
-                'folder_id' => $this->getElementText($patientElement, 'FolderId'),
-            ];
-        }
-
-        // Parse attendance
-        $attendanceElement = $claimElement->getElementsByTagName('Attendance')->item(0);
-        if ($attendanceElement) {
-            $claim['attendance'] = [
-                'date_of_attendance' => $this->getElementText($attendanceElement, 'DateOfAttendance'),
-                'date_of_discharge' => $this->getElementText($attendanceElement, 'DateOfDischarge'),
-                'type_of_attendance' => $this->getElementText($attendanceElement, 'TypeOfAttendance'),
-                'type_of_service' => $this->getElementText($attendanceElement, 'TypeOfService'),
-                'specialty_attended' => $this->getElementText($attendanceElement, 'SpecialtyAttended'),
-                'attending_prescriber' => $this->getElementText($attendanceElement, 'AttendingPrescriber'),
-            ];
-        }
-
-        // Parse G-DRG
-        $gdrgElement = $claimElement->getElementsByTagName('GDRG')->item(0);
-        if ($gdrgElement) {
-            $claim['gdrg'] = [
-                'code' => $this->getElementText($gdrgElement, 'Code'),
-                'name' => $this->getElementText($gdrgElement, 'Name'),
-                'amount' => (float) $this->getElementText($gdrgElement, 'Amount'),
-            ];
-        }
-
         // Parse diagnoses
-        $diagnosisElements = $claimElement->getElementsByTagName('Diagnosis');
+        $diagnosisElements = $claimElement->getElementsByTagName('diagnosis');
         foreach ($diagnosisElements as $diagElement) {
-            $claim['diagnoses'][] = [
-                'is_primary' => $diagElement->getAttribute('isPrimary') === 'true',
-                'icd10_code' => $this->getElementText($diagElement, 'ICD10Code'),
-                'description' => $this->getElementText($diagElement, 'Description'),
+            // Skip if this is nested inside another element (like referralInfo)
+            if ($diagElement->parentNode->nodeName === 'claim') {
+                $claim['diagnoses'][] = [
+                    'serviceDate' => $this->getElementText($diagElement, 'serviceDate'),
+                    'gdrgCode' => $this->getElementText($diagElement, 'gdrgCode'),
+                    'ICD10' => $this->getElementText($diagElement, 'ICD10'),
+                    'diagnosis' => $this->getElementText($diagElement, 'diagnosis'),
+                ];
+            }
+        }
+
+        // Parse medicines
+        $medicineElements = $claimElement->getElementsByTagName('medicine');
+        foreach ($medicineElements as $medElement) {
+            $prescriptionElement = $medElement->getElementsByTagName('prescription')->item(0);
+            $claim['medicines'][] = [
+                'medicineCode' => $this->getElementText($medElement, 'medicineCode'),
+                'dispensedQty' => $this->getElementText($medElement, 'dispensedQty'),
+                'serviceDate' => $this->getElementText($medElement, 'serviceDate'),
+                'prescription' => $prescriptionElement ? [
+                    'dose' => $this->getElementText($prescriptionElement, 'dose'),
+                    'frequency' => $this->getElementText($prescriptionElement, 'frequency'),
+                    'duration' => $this->getElementText($prescriptionElement, 'duration'),
+                    'unparsed' => $this->getElementText($prescriptionElement, 'unparsed'),
+                ] : null,
             ];
         }
 
-        // Parse items
-        $itemElements = $claimElement->getElementsByTagName('Item');
-        foreach ($itemElements as $itemElement) {
-            $claim['items'][] = [
-                'type' => $itemElement->getAttribute('type'),
-                'item_date' => $this->getElementText($itemElement, 'ItemDate'),
-                'nhis_code' => $this->getElementText($itemElement, 'NhisCode'),
-                'hospital_code' => $this->getElementText($itemElement, 'HospitalCode'),
-                'description' => $this->getElementText($itemElement, 'Description'),
-                'quantity' => (int) $this->getElementText($itemElement, 'Quantity'),
-                'unit_price' => (float) $this->getElementText($itemElement, 'UnitPrice'),
-                'subtotal' => (float) $this->getElementText($itemElement, 'Subtotal'),
-                'is_covered' => $this->getElementText($itemElement, 'IsCovered') === 'true',
-                'insurance_pays' => (float) $this->getElementText($itemElement, 'InsurancePays'),
-                'patient_pays' => (float) $this->getElementText($itemElement, 'PatientPays'),
-            ];
-        }
-
-        // Parse totals
-        $totalsElement = $claimElement->getElementsByTagName('Totals')->item(0);
-        if ($totalsElement) {
-            $claim['totals'] = [
-                'total_claim_amount' => (float) $this->getElementText($totalsElement, 'TotalClaimAmount'),
-                'insurance_covered_amount' => (float) $this->getElementText($totalsElement, 'InsuranceCoveredAmount'),
-                'patient_copay_amount' => (float) $this->getElementText($totalsElement, 'PatientCopayAmount'),
+        // Parse procedures
+        $procedureElements = $claimElement->getElementsByTagName('procedure');
+        foreach ($procedureElements as $procElement) {
+            $claim['procedures'][] = [
+                'serviceDate' => $this->getElementText($procElement, 'serviceDate'),
+                'gdrgCode' => $this->getElementText($procElement, 'gdrgCode'),
+                'ICD10' => $this->getElementText($procElement, 'ICD10'),
             ];
         }
 
@@ -410,8 +443,15 @@ class NhisXmlExportService
      */
     protected function getElementText(DOMElement $parent, string $tagName): string
     {
-        $element = $parent->getElementsByTagName($tagName)->item(0);
+        $elements = $parent->getElementsByTagName($tagName);
 
-        return $element ? $element->textContent : '';
+        // Get the first direct child with this tag name
+        foreach ($elements as $element) {
+            if ($element->parentNode === $parent) {
+                return $element->textContent;
+            }
+        }
+
+        return '';
     }
 }

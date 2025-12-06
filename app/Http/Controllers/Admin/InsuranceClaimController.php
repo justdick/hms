@@ -9,8 +9,11 @@ use App\Http\Requests\SubmitInsuranceClaimRequest;
 use App\Http\Requests\VetClaimRequest;
 use App\Http\Resources\InsuranceClaimResource;
 use App\Http\Resources\InsuranceProviderResource;
+use App\Models\Diagnosis;
 use App\Models\InsuranceClaim;
+use App\Models\InsuranceClaimItem;
 use App\Models\InsuranceProvider;
+use App\Models\NhisTariff;
 use App\Services\ClaimVettingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -93,7 +96,7 @@ class InsuranceClaimController extends Controller
      */
     public function getVettingData(InsuranceClaim $claim): JsonResponse
     {
-        $this->authorize('vetClaim', $claim);
+        $this->authorize('view', $claim);
 
         $vettingData = $this->claimVettingService->getVettingData($claim);
 
@@ -146,6 +149,9 @@ class InsuranceClaimController extends Controller
                 'tariff_price' => $tariff->tariff_price,
                 'display_name' => $tariff->display_name,
             ]),
+            'available_diagnoses' => Diagnosis::query()
+                ->orderBy('diagnosis')
+                ->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
             'can' => [
                 'vet' => auth()->user()->can('vetClaim', $claim),
             ],
@@ -170,12 +176,21 @@ class InsuranceClaimController extends Controller
             $claim->vetted_at = now();
             $claim->save();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim has been rejected.');
         }
 
         // Handle approval using ClaimVettingService
         try {
+            // Update attendance details if provided
+            $attendanceFields = ['type_of_attendance', 'type_of_service', 'specialty_attended', 'attending_prescriber'];
+            foreach ($attendanceFields as $field) {
+                if (isset($validated[$field])) {
+                    $claim->$field = $validated[$field];
+                }
+            }
+            $claim->save();
+
             $this->claimVettingService->vetClaim(
                 $claim,
                 auth()->user(),
@@ -213,7 +228,7 @@ class InsuranceClaimController extends Controller
                 $claim->save();
             }
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim has been vetted and approved.');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()
@@ -273,6 +288,173 @@ class InsuranceClaimController extends Controller
                 'message' => 'Failed to update diagnoses: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Add an item to a claim from NHIS or GDRG tariff.
+     * This creates a claim-only item that doesn't affect the original consultation.
+     */
+    public function addItem(Request $request, InsuranceClaim $claim): JsonResponse
+    {
+        $this->authorize('vetClaim', $claim);
+
+        $validated = $request->validate([
+            'nhis_tariff_id' => ['required_without:gdrg_tariff_id', 'nullable', 'integer', 'exists:nhis_tariffs,id'],
+            'gdrg_tariff_id' => ['required_without:nhis_tariff_id', 'nullable', 'integer', 'exists:gdrg_tariffs,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Determine if using NHIS or GDRG tariff
+            $isGdrg = ! empty($validated['gdrg_tariff_id']);
+
+            if ($isGdrg) {
+                $gdrgTariff = \App\Models\GdrgTariff::findOrFail($validated['gdrg_tariff_id']);
+
+                // Map GDRG category to claim item type
+                $itemType = match (strtoupper($gdrgTariff->mdc_category)) {
+                    'INVESTIGATION' => 'lab',
+                    'ADULT SURGERY', 'PAEDIATRIC SURGERY', 'SURGERY' => 'procedure',
+                    default => 'procedure',
+                };
+
+                $code = $gdrgTariff->code;
+                $name = $gdrgTariff->name;
+                $price = $gdrgTariff->tariff_price;
+                $nhisTariffId = null;
+            } else {
+                $nhisTariff = NhisTariff::findOrFail($validated['nhis_tariff_id']);
+
+                // Map NHIS category to claim item type
+                $itemType = match ($nhisTariff->category) {
+                    'drug', 'drugs', 'medicine' => 'drug',
+                    'lab', 'lab_service', 'investigation' => 'lab',
+                    'procedure', 'procedures' => 'procedure',
+                    'consumable', 'consumables' => 'consumable',
+                    default => 'drug',
+                };
+
+                $code = $nhisTariff->nhis_code;
+                $name = $nhisTariff->name;
+                $price = $nhisTariff->price;
+                $nhisTariffId = $nhisTariff->id;
+            }
+
+            // Create claim item without charge_id (manual item)
+            $item = InsuranceClaimItem::create([
+                'insurance_claim_id' => $claim->id,
+                'charge_id' => null, // No charge - this is a claim-only item
+                'item_date' => now(),
+                'item_type' => $itemType,
+                'code' => $code,
+                'description' => $name,
+                'quantity' => $validated['quantity'],
+                'unit_tariff' => $price,
+                'subtotal' => $price * $validated['quantity'],
+                'is_covered' => true,
+                'coverage_percentage' => 100,
+                'insurance_pays' => $price * $validated['quantity'],
+                'patient_pays' => 0,
+                'is_approved' => null,
+                'nhis_tariff_id' => $nhisTariffId,
+                'nhis_code' => $code,
+                'nhis_price' => $price,
+            ]);
+
+            // Recalculate claim totals
+            $this->recalculateClaimTotals($claim);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added to claim successfully.',
+                'item' => [
+                    'id' => $item->id,
+                    'name' => $item->description,
+                    'code' => $item->code,
+                    'nhis_code' => $item->nhis_code,
+                    'quantity' => $item->quantity,
+                    'unit_price' => (float) $item->unit_tariff,
+                    'nhis_price' => (float) $item->nhis_price,
+                    'subtotal' => (float) $item->subtotal,
+                    'is_covered' => true,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add item: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove an item from a claim.
+     * This only removes from the claim, doesn't affect the original consultation.
+     */
+    public function removeItem(InsuranceClaim $claim, InsuranceClaimItem $item): JsonResponse
+    {
+        $this->authorize('vetClaim', $claim);
+
+        // Verify item belongs to this claim
+        if ($item->insurance_claim_id !== $claim->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item does not belong to this claim.',
+            ], 403);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $item->delete();
+
+            // Recalculate claim totals
+            $this->recalculateClaimTotals($claim);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from claim successfully.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove item: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Recalculate claim totals after adding/removing items.
+     */
+    protected function recalculateClaimTotals(InsuranceClaim $claim): void
+    {
+        $claim->load('items', 'gdrgTariff');
+
+        $isNhis = $claim->isNhisClaim();
+        $gdrgAmount = (float) ($claim->gdrgTariff?->tariff_price ?? $claim->gdrg_amount ?? 0);
+
+        if ($isNhis) {
+            // For NHIS, sum only items with NHIS prices
+            $itemsTotal = $claim->items
+                ->whereNotNull('nhis_price')
+                ->sum(fn ($item) => (float) $item->nhis_price * (int) $item->quantity);
+        } else {
+            $itemsTotal = $claim->items->sum('subtotal');
+        }
+
+        $claim->total_claim_amount = $gdrgAmount + $itemsTotal;
+        $claim->insurance_covered_amount = $gdrgAmount + $itemsTotal;
+        $claim->save();
     }
 
     public function submit(SubmitInsuranceClaimRequest $request): RedirectResponse
@@ -366,7 +548,7 @@ class InsuranceClaimController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Payment recorded successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -391,7 +573,7 @@ class InsuranceClaimController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim marked as rejected.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -427,7 +609,7 @@ class InsuranceClaimController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim resubmitted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -473,7 +655,7 @@ class InsuranceClaimController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -525,7 +707,7 @@ class InsuranceClaimController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.insurance.claims.show', $claim)
+            return redirect()->route('admin.insurance.claims.index')
                 ->with('success', 'Claim has been prepared for resubmission. You can now add it to a new batch.');
         } catch (\Exception $e) {
             DB::rollBack();

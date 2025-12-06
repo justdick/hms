@@ -18,6 +18,45 @@ class InsuranceClaimService
     ) {}
 
     /**
+     * NHIS Type of Attendance codes
+     */
+    public const ATTENDANCE_TYPES = [
+        'EAE' => 'Emergency/Acute Episode',
+        'ANC' => 'Antenatal Care',
+        'PNC' => 'Postnatal Care',
+        'FP' => 'Family Planning',
+        'CWC' => 'Child Welfare Clinic',
+        'REV' => 'Review/Follow-up',
+    ];
+
+    /**
+     * NHIS Type of Service codes
+     */
+    public const SERVICE_TYPES = [
+        'OPD' => 'Outpatient',
+        'IPD' => 'Inpatient',
+    ];
+
+    /**
+     * NHIS Specialty codes
+     */
+    public const SPECIALTY_CODES = [
+        'OPDC' => 'OPD Clinic (General)',
+        'DENT' => 'Dental',
+        'ENT' => 'ENT',
+        'EYE' => 'Eye/Ophthalmology',
+        'GYNA' => 'Gynaecology',
+        'OBST' => 'Obstetrics',
+        'PAED' => 'Paediatrics',
+        'SURG' => 'Surgery',
+        'ORTH' => 'Orthopaedics',
+        'PSYC' => 'Psychiatry',
+        'DERM' => 'Dermatology',
+        'PHYS' => 'Physiotherapy',
+        'MEDI' => 'Internal Medicine',
+    ];
+
+    /**
      * Create a new insurance claim for a patient check-in
      */
     public function createClaim(
@@ -25,14 +64,23 @@ class InsuranceClaimService
         int $patientId,
         int $patientInsuranceId,
         int $patientCheckinId,
-        string $typeOfService = 'outpatient',
+        string $typeOfService = 'OPD',
         ?Carbon $dateOfAttendance = null
     ): InsuranceClaim {
         $patient = Patient::findOrFail($patientId);
         $patientInsurance = PatientInsurance::findOrFail($patientInsuranceId);
-        $checkin = PatientCheckin::findOrFail($patientCheckinId);
+        $checkin = PatientCheckin::with(['department', 'consultation.doctor'])->findOrFail($patientCheckinId);
 
         $dateOfAttendance = $dateOfAttendance ?? now();
+
+        // Determine specialty from department
+        $specialtyAttended = $this->mapDepartmentToSpecialty($checkin->department);
+
+        // Get attending prescriber from consultation
+        $attendingPrescriber = $checkin->consultation?->doctor?->name ?? null;
+
+        // Map visit type to NHIS attendance type code
+        $typeOfAttendance = $this->mapVisitTypeToAttendanceCode($checkin->visit_type);
 
         // Create the claim with denormalized patient data
         return InsuranceClaim::create([
@@ -48,9 +96,61 @@ class InsuranceClaimService
             'membership_id' => $patientInsurance->membership_id,
             'date_of_attendance' => $dateOfAttendance,
             'type_of_service' => $typeOfService,
-            'type_of_attendance' => $checkin->visit_type ?? 'routine',
+            'type_of_attendance' => $typeOfAttendance,
+            'specialty_attended' => $specialtyAttended,
+            'attending_prescriber' => $attendingPrescriber,
             'status' => 'pending_vetting',
         ]);
+    }
+
+    /**
+     * Map department to NHIS specialty code
+     */
+    protected function mapDepartmentToSpecialty($department): string
+    {
+        if (! $department) {
+            return 'OPDC';
+        }
+
+        $name = strtolower($department->name ?? '');
+
+        // Map common department names to NHIS specialty codes
+        return match (true) {
+            str_contains($name, 'dental') => 'DENT',
+            str_contains($name, 'ent') => 'ENT',
+            str_contains($name, 'eye') || str_contains($name, 'ophthal') => 'EYE',
+            str_contains($name, 'gynae') || str_contains($name, 'gyna') => 'GYNA',
+            str_contains($name, 'obstet') || str_contains($name, 'maternity') => 'OBST',
+            str_contains($name, 'paed') || str_contains($name, 'child') => 'PAED',
+            str_contains($name, 'surg') => 'SURG',
+            str_contains($name, 'ortho') => 'ORTH',
+            str_contains($name, 'psych') || str_contains($name, 'mental') => 'PSYC',
+            str_contains($name, 'derm') || str_contains($name, 'skin') => 'DERM',
+            str_contains($name, 'physio') => 'PHYS',
+            str_contains($name, 'medicine') || str_contains($name, 'internal') => 'MEDI',
+            default => 'OPDC',
+        };
+    }
+
+    /**
+     * Map visit type to NHIS attendance type code
+     */
+    protected function mapVisitTypeToAttendanceCode(?string $visitType): string
+    {
+        if (! $visitType) {
+            return 'EAE';
+        }
+
+        $visitType = strtolower($visitType);
+
+        return match (true) {
+            str_contains($visitType, 'antenatal') || str_contains($visitType, 'anc') => 'ANC',
+            str_contains($visitType, 'postnatal') || str_contains($visitType, 'pnc') => 'PNC',
+            str_contains($visitType, 'family planning') || str_contains($visitType, 'fp') => 'FP',
+            str_contains($visitType, 'child welfare') || str_contains($visitType, 'cwc') => 'CWC',
+            str_contains($visitType, 'review') || str_contains($visitType, 'follow') => 'REV',
+            default => 'EAE', // Default to Emergency/Acute Episode for general OPD
+        };
     }
 
     /**
@@ -61,13 +161,16 @@ class InsuranceClaimService
         $patientInsurance = $claim->patientInsurance;
 
         foreach ($chargeIds as $chargeId) {
-            $charge = Charge::findOrFail($chargeId);
+            $charge = Charge::with(['prescription.drug', 'labOrder.labService', 'minorProcedure.procedureType'])->findOrFail($chargeId);
+
+            // Get the proper item code from the related entity
+            $itemCode = $this->getItemCodeFromCharge($charge);
 
             // Calculate coverage for this charge
             $coverage = $this->insuranceService->calculateCoverage(
                 $patientInsurance,
                 $charge->service_type,
-                $charge->service_code ?? $charge->charge_type,
+                $itemCode,
                 (float) $charge->amount,
                 $charge->metadata['quantity'] ?? 1
             );
@@ -77,8 +180,8 @@ class InsuranceClaimService
                 'insurance_claim_id' => $claim->id,
                 'charge_id' => $chargeId,
                 'item_date' => $charge->charged_at ?? now(),
-                'item_type' => $charge->service_type,
-                'code' => $charge->service_code ?? $charge->charge_type,
+                'item_type' => $this->mapServiceTypeToItemType($charge->service_type),
+                'code' => $itemCode,
                 'description' => $charge->description,
                 'quantity' => $charge->metadata['quantity'] ?? 1,
                 'unit_tariff' => $coverage['insurance_tariff'],
@@ -93,6 +196,50 @@ class InsuranceClaimService
 
         // Recalculate claim totals
         $this->recalculateClaimTotals($claim);
+    }
+
+    /**
+     * Get the proper item code from a charge by looking at related entities.
+     */
+    protected function getItemCodeFromCharge(Charge $charge): string
+    {
+        // If service_code is set, use it
+        if ($charge->service_code) {
+            return $charge->service_code;
+        }
+
+        // For pharmacy charges, get drug code from prescription
+        if ($charge->service_type === 'pharmacy' && $charge->prescription?->drug) {
+            return $charge->prescription->drug->drug_code ?? $charge->charge_type;
+        }
+
+        // For lab charges, get service code from lab order
+        if (in_array($charge->service_type, ['lab', 'laboratory']) && $charge->labOrder?->labService) {
+            return $charge->labOrder->labService->service_code ?? $charge->charge_type;
+        }
+
+        // For procedure charges, get procedure code
+        if ($charge->service_type === 'procedure' && $charge->minorProcedure?->procedureType) {
+            return $charge->minorProcedure->procedureType->code ?? $charge->charge_type;
+        }
+
+        // Fallback to charge_type
+        return $charge->charge_type ?? 'GENERAL';
+    }
+
+    /**
+     * Map service type to claim item type.
+     */
+    protected function mapServiceTypeToItemType(string $serviceType): string
+    {
+        return match ($serviceType) {
+            'pharmacy', 'medication' => 'drug',
+            'lab', 'laboratory' => 'lab',
+            'procedure', 'minor_procedure' => 'procedure',
+            'consultation' => 'consultation',
+            'consumable' => 'consumable',
+            default => $serviceType,
+        };
     }
 
     /**

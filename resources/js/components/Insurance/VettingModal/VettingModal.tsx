@@ -70,6 +70,7 @@ export function VettingModal({
     // Local state for editable fields
     const [selectedGdrg, setSelectedGdrg] = useState<GdrgTariff | null>(null);
     const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
+    const [attendanceUpdates, setAttendanceUpdates] = useState<Record<string, string>>({});
 
     // Focus management
     const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -96,12 +97,18 @@ export function VettingModal({
                 .then((data: VettingData) => {
                     setVettingData(data);
                     setDiagnoses(data.diagnoses);
-                    // Set initial G-DRG if already selected
+                    // Set initial G-DRG if already selected, otherwise default to General OPD - Adult (OPDC06A)
                     if (data.claim.gdrg_tariff_id) {
                         const existingGdrg = data.gdrg_tariffs.find(
                             (t) => t.id === data.claim.gdrg_tariff_id,
                         );
                         setSelectedGdrg(existingGdrg || null);
+                    } else if (data.is_nhis && data.gdrg_tariffs.length > 0) {
+                        // Default to General OPD - Adult (OPDC06A) for new claims
+                        const defaultGdrg = data.gdrg_tariffs.find(
+                            (t) => t.code === 'OPDC06A',
+                        );
+                        setSelectedGdrg(defaultGdrg || null);
                     }
                     setLoading(false);
                 })
@@ -119,11 +126,27 @@ export function VettingModal({
             setVettingData(null);
             setSelectedGdrg(null);
             setDiagnoses([]);
+            setAttendanceUpdates({});
             setShowRejectForm(false);
             setRejectionReason('');
             setError(null);
         }
     }, [isOpen]);
+
+    // Handle attendance field changes
+    const handleAttendanceChange = useCallback((field: string, value: string) => {
+        setAttendanceUpdates((prev) => ({ ...prev, [field]: value }));
+        // Also update the vettingData for immediate UI feedback
+        if (vettingData) {
+            setVettingData({
+                ...vettingData,
+                attendance: {
+                    ...vettingData.attendance,
+                    [field]: value,
+                },
+            });
+        }
+    }, [vettingData]);
 
     // Focus management
     useEffect(() => {
@@ -156,21 +179,41 @@ export function VettingModal({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, vettingData, selectedGdrg, diagnoses]);
 
-    // Calculate updated totals when G-DRG changes
+    // Calculate updated totals when G-DRG or items change
     const calculateTotals = useCallback(() => {
         if (!vettingData) return null;
 
-        const gdrgAmount = selectedGdrg?.tariff_price || 0;
-        const grandTotal =
-            gdrgAmount +
-            vettingData.totals.investigations +
-            vettingData.totals.prescriptions +
-            vettingData.totals.procedures;
+        const gdrgAmount = selectedGdrg ? Number(selectedGdrg.tariff_price) || 0 : 0;
+
+        // Recalculate category totals from current items
+        const calculateCategoryTotal = (items: typeof vettingData.items.investigations) => {
+            if (vettingData.is_nhis) {
+                return items
+                    .filter((item) => item.is_covered && item.nhis_price !== null)
+                    .reduce((sum, item) => sum + (item.nhis_price || 0) * item.quantity, 0);
+            }
+            return items.reduce((sum, item) => sum + item.subtotal, 0);
+        };
+
+        const investigationsTotal = calculateCategoryTotal(vettingData.items.investigations);
+        const prescriptionsTotal = calculateCategoryTotal(vettingData.items.prescriptions);
+        const proceduresTotal = calculateCategoryTotal(vettingData.items.procedures);
+
+        const unmappedCount = vettingData.is_nhis
+            ? vettingData.items.investigations.filter((i) => !i.is_covered).length +
+              vettingData.items.prescriptions.filter((i) => !i.is_covered).length +
+              vettingData.items.procedures.filter((i) => !i.is_covered).length
+            : 0;
+
+        const grandTotal = gdrgAmount + investigationsTotal + prescriptionsTotal + proceduresTotal;
 
         return {
-            ...vettingData.totals,
+            investigations: investigationsTotal,
+            prescriptions: prescriptionsTotal,
+            procedures: proceduresTotal,
             gdrg: gdrgAmount,
             grand_total: grandTotal,
+            unmapped_count: unmappedCount,
         };
     }, [vettingData, selectedGdrg]);
 
@@ -195,6 +238,8 @@ export function VettingModal({
                     diagnosis_id: d.diagnosis_id,
                     is_primary: d.is_primary,
                 })),
+                // Include attendance updates
+                ...attendanceUpdates,
             },
             {
                 preserveScroll: true,
@@ -328,6 +373,8 @@ export function VettingModal({
                                     />
                                     <AttendanceDetailsSection
                                         attendance={vettingData.attendance}
+                                        onAttendanceChange={handleAttendanceChange}
+                                        disabled={processing || isViewOnly}
                                     />
                                 </div>
 
@@ -337,6 +384,7 @@ export function VettingModal({
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <DiagnosesManager
                                         diagnoses={diagnoses}
+                                        availableDiagnoses={vettingData.available_diagnoses || []}
                                         onChange={handleDiagnosesChange}
                                         disabled={processing || isViewOnly}
                                     />
@@ -354,19 +402,29 @@ export function VettingModal({
 
                                 <Separator />
 
-                                {/* Row 3: Claim Items (left) | Claim Total (right) */}
-                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                    <ClaimItemsTabs
-                                        items={vettingData.items}
+                                {/* Row 3: Claim Items (full width) */}
+                                <ClaimItemsTabs
+                                    claimId={vettingData.claim.id}
+                                    items={vettingData.items}
+                                    isNhis={vettingData.is_nhis}
+                                    disabled={processing || isViewOnly}
+                                    onItemsChange={(newItems) => {
+                                        setVettingData({
+                                            ...vettingData,
+                                            items: newItems,
+                                        });
+                                    }}
+                                />
+
+                                <Separator />
+
+                                {/* Row 4: Claim Total (full width) */}
+                                {updatedTotals && (
+                                    <ClaimTotalDisplay
+                                        totals={updatedTotals}
                                         isNhis={vettingData.is_nhis}
                                     />
-                                    {updatedTotals && (
-                                        <ClaimTotalDisplay
-                                            totals={updatedTotals}
-                                            isNhis={vettingData.is_nhis}
-                                        />
-                                    )}
-                                </div>
+                                )}
 
                                 {/* Rejection Form (only in vet mode) */}
                                 {!isViewOnly && showRejectForm && (

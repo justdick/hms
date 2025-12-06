@@ -289,7 +289,7 @@ it('searches claims by claim code', function () {
 
 it('returns vetting data for a claim', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $provider = InsuranceProvider::factory()->create();
     $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
@@ -451,7 +451,7 @@ it('allows updating claim diagnoses', function () {
 
 it('returns G-DRG tariffs for NHIS claims in vetting data', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('insurance.vet-claims');
+    $user->givePermissionTo(['insurance.vet-claims', 'insurance.view-claims']);
 
     $nhisProvider = InsuranceProvider::factory()->nhis()->create();
     $nhisPlan = InsurancePlan::factory()->create(['insurance_provider_id' => $nhisProvider->id]);

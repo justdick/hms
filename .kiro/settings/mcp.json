@@ -36,7 +36,9 @@
         "application-info",
         "list-routes",
         "last-error",
-        "get-absolute-url"
+        "get-absolute-url",
+        "browser-logs",
+        "read-log-entries"
       ]
     },
     "shadcn": {

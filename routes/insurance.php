@@ -50,6 +50,8 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::get('claims/{claim}/vetting-data', [InsuranceClaimController::class, 'getVettingData'])->name('claims.vetting-data');
     Route::post('claims/{claim}/vet', [InsuranceClaimController::class, 'vet'])->name('claims.vet');
     Route::post('claims/{claim}/diagnoses', [InsuranceClaimController::class, 'updateDiagnoses'])->name('claims.diagnoses');
+    Route::post('claims/{claim}/items', [InsuranceClaimController::class, 'addItem'])->name('claims.items.store');
+    Route::delete('claims/{claim}/items/{item}', [InsuranceClaimController::class, 'removeItem'])->name('claims.items.destroy');
 
     // Claims Submission & Tracking (Phase 8)
     Route::post('claims/submit', [InsuranceClaimController::class, 'submit'])->name('claims.submit');

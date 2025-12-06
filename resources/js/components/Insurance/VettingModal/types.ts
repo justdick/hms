@@ -28,6 +28,15 @@ export interface ClaimItem {
     nhis_price: number | null;
     subtotal: number;
     is_covered: boolean;
+    item_type?: 'drug' | 'lab' | 'procedure';
+}
+
+export interface NhisTariffOption {
+    id: number;
+    nhis_code: string;
+    name: string;
+    category: string;
+    price: number;
 }
 
 export interface PatientInfo {
@@ -44,15 +53,19 @@ export interface PatientInfo {
 }
 
 export interface AttendanceDetails {
-    type_of_attendance: 'emergency' | 'acute' | 'routine';
+    type_of_attendance: string;
     date_of_attendance: string;
     date_of_discharge: string | null;
-    type_of_service: 'inpatient' | 'outpatient';
+    type_of_service: string;
     specialty_attended: string | null;
     attending_prescriber: string | null;
     claim_check_code: string;
     is_unbundled: boolean;
     is_pharmacy_included: boolean;
+    // NHIS code options for editing
+    attendance_type_options: Record<string, string>;
+    service_type_options: Record<string, string>;
+    specialty_options: Record<string, string>;
 }
 
 export interface ClaimTotals {
@@ -62,6 +75,14 @@ export interface ClaimTotals {
     gdrg: number;
     grand_total: number;
     unmapped_count: number;
+}
+
+export interface AvailableDiagnosis {
+    id: number;
+    diagnosis: string;
+    code: string;
+    g_drg: string;
+    icd_10: string;
 }
 
 export interface VettingData {
@@ -83,6 +104,7 @@ export interface VettingData {
     totals: ClaimTotals;
     is_nhis: boolean;
     gdrg_tariffs: GdrgTariff[];
+    available_diagnoses: AvailableDiagnosis[];
     can: {
         vet: boolean;
     };

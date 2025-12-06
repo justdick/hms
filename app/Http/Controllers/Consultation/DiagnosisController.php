@@ -10,6 +10,24 @@ use Illuminate\Http\Request;
 
 class DiagnosisController extends Controller
 {
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $diagnoses = Diagnosis::query()
+            ->where('diagnosis', 'like', "%{$query}%")
+            ->orWhere('icd_10', 'like', "%{$query}%")
+            ->orderBy('diagnosis')
+            ->limit(20)
+            ->get(['id', 'diagnosis as name', 'icd_10 as icd_code']);
+
+        return response()->json($diagnoses);
+    }
+
     public function store(Request $request, Consultation $consultation)
     {
         $this->authorize('update', $consultation);
