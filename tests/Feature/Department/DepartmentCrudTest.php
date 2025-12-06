@@ -25,11 +25,14 @@ it('displays departments index page', function () {
     $response->assertInertia(fn ($page) => $page->component('Departments/Index'));
 });
 
-it('displays create department form', function () {
-    $response = $this->actingAs($this->admin)->get('/departments/create');
+it('includes types in index response for modal', function () {
+    $response = $this->actingAs($this->admin)->get('/departments');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->component('Departments/Create'));
+    $response->assertInertia(fn ($page) => $page
+        ->component('Departments/Index')
+        ->has('types')
+    );
 });
 
 it('creates a new department', function () {
@@ -61,18 +64,6 @@ it('validates unique code', function () {
     ]);
 
     $response->assertSessionHasErrors(['code']);
-});
-
-it('displays edit department form', function () {
-    $department = Department::factory()->create();
-
-    $response = $this->actingAs($this->admin)->get("/departments/{$department->id}/edit");
-
-    $response->assertOk();
-    $response->assertInertia(fn ($page) => $page
-        ->component('Departments/Edit')
-        ->has('department')
-    );
 });
 
 it('updates a department', function () {

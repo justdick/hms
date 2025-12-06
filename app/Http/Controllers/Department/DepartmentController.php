@@ -20,18 +20,10 @@ class DepartmentController extends Controller
         $departments = Department::query()
             ->withCount(['checkins', 'users'])
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(50);
 
         return Inertia::render('Departments/Index', [
             'departments' => DepartmentResource::collection($departments),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', Department::class);
-
-        return Inertia::render('Departments/Create', [
             'types' => $this->getDepartmentTypes(),
         ]);
     }
@@ -45,16 +37,6 @@ class DepartmentController extends Controller
         return redirect()
             ->route('departments.index')
             ->with('success', 'Department created successfully.');
-    }
-
-    public function edit(Department $department): Response
-    {
-        $this->authorize('update', $department);
-
-        return Inertia::render('Departments/Edit', [
-            'department' => (new DepartmentResource($department))->resolve(),
-            'types' => $this->getDepartmentTypes(),
-        ]);
     }
 
     public function update(UpdateDepartmentRequest $request, Department $department): RedirectResponse

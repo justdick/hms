@@ -1,28 +1,12 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
-import { Building2, Edit, Plus, Trash2, Users } from 'lucide-react';
-
-interface Department {
-    id: number;
-    name: string;
-    code: string;
-    description?: string;
-    type: 'opd' | 'ipd' | 'diagnostic' | 'support';
-    is_active: boolean;
-    checkins_count?: number;
-    users_count?: number;
-}
+import { Head, router } from '@inertiajs/react';
+import { Building2, Plus, Users } from 'lucide-react';
+import { useState } from 'react';
+import { columns } from './columns';
+import { DataTable } from './data-table';
+import DepartmentModal, { Department } from './DepartmentModal';
 
 interface Props {
     departments: {
@@ -30,23 +14,25 @@ interface Props {
         links: unknown;
         meta: unknown;
     };
+    types?: Record<string, string>;
 }
 
-const typeLabels: Record<string, string> = {
-    opd: 'Outpatient',
-    ipd: 'Inpatient',
+const defaultTypes: Record<string, string> = {
+    opd: 'Outpatient (OPD)',
+    ipd: 'Inpatient (IPD)',
     diagnostic: 'Diagnostic',
     support: 'Support',
 };
 
-const typeColors: Record<string, string> = {
-    opd: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    ipd: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-    diagnostic: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
-    support: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-};
+export default function DepartmentsIndex({ departments, types = defaultTypes }: Props) {
+    const [showModal, setShowModal] = useState(false);
+    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
 
-export default function DepartmentsIndex({ departments }: Props) {
+    const handleEdit = (department: Department) => {
+        setEditingDepartment(department);
+        setShowModal(true);
+    };
+
     const handleDelete = (department: Department) => {
         if (
             confirm(
@@ -56,6 +42,13 @@ export default function DepartmentsIndex({ departments }: Props) {
             router.delete(`/departments/${department.id}`);
         }
     };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingDepartment(null);
+    };
+
+    const data = departments.data;
 
     return (
         <AppLayout
@@ -77,12 +70,10 @@ export default function DepartmentsIndex({ departments }: Props) {
                             Manage hospital departments and clinics
                         </p>
                     </div>
-                    <Link href="/departments/create">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Department
-                        </Button>
-                    </Link>
+                    <Button onClick={() => setShowModal(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Department
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -94,7 +85,7 @@ export default function DepartmentsIndex({ departments }: Props) {
                                         Total
                                     </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {departments.data.length}
+                                        {data.length}
                                     </p>
                                 </div>
                                 <Building2 className="h-8 w-8 text-blue-600" />
@@ -110,10 +101,12 @@ export default function DepartmentsIndex({ departments }: Props) {
                                         Active
                                     </p>
                                     <p className="text-3xl font-bold text-green-600">
-                                        {departments.data.filter((d) => d.is_active).length}
+                                        {data.filter((d) => d.is_active).length}
                                     </p>
                                 </div>
-                                <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900" />
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                                    <div className="h-3 w-3 rounded-full bg-green-600" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -126,10 +119,12 @@ export default function DepartmentsIndex({ departments }: Props) {
                                         OPD Clinics
                                     </p>
                                     <p className="text-3xl font-bold text-blue-600">
-                                        {departments.data.filter((d) => d.type === 'opd').length}
+                                        {data.filter((d) => d.type === 'opd').length}
                                     </p>
                                 </div>
-                                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900" />
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                                    <div className="h-3 w-3 rounded-full bg-blue-600" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -142,7 +137,7 @@ export default function DepartmentsIndex({ departments }: Props) {
                                         Staff Assigned
                                     </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {departments.data.reduce((sum, d) => sum + (d.users_count || 0), 0)}
+                                        {data.reduce((sum, d) => sum + (d.users_count || 0), 0)}
                                     </p>
                                 </div>
                                 <Users className="h-8 w-8 text-purple-600" />
@@ -152,88 +147,18 @@ export default function DepartmentsIndex({ departments }: Props) {
                 </div>
 
                 <Card>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Code</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Staff</TableHead>
-                                    <TableHead className="text-right">Check-ins</TableHead>
-                                    <TableHead className="w-[100px]">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {departments.data.length > 0 ? (
-                                    departments.data.map((department) => (
-                                        <TableRow key={department.id}>
-                                            <TableCell>
-                                                <div>
-                                                    <p className="font-medium">{department.name}</p>
-                                                    {department.description && (
-                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                            {department.description}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <code className="rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800">
-                                                    {department.code}
-                                                </code>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${typeColors[department.type]}`}>
-                                                    {typeLabels[department.type]}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={department.is_active ? 'default' : 'secondary'}>
-                                                    {department.is_active ? 'Active' : 'Inactive'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {department.users_count || 0}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {department.checkins_count || 0}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-1">
-                                                    <Link href={`/departments/${department.id}/edit`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(department)}
-                                                        className="text-red-600 hover:text-red-700"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="py-12 text-center">
-                                            <Building2 className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                            <p className="text-gray-500 dark:text-gray-400">
-                                                No departments found. Add your first department to get started.
-                                            </p>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                    <CardContent className="p-6">
+                        <DataTable columns={columns(handleEdit, handleDelete)} data={data} />
                     </CardContent>
                 </Card>
             </div>
+
+            <DepartmentModal
+                open={showModal}
+                onClose={handleCloseModal}
+                department={editingDepartment}
+                types={types}
+            />
         </AppLayout>
     );
 }
