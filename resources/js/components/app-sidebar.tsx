@@ -16,6 +16,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     Bandage,
     BarChart3,
+    Building2,
     ClipboardList,
     CreditCard,
     FileText,
@@ -241,6 +242,11 @@ export function AppSidebar() {
                     icon: TableProperties,
                 },
             ],
+        },
+        {
+            title: 'Departments',
+            href: '/departments',
+            icon: Building2,
         },
     ];
     return (
