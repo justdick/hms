@@ -12,8 +12,6 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing departments
-        Department::query()->delete();
 
         $departments = [
             [

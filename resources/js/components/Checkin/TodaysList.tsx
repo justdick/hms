@@ -102,7 +102,7 @@ export default function TodaysList({
 
     const handleEditDepartment = (checkin: Checkin) => {
         setEditingDepartment(checkin.id);
-        setSelectedDepartmentId(checkin.department.id);
+        setSelectedDepartmentId(checkin.department?.id ?? null);
     };
 
     const handleDepartmentChange = (checkinId: number) => {
@@ -221,7 +221,7 @@ export default function TodaysList({
 
     // Get unique departments for filter
     const uniqueDepartments = Array.from(
-        new Set(checkins.map((c) => c.department.name)),
+        new Set(checkins.map((c) => c.department?.name).filter(Boolean)),
     ).sort();
 
     // Filter check-ins based on search term, status, and department
@@ -232,7 +232,7 @@ export default function TodaysList({
             const matchesSearch =
                 checkin.patient.full_name.toLowerCase().includes(search) ||
                 checkin.patient.patient_number.toLowerCase().includes(search) ||
-                checkin.department.name.toLowerCase().includes(search) ||
+                checkin.department?.name?.toLowerCase().includes(search) ||
                 checkin.patient.phone_number?.toLowerCase().includes(search);
             if (!matchesSearch) return false;
         }
@@ -245,7 +245,7 @@ export default function TodaysList({
         // Department filter
         if (
             departmentFilter !== 'all' &&
-            checkin.department.name !== departmentFilter
+            checkin.department?.name !== departmentFilter
         ) {
             return false;
         }
@@ -435,7 +435,7 @@ export default function TodaysList({
                                         ) : (
                                             <>
                                                 <span>
-                                                    {checkin.department.name}
+                                                    {checkin.department?.name ?? 'N/A'}
                                                 </span>
                                                 {checkin.status ===
                                                     'checked_in' &&
