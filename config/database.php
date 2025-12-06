@@ -82,6 +82,23 @@ return [
             ]) : [],
         ],
 
+        // Mittag old system database for migration
+        'mittag_old' => [
+            'driver' => 'mysql',
+            'host' => env('MITTAG_DB_HOST', '127.0.0.1'),
+            'port' => env('MITTAG_DB_PORT', '3306'),
+            'database' => env('MITTAG_DB_DATABASE', 'mittag_old'),
+            'username' => env('MITTAG_DB_USERNAME', 'root'),
+            'password' => env('MITTAG_DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => false,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),

@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('mittag_migration_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('entity_type'); // patients, drugs, checkins, etc.
+            $table->string('entity_type', 50); // patients, drugs, checkins, etc.
             $table->unsignedBigInteger('old_id');
             $table->unsignedBigInteger('new_id')->nullable();
-            $table->string('old_identifier')->nullable(); // folder_id for patients
-            $table->string('new_identifier')->nullable(); // patient_number for patients
+            $table->string('old_identifier', 100)->nullable(); // folder_id for patients
+            $table->string('new_identifier', 100)->nullable(); // patient_number for patients
             $table->enum('status', ['success', 'skipped', 'failed']);
             $table->text('notes')->nullable();
             $table->json('old_data')->nullable();
