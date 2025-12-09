@@ -2,6 +2,7 @@ import DateRangeFilter from '@/components/Insurance/DateRangeFilter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -15,11 +16,15 @@ import { cache, TTL } from '@/lib/cache';
 import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import {
+    AlertTriangle,
     ArrowRight,
     BarChart3,
+    Banknote,
     Building2,
+    CheckCircle,
     FileBarChart,
     FileText,
+    Hash,
     Package,
     TrendingDown,
     TrendingUp,
@@ -369,47 +374,30 @@ export default function Index() {
                                 onExpand={loadClaimsSummary}
                                 summary={
                                     claimsSummaryData ? (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Total Claims
-                                                </p>
-                                                <p className="text-2xl font-bold">
-                                                    {
-                                                        claimsSummaryData.total_claims
-                                                    }
-                                                </p>
-                                            </div>
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Total Claimed
-                                                </p>
-                                                <p className="text-xl font-bold">
-                                                    {formatCurrency(
-                                                        claimsSummaryData.total_claimed_amount,
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Total Approved
-                                                </p>
-                                                <p className="text-xl font-bold text-green-600">
-                                                    {formatCurrency(
-                                                        claimsSummaryData.total_approved_amount,
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Outstanding
-                                                </p>
-                                                <p className="text-xl font-bold text-red-600">
-                                                    {formatCurrency(
-                                                        claimsSummaryData.outstanding_amount,
-                                                    )}
-                                                </p>
-                                            </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <StatCard
+                                                label="Total Claims"
+                                                value={claimsSummaryData.total_claims}
+                                                icon={<Hash className="h-5 w-5" />}
+                                            />
+                                            <StatCard
+                                                label="Total Claimed"
+                                                value={formatCurrency(claimsSummaryData.total_claimed_amount)}
+                                                icon={<Banknote className="h-5 w-5" />}
+                                                variant="info"
+                                            />
+                                            <StatCard
+                                                label="Total Approved"
+                                                value={formatCurrency(claimsSummaryData.total_approved_amount)}
+                                                icon={<CheckCircle className="h-5 w-5" />}
+                                                variant="success"
+                                            />
+                                            <StatCard
+                                                label="Outstanding"
+                                                value={formatCurrency(claimsSummaryData.outstanding_amount)}
+                                                icon={<AlertTriangle className="h-5 w-5" />}
+                                                variant="error"
+                                            />
                                         </div>
                                     ) : (
                                         <p className="text-sm text-gray-500">
@@ -654,27 +642,19 @@ export default function Index() {
                                 onExpand={loadOutstandingClaims}
                                 summary={
                                     outstandingClaimsData ? (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Outstanding Claims
-                                                </p>
-                                                <p className="text-2xl font-bold">
-                                                    {
-                                                        outstandingClaimsData.total_claims
-                                                    }
-                                                </p>
-                                            </div>
-                                            <div className="rounded-lg border p-4 dark:border-gray-700">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Outstanding Amount
-                                                </p>
-                                                <p className="text-xl font-bold text-red-600">
-                                                    {formatCurrency(
-                                                        outstandingClaimsData.total_outstanding,
-                                                    )}
-                                                </p>
-                                            </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <StatCard
+                                                label="Outstanding Claims"
+                                                value={outstandingClaimsData.total_claims}
+                                                icon={<Hash className="h-5 w-5" />}
+                                                variant="warning"
+                                            />
+                                            <StatCard
+                                                label="Outstanding Amount"
+                                                value={formatCurrency(outstandingClaimsData.total_outstanding)}
+                                                icon={<AlertTriangle className="h-5 w-5" />}
+                                                variant="error"
+                                            />
                                         </div>
                                     ) : (
                                         <p className="text-sm text-gray-500">

@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -221,36 +222,18 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Outstanding
-                                    </p>
-                                    <p className="text-3xl font-bold text-red-600">
-                                        {formatCurrency(data.total_outstanding)}
-                                    </p>
-                                </div>
-                                <AlertTriangle className="h-10 w-10 text-red-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Outstanding Claims
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {data.total_claims}
-                                    </p>
-                                </div>
-                                <Calendar className="h-10 w-10 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Outstanding"
+                        value={formatCurrency(data.total_outstanding)}
+                        icon={<AlertTriangle className="h-5 w-5" />}
+                        variant="error"
+                    />
+                    <StatCard
+                        label="Outstanding Claims"
+                        value={data.total_claims}
+                        icon={<Calendar className="h-5 w-5" />}
+                        variant="info"
+                    />
                 </div>
 
                 {/* Aging Analysis */}

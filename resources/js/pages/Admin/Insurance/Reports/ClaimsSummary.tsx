@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -263,66 +264,29 @@ export default function ClaimsSummary({ data, providers, filters }: Props) {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Claimed
-                                    </p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {formatCurrency(data.total_claimed_amount)}
-                                    </p>
-                                </div>
-                                <DollarSign className="h-8 w-8 text-gray-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Approved
-                                    </p>
-                                    <p className="text-2xl font-bold text-green-600">
-                                        {formatCurrency(data.total_approved_amount)}
-                                    </p>
-                                </div>
-                                <CheckCircle className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Paid
-                                    </p>
-                                    <p className="text-2xl font-bold text-emerald-600">
-                                        {formatCurrency(data.total_paid_amount)}
-                                    </p>
-                                </div>
-                                <DollarSign className="h-8 w-8 text-emerald-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Outstanding
-                                    </p>
-                                    <p className="text-2xl font-bold text-red-600">
-                                        {formatCurrency(data.outstanding_amount)}
-                                    </p>
-                                </div>
-                                <Clock className="h-8 w-8 text-red-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Claimed"
+                        value={formatCurrency(data.total_claimed_amount)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                    />
+                    <StatCard
+                        label="Total Approved"
+                        value={formatCurrency(data.total_approved_amount)}
+                        icon={<CheckCircle className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Total Paid"
+                        value={formatCurrency(data.total_paid_amount)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Outstanding"
+                        value={formatCurrency(data.outstanding_amount)}
+                        icon={<Clock className="h-4 w-4" />}
+                        variant="error"
+                    />
                 </div>
 
                 {/* Status Breakdown */}

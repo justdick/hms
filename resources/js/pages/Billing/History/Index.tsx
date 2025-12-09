@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -262,56 +263,23 @@ export default function HistoryIndex({
 
                 {/* Summary Stats */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Amount
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(summary.total_amount)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                For filtered results
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Transactions
-                            </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {summary.transaction_count}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Total transactions
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Showing
-                            </CardTitle>
-                            <Receipt className="h-4 w-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-600">
-                                {payments.data.length} of {payments.total}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Page {payments.current_page} of {payments.last_page}
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Amount"
+                        value={formatCurrency(summary.total_amount)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Transactions"
+                        value={summary.transaction_count}
+                        icon={<TrendingUp className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label={`Showing ${payments.data.length} of ${payments.total}`}
+                        value={`Page ${payments.current_page} of ${payments.last_page}`}
+                        icon={<Receipt className="h-4 w-4" />}
+                    />
                 </div>
 
 

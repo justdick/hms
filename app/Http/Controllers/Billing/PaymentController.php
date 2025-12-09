@@ -32,13 +32,6 @@ class PaymentController extends Controller
      */
     public function index(Request $request): Response
     {
-        $stats = [
-            'pending_charges' => Charge::pending()->count(),
-            'pending_amount' => Charge::pending()->sum('amount'),
-            'paid_today' => Charge::paid()->whereDate('paid_at', today())->sum('amount'),
-            'total_outstanding' => Charge::pending()->sum('amount'),
-        ];
-
         $permissions = [
             'canProcessPayment' => auth()->user()->can('billing.create'),
             'canWaiveCharges' => auth()->user()->can('billing.waive-charges'),
@@ -48,7 +41,6 @@ class PaymentController extends Controller
         ];
 
         return Inertia::render('Billing/Payments/Index', [
-            'stats' => $stats,
             'permissions' => $permissions,
         ]);
     }
@@ -112,8 +104,15 @@ class PaymentController extends Controller
                     $visitCharges = $checkin->charges->where('status', 'pending');
                     if ($visitCharges->count() > 0) {
                         $visitTotal = $visitCharges->sum('amount');
-                        $visitCopay = $visitCharges->sum('patient_copay_amount');
                         $visitInsurance = $visitCharges->sum('insurance_covered_amount');
+                        // Patient owes: copay if insured, or full amount if not insured
+                        $visitCopay = $visitCharges->sum(function ($charge) {
+                            if ($charge->is_insurance_claim && $charge->patient_copay_amount !== null) {
+                                return $charge->patient_copay_amount;
+                            }
+
+                            return $charge->amount; // Non-insured patient owes full amount
+                        });
 
                         $totalPending += $visitTotal;
                         $totalPatientOwes += $visitCopay;
@@ -129,13 +128,18 @@ class PaymentController extends Controller
                             'insurance_covered' => $visitInsurance,
                             'charges_count' => $visitCharges->count(),
                             'charges' => $visitCharges->map(function ($charge) {
+                                // Calculate what patient actually owes for this charge
+                                $patientOwes = ($charge->is_insurance_claim && $charge->patient_copay_amount !== null)
+                                    ? $charge->patient_copay_amount
+                                    : $charge->amount;
+
                                 return [
                                     'id' => $charge->id,
                                     'description' => $charge->description,
                                     'amount' => $charge->amount,
                                     'is_insurance_claim' => $charge->is_insurance_claim,
                                     'insurance_covered_amount' => $charge->insurance_covered_amount,
-                                    'patient_copay_amount' => $charge->patient_copay_amount,
+                                    'patient_copay_amount' => $patientOwes,
                                     'service_type' => $charge->service_type,
                                     'charged_at' => $charge->charged_at->format('M j, Y'),
                                 ];

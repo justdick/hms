@@ -170,10 +170,10 @@ class MigrateAllFromMittag extends Command
             'lab_param_list' => 'Lab Parameters',
             'lab_daily_register' => 'Lab Orders',
             'lab_results' => 'Lab Results',
-            'ipd_admissions' => 'Admissions',
+            'ipd_register' => 'Admissions',
             'ipd_vitals' => 'IPD Vitals',
-            'ipd_ward_round' => 'Ward Rounds',
-            'ipd_nursing_notes' => 'Nursing Notes',
+            'ipd_review' => 'Ward Rounds',
+            'nurses_notes' => 'Nursing Notes',
             'sponsors' => 'Insurance Sponsors',
         ];
 

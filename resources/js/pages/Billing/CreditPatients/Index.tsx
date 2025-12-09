@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -119,58 +120,24 @@ export default function CreditPatientsIndex({
 
                 {/* Summary Stats */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Credit Patients
-                            </CardTitle>
-                            <Users className="h-4 w-4 text-amber-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-amber-600">
-                                {totalPatients}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Patients with credit privileges
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Owing
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-orange-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">
-                                {formatCurrency(totalOwing)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Outstanding balance from credit patients
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Avg. Owing per Patient
-                            </CardTitle>
-                            <CreditCard className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {formatCurrency(
-                                    totalPatients > 0 ? totalOwing / totalPatients : 0,
-                                )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Average outstanding per patient
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Credit Patients"
+                        value={totalPatients}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Total Owing"
+                        value={formatCurrency(totalOwing)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                        variant="error"
+                    />
+                    <StatCard
+                        label="Avg. Owing per Patient"
+                        value={formatCurrency(totalPatients > 0 ? totalOwing / totalPatients : 0)}
+                        icon={<CreditCard className="h-4 w-4" />}
+                        variant="info"
+                    />
                 </div>
 
 

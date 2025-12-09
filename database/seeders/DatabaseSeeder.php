@@ -27,10 +27,10 @@ class DatabaseSeeder extends Seeder
         // Seed consultation module data
         $this->call([
             PermissionSeeder::class,
-            // DepartmentSeeder::class,
+            DepartmentSeeder::class,
             // MinorProceduresDepartmentSeeder::class,
             // MinorProcedureTypesSeeder::class,
-            // TestDataSeeder::class,
+            TestDataSeeder::class,
             PaymentMethodSeeder::class,
             // LabServiceSeeder::class,
             // PharmacySeeder::class,

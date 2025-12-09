@@ -40,7 +40,8 @@
         "browser-logs",
         "read-log-entries",
         "get-config",
-        "search-docs"
+        "search-docs",
+        "list-artisan-commands"
       ]
     },
     "shadcn": {

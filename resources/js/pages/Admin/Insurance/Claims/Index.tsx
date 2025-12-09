@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -28,6 +29,7 @@ import {
     FileText,
     Filter,
     Search,
+    Send,
     X,
 } from 'lucide-react';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
@@ -264,69 +266,29 @@ export default function InsuranceClaimsIndex({
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Claims
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {stats.total}
-                                    </p>
-                                </div>
-                                <FileText className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Pending Vetting
-                                    </p>
-                                    <p className="text-3xl font-bold text-yellow-600">
-                                        {stats.pending_vetting}
-                                    </p>
-                                </div>
-                                <ClipboardList className="h-8 w-8 text-yellow-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Vetted
-                                    </p>
-                                    <p className="text-3xl font-bold text-blue-600">
-                                        {stats.vetted}
-                                    </p>
-                                </div>
-                                <FileCheck className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Submitted
-                                    </p>
-                                    <p className="text-3xl font-bold text-purple-600">
-                                        {stats.submitted}
-                                    </p>
-                                </div>
-                                <FileCheck className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Claims"
+                        value={stats.total}
+                        icon={<FileText className="h-5 w-5" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Pending Vetting"
+                        value={stats.pending_vetting}
+                        icon={<ClipboardList className="h-5 w-5" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Vetted"
+                        value={stats.vetted}
+                        icon={<FileCheck className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Submitted"
+                        value={stats.submitted}
+                        icon={<Send className="h-5 w-5" />}
+                        variant="success"
+                    />
                 </div>
 
                 {/* Filters Panel */}

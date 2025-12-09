@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import {
@@ -19,6 +20,7 @@ import {
     Download,
     Filter,
     FlaskConical,
+    Hash,
     Package,
     Pill,
     Stethoscope,
@@ -251,21 +253,24 @@ export default function TariffCoverage({ data, filters }: Props) {
                                     {getCoverageStatus(data.overall.percentage).label}
                                 </Badge>
                             </div>
-                            <div className="grid grid-cols-3 gap-8 text-center">
-                                <div>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {data.overall.total}
-                                    </p>
-                                    <p className="text-sm text-gray-500">Total Items</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-green-600">{data.overall.mapped}</p>
-                                    <p className="text-sm text-gray-500">Mapped</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-red-600">{data.overall.unmapped}</p>
-                                    <p className="text-sm text-gray-500">Unmapped</p>
-                                </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <StatCard
+                                    label="Total Items"
+                                    value={data.overall.total}
+                                    icon={<Hash className="h-5 w-5" />}
+                                />
+                                <StatCard
+                                    label="Mapped"
+                                    value={data.overall.mapped}
+                                    icon={<CheckCircle className="h-5 w-5" />}
+                                    variant="success"
+                                />
+                                <StatCard
+                                    label="Unmapped"
+                                    value={data.overall.unmapped}
+                                    icon={<AlertTriangle className="h-5 w-5" />}
+                                    variant="error"
+                                />
                             </div>
                         </div>
                     </CardContent>

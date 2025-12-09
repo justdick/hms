@@ -1,4 +1,4 @@
-import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
+import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
@@ -262,8 +262,88 @@ interface Props {
     consultation: Consultation;
     labServices: LabService[];
     patientHistory?: {
-        previousConsultations: Consultation[];
+        previousConsultations: {
+            id: number;
+            started_at: string;
+            completed_at?: string;
+            status: string;
+            presenting_complaint?: string;
+            history_presenting_complaint?: string;
+            on_direct_questioning?: string;
+            examination_findings?: string;
+            assessment_notes?: string;
+            plan_notes?: string;
+            follow_up_date?: string;
+            patient_checkin: {
+                id: number;
+                department: {
+                    id: number;
+                    name: string;
+                };
+                vital_signs?: VitalSigns[];
+            };
+            doctor: {
+                id: number;
+                name: string;
+            };
+            diagnoses: {
+                id: number;
+                icd_code: string;
+                diagnosis_description: string;
+                is_primary: boolean;
+            }[];
+            prescriptions: {
+                id: number;
+                medication_name: string;
+                dosage: string;
+                frequency: string;
+                duration: string;
+                instructions?: string;
+                status: string;
+            }[];
+            lab_orders?: LabOrder[];
+        }[];
         previousPrescriptions: Prescription[];
+        previousMinorProcedures?: {
+            id: number;
+            performed_at: string;
+            status: string;
+            procedure_notes: string;
+            procedure_type: {
+                id: number;
+                name: string;
+                code: string;
+            };
+            nurse: {
+                id: number;
+                name: string;
+            };
+            patient_checkin: {
+                id: number;
+                department: {
+                    id: number;
+                    name: string;
+                };
+            };
+            diagnoses: {
+                id: number;
+                diagnosis: string;
+                code: string;
+                icd_10: string;
+                g_drg: string;
+            }[];
+            supplies: {
+                id: number;
+                drug: {
+                    id: number;
+                    name: string;
+                    form: string;
+                    strength: string;
+                };
+                quantity: number;
+                dispensed: boolean;
+            }[];
+        }[];
         allergies: string[];
     };
     patientHistories: {
@@ -1247,17 +1327,6 @@ export default function ConsultationShow({
                             </>
                         )}
                     </div>
-
-                    <Button
-                        onClick={() =>
-                            (window.location.href = `/consultation/${consultation.id}/enhanced`)
-                        }
-                        variant="default"
-                        className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                        <Activity className="mr-2 h-4 w-4" />
-                        Try Enhanced UI
-                    </Button>
                 </div>
 
                 <Tabs

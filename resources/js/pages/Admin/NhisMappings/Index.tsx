@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -25,10 +26,13 @@ import { Head, router } from '@inertiajs/react';
 import {
     Download,
     Filter,
+    FlaskConical,
     Link2,
     Link2Off,
+    Pill,
     Plus,
     Search,
+    Stethoscope,
     Trash2,
     Upload,
     X,
@@ -198,66 +202,29 @@ export default function NhisMappingsIndex({
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Mappings
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {stats.total}
-                                    </p>
-                                </div>
-                                <Link2 className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Drugs
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {stats.drugs}
-                                    </p>
-                                </div>
-                                <Badge variant="outline">Drug</Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Lab Services
-                                    </p>
-                                    <p className="text-3xl font-bold text-purple-600">
-                                        {stats.labs}
-                                    </p>
-                                </div>
-                                <Badge variant="outline">Lab</Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Procedures
-                                    </p>
-                                    <p className="text-3xl font-bold text-orange-600">
-                                        {stats.procedures}
-                                    </p>
-                                </div>
-                                <Badge variant="outline">Procedure</Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Mappings"
+                        value={stats.total}
+                        icon={<Link2 className="h-5 w-5" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Drugs"
+                        value={stats.drugs}
+                        icon={<Pill className="h-5 w-5" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Lab Services"
+                        value={stats.labs}
+                        icon={<FlaskConical className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Procedures"
+                        value={stats.procedures}
+                        icon={<Stethoscope className="h-5 w-5" />}
+                        variant="warning"
+                    />
                 </div>
 
                 {/* Filters Panel */}

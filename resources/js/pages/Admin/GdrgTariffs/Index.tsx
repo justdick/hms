@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -25,9 +26,11 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import {
     Activity,
+    CheckCircle,
     Edit,
     FileSpreadsheet,
     Filter,
+    Layers,
     Plus,
     Search,
     Trash2,
@@ -195,51 +198,23 @@ export default function GdrgTariffsIndex({
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Tariffs
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {stats.total}
-                                    </p>
-                                </div>
-                                <FileSpreadsheet className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Active Tariffs
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {stats.active}
-                                    </p>
-                                </div>
-                                <Activity className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        MDC Categories
-                                    </p>
-                                    <p className="text-3xl font-bold text-purple-600">
-                                        {mdcCategories.length}
-                                    </p>
-                                </div>
-                                <Filter className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Tariffs"
+                        value={stats.total}
+                        icon={<FileSpreadsheet className="h-5 w-5" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Active Tariffs"
+                        value={stats.active}
+                        icon={<CheckCircle className="h-5 w-5" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="MDC Categories"
+                        value={mdcCategories.length}
+                        icon={<Layers className="h-5 w-5" />}
+                    />
                 </div>
 
                 {/* Filters Panel */}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Bundle Sticker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sticker {
+            width: 280px;
+            background: linear-gradient(145deg, #ff6b35 0%, #f7931e 50%, #ffcc00 100%);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .sticker::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .wifi-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .main-text {
+            font-size: 18px;
+            font-weight: 900;
+            color: #1a1a2e;
+            text-transform: uppercase;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        .highlight {
+            background: linear-gradient(90deg, #e63946, #d62828);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        .company {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1a1a2e;
+            background: rgba(255,255,255,0.8);
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .contact {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .contact-label {
+            font-size: 9px;
+            color: #ffcc00;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sticker">
+        <div class="wifi-icon">📶</div>
+        <div class="main-text">Buy Cheap &<br>Affordable Data</div>
+        <div class="highlight">🔥 NON-EXPIRY BUNDLE 🔥</div>
+        <div class="company">GRACEFIELD GAM VENTURES</div>
+        <div class="contact">
+            <div class="contact-label">📞 CALL / DM</div>
+            0540361386
+        </div>
+    </div>
+</body>
+</html>

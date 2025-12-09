@@ -57,6 +57,7 @@ Route::middleware(['auth', 'verified'])->prefix('billing')->name('billing.')->gr
         Route::get('/', [BillingConfigurationController::class, 'index'])->name('index')->middleware('can:billing.configure');
         Route::post('/system', [BillingConfigurationController::class, 'updateSystemConfig'])->name('system.update')->middleware('can:billing.configure');
         Route::post('/department', [BillingConfigurationController::class, 'createDepartmentBilling'])->name('department.create')->middleware('can:billing.configure');
+        Route::post('/department/bulk', [BillingConfigurationController::class, 'bulkCreateDepartmentBilling'])->name('department.bulk')->middleware('can:billing.configure');
         Route::put('/department/{departmentBilling}', [BillingConfigurationController::class, 'updateDepartmentBilling'])->name('department.update')->middleware('can:billing.configure');
         Route::post('/service-rule', [BillingConfigurationController::class, 'createServiceRule'])->name('service-rule.create')->middleware('can:billing.configure');
         Route::put('/service-rule/{serviceRule}', [BillingConfigurationController::class, 'updateServiceRule'])->name('service-rule.update')->middleware('can:billing.configure');

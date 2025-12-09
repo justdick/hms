@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
@@ -90,61 +91,23 @@ export default function InsuranceProvidersIndex({ providers }: Props) {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Providers
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {providers.data.length}
-                                    </p>
-                                </div>
-                                <Building2 className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Active Providers
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {
-                                            providers.data.filter(
-                                                (p) => p.is_active,
-                                            ).length
-                                        }
-                                    </p>
-                                </div>
-                                <ToggleRight className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Plans
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {providers.data.reduce(
-                                            (sum, p) =>
-                                                sum + (p.plans_count || 0),
-                                            0,
-                                        )}
-                                    </p>
-                                </div>
-                                <Shield className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Providers"
+                        value={providers.data.length}
+                        icon={<Building2 className="h-5 w-5" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Active Providers"
+                        value={providers.data.filter((p) => p.is_active).length}
+                        icon={<ToggleRight className="h-5 w-5" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Total Plans"
+                        value={providers.data.reduce((sum, p) => sum + (p.plans_count || 0), 0)}
+                        icon={<Shield className="h-5 w-5" />}
+                    />
                 </div>
 
                 {/* Providers List */}

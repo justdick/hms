@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -199,73 +200,30 @@ export default function OutstandingReport({
 
                 {/* Summary Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Outstanding
-                            </CardTitle>
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">
-                                {formatCurrency(summary.total_outstanding)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {summary.charge_count} charges
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Patients with Balance
-                            </CardTitle>
-                            <Users className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {summary.patient_count}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {summary.insured_count} insured, {summary.uninsured_count} uninsured
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Current (0-30 days)
-                            </CardTitle>
-                            <Calendar className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(summary.aging_totals.current)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Recent charges
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Overdue (90+ days)
-                            </CardTitle>
-                            <AlertCircle className="h-4 w-4 text-orange-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">
-                                {formatCurrency(summary.aging_totals.days_90_plus)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Requires attention
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label={`Total Outstanding · ${summary.charge_count} charges`}
+                        value={formatCurrency(summary.total_outstanding)}
+                        icon={<AlertCircle className="h-4 w-4" />}
+                        variant="error"
+                    />
+                    <StatCard
+                        label={`Patients · ${summary.insured_count} insured`}
+                        value={summary.patient_count}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Current (0-30 days)"
+                        value={formatCurrency(summary.aging_totals.current)}
+                        icon={<Calendar className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Overdue (90+ days)"
+                        value={formatCurrency(summary.aging_totals.days_90_plus)}
+                        icon={<AlertCircle className="h-4 w-4" />}
+                        variant="warning"
+                    />
                 </div>
 
                 {/* Aging Summary Bar */}

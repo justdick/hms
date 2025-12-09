@@ -10,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -222,81 +223,33 @@ export default function BatchesIndex({ batches, filters, stats }: Props) {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Batches
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {stats.total}
-                                    </p>
-                                </div>
-                                <Package className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Draft
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-600">
-                                        {stats.draft}
-                                    </p>
-                                </div>
-                                <FileText className="h-8 w-8 text-gray-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Finalized
-                                    </p>
-                                    <p className="text-3xl font-bold text-blue-600">
-                                        {stats.finalized}
-                                    </p>
-                                </div>
-                                <FileCheck className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Submitted
-                                    </p>
-                                    <p className="text-3xl font-bold text-purple-600">
-                                        {stats.submitted}
-                                    </p>
-                                </div>
-                                <Send className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Vetted Claims
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {stats.vetted_claims_available}
-                                    </p>
-                                </div>
-                                <CheckCircle className="h-8 w-8 text-green-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Batches"
+                        value={stats.total}
+                        icon={<Package className="h-5 w-5" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Draft"
+                        value={stats.draft}
+                        icon={<FileText className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Finalized"
+                        value={stats.finalized}
+                        icon={<FileCheck className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Submitted"
+                        value={stats.submitted}
+                        icon={<Send className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Vetted Claims"
+                        value={stats.vetted_claims_available}
+                        icon={<CheckCircle className="h-5 w-5" />}
+                        variant="success"
+                    />
                 </div>
 
                 {/* Filters Panel */}

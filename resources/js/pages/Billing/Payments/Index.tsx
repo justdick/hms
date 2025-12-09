@@ -5,7 +5,6 @@ import { Head, router } from '@inertiajs/react';
 import { Settings } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { BillAdjustmentModal } from './components/BillAdjustmentModal';
-import { BillingStatsCards } from './components/BillingStatsCards';
 import { BillWaiverModal } from './components/BillWaiverModal';
 import { MyCollectionsCard } from './components/MyCollectionsCard';
 import { MyCollectionsModal } from './components/MyCollectionsModal';
@@ -65,13 +64,6 @@ interface PatientSearchResult {
     visits: Visit[];
 }
 
-interface Stats {
-    pending_charges: number;
-    pending_amount: number;
-    paid_today: number;
-    total_outstanding: number;
-}
-
 interface BillingPermissions {
     canProcessPayment: boolean;
     canWaiveCharges: boolean;
@@ -81,11 +73,10 @@ interface BillingPermissions {
 }
 
 interface Props {
-    stats: Stats;
     permissions: BillingPermissions;
 }
 
-export default function PaymentIndex({ stats, permissions }: Props) {
+export default function PaymentIndex({ permissions }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -270,30 +261,11 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                     </div>
                 </div>
 
-                {/* Stats Cards and My Collections */}
-                <div className="grid gap-6 lg:grid-cols-4">
-                    <div className="lg:col-span-3">
-                        <BillingStatsCards
-                            stats={{
-                                pending_charges_count: stats.pending_charges,
-                                pending_charges_amount: stats.pending_amount,
-                                todays_revenue: stats.paid_today,
-                                total_outstanding: stats.total_outstanding,
-                                collection_rate:
-                                    stats.total_outstanding > 0
-                                        ? (stats.paid_today / (stats.paid_today + stats.total_outstanding)) * 100
-                                        : 100,
-                            }}
-                            formatCurrency={formatCurrency}
-                        />
-                    </div>
-                    <div className="lg:col-span-1">
-                        <MyCollectionsCard
-                            formatCurrency={formatCurrency}
-                            onViewDetails={() => setCollectionsModalOpen(true)}
-                        />
-                    </div>
-                </div>
+                {/* My Collections Card */}
+                <MyCollectionsCard
+                    formatCurrency={formatCurrency}
+                    onViewDetails={() => setCollectionsModalOpen(true)}
+                />
 
                 {/* Patient Search Section */}
                 <Card>
@@ -308,7 +280,6 @@ export default function PaymentIndex({ stats, permissions }: Props) {
                                 searchQuery={searchQuery}
                                 selectedPatientId={selectedPatient?.patient_id || null}
                                 onPatientSelect={handlePatientSelect}
-                                onQuickPayAll={handleQuickPayAll}
                                 formatCurrency={formatCurrency}
                             />
                         </div>

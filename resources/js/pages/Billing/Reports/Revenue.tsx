@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -200,82 +201,29 @@ export default function RevenueReport({ report, departments, filters }: Props) {
 
                 {/* Summary Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Revenue
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(report.summary.total_revenue)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {report.summary.period_start} to {report.summary.period_end}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Transactions
-                            </CardTitle>
-                            <BarChart3 className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {report.summary.transaction_count.toLocaleString()}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Total payments processed
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Average Transaction
-                            </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-600">
-                                {formatCurrency(report.summary.average_transaction)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Per transaction
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                vs Previous Period
-                            </CardTitle>
-                            {isPositiveChange ? (
-                                <ArrowUp className="h-4 w-4 text-green-600" />
-                            ) : (
-                                <ArrowDown className="h-4 w-4 text-red-600" />
-                            )}
-                        </CardHeader>
-                        <CardContent>
-                            <div
-                                className={`text-2xl font-bold ${
-                                    isPositiveChange ? 'text-green-600' : 'text-red-600'
-                                }`}
-                            >
-                                {isPositiveChange ? '+' : ''}
-                                {report.comparison.percentage_change.toFixed(1)}%
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Previous: {formatCurrency(report.comparison.previous_total)}
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Revenue"
+                        value={formatCurrency(report.summary.total_revenue)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Transactions"
+                        value={report.summary.transaction_count.toLocaleString()}
+                        icon={<BarChart3 className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Average Transaction"
+                        value={formatCurrency(report.summary.average_transaction)}
+                        icon={<TrendingUp className="h-4 w-4" />}
+                    />
+                    <StatCard
+                        label={`vs Previous: ${formatCurrency(report.comparison.previous_total)}`}
+                        value={`${isPositiveChange ? '+' : ''}${report.comparison.percentage_change.toFixed(1)}%`}
+                        icon={isPositiveChange ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                        variant={isPositiveChange ? 'success' : 'error'}
+                    />
                 </div>
 
 

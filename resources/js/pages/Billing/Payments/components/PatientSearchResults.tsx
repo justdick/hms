@@ -37,7 +37,6 @@ interface PatientSearchResultsProps {
     searchQuery: string;
     selectedPatientId: number | null;
     onPatientSelect: (patient: PatientSearchResult) => void;
-    onQuickPayAll: (patient: PatientSearchResult) => void;
     formatCurrency: (amount: number) => string;
 }
 
@@ -46,7 +45,6 @@ export function PatientSearchResults({
     searchQuery,
     selectedPatientId,
     onPatientSelect,
-    onQuickPayAll,
     formatCurrency,
 }: PatientSearchResultsProps) {
     if (searchQuery.length === 0) {
@@ -120,17 +118,6 @@ export function PatientSearchResults({
                                 {patient.total_charges} charge
                                 {patient.total_charges !== 1 ? 's' : ''}
                             </Badge>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="mt-2 w-full"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onQuickPayAll(patient);
-                                }}
-                            >
-                                Quick Pay All
-                            </Button>
                         </div>
                     </div>
                 </div>
