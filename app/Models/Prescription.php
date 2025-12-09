@@ -37,6 +37,7 @@ class Prescription extends Model
         'discontinued_at',
         'discontinued_by_id',
         'discontinuation_reason',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

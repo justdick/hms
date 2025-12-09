@@ -41,7 +41,10 @@ interface CoverageException {
     item_description: string;
     coverage_type: string;
     coverage_value: number | string;
+    tariff_amount?: number | string | null;
+    nhis_tariff_price?: number | string | null;
     patient_copay_percentage: number | string;
+    patient_copay_amount?: number | string | null;
     is_covered: boolean;
     notes?: string;
 }
@@ -180,9 +183,33 @@ export default function ExceptionTableModal({
         return <Badge variant={config.variant}>{config.label}</Badge>;
     };
 
+    const getCopayDisplay = (exception: CoverageException) => {
+        // For NHIS/full coverage, show fixed copay amount if set
+        if (exception.patient_copay_amount && parseFloat(String(exception.patient_copay_amount)) > 0) {
+            return `GHS ${parseFloat(String(exception.patient_copay_amount)).toFixed(2)}`;
+        }
+        // For percentage-based coverage, show percentage
+        if (exception.patient_copay_percentage && parseFloat(String(exception.patient_copay_percentage)) > 0) {
+            return `${parseFloat(String(exception.patient_copay_percentage)).toFixed(0)}%`;
+        }
+        return 'None';
+    };
+
+    const getTariffDisplay = (exception: CoverageException) => {
+        // First check NHIS tariff (from mapping)
+        if (exception.nhis_tariff_price && parseFloat(String(exception.nhis_tariff_price)) > 0) {
+            return `GHS ${parseFloat(String(exception.nhis_tariff_price)).toFixed(2)}`;
+        }
+        // Then check custom tariff amount
+        if (exception.tariff_amount && parseFloat(String(exception.tariff_amount)) > 0) {
+            return `GHS ${parseFloat(String(exception.tariff_amount)).toFixed(2)}`;
+        }
+        return '-';
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col">
+            <DialogContent className="flex max-h-[95vh] w-[95vw] max-w-7xl flex-col">
                 <DialogHeader>
                     <DialogTitle className="flex items-center justify-between">
                         <span>{categoryLabel} - Coverage Exceptions</span>
@@ -242,7 +269,7 @@ export default function ExceptionTableModal({
                                         (sortDirection === 'asc' ? '↑' : '↓')}
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    className="min-w-[200px] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                                     onClick={() =>
                                         handleSort('item_description')
                                     }
@@ -251,14 +278,16 @@ export default function ExceptionTableModal({
                                     {sortColumn === 'item_description' &&
                                         (sortDirection === 'asc' ? '↑' : '↓')}
                                 </TableHead>
-                                <TableHead>Coverage Type</TableHead>
                                 <TableHead
-                                    className="cursor-pointer text-right hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                                     onClick={() => handleSort('coverage_value')}
                                 >
                                     Coverage{' '}
                                     {sortColumn === 'coverage_value' &&
                                         (sortDirection === 'asc' ? '↑' : '↓')}
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Insurance Tariff
                                 </TableHead>
                                 <TableHead className="text-right">
                                     Patient Copay
@@ -286,22 +315,21 @@ export default function ExceptionTableModal({
                                         <TableCell className="font-mono text-sm">
                                             {exception.item_code}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="max-w-[250px] truncate">
                                             {exception.item_description}
                                         </TableCell>
                                         <TableCell>
-                                            {getCoverageTypeBadge(
-                                                exception.coverage_type,
-                                            )}
+                                            {getCoverageTypeBadge(exception.coverage_type)}
+                                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                                {exception.coverage_type === 'percentage' && `${exception.coverage_value}%`}
+                                                {exception.coverage_type === 'fixed' && `GHS ${parseFloat(String(exception.coverage_value || 0)).toFixed(2)}`}
+                                            </span>
                                         </TableCell>
-                                        <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
-                                            {getCoverageDisplay(exception)}
+                                        <TableCell className="text-right text-blue-600 dark:text-blue-400">
+                                            {getTariffDisplay(exception)}
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            {typeof exception.patient_copay_percentage ===
-                                            'number'
-                                                ? `${exception.patient_copay_percentage.toFixed(2)}%`
-                                                : `${parseFloat(exception.patient_copay_percentage || '0').toFixed(2)}%`}
+                                        <TableCell className="text-right font-medium text-orange-600 dark:text-orange-400">
+                                            {getCopayDisplay(exception)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>

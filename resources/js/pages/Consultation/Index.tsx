@@ -504,11 +504,10 @@ export default function ConsultationIndex({
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <Building className="h-4 w-4" />
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .department.name
-                                                        }
+                                                        {consultation
+                                                            .patient_checkin
+                                                            .department?.name ??
+                                                            'Unknown Department'}
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <Clock className="h-4 w-4" />

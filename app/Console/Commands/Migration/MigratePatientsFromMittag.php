@@ -18,7 +18,9 @@ class MigratePatientsFromMittag extends Command
     protected $description = 'Migrate patients from Mittag old system to HMS';
 
     private int $migrated = 0;
+
     private int $skipped = 0;
+
     private int $failed = 0;
 
     public function handle(): int
@@ -30,17 +32,18 @@ class MigratePatientsFromMittag extends Command
             DB::connection('mittag_old')->getPdo();
             $this->info('✓ Connected to mittag_old database');
         } catch (\Exception $e) {
-            $this->error('Cannot connect to mittag_old database: ' . $e->getMessage());
+            $this->error('Cannot connect to mittag_old database: '.$e->getMessage());
             $this->line('');
             $this->line('Please ensure:');
             $this->line('1. Create database: CREATE DATABASE mittag_old;');
             $this->line('2. Import backup: mysql -u root mittag_old < backup_mittag.sql');
             $this->line('3. Add to .env: MITTAG_DB_DATABASE=mittag_old');
+
             return Command::FAILURE;
         }
 
         $query = DB::connection('mittag_old')->table('patients');
-        
+
         if ($limit = $this->option('limit')) {
             $query->limit((int) $limit);
         }
@@ -65,7 +68,7 @@ class MigratePatientsFromMittag extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->info("Migration completed:");
+        $this->info('Migration completed:');
         $this->line("  ✓ Migrated: {$this->migrated}");
         $this->line("  ⊘ Skipped:  {$this->skipped}");
         $this->line("  ✗ Failed:   {$this->failed}");
@@ -84,24 +87,27 @@ class MigratePatientsFromMittag extends Command
 
             if ($existingLog && $existingLog->status === 'success') {
                 $this->skipped++;
+
                 return;
             }
 
             // Check if patient exists by folder_id (old patient number)
             if ($this->option('skip-existing')) {
-                $existing = Patient::where('patient_number', 'LIKE', '%' . $old->folder_id)
+                $existing = Patient::where('patient_number', 'LIKE', '%'.$old->folder_id)
                     ->orWhere('national_id', $old->folder_id)
                     ->first();
-                
+
                 if ($existing) {
                     $this->logMigration($old, $existing->id, $existing->patient_number, 'skipped', 'Patient already exists');
                     $this->skipped++;
+
                     return;
                 }
             }
 
             if ($this->option('dry-run')) {
                 $this->migrated++;
+
                 return;
             }
 
@@ -129,7 +135,7 @@ class MigratePatientsFromMittag extends Command
         // Parse name - old system has sname (surname), fname (first), mname (middle)
         $firstName = trim($old->fname) ?: 'Unknown';
         $lastName = trim($old->sname) ?: 'Unknown';
-        
+
         // Map gender
         $gender = strtolower(trim($old->gender));
         $gender = match (true) {
@@ -162,16 +168,18 @@ class MigratePatientsFromMittag extends Command
             'status' => 'active',
             // Medical history from old system
             'past_medical_surgical_history' => trim($old->problem) ?: null,
+            'migrated_from_mittag' => true,
         ];
     }
 
     private function cleanPhone(?string $phone): ?string
     {
-        if (!$phone) {
+        if (! $phone) {
             return null;
         }
-        
+
         $phone = preg_replace('/[^0-9+]/', '', $phone);
+
         return $phone ?: null;
     }
 

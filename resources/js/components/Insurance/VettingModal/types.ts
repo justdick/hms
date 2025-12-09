@@ -77,14 +77,6 @@ export interface ClaimTotals {
     unmapped_count: number;
 }
 
-export interface AvailableDiagnosis {
-    id: number;
-    diagnosis: string;
-    code: string;
-    g_drg: string;
-    icd_10: string;
-}
-
 export interface VettingData {
     claim: {
         id: number;
@@ -104,7 +96,7 @@ export interface VettingData {
     totals: ClaimTotals;
     is_nhis: boolean;
     gdrg_tariffs: GdrgTariff[];
-    available_diagnoses: AvailableDiagnosis[];
+    // Diagnoses loaded via async search - too many to load upfront
     can: {
         vet: boolean;
     };

@@ -38,7 +38,9 @@
         "last-error",
         "get-absolute-url",
         "browser-logs",
-        "read-log-entries"
+        "read-log-entries",
+        "get-config",
+        "search-docs"
       ]
     },
     "shadcn": {

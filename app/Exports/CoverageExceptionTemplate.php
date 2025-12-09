@@ -54,8 +54,8 @@ class EnhancedInstructionsSheet implements FromArray, WithColumnWidths, WithStyl
             [''],
             ['COLUMN EXPLANATIONS:'],
             [''],
-            ['current_price: Hospital standard price (for non-insured patients)'],
-            ['tariff_amount: Insurance negotiated price (optional - leave empty to use current_price)'],
+            ['hospital_price (non-insured): Hospital standard price for cash/non-insured patients - DO NOT EDIT'],
+            ['tariff_amount: Insurance negotiated price (optional - leave empty to use hospital price)'],
             ['patient_copay_amount: Fixed amount patient pays in addition to percentage (optional)'],
             [''],
             ['COVERAGE TYPES:'],
@@ -190,7 +190,7 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
             return [
                 'item_code' => $item->code,
                 'item_name' => $item->name,
-                'current_price' => number_format($item->price, 2, '.', ''),
+                'hospital_price (non-insured)' => number_format($item->price, 2, '.', ''),
                 'coverage_type' => $coverageType,
                 'coverage_value' => $existingRule?->coverage_value ?? $defaultCoverageValue,
                 'tariff_amount' => $existingRule?->tariff_amount ? number_format($existingRule->tariff_amount, 2, '.', '') : '',
@@ -245,7 +245,7 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
         return [
             'item_code',
             'item_name',
-            'current_price',
+            'hospital_price (non-insured)',
             'coverage_type',
             'coverage_value',
             'tariff_amount',
@@ -289,6 +289,9 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
         if ($this->rowCount > 0) {
             $lastRow = $this->rowCount + 1; // +1 for header row
 
+            // 0. Style read-only columns (item_code, item_name, hospital_price) with gray background
+            $this->styleReadOnlyColumns($sheet, $lastRow);
+
             // 1. Add dropdown validation to coverage_type column (column D)
             $this->addCoverageTypeDropdown($sheet, $lastRow);
 
@@ -300,6 +303,25 @@ class PrePopulatedDataSheet implements FromCollection, WithColumnWidths, WithHea
         }
 
         return $styles;
+    }
+
+    /**
+     * Style read-only columns with gray background to indicate they should not be edited
+     */
+    private function styleReadOnlyColumns(Worksheet $sheet, int $lastRow): void
+    {
+        // Columns A (item_code), B (item_name), C (hospital_price) are read-only
+        $readOnlyColumns = ['A', 'B', 'C'];
+
+        foreach ($readOnlyColumns as $column) {
+            $sheet->getStyle("{$column}2:{$column}{$lastRow}")->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFF5F5F5'); // Light gray background
+
+            // Make text slightly muted
+            $sheet->getStyle("{$column}2:{$column}{$lastRow}")->getFont()
+                ->getColor()->setARGB('FF666666');
+        }
     }
 
     /**

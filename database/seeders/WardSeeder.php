@@ -18,57 +18,38 @@ class WardSeeder extends Seeder
 
         Bed::query()->delete();
 
+        // Wards based on Mittag hospital setup
         $wards = [
             [
-                'name' => 'Ward A',
-                'code' => 'WA',
-                'description' => 'General medical ward for adult patients',
-                'bed_count' => 20,
-            ],
-            [
-                'name' => 'Ward B',
-                'code' => 'WB',
-                'description' => 'General medical ward for adult patients',
-                'bed_count' => 18,
-            ],
-            [
-                'name' => 'ICU-1',
-                'code' => 'ICU1',
-                'description' => 'Intensive Care Unit with specialized monitoring equipment',
+                'name' => 'Male Ward',
+                'code' => 'MW',
+                'description' => 'General ward for adult male patients',
                 'bed_count' => 10,
-                'bed_type' => 'icu',
             ],
             [
-                'name' => 'NICU',
-                'code' => 'NICU',
-                'description' => 'Neonatal Intensive Care Unit for newborns',
-                'bed_count' => 8,
-                'bed_type' => 'icu',
+                'name' => 'Female Ward',
+                'code' => 'FW',
+                'description' => 'General ward for adult female patients',
+                'bed_count' => 10,
             ],
             [
-                'name' => 'Pediatric Wing',
+                'name' => 'Paediatric Ward',
                 'code' => 'PED',
-                'description' => 'Specialized ward for children and adolescents',
-                'bed_count' => 15,
+                'description' => 'Ward for children and adolescents',
+                'bed_count' => 10,
             ],
             [
-                'name' => 'Maternity-1',
-                'code' => 'MAT1',
+                'name' => 'Maternity Ward',
+                'code' => 'MAT',
                 'description' => 'Labor, delivery and postpartum care',
-                'bed_count' => 12,
+                'bed_count' => 10,
                 'bed_type' => 'private',
             ],
             [
-                'name' => 'Surgery Recovery',
-                'code' => 'SUR',
-                'description' => 'Post-operative recovery and monitoring',
-                'bed_count' => 16,
-            ],
-            [
-                'name' => 'Emergency Obs',
+                'name' => 'Emergency / Same Day Care',
                 'code' => 'ER',
-                'description' => 'Emergency department observation beds',
-                'bed_count' => 6,
+                'description' => 'Emergency department and same day observation',
+                'bed_count' => 10,
             ],
         ];
 

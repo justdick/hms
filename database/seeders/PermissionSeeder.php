@@ -108,10 +108,18 @@ class PermissionSeeder extends Seeder
 
             // User Management
             'users.view' => 'View users',
+            'users.view-all' => 'View all users system-wide',
             'users.create' => 'Create new users',
             'users.update' => 'Update user information',
             'users.delete' => 'Delete users',
+            'users.reset-password' => 'Reset user passwords',
             'users.manage-permissions' => 'Manage user permissions',
+
+            // Role Management
+            'roles.view-all' => 'View all roles',
+            'roles.create' => 'Create new roles',
+            'roles.update' => 'Update role information and permissions',
+            'roles.delete' => 'Delete roles',
 
             // Pharmacy Management
             'pharmacy.view' => 'View pharmacy dashboard',
@@ -217,6 +225,13 @@ class PermissionSeeder extends Seeder
             // G-DRG Tariff Management
             'gdrg-tariffs.view' => 'View G-DRG tariffs',
             'gdrg-tariffs.manage' => 'Manage G-DRG tariffs (create, update, delete, import)',
+
+            // Backup Management
+            'backups.view' => 'View database backups',
+            'backups.create' => 'Create database backups',
+            'backups.delete' => 'Delete database backups',
+            'backups.restore' => 'Restore database from backups',
+            'backups.manage-settings' => 'Manage backup settings (schedule, retention, Google Drive)',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -426,7 +441,7 @@ class PermissionSeeder extends Seeder
         $admin->syncPermissions(\Spatie\Permission\Models\Permission::all());
 
         // Ensure admin user has admin role with all permissions
-        $adminUser = \App\Models\User::where('email', 'admin@hms.com')->first();
+        $adminUser = \App\Models\User::where('username', 'admin')->first();
         if ($adminUser) {
             $adminUser->syncRoles(['Admin']);
             $adminUser->syncPermissions(\Spatie\Permission\Models\Permission::all());

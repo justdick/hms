@@ -1545,7 +1545,6 @@ export default function ConsultationShow({
                                 </CardHeader>
                                 <CardContent>
                                     <DiagnosisFormSection
-                                        diagnoses={availableDiagnoses}
                                         consultationDiagnoses={
                                             consultation.diagnoses
                                         }

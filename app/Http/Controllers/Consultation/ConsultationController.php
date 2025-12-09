@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Consultation;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Department;
-use App\Models\Diagnosis;
 use App\Models\Drug;
 use App\Models\LabService;
 use App\Models\MinorProcedureType;
@@ -174,7 +173,7 @@ class ConsultationController extends Controller
             'availableWards' => Ward::active()->available()->get(['id', 'name', 'code', 'available_beds']),
             'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
             'availableDepartments' => Department::active()->opd()->get(['id', 'name', 'code']),
-            'availableDiagnoses' => Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            // Diagnoses loaded via async search - too many to load upfront
             'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
         ]);
     }

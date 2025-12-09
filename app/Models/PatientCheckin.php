@@ -24,6 +24,7 @@ class PatientCheckin extends Model
         'status',
         'notes',
         'claim_check_code',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

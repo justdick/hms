@@ -31,6 +31,7 @@ class PatientAdmission extends Model
         'discharged_at',
         'discharge_notes',
         'discharged_by_id',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

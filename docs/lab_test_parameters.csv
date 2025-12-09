@@ -1,0 +1,100 @@
+code,test_name,price,parameter_name,normal_range,usage_count
+INVE09D,B/F for Malaria Parasites,5.18,Count,parasites / uL,2600
+INVE09D,B/F for Malaria Parasites,5.18,Species,,2600
+INVE104,Grouping/X' Matching/Unit,7.46,BLOOD BANK,,2
+INVE105,Hepatitis C screening,7.46,HEPATITIS C,,14
+INVE112,Renal Function Test,13.19,CREATININE,"M: 61.8- 123.7 umol/L F: 53.0-97.2 umol/L",112
+INVE112,Renal Function Test,13.19,eGFR,>=/= 90ml/min/1.73m^2,112
+INVE112,Renal Function Test,13.19,eGFR COMMENT,STAGE 1-5 classification,112
+INVE112,Renal Function Test,13.19,UREA,2.50-7.50 mmol/L,112
+INVE122,Malaria Card Test (Dipstik assay/rapid card),2.66,Result,,6
+INVE123,RH Typing,6.04,RH Type,,17
+INVE16E,Sickling Test,4.43,sickle cell,,38
+INVE17D,Blood Grouping,5.29,Blood Group,,34
+INVE18D,Blood Grouping & Antibody Screen,7.40,BLOOD GROUP,,4
+INVE24D,BUE & Creatinine,14.14,CREATININE,"M:53.0-97.0 F:44.0-80.0",2
+INVE24D,BUE & Creatinine,14.14,UREA,2.10-7.10,2
+INVE24E,Thyroid Function Test (TSH),18.79,FREE THYROXINE(FT3),2.33 - 5.36 pmol/L,2
+INVE24E,Thyroid Function Test (TSH),18.79,FREE THYROXINE(FT4),9.14 - 23.10 pmol/L,2
+INVE24E,Thyroid Function Test (TSH),18.79,THYROTROPHIN(TSH),0.49 - 5.6 mIU/L,2
+INVE36E,Veneral Disease Research Laboratory (VDRL),4.72,VDRL,,114
+INVE38E,Widal Test,5.32,IgG,,521
+INVE38E,Widal Test,5.32,IgM,,521
+INVE42D,Erythrocyte Sedimentation Rate (ESR),4.82,ESR,"MEN UP TO 10mmfall/hr WOMEN UP TO 14mmfall/hr",3
+INVE46D,Fasting Blood Sugar/Random Blood Sugar,4.94,FASTING BLOOD SUGAR,3.3-6.6mmoI/L,1
+INVE46D,Fasting Blood Sugar/Random Blood Sugar,4.94,RANDOM BLOOD SUGAR,3.3-11.0mmol/L,1
+INVE51D,Full Blood Count FBC (Auto) & Film Comment,13.12,WBC,3.2*10,25
+INVE52D,Full Blood Count FBC (Automation),11.10,GRAN#,2.0-8.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,GRAN%,50.0-70.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,HCT,35.0-49.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,HGB,12.0-16.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,LYMPH#,0.8-7.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,LYMPH%,20.0-60.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MCH,27.0-34.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MCHC,31.0-37.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MCV,80.0-100.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MID#,0.1-1.5,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MID%,3.0-15.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,MPV,6.5-12.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,P-LCR,,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,PCT,0.108-0.282,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,PDW,9.0-17.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,PLT,100-300,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,RBC,3.50-5.20,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,RDW-CV,11.0-16.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,RDW-SD,35.0-56.0,2951
+INVE52D,Full Blood Count FBC (Automation),11.10,WBC,4.0-12.0,2951
+INVE56D,Glucose-6-Phosphate Dehydrogenase (G6PD),6.64,Defect,,5
+INVE57D,Glycosylated Haemoglobin (HBA 1C),15.96,Glycoslated Haemoglobin(HBa1c),3.5-5.5%,13
+INVE60D,Haemoglobin Estimation (HB),5.11,Haemoglobin,11 - 16 g/dL,78
+INVE62D,Helicobacter Pylori Test,5.18,H.PYLORI TEST,,172
+INVE63D,Hepatitis B Surface Antigen (HBSAG) HBV,5.76,HBsAg,,53
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,COMMENTS,,17
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,HBcAb,,17
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,HBeAb,,17
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,HBeAg,,17
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,HBsAb,,17
+INVE64D,Hepatitis B Virus Profile (HBV Profile),14.35,HBsAg,,17
+INVE68D,Human Immunodeficiency Virus (HIV) Confirmation,12.00,ORAQUICK,,9
+INVE69D,Human Immunodeficiency Virus (HIV) Screening,11.22,FIRST RESPONSE,,153
+INVE74D,Liver Function Test (LFT),19.20,ALBUMIN,35.0-52.0 g/l,63
+INVE74D,Liver Function Test (LFT),19.20,ALKALINE PHOS,98.0-270.0 U/L,63
+INVE74D,Liver Function Test (LFT),19.20,ALT/GPT,3.0-41.0 U/L,63
+INVE74D,Liver Function Test (LFT),19.20,AST/GOT,5.0-37.0 U/L,63
+INVE74D,Liver Function Test (LFT),19.20,DIRERCT BIL,0.0-6.8 umol/L,63
+INVE74D,Liver Function Test (LFT),19.20,GAMMA GT,9.0-50.0 U/L,63
+INVE74D,Liver Function Test (LFT),19.20,GLOBULIN,20-39g/l,63
+INVE74D,Liver Function Test (LFT),19.20,INDIRECT BIL,1.70-22.0 umol/L,63
+INVE74D,Liver Function Test (LFT),19.20,TOTAL BIL,3.0-22.0 umol/L,63
+INVE74D,Liver Function Test (LFT),19.20,TOTAL PROTEIN,66.0-87.0 g/l,63
+INVE75D,Lipid Profile,18.25,CHOLESTEROL,3.10-6.20 U/L,51
+INVE75D,Lipid Profile,18.25,CORONARY RISK,3.00-9.00,51
+INVE75D,Lipid Profile,18.25,HDL CHOLESTEROL,1.04-1.55 mmol/L,51
+INVE75D,Lipid Profile,18.25,LDL CHOLESTEROL,2.60-4.90 mmol/L,51
+INVE75D,Lipid Profile,18.25,TRIGLYCERIDES,0.05-1.70 U/L,51
+INVE75D,Lipid Profile,18.25,VLDL CHOL.,0.00-5.00,51
+INVE92D,Pregnancy Test,6.14,PREGNANCY TEST SERUM,,324
+INVE92D,Pregnancy Test,6.14,Pregnancy Test (Urine),NEGATIVE,324
+INVE94D,Prostate Specific Antigen (PSA),17.65,PSA,,19
+INVE99D,Routine Urine Examination,5.05,APPEARANCE,,1367
+INVE99D,Routine Urine Examination,5.05,BACTERIA,,1367
+INVE99D,Routine Urine Examination,5.05,BILIRUBIN,,1367
+INVE99D,Routine Urine Examination,5.05,BLOOD,,1367
+INVE99D,Routine Urine Examination,5.05,CAST,,1367
+INVE99D,Routine Urine Examination,5.05,COLOUR,,1367
+INVE99D,Routine Urine Examination,5.05,CRYSTALS,,1367
+INVE99D,Routine Urine Examination,5.05,EPITH CELL,,1367
+INVE99D,Routine Urine Examination,5.05,GLUCOSE,,1367
+INVE99D,Routine Urine Examination,5.05,KETONE,,1367
+INVE99D,Routine Urine Examination,5.05,LEUCOCYTE,,1367
+INVE99D,Routine Urine Examination,5.05,NITRITE,,1367
+INVE99D,Routine Urine Examination,5.05,OTHERS,,1367
+INVE99D,Routine Urine Examination,5.05,PH,,1367
+INVE99D,Routine Urine Examination,5.05,PROTEIN,,1367
+INVE99D,Routine Urine Examination,5.05,PUS CELLS,,1367
+INVE99D,Routine Urine Examination,5.05,RBC,,1367
+INVE99D,Routine Urine Examination,5.05,S.G,,1367
+INVE99D,Routine Urine Examination,5.05,SCHISTOSOMA HAEMATOBIUM,,1367
+INVE99D,Routine Urine Examination,5.05,UROBILINOGEN,,1367
+INVE99D,Routine Urine Examination,5.05,YEAST CELLS,,1367
+KGH3,HIV FINAL RESULT,0.00,FINAL RESULT,,3

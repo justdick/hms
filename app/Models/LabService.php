@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LabService extends Model
 {
@@ -38,6 +39,15 @@ class LabService extends Model
     public function labOrders(): HasMany
     {
         return $this->hasMany(LabOrder::class);
+    }
+
+    /**
+     * Get the NHIS item mapping for this lab service.
+     */
+    public function nhisMapping(): HasOne
+    {
+        return $this->hasOne(NhisItemMapping::class, 'item_id')
+            ->where('item_type', 'lab_service');
     }
 
     public function scopeActive($query): void

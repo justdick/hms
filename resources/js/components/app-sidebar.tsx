@@ -1,6 +1,5 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -19,6 +18,7 @@ import {
     Building2,
     ClipboardList,
     CreditCard,
+    Database,
     FileText,
     FlaskConical,
     FolderSync,
@@ -249,6 +249,44 @@ export function AppSidebar() {
             icon: Building2,
         },
     ];
+
+    // Add Backups menu item if user has backup permissions
+    if (auth.permissions?.backups?.view) {
+        mainNavItems.push({
+            title: 'Backups',
+            href: '/admin/backups',
+            icon: Database,
+        });
+    }
+
+    // Build admin sub-items based on permissions
+    const adminItems: NavItem[] = [];
+
+    if (auth.permissions?.users?.viewAll) {
+        adminItems.push({
+            title: 'Users',
+            href: '/admin/users',
+            icon: Users,
+        });
+    }
+
+    if (auth.permissions?.roles?.viewAll) {
+        adminItems.push({
+            title: 'Roles',
+            href: '/admin/roles',
+            icon: Shield,
+        });
+    }
+
+    // Add Administration menu if user has any admin permissions
+    if (adminItems.length > 0) {
+        mainNavItems.push({
+            title: 'Administration',
+            href: '/admin/users',
+            icon: Settings,
+            items: adminItems,
+        });
+    }
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -269,7 +307,6 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

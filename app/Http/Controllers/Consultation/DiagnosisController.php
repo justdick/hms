@@ -18,12 +18,23 @@ class DiagnosisController extends Controller
             return response()->json([]);
         }
 
+        // Use FULLTEXT search for better performance with 12,500+ diagnoses
+        // Fall back to LIKE if FULLTEXT doesn't return results (for partial matches)
         $diagnoses = Diagnosis::query()
-            ->where('diagnosis', 'like', "%{$query}%")
-            ->orWhere('icd_10', 'like', "%{$query}%")
+            ->whereFullText(['diagnosis', 'icd_10'], $query)
             ->orderBy('diagnosis')
             ->limit(20)
             ->get(['id', 'diagnosis as name', 'icd_10 as icd_code']);
+
+        // If no FULLTEXT results, fall back to LIKE for partial matching
+        if ($diagnoses->isEmpty()) {
+            $diagnoses = Diagnosis::query()
+                ->where('diagnosis', 'like', "{$query}%")
+                ->orWhere('icd_10', 'like', "{$query}%")
+                ->orderBy('diagnosis')
+                ->limit(20)
+                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code']);
+        }
 
         return response()->json($diagnoses);
     }

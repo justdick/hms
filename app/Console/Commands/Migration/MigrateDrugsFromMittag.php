@@ -6,7 +6,6 @@ use App\Models\Drug;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class MigrateDrugsFromMittag extends Command
 {
@@ -18,7 +17,9 @@ class MigrateDrugsFromMittag extends Command
     protected $description = 'Migrate drugs from Mittag old system to HMS';
 
     private int $migrated = 0;
+
     private int $skipped = 0;
+
     private int $failed = 0;
 
     public function handle(): int
@@ -29,12 +30,13 @@ class MigrateDrugsFromMittag extends Command
             DB::connection('mittag_old')->getPdo();
             $this->info('✓ Connected to mittag_old database');
         } catch (\Exception $e) {
-            $this->error('Cannot connect to mittag_old database: ' . $e->getMessage());
+            $this->error('Cannot connect to mittag_old database: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
         $query = DB::connection('mittag_old')->table('drugs');
-        
+
         if ($limit = $this->option('limit')) {
             $query->limit((int) $limit);
         }
@@ -59,7 +61,7 @@ class MigrateDrugsFromMittag extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->info("Migration completed:");
+        $this->info('Migration completed:');
         $this->line("  ✓ Migrated: {$this->migrated}");
         $this->line("  ⊘ Skipped:  {$this->skipped}");
         $this->line("  ✗ Failed:   {$this->failed}");
@@ -78,38 +80,37 @@ class MigrateDrugsFromMittag extends Command
 
             if ($existingLog && $existingLog->status === 'success') {
                 $this->skipped++;
+
                 return;
             }
 
             // Check if drug exists by code
             if ($this->option('skip-existing')) {
                 $existing = Drug::where('drug_code', $old->code)->first();
-                
+
                 if ($existing) {
                     $this->logMigration($old, $existing->id, $existing->drug_code, 'skipped', 'Drug already exists');
                     $this->skipped++;
+
                     return;
                 }
             }
 
             if ($this->option('dry-run')) {
                 $this->migrated++;
+
                 return;
             }
 
             $drugData = $this->mapDrugData($old);
-
-            // Handle duplicate codes
-            $baseCode = $drugData['drug_code'];
-            $counter = 1;
-            while (Drug::where('drug_code', $drugData['drug_code'])->exists()) {
-                $drugData['drug_code'] = $baseCode . '-' . $counter;
-                $counter++;
-            }
+            $drugCode = $drugData['drug_code'];
 
             // Disable observers during migration to avoid notification errors
-            $drug = Drug::withoutEvents(function () use ($drugData) {
-                return Drug::create($drugData);
+            $drug = Drug::withoutEvents(function () use ($drugCode, $drugData) {
+                return Drug::updateOrCreate(
+                    ['drug_code' => $drugCode],
+                    $drugData
+                );
             });
 
             $this->logMigration($old, $drug->id, $drug->drug_code, 'success');
@@ -129,10 +130,10 @@ class MigrateDrugsFromMittag extends Command
     private function mapDrugData(object $old): array
     {
         $name = trim($old->name) ?: 'Unknown Drug';
-        
+
         // Determine category based on old system flags
         $category = $this->determineCategory($old);
-        
+
         // Determine form based on costing_unit or name patterns
         $form = $this->determineForm($old);
 
@@ -140,16 +141,17 @@ class MigrateDrugsFromMittag extends Command
             'name' => $name,
             'generic_name' => $name, // Old system doesn't separate generic/brand
             'brand_name' => null,
-            'drug_code' => $old->code ?: 'DRUG-' . $old->id,
+            'drug_code' => $old->code ?: 'DRUG-'.$old->id,
             'category' => $category,
             'form' => $form,
             'strength' => $old->dose ? (string) $old->dose : null,
             'description' => null,
-            'unit_price' => $old->cash_price ?: $old->cost ?: 0,
+            'unit_price' => $old->cash_price ?: 0, // Only use cash_price, not cost (NHIS tariff handled separately)
             'unit_type' => $this->mapUnitType($old->costing_unit),
             'minimum_stock_level' => 10,
             'maximum_stock_level' => 1000,
             'is_active' => true,
+            'migrated_from_mittag' => true,
         ];
     }
 
@@ -157,9 +159,9 @@ class MigrateDrugsFromMittag extends Command
     {
         $name = strtolower($old->name ?? '');
         $category = strtolower($old->category ?? '');
-        
-        // Valid enum values: analgesics, antibiotics, antivirals, antifungals, cardiovascular, 
-        // diabetes, respiratory, gastrointestinal, neurological, psychiatric, dermatological, 
+
+        // Valid enum values: analgesics, antibiotics, antivirals, antifungals, cardiovascular,
+        // diabetes, respiratory, gastrointestinal, neurological, psychiatric, dermatological,
         // vaccines, vitamins, supplements, other
 
         // Check for cream flag
@@ -189,7 +191,7 @@ class MigrateDrugsFromMittag extends Command
     {
         $name = strtolower($old->name ?? '');
         $unit = strtolower($old->costing_unit ?? '');
-        
+
         return match (true) {
             str_contains($name, 'tablet') || str_contains($unit, 'tab') => 'tablet',
             str_contains($name, 'capsule') || str_contains($unit, 'cap') => 'capsule',
@@ -206,7 +208,7 @@ class MigrateDrugsFromMittag extends Command
     {
         // Valid enum: piece, bottle, vial, tube, box
         $unit = strtolower(trim($costingUnit ?? ''));
-        
+
         return match (true) {
             str_contains($unit, 'bottle') || str_contains($unit, 'btl') => 'bottle',
             str_contains($unit, 'vial') => 'vial',

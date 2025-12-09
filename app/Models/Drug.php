@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Drug extends Model
 {
@@ -26,6 +27,7 @@ class Drug extends Model
         'minimum_stock_level',
         'maximum_stock_level',
         'is_active',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array
@@ -44,6 +46,15 @@ class Drug extends Model
     public function prescriptions(): HasMany
     {
         return $this->hasMany(Prescription::class);
+    }
+
+    /**
+     * Get the NHIS item mapping for this drug.
+     */
+    public function nhisMapping(): HasOne
+    {
+        return $this->hasOne(NhisItemMapping::class, 'item_id')
+            ->where('item_type', 'drug');
     }
 
     public function availableBatches(): HasMany

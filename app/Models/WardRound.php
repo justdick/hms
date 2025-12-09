@@ -22,8 +22,10 @@ class WardRound extends Model
         'examination_findings',
         'assessment_notes',
         'plan_notes',
+        'patient_status',
         'round_datetime',
         'status',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

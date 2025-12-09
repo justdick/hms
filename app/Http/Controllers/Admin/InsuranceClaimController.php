@@ -9,7 +9,6 @@ use App\Http\Requests\SubmitInsuranceClaimRequest;
 use App\Http\Requests\VetClaimRequest;
 use App\Http\Resources\InsuranceClaimResource;
 use App\Http\Resources\InsuranceProviderResource;
-use App\Models\Diagnosis;
 use App\Models\InsuranceClaim;
 use App\Models\InsuranceClaimItem;
 use App\Models\InsuranceProvider;
@@ -149,9 +148,7 @@ class InsuranceClaimController extends Controller
                 'tariff_price' => $tariff->tariff_price,
                 'display_name' => $tariff->display_name,
             ]),
-            'available_diagnoses' => Diagnosis::query()
-                ->orderBy('diagnosis')
-                ->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            // Diagnoses loaded via async search - too many to load upfront
             'can' => [
                 'vet' => auth()->user()->can('vetClaim', $claim),
             ],

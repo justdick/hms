@@ -14,7 +14,7 @@ test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'username' => $user->username,
         'password' => 'password',
     ]);
 
@@ -41,7 +41,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     ])->save();
 
     $response = $this->post(route('login'), [
-        'email' => $user->email,
+        'username' => $user->username,
         'password' => 'password',
     ]);
 
@@ -54,7 +54,7 @@ test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
     $this->post(route('login.store'), [
-        'email' => $user->email,
+        'username' => $user->username,
         'password' => 'wrong-password',
     ]);
 
@@ -73,16 +73,16 @@ test('users can logout', function () {
 test('users are rate limited', function () {
     $user = User::factory()->create();
 
-    RateLimiter::increment(implode('|', [$user->email, '127.0.0.1']), amount: 10);
+    RateLimiter::increment(implode('|', [$user->username, '127.0.0.1']), amount: 10);
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'username' => $user->username,
         'password' => 'wrong-password',
     ]);
 
-    $response->assertSessionHasErrors('email');
+    $response->assertSessionHasErrors('username');
 
     $errors = session('errors');
 
-    $this->assertStringContainsString('Too many login attempts', $errors->first('email'));
+    $this->assertStringContainsString('Too many login attempts', $errors->first('username'));
 });

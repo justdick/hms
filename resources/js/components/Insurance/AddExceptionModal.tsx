@@ -335,6 +335,9 @@ export default function AddExceptionModal({
                                                     </p>
                                                 </div>
                                                 <div className="text-left sm:text-right">
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Hospital price
+                                                    </p>
                                                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                         $
                                                         {parseFloat(
@@ -375,7 +378,7 @@ export default function AddExceptionModal({
                                                 </span>
                                             </div>
                                             <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-                                                Current price: $
+                                                Hospital price (non-insured): $
                                                 {parseFloat(
                                                     String(selectedItem.price),
                                                 ).toFixed(2)}

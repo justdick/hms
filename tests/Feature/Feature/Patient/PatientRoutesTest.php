@@ -20,7 +20,7 @@ beforeEach(function () {
 });
 
 test('user can view patient list page', function () {
-    Patient::factory()->count(3)->create();
+    Patient::factory()->count(3)->create(['status' => 'active']);
 
     $response = $this->get(route('patients.index'));
 
@@ -28,18 +28,21 @@ test('user can view patient list page', function () {
     $response->assertInertia(fn ($page) => $page
         ->component('Patients/Index')
         ->has('patients.data', 3)
+        ->where('patients.total', 3)
     );
 });
 
 test('user can search patients', function () {
-    $patient1 = Patient::factory()->create([
+    Patient::factory()->create([
         'first_name' => 'John',
         'last_name' => 'Doe',
+        'status' => 'active',
     ]);
 
-    $patient2 = Patient::factory()->create([
+    Patient::factory()->create([
         'first_name' => 'Jane',
         'last_name' => 'Smith',
+        'status' => 'active',
     ]);
 
     $response = $this->get(route('patients.index', ['search' => 'John']));
@@ -90,7 +93,7 @@ test('user can update patient information', function () {
 });
 
 test('patient list includes active insurance information', function () {
-    $patient = Patient::factory()->create();
+    $patient = Patient::factory()->create(['status' => 'active']);
     PatientInsurance::factory()->create([
         'patient_id' => $patient->id,
         'status' => 'active',
@@ -103,6 +106,7 @@ test('patient list includes active insurance information', function () {
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->component('Patients/Index')
+        ->has('patients.data', 1)
         ->has('patients.data.0.active_insurance')
     );
 });
@@ -128,7 +132,7 @@ test('patient profile includes insurance plans and checkin history', function ()
 });
 
 test('patient list includes recent incomplete checkin information', function () {
-    $patient = Patient::factory()->create();
+    $patient = Patient::factory()->create(['status' => 'active']);
     $department = \App\Models\Department::factory()->create();
 
     // Create an incomplete check-in
@@ -144,6 +148,7 @@ test('patient list includes recent incomplete checkin information', function () 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->component('Patients/Index')
+        ->has('patients.data', 1)
         ->has('patients.data.0.recent_checkin')
         ->where('patients.data.0.recent_checkin.id', $checkin->id)
         ->where('patients.data.0.recent_checkin.status', 'checked_in')
@@ -151,7 +156,7 @@ test('patient list includes recent incomplete checkin information', function () 
 });
 
 test('patient list does not include completed checkins as recent checkin', function () {
-    $patient = Patient::factory()->create();
+    $patient = Patient::factory()->create(['status' => 'active']);
     $department = \App\Models\Department::factory()->create();
 
     // Create a completed check-in
@@ -167,12 +172,13 @@ test('patient list does not include completed checkins as recent checkin', funct
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->component('Patients/Index')
+        ->has('patients.data', 1)
         ->where('patients.data.0.recent_checkin', null)
     );
 });
 
 test('patient list shows most recent incomplete checkin when multiple exist', function () {
-    $patient = Patient::factory()->create();
+    $patient = Patient::factory()->create(['status' => 'active']);
     $department = \App\Models\Department::factory()->create();
 
     // Create older incomplete check-in
@@ -196,6 +202,7 @@ test('patient list shows most recent incomplete checkin when multiple exist', fu
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page
         ->component('Patients/Index')
+        ->has('patients.data', 1)
         ->has('patients.data.0.recent_checkin')
         ->where('patients.data.0.recent_checkin.id', $recentCheckin->id)
         ->where('patients.data.0.recent_checkin.status', 'awaiting_consultation')

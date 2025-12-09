@@ -16,7 +16,9 @@ class PharmacyController extends Controller
     {
         $this->authorize('viewAny', Drug::class);
         $stats = [
-            'pending_prescriptions' => Prescription::where('status', 'prescribed')->count(),
+            'pending_prescriptions' => Prescription::where('status', 'prescribed')
+                ->where('migrated_from_mittag', false)
+                ->count(),
             'dispensed_today' => Dispensing::today()->count(),
             'low_stock_drugs' => Drug::whereHas('batches', function ($query) {
                 $query->where('quantity_remaining', '>', 0)
@@ -30,6 +32,7 @@ class PharmacyController extends Controller
             'drug:id,name,form,unit_type',
         ])
             ->where('status', 'prescribed')
+            ->where('migrated_from_mittag', false)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

@@ -7,7 +7,7 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
@@ -25,3 +25,5 @@ require __DIR__.'/pharmacy.php';
 require __DIR__.'/billing.php';
 require __DIR__.'/insurance.php';
 require __DIR__.'/minor-procedures.php';
+require __DIR__.'/backups.php';
+require __DIR__.'/admin.php';

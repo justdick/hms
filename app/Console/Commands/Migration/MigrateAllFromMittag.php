@@ -10,9 +10,18 @@ class MigrateAllFromMittag extends Command
     protected $signature = 'migrate:all-from-mittag 
                             {--dry-run : Run without actually inserting data}
                             {--skip-existing : Skip records that already exist}
-                            {--only= : Only run specific migration (patients,drugs)}';
+                            {--only= : Only run specific migration (patients,checkins,etc)}
+                            {--from= : Start from a specific migration step}';
 
     protected $description = 'Run all Mittag migrations in the correct order';
+
+    // Disable memory limit and set unlimited execution time for long migrations
+    public function __construct()
+    {
+        parent::__construct();
+        ini_set('memory_limit', '1G');
+        set_time_limit(0);
+    }
 
     public function handle(): int
     {
@@ -42,14 +51,16 @@ class MigrateAllFromMittag extends Command
             $this->newLine();
             $this->line('4. Run the migration table:');
             $this->line('   php artisan migrate');
+
             return Command::FAILURE;
         }
 
         // Show stats
         $this->showSourceStats();
 
-        if (!$this->confirm('Do you want to proceed with the migration?')) {
+        if (! $this->confirm('Do you want to proceed with the migration?')) {
             $this->info('Migration cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -62,20 +73,75 @@ class MigrateAllFromMittag extends Command
         }
 
         $only = $this->option('only');
+        $from = $this->option('from');
+
+        // Complete migration order - dependencies matter!
         $migrations = [
-            'patients' => 'migrate:patients-from-mittag',
-            'drugs' => 'migrate:drugs-from-mittag',
+            '1_diagnoses' => 'migrate:diagnoses-from-mittag',
+            '2_patients' => 'migrate:patients-from-mittag',
+            '3_drugs' => 'migrate:drugs-from-mittag',
+            '4_checkins' => 'migrate:checkins-from-mittag',
+            '5_opd_vitals' => 'migrate:vitals-from-mittag --source=opd',
+            '6_consultations' => 'migrate:consultations-from-mittag',
+            '7_prescriptions' => 'migrate:prescriptions-from-mittag',
+            '8_lab_services' => 'migrate:lab-services-from-mittag',
+            '9_lab_parameters' => 'migrate:lab-parameters-from-mittag',
+            '10_lab_orders' => 'migrate:lab-orders-from-mittag',
+            '11_admissions' => 'migrate:admissions-from-mittag',
+            '12_ipd_vitals' => 'migrate:vitals-from-mittag --source=ipd',
+            '13_ward_rounds' => 'migrate:ward-rounds-from-mittag',
+            '14_nursing_notes' => 'migrate:nursing-notes-from-mittag',
+            '15_patient_insurance' => 'migrate:patient-insurance-from-mittag',
         ];
 
+        // Filter by --only option
         if ($only) {
             $selected = explode(',', $only);
-            $migrations = array_filter($migrations, fn($key) => in_array($key, $selected), ARRAY_FILTER_USE_KEY);
+            $migrations = array_filter($migrations, function ($key) use ($selected) {
+                $name = preg_replace('/^\d+_/', '', $key); // Remove number prefix
+
+                return in_array($name, $selected);
+            }, ARRAY_FILTER_USE_KEY);
         }
 
+        // Filter by --from option (start from specific step)
+        if ($from) {
+            $found = false;
+            $migrations = array_filter($migrations, function ($key) use ($from, &$found) {
+                $name = preg_replace('/^\d+_/', '', $key);
+                if ($name === $from) {
+                    $found = true;
+                }
+
+                return $found;
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        $total = count($migrations);
+        $current = 0;
+
         foreach ($migrations as $name => $command) {
+            $current++;
+            $displayName = preg_replace('/^\d+_/', '', $name);
             $this->newLine();
-            $this->info("═══ Migrating {$name} ═══");
-            $this->call($command, $options);
+            $this->info("═══ [{$current}/{$total}] Migrating {$displayName} ═══");
+
+            // Parse command and options
+            $parts = explode(' ', $command);
+            $cmd = array_shift($parts);
+            $cmdOptions = $options;
+
+            foreach ($parts as $part) {
+                if (str_starts_with($part, '--')) {
+                    $opt = explode('=', ltrim($part, '-'), 2);
+                    $cmdOptions['--'.$opt[0]] = $opt[1] ?? true;
+                }
+            }
+
+            $this->call($cmd, $cmdOptions);
+
+            // Clear memory between migrations
+            gc_collect_cycles();
         }
 
         $this->newLine();
@@ -92,23 +158,38 @@ class MigrateAllFromMittag extends Command
     {
         $this->newLine();
         $this->info('Source Database Statistics:');
-        
+
         $tables = [
+            'tb_data_icd' => 'ICD-10 Diagnoses',
             'patients' => 'Patients',
             'drugs' => 'Drugs',
             'checkin' => 'Check-ins',
-            'opd_consultation' => 'Consultations',
+            'opd_vitals' => 'OPD Vitals',
+            'opd_consultation' => 'Consultations (+ prescriptions)',
+            'gdrg_lab' => 'Lab Services',
+            'lab_param_list' => 'Lab Parameters',
+            'lab_daily_register' => 'Lab Orders',
+            'lab_results' => 'Lab Results',
+            'ipd_admissions' => 'Admissions',
+            'ipd_vitals' => 'IPD Vitals',
+            'ipd_ward_round' => 'Ward Rounds',
+            'ipd_nursing_notes' => 'Nursing Notes',
             'sponsors' => 'Insurance Sponsors',
         ];
 
+        $totalRecords = 0;
         foreach ($tables as $table => $label) {
             try {
                 $count = DB::connection('mittag_old')->table($table)->count();
-                $this->line("  • {$label}: {$count}");
+                $this->line("  • {$label}: ".number_format($count));
+                $totalRecords += $count;
             } catch (\Exception $e) {
                 $this->line("  • {$label}: (table not found)");
             }
         }
+        $this->newLine();
+        $this->info('Total records to process: '.number_format($totalRecords));
+        $this->warn('⚠ This migration may take 30-60 minutes depending on server performance.');
         $this->newLine();
     }
 
@@ -116,7 +197,7 @@ class MigrateAllFromMittag extends Command
     {
         $this->newLine();
         $this->info('Migration Summary:');
-        
+
         $stats = DB::table('mittag_migration_logs')
             ->select('entity_type', 'status', DB::raw('count(*) as count'))
             ->groupBy('entity_type', 'status')

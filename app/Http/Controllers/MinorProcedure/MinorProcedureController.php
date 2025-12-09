@@ -5,7 +5,6 @@ namespace App\Http\Controllers\MinorProcedure;
 use App\Events\MinorProcedurePerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMinorProcedureRequest;
-use App\Models\Diagnosis;
 use App\Models\Drug;
 use App\Models\MinorProcedure;
 use App\Models\MinorProcedureSupply;
@@ -38,7 +37,7 @@ class MinorProcedureController extends Controller
             'queueCount' => $queueCount,
             'procedureTypes' => MinorProcedureType::active()->orderBy('name')->get(),
             'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
-            'availableDiagnoses' => Diagnosis::orderBy('diagnosis')->get(['id', 'diagnosis', 'code', 'g_drg', 'icd_10']),
+            // Diagnoses loaded via async search - too many to load upfront
             'canManageTypes' => $user->can('minor-procedures.view-types'),
         ]);
     }

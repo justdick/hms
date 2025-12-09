@@ -27,6 +27,7 @@ class Consultation extends Model
         'assessment_notes',
         'plan_notes',
         'follow_up_date',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

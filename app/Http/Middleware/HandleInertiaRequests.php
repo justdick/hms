@@ -64,6 +64,25 @@ class HandleInertiaRequests extends Middleware
                         'refund' => $request->user()?->can('billing.refund') ?? false,
                         'configure' => $request->user()?->can('billing.configure') ?? false,
                     ],
+                    'backups' => [
+                        'view' => $request->user()?->can('backups.view') ?? false,
+                        'create' => $request->user()?->can('backups.create') ?? false,
+                        'delete' => $request->user()?->can('backups.delete') ?? false,
+                        'restore' => $request->user()?->can('backups.restore') ?? false,
+                        'manageSettings' => $request->user()?->can('backups.manage-settings') ?? false,
+                    ],
+                    'users' => [
+                        'viewAll' => $request->user()?->can('users.view-all') ?? false,
+                        'create' => $request->user()?->can('users.create') ?? false,
+                        'update' => $request->user()?->can('users.update') ?? false,
+                        'resetPassword' => $request->user()?->can('users.reset-password') ?? false,
+                    ],
+                    'roles' => [
+                        'viewAll' => $request->user()?->can('roles.view-all') ?? false,
+                        'create' => $request->user()?->can('roles.create') ?? false,
+                        'update' => $request->user()?->can('roles.update') ?? false,
+                        'delete' => $request->user()?->can('roles.delete') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
@@ -72,6 +91,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
+                'temporary_password' => $request->session()->get('temporary_password'),
             ],
             'patient' => $request->session()->get('patient'),
         ];

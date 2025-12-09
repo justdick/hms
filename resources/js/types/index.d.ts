@@ -23,6 +23,25 @@ export interface Auth {
             refund: boolean;
             configure: boolean;
         };
+        backups?: {
+            view: boolean;
+            create: boolean;
+            delete: boolean;
+            restore: boolean;
+            manageSettings: boolean;
+        };
+        users?: {
+            viewAll: boolean;
+            create: boolean;
+            update: boolean;
+            resetPassword: boolean;
+        };
+        roles?: {
+            viewAll: boolean;
+            create: boolean;
+            update: boolean;
+            delete: boolean;
+        };
     };
 }
 

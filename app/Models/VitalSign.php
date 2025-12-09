@@ -27,6 +27,7 @@ class VitalSign extends Model
         'oxygen_saturation',
         'notes',
         'recorded_at',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

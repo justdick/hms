@@ -5,118 +5,101 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\ProcedureTypeImportTemplate;
 use App\Http\Controllers\Controller;
 use App\Imports\ProcedureTypeImport;
+use App\Models\MinorProcedureType;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProcedureTypeImportController extends Controller
 {
     /**
-     * Download import template.
+     * Download the procedure type import template.
      */
-    public function template()
+    public function downloadTemplate(): BinaryFileResponse
     {
-        return Excel::download(new ProcedureTypeImportTemplate, 'procedure_type_import_template.xlsx');
+        $this->authorize('create', MinorProcedureType::class);
+
+        return Excel::download(
+            new ProcedureTypeImportTemplate,
+            'procedure_type_import_template.xlsx'
+        );
     }
 
     /**
-     * Import procedure types from CSV/Excel.
+     * Import procedure types from uploaded file.
      */
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
+        $this->authorize('create', MinorProcedureType::class);
+
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:10240'],
         ]);
 
         $file = $request->file('file');
-        $extension = $file->getClientOriginalExtension();
 
-        // Parse the file
-        $rows = [];
-        if ($extension === 'csv') {
-            $rows = $this->parseCsv($file->getPathname());
-        } else {
-            $rows = $this->parseExcel($file->getPathname());
-        }
+        try {
+            $data = Excel::toArray([], $file);
 
-        if (empty($rows)) {
-            return redirect()->back()->with('error', 'No data found in file.');
-        }
+            $rows = [];
+            if (count($data) > 1 && ! empty($data[1])) {
+                $rows = $data[1];
+            } else {
+                $rows = $data[0] ?? [];
+            }
 
-        $importer = new ProcedureTypeImport;
-        $results = $importer->processRows($rows);
+            if (empty($rows)) {
+                return redirect()->back()->with('error', 'No data found in the file.');
+            }
 
-        $message = sprintf(
-            'Import completed: %d created, %d updated, %d mapped to NHIS. %d skipped.',
-            $results['created'],
-            $results['updated'],
-            $results['mapped'],
-            $results['skipped']
-        );
+            $headers = array_map(fn ($h) => strtolower(trim($h ?? '')), array_shift($rows));
 
-        if (! empty($results['errors'])) {
-            $errorCount = count($results['errors']);
-            $message .= " {$errorCount} errors occurred.";
+            $dataRows = [];
+            foreach ($rows as $row) {
+                $rowData = [];
+                foreach ($headers as $index => $header) {
+                    if ($header && isset($row[$index])) {
+                        $rowData[$header] = $row[$index];
+                    }
+                }
+                if (! empty(array_filter($rowData))) {
+                    $dataRows[] = $rowData;
+                }
+            }
 
-            // Show first 10 errors
-            $errorMessages = array_slice(
-                array_map(fn ($e) => "Row {$e['row']}: {$e['error']}", $results['errors']),
-                0,
-                10
+            if (empty($dataRows)) {
+                return redirect()->back()->with('error', 'No valid data rows found.');
+            }
+
+            $importer = new ProcedureTypeImport;
+            $results = $importer->processRows($dataRows);
+
+            $message = sprintf(
+                'Import completed: %d created, %d updated, %d mapped to NHIS.',
+                $results['created'],
+                $results['updated'],
+                $results['mapped']
             );
-            $message .= ' Errors: '.implode('; ', $errorMessages);
 
-            if ($errorCount > 10) {
-                $message .= '... and '.($errorCount - 10).' more.';
+            if ($results['skipped'] > 0) {
+                $message .= sprintf(' %d skipped.', $results['skipped']);
             }
-        }
 
-        $flashType = $results['created'] > 0 || $results['updated'] > 0 ? 'success' : 'warning';
+            if (! empty($results['errors'])) {
+                $errorMessages = array_slice(
+                    array_map(fn ($e) => "Row {$e['row']}: {$e['error']}", $results['errors']),
+                    0,
+                    3
+                );
 
-        return redirect()->back()->with($flashType, $message);
-    }
-
-    private function parseCsv(string $path): array
-    {
-        $rows = [];
-        $headers = [];
-
-        if (($handle = fopen($path, 'r')) !== false) {
-            $lineNumber = 0;
-            while (($data = fgetcsv($handle)) !== false) {
-                $lineNumber++;
-
-                if ($lineNumber === 1) {
-                    $headers = array_map('trim', $data);
-
-                    continue;
-                }
-
-                if (count($data) === count($headers)) {
-                    $rows[] = array_combine($headers, $data);
-                }
+                return redirect()->back()->with('warning', $message.' Errors: '.implode('; ', $errorMessages));
             }
-            fclose($handle);
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Import failed: '.$e->getMessage());
         }
-
-        return $rows;
-    }
-
-    private function parseExcel(string $path): array
-    {
-        $rows = [];
-        $data = Excel::toArray(null, $path);
-
-        if (! empty($data[0])) {
-            $sheet = $data[0];
-            $headers = array_map('trim', $sheet[0] ?? []);
-
-            for ($i = 1; $i < count($sheet); $i++) {
-                if (count($sheet[$i]) === count($headers)) {
-                    $rows[] = array_combine($headers, $sheet[$i]);
-                }
-            }
-        }
-
-        return $rows;
     }
 }

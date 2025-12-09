@@ -45,6 +45,7 @@ class DrugController extends Controller
                     'category' => $drug->category,
                     'form' => $drug->form,
                     'unit_type' => $drug->unit_type,
+                    'unit_price' => $drug->unit_price,
                     'total_stock' => $drug->total_stock,
                     'minimum_stock_level' => $drug->minimum_stock_level,
                     'is_low_stock' => $drug->isLowStock(),

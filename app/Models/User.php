@@ -23,8 +23,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
+        'username',
         'password',
+        'is_active',
+        'must_change_password',
     ];
 
     /**
@@ -45,9 +47,18 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
+    }
+
+    /**
+     * Scope a query to only include active users.
+     */
+    public function scopeActive($query): void
+    {
+        $query->where('is_active', true);
     }
 
     public function departments(): BelongsToMany

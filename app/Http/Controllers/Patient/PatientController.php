@@ -119,7 +119,7 @@ class PatientController extends Controller
                 'checkins' => function ($query) {
                     // Get the most recent incomplete check-in
                     $query->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
-                        ->latest()
+                        ->latest('checked_in_at')
                         ->limit(1);
                 },
             ])
@@ -130,40 +130,41 @@ class PatientController extends Controller
             $query->search($search);
         }
 
-        $patients = $query->latest()
-            ->get()
-            ->map(function ($patient) {
-                $recentCheckin = $patient->checkins->first();
+        $perPage = $request->get('per_page', 5);
+        $paginated = $query->latest()->paginate($perPage)->withQueryString();
 
-                return [
-                    'id' => $patient->id,
-                    'patient_number' => $patient->patient_number,
-                    'full_name' => $patient->full_name,
-                    'first_name' => $patient->first_name,
-                    'last_name' => $patient->last_name,
-                    'age' => $patient->age,
-                    'gender' => $patient->gender,
-                    'phone_number' => $patient->phone_number,
-                    'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
-                    'address' => $patient->address,
-                    'status' => $patient->status,
-                    'active_insurance' => $patient->activeInsurance ? [
-                        'id' => $patient->activeInsurance->id,
-                        'insurance_plan' => [
-                            'id' => $patient->activeInsurance->plan->id,
-                            'name' => $patient->activeInsurance->plan->name,
-                        ],
-                        'membership_id' => $patient->activeInsurance->membership_id,
-                        'coverage_start_date' => $patient->activeInsurance->coverage_start_date->format('Y-m-d'),
-                        'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
-                    ] : null,
-                    'recent_checkin' => $recentCheckin ? [
-                        'id' => $recentCheckin->id,
-                        'checked_in_at' => $recentCheckin->checked_in_at->format('Y-m-d H:i'),
-                        'status' => $recentCheckin->status,
-                    ] : null,
-                ];
-            });
+        $patients = $paginated->through(function ($patient) {
+            $recentCheckin = $patient->checkins->first();
+
+            return [
+                'id' => $patient->id,
+                'patient_number' => $patient->patient_number,
+                'full_name' => $patient->full_name,
+                'first_name' => $patient->first_name,
+                'last_name' => $patient->last_name,
+                'age' => $patient->age,
+                'gender' => $patient->gender,
+                'phone_number' => $patient->phone_number,
+                'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
+                'address' => $patient->address,
+                'status' => $patient->status,
+                'active_insurance' => $patient->activeInsurance ? [
+                    'id' => $patient->activeInsurance->id,
+                    'insurance_plan' => [
+                        'id' => $patient->activeInsurance->plan->id,
+                        'name' => $patient->activeInsurance->plan->name,
+                    ],
+                    'membership_id' => $patient->activeInsurance->membership_id,
+                    'coverage_start_date' => $patient->activeInsurance->coverage_start_date->format('Y-m-d'),
+                    'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
+                ] : null,
+                'recent_checkin' => $recentCheckin ? [
+                    'id' => $recentCheckin->id,
+                    'checked_in_at' => $recentCheckin->checked_in_at->format('Y-m-d H:i'),
+                    'status' => $recentCheckin->status,
+                ] : null,
+            ];
+        });
 
         // Get active departments for check-in modal
         $departments = \App\Models\Department::active()
@@ -197,11 +198,12 @@ class PatientController extends Controller
             });
 
         return inertia('Patients/Index', [
-            'patients' => [
-                'data' => $patients,
-            ],
+            'patients' => $patients,
             'departments' => $departments,
             'insurancePlans' => $insurancePlans,
+            'filters' => [
+                'search' => $request->get('search', ''),
+            ],
         ]);
     }
 

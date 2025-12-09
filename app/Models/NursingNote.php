@@ -17,6 +17,7 @@ class NursingNote extends Model
         'type',
         'note',
         'noted_at',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

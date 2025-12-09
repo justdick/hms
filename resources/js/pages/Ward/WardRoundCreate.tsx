@@ -82,7 +82,7 @@ interface Doctor {
     name: string;
 }
 
-interface Diagnosis {
+interface DiagnosisDisplay {
     id: number;
     diagnosis: string;
     code: string;
@@ -211,7 +211,6 @@ interface Props {
     dayNumber: number;
     labServices: LabService[];
     availableDrugs: Drug[];
-    availableDiagnoses: Diagnosis[];
     availableProcedures?: ProcedureType[];
     patientHistories: {
         past_medical_surgical_history: string;
@@ -232,7 +231,6 @@ export default function WardRoundCreate({
     dayNumber,
     labServices,
     availableDrugs = [],
-    availableDiagnoses = [],
     availableProcedures = [],
     patientHistories,
     patientHistory,
@@ -532,12 +530,10 @@ export default function WardRoundCreate({
     const pageTitle = `Ward Round - Day ${dayNumber} - ${admission.patient.first_name} ${admission.patient.last_name}`;
 
     // Convert ward round diagnoses to display format
-    // Ward round diagnoses might be empty initially, so provide a fallback
+    // Convert ward round diagnoses to display format
     const displayDiagnoses = (wardRound.diagnoses || []).map((wd) => {
-        // Find the diagnosis from available diagnoses by name or create a pseudo diagnosis object
-        const diagnosis = availableDiagnoses.find(
-            (d) => d.diagnosis === wd.diagnosis_name,
-        ) || {
+        // Create diagnosis object from ward round diagnosis data
+        const diagnosis = {
             id: 0, // Temporary ID since it's already saved
             diagnosis: wd.diagnosis_name,
             code: wd.icd_code,
@@ -984,7 +980,6 @@ export default function WardRoundCreate({
                             </CardHeader>
                             <CardContent>
                                 <DiagnosisFormSection
-                                    diagnoses={availableDiagnoses}
                                     consultationDiagnoses={displayDiagnoses}
                                     onAdd={handleDiagnosisAdd}
                                     onDelete={(id) =>

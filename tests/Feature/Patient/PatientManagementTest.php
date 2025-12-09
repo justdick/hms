@@ -25,18 +25,49 @@ beforeEach(function () {
 });
 
 describe('Patient List Viewing', function () {
-    it('displays patient list page with all patients', function () {
-        Patient::factory()->count(30)->create(['status' => 'active']);
+    it('displays patient list page with paginated patients', function () {
+        Patient::factory()->count(12)->create(['status' => 'active']);
 
         $response = $this->get(route('patients.index'));
 
         $response->assertSuccessful();
         $response->assertInertia(fn ($page) => $page
             ->component('Patients/Index')
-            ->has('patients.data', 30) // All patients are returned for client-side pagination
-            ->has('patients')
+            ->has('patients.data', 5) // Server-side pagination with 5 per page default
+            ->where('patients.total', 12)
+            ->where('patients.per_page', 5)
+            ->where('patients.current_page', 1)
+            ->where('patients.last_page', 3)
             ->has('departments')
             ->has('insurancePlans')
+            ->has('filters')
+        );
+    });
+
+    it('navigates to second page of patients', function () {
+        Patient::factory()->count(12)->create(['status' => 'active']);
+
+        $response = $this->get(route('patients.index', ['page' => 2]));
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Patients/Index')
+            ->has('patients.data', 5) // 5 patients on page 2
+            ->where('patients.current_page', 2)
+        );
+    });
+
+    it('allows changing per page count', function () {
+        Patient::factory()->count(30)->create(['status' => 'active']);
+
+        $response = $this->get(route('patients.index', ['per_page' => 10]));
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Patients/Index')
+            ->has('patients.data', 10)
+            ->where('patients.per_page', 10)
+            ->where('patients.last_page', 3)
         );
     });
 

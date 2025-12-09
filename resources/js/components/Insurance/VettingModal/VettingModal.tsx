@@ -384,7 +384,6 @@ export function VettingModal({
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <DiagnosesManager
                                         diagnoses={diagnoses}
-                                        availableDiagnoses={vettingData.available_diagnoses || []}
                                         onChange={handleDiagnosesChange}
                                         disabled={processing || isViewOnly}
                                     />

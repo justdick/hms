@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 // Procedure Type Import Routes (admin prefix)
 Route::middleware(['auth', 'verified'])->prefix('admin/procedure-types')->group(function () {
-    Route::get('/template', [ProcedureTypeImportController::class, 'template'])->name('procedure-types.import.template');
+    Route::get('/template', [ProcedureTypeImportController::class, 'downloadTemplate'])->name('procedure-types.import.template');
     Route::post('/import', [ProcedureTypeImportController::class, 'import'])->name('procedure-types.import');
 });
 

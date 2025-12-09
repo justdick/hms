@@ -25,7 +25,9 @@ class DispensingController extends Controller
     {
         $this->authorize('viewAny', Dispensing::class);
 
-        $pendingPrescriptionsCount = Prescription::where('status', 'prescribed')->count();
+        $pendingPrescriptionsCount = Prescription::where('status', 'prescribed')
+            ->where('migrated_from_mittag', false)
+            ->count();
         $pendingSuppliesCount = MinorProcedureSupply::where('status', 'pending')->count();
         $totalPendingCount = $pendingPrescriptionsCount + $pendingSuppliesCount;
 
@@ -62,12 +64,14 @@ class DispensingController extends Controller
             ->where(function ($q) use ($dateConstraint) {
                 // Has prescriptions from consultations OR ward rounds OR minor procedure supplies
                 $q->whereHas('checkins.consultations.prescriptions', function ($q) use ($dateConstraint) {
-                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed']);
+                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
+                        ->where('migrated_from_mittag', false);
                     if ($dateConstraint) {
                         $q->where('created_at', '>=', $dateConstraint);
                     }
                 })->orWhereHas('admissions.wardRounds.prescriptions', function ($q) use ($dateConstraint) {
-                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed']);
+                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
+                        ->where('migrated_from_mittag', false);
                     if ($dateConstraint) {
                         $q->where('created_at', '>=', $dateConstraint);
                     }
@@ -89,6 +93,7 @@ class DispensingController extends Controller
                                 $q->latest()
                                     ->with(['prescriptions' => function ($q) use ($dateConstraint) {
                                         $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
+                                            ->where('migrated_from_mittag', false)
                                             ->with('drug:id,name,form,unit_type');
                                         if ($dateConstraint) {
                                             $q->where('created_at', '>=', $dateConstraint);
@@ -117,6 +122,7 @@ class DispensingController extends Controller
                             }
                             $q->with(['prescriptions' => function ($q) use ($dateConstraint) {
                                 $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
+                                    ->where('migrated_from_mittag', false)
                                     ->with('drug:id,name,form,unit_type');
                                 if ($dateConstraint) {
                                     $q->where('created_at', '>=', $dateConstraint);

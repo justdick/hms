@@ -33,6 +33,7 @@ class Patient extends Model
         'drug_history',
         'family_history',
         'social_history',
+        'migrated_from_mittag',
     ];
 
     protected $appends = ['full_name', 'age'];

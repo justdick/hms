@@ -1,3 +1,4 @@
+import AsyncDiagnosisSelect from '@/components/Consultation/AsyncDiagnosisSelect';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -110,13 +111,18 @@ interface Supply {
     drug: Drug;
 }
 
+interface SelectedDiagnosis {
+    id: number;
+    name: string;
+    icd_code: string;
+}
+
 interface Props {
     open: boolean;
     onClose: () => void;
     patientCheckin: PatientCheckin;
     procedureTypes: ProcedureType[];
     availableDrugs: Drug[];
-    availableDiagnoses: Diagnosis[];
     onSuccess: () => void;
 }
 
@@ -126,7 +132,6 @@ export default function ProcedureForm({
     patientCheckin,
     procedureTypes,
     availableDrugs,
-    availableDiagnoses,
     onSuccess,
 }: Props) {
     const [procedureTypeOpen, setProcedureTypeOpen] = useState(false);
@@ -134,11 +139,12 @@ export default function ProcedureForm({
         number | null
     >(null);
 
-    const [diagnosisOpen, setDiagnosisOpen] = useState(false);
     const [selectedDiagnosis, setSelectedDiagnosis] = useState<number | null>(
         null,
     );
-    const [selectedDiagnoses, setSelectedDiagnoses] = useState<Diagnosis[]>([]);
+    const [selectedDiagnoses, setSelectedDiagnoses] = useState<
+        SelectedDiagnosis[]
+    >([]);
 
     const [supplyOpen, setSupplyOpen] = useState(false);
     const [selectedSupply, setSelectedSupply] = useState<number | null>(null);
@@ -159,25 +165,48 @@ export default function ProcedureForm({
         return age;
     };
 
-    const handleAddDiagnosis = () => {
-        if (selectedDiagnosis) {
-            const diagnosis = availableDiagnoses.find(
-                (d) => d.id === selectedDiagnosis,
-            );
-            if (
-                diagnosis &&
-                !selectedDiagnoses.find((d) => d.id === diagnosis.id)
-            ) {
-                setSelectedDiagnoses([...selectedDiagnoses, diagnosis]);
-            }
-            setSelectedDiagnosis(null);
-        }
-    };
-
     const handleRemoveDiagnosis = (diagnosisId: number) => {
         setSelectedDiagnoses(
             selectedDiagnoses.filter((d) => d.id !== diagnosisId),
         );
+    };
+
+    // Callback when a diagnosis is selected from async search
+    const handleDiagnosisSelected = async (diagnosisId: number | null) => {
+        if (!diagnosisId) {
+            setSelectedDiagnosis(null);
+            return;
+        }
+
+        // Check if already added
+        if (selectedDiagnoses.find((d) => d.id === diagnosisId)) {
+            setSelectedDiagnosis(null);
+            return;
+        }
+
+        // Fetch diagnosis details
+        try {
+            const response = await fetch(
+                `/consultation/diagnoses/search?q=${diagnosisId}`,
+            );
+            const data = await response.json();
+            const diagnosis = data.find(
+                (d: { id: number }) => d.id === diagnosisId,
+            );
+            if (diagnosis) {
+                setSelectedDiagnoses([
+                    ...selectedDiagnoses,
+                    {
+                        id: diagnosis.id,
+                        name: diagnosis.name,
+                        icd_code: diagnosis.icd_code,
+                    },
+                ]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch diagnosis:', error);
+        }
+        setSelectedDiagnosis(null);
     };
 
     const handleAddSupply = () => {
@@ -223,10 +252,6 @@ export default function ProcedureForm({
         );
         setSupplies(updatedSupplies);
     };
-
-    const availableDiagnosesFiltered = availableDiagnoses.filter(
-        (d) => !selectedDiagnoses.find((sd) => sd.id === d.id),
-    );
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -521,110 +546,18 @@ export default function ProcedureForm({
                                         Add Diagnosis
                                     </Label>
                                     <div className="flex gap-2">
-                                        <Popover
-                                            open={diagnosisOpen}
-                                            onOpenChange={setDiagnosisOpen}
-                                        >
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={
-                                                        diagnosisOpen
-                                                    }
-                                                    className="flex-1 justify-between"
-                                                >
-                                                    {selectedDiagnosis
-                                                        ? availableDiagnoses.find(
-                                                              (d) =>
-                                                                  d.id ===
-                                                                  selectedDiagnosis,
-                                                          )?.diagnosis
-                                                        : 'Select diagnosis...'}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                                className="w-[500px] p-0"
-                                                align="start"
-                                            >
-                                                <Command>
-                                                    <CommandInput placeholder="Search diagnoses..." />
-                                                    <CommandList>
-                                                        <CommandEmpty>
-                                                            No diagnosis found.
-                                                        </CommandEmpty>
-                                                        <CommandGroup>
-                                                            {availableDiagnosesFiltered.map(
-                                                                (diagnosis) => (
-                                                                    <CommandItem
-                                                                        key={
-                                                                            diagnosis.id
-                                                                        }
-                                                                        value={`${diagnosis.diagnosis} ${diagnosis.code} ${diagnosis.icd_10}`}
-                                                                        onSelect={() => {
-                                                                            setSelectedDiagnosis(
-                                                                                diagnosis.id,
-                                                                            );
-                                                                            setDiagnosisOpen(
-                                                                                false,
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        <Check
-                                                                            className={cn(
-                                                                                'mr-2 h-4 w-4',
-                                                                                selectedDiagnosis ===
-                                                                                    diagnosis.id
-                                                                                    ? 'opacity-100'
-                                                                                    : 'opacity-0',
-                                                                            )}
-                                                                        />
-                                                                        <div className="flex flex-1 flex-col gap-1">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span className="font-medium">
-                                                                                    {
-                                                                                        diagnosis.diagnosis
-                                                                                    }
-                                                                                </span>
-                                                                                {diagnosis.code && (
-                                                                                    <Badge
-                                                                                        variant="outline"
-                                                                                        className="text-xs"
-                                                                                    >
-                                                                                        {
-                                                                                            diagnosis.code
-                                                                                        }
-                                                                                    </Badge>
-                                                                                )}
-                                                                            </div>
-                                                                            {diagnosis.icd_10 && (
-                                                                                <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                                                    ICD-10:{' '}
-                                                                                    {
-                                                                                        diagnosis.icd_10
-                                                                                    }
-                                                                                    {diagnosis.g_drg &&
-                                                                                        ` • Group: ${diagnosis.g_drg}`}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </CommandItem>
-                                                                ),
-                                                            )}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-                                        <Button
-                                            type="button"
-                                            onClick={handleAddDiagnosis}
-                                            disabled={!selectedDiagnosis}
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex-1">
+                                            <AsyncDiagnosisSelect
+                                                value={selectedDiagnosis}
+                                                onChange={
+                                                    handleDiagnosisSelected
+                                                }
+                                                excludeIds={selectedDiagnoses.map(
+                                                    (d) => d.id,
+                                                )}
+                                                placeholder="Search diagnoses..."
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -639,25 +572,19 @@ export default function ProcedureForm({
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <p className="font-medium">
-                                                            {
-                                                                diagnosis.diagnosis
-                                                            }
+                                                            {diagnosis.name}
                                                         </p>
-                                                        {diagnosis.code && (
+                                                        {diagnosis.icd_code && (
                                                             <Badge
                                                                 variant="outline"
                                                                 className="text-xs"
                                                             >
-                                                                {diagnosis.code}
+                                                                {
+                                                                    diagnosis.icd_code
+                                                                }
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    {diagnosis.icd_10 && (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            ICD-10:{' '}
-                                                            {diagnosis.icd_10}
-                                                        </p>
-                                                    )}
                                                 </div>
                                                 <Button
                                                     type="button"

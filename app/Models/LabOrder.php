@@ -26,6 +26,7 @@ class LabOrder extends Model
         'result_entered_at',
         'result_values',
         'result_notes',
+        'migrated_from_mittag',
     ];
 
     protected function casts(): array

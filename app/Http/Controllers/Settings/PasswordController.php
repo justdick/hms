@@ -3,37 +3,54 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\UpdatePasswordRequest;
+use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PasswordController extends Controller
 {
+    public function __construct(protected UserService $userService) {}
+
     /**
      * Show the user's password settings page.
      */
     public function edit(): Response
     {
-        return Inertia::render('settings/password');
+        $user = auth()->user();
+
+        return Inertia::render('settings/password', [
+            'mustChangePassword' => $user->must_change_password,
+        ]);
     }
 
     /**
      * Update the user's password.
+     *
+     * Validates current password, updates to new password,
+     * and invalidates all other sessions for security.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(UpdatePasswordRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
-        ]);
+        $user = $request->user();
+        $currentSessionId = $request->session()->getId();
+        $wasForced = $user->must_change_password;
 
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        // Use UserService to change password and invalidate other sessions
+        $this->userService->changePassword(
+            $user,
+            $request->validated('password'),
+            $currentSessionId
+        );
 
-        return back();
+        // If user was forced to change password, redirect to dashboard
+        if ($wasForced) {
+            return redirect()
+                ->route('dashboard')
+                ->with('success', 'Password updated successfully. Welcome!');
+        }
+
+        return back()->with('success', 'Password updated successfully.');
     }
 }

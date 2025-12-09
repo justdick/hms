@@ -73,19 +73,10 @@ interface Drug {
     unit_type: string;
 }
 
-interface Diagnosis {
-    id: number;
-    diagnosis: string;
-    code: string | null;
-    g_drg: string | null;
-    icd_10: string | null;
-}
-
 interface Props {
     queueCount: number;
     procedureTypes: ProcedureType[];
     availableDrugs: Drug[];
-    availableDiagnoses: Diagnosis[];
     canManageTypes: boolean;
 }
 
@@ -93,7 +84,6 @@ export default function MinorProcedureIndex({
     queueCount,
     procedureTypes,
     availableDrugs,
-    availableDiagnoses,
     canManageTypes,
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -407,7 +397,6 @@ export default function MinorProcedureIndex({
                     patientCheckin={selectedPatient}
                     procedureTypes={procedureTypes}
                     availableDrugs={availableDrugs}
-                    availableDiagnoses={availableDiagnoses}
                     onSuccess={handleProcedureSuccess}
                 />
             )}

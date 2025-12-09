@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
+use App\Models\GdrgTariff;
 use App\Models\MinorProcedureType;
 use App\Models\NhisItemMapping;
-use App\Models\NhisTariff;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,7 +58,7 @@ class ProcedureTypeImport
     {
         $code = $this->getValue($row, ['code', 'procedure_code']);
         $name = $this->getValue($row, ['name', 'procedure_name']);
-        $price = $this->getValue($row, ['price', 'unit_price', 'cost']);
+        $price = $this->getValue($row, ['price', 'unit_price', 'cash_price']);
 
         if (empty($code)) {
             throw new \Exception('Missing code');
@@ -68,7 +68,6 @@ class ProcedureTypeImport
             throw new \Exception('Missing name');
         }
 
-        // price is optional - default to 0 if not provided
         if (! empty($price) && ! is_numeric($price)) {
             throw new \Exception('Invalid price (must be numeric)');
         }
@@ -76,62 +75,44 @@ class ProcedureTypeImport
 
         $category = $this->getValue($row, ['category']) ?: 'General';
         $type = $this->getValue($row, ['type']) ?: 'minor';
-        $nhisCode = $this->getValue($row, ['nhis_code']) ?: null;
         $description = $this->getValue($row, ['description']) ?: null;
+        $nhisCode = $this->getValue($row, ['nhis_code']) ?: null;
 
         // Normalize type
-        $type = $this->normalizeType(strtolower(trim($type)));
+        $type = strtolower(trim($type));
+        if (! in_array($type, ['minor', 'major'])) {
+            $type = 'minor';
+        }
 
-        $procedureType = MinorProcedureType::updateOrCreate(
+        $procedure = MinorProcedureType::updateOrCreate(
             ['code' => trim($code)],
             [
                 'name' => trim($name),
-                'price' => $price,
                 'category' => trim($category),
                 'type' => $type,
                 'description' => $description ? trim($description) : null,
+                'price' => $price,
                 'is_active' => true,
             ]
         );
 
-        $procedureType->wasRecentlyCreated ? $this->results['created']++ : $this->results['updated']++;
+        $procedure->wasRecentlyCreated ? $this->results['created']++ : $this->results['updated']++;
 
         if ($nhisCode) {
-            $this->createNhisMapping($procedureType, trim($nhisCode), $rowNumber);
+            $this->createNhisMapping($procedure, trim($nhisCode), $rowNumber);
         }
     }
 
-    private function createNhisMapping(MinorProcedureType $procedureType, string $nhisCode, int $rowNumber): void
+    private function createNhisMapping(MinorProcedureType $procedure, string $nhisCode, int $rowNumber): void
     {
-        // Check in both NhisTariff (medicines) and GdrgTariff (procedures)
-        $nhisTariff = NhisTariff::where('nhis_code', $nhisCode)->first();
+        // Procedures use G-DRG tariffs
+        $gdrgTariff = GdrgTariff::where('code', $nhisCode)->first();
 
-        if (! $nhisTariff) {
-            // Try GdrgTariff
-            $gdrgTariff = \App\Models\GdrgTariff::where('code', $nhisCode)->first();
-
-            if (! $gdrgTariff) {
-                $this->results['errors'][] = [
-                    'row' => $rowNumber,
-                    'error' => "NHIS code '{$nhisCode}' not found (procedure created without mapping)",
-                ];
-
-                return;
-            }
-
-            // Map to G-DRG tariff
-            NhisItemMapping::updateOrCreate(
-                [
-                    'item_type' => 'procedure',
-                    'item_id' => $procedureType->id,
-                ],
-                [
-                    'item_code' => $procedureType->code,
-                    'gdrg_tariff_id' => $gdrgTariff->id,
-                ]
-            );
-
-            $this->results['mapped']++;
+        if (! $gdrgTariff) {
+            $this->results['errors'][] = [
+                'row' => $rowNumber,
+                'error' => "G-DRG code '{$nhisCode}' not found (procedure created without mapping)",
+            ];
 
             return;
         }
@@ -139,22 +120,15 @@ class ProcedureTypeImport
         NhisItemMapping::updateOrCreate(
             [
                 'item_type' => 'procedure',
-                'item_id' => $procedureType->id,
+                'item_id' => $procedure->id,
             ],
             [
-                'item_code' => $procedureType->code,
-                'nhis_tariff_id' => $nhisTariff->id,
+                'item_code' => $procedure->code,
+                'gdrg_tariff_id' => $gdrgTariff->id,
             ]
         );
 
         $this->results['mapped']++;
-    }
-
-    private function normalizeType(string $type): string
-    {
-        $validTypes = ['minor', 'major'];
-
-        return in_array($type, $validTypes) ? $type : 'minor';
     }
 
     private function getValue(array $row, array $possibleKeys): ?string

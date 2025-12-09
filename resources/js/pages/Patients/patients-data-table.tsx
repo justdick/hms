@@ -8,7 +8,6 @@ import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
@@ -33,17 +32,39 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { router } from '@inertiajs/react';
+import { useDebouncedCallback } from 'use-debounce';
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginationData {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    pagination: PaginationData;
     onRegisterClick: () => void;
+    searchValue?: string;
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    pagination,
     onRegisterClick,
+    searchValue = '',
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -51,7 +72,7 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
-    const [globalFilter, setGlobalFilter] = React.useState('');
+    const [search, setSearch] = React.useState(searchValue);
 
     const table = useReactTable({
         data,
@@ -59,27 +80,53 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        onGlobalFilterChange: setGlobalFilter,
+        manualPagination: true,
+        pageCount: pagination.last_page,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
-            globalFilter,
-        },
-        initialState: {
             pagination: {
-                pageSize: 25,
+                pageIndex: pagination.current_page - 1,
+                pageSize: pagination.per_page,
             },
         },
     });
 
-    // Get unique genders for filtering
+    // Debounced server-side search
+    const debouncedSearch = useDebouncedCallback((value: string) => {
+        router.get(
+            window.location.pathname,
+            { search: value || undefined },
+            { preserveState: true, preserveScroll: true },
+        );
+    }, 300);
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        debouncedSearch(value);
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const handlePerPageChange = (perPage: string) => {
+        router.get(
+            window.location.pathname,
+            { per_page: perPage, search: search || undefined },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    // Get unique genders for filtering (client-side filter on current page)
     const genders = React.useMemo(() => {
         const genderSet = new Set<string>();
         data.forEach((item: any) => {
@@ -90,6 +137,14 @@ export function DataTable<TData, TValue>({
         return Array.from(genderSet);
     }, [data]);
 
+    // Find prev/next links from pagination
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
+
     return (
         <div className="w-full space-y-4">
             <div className="flex items-center gap-4">
@@ -97,12 +152,28 @@ export function DataTable<TData, TValue>({
                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                     <Input
                         placeholder="Search patients by name, number, phone..."
-                        value={globalFilter}
+                        value={search}
                         onChange={(event) =>
-                            setGlobalFilter(event.target.value)
+                            handleSearchChange(event.target.value)
                         }
                         className="pl-10"
                     />
+                </div>
+
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show</span>
+                    <select
+                        value={pagination.per_page}
+                        onChange={(e) => handlePerPageChange(e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
                 </div>
 
                 {/* Gender Filter */}
@@ -257,28 +328,48 @@ export function DataTable<TData, TValue>({
 
             {/* Pagination */}
             <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    Showing {table.getRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} patient(s)
+                <div className="text-sm text-muted-foreground">
+                    {pagination.from && pagination.to ? (
+                        <>
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} patient(s)
+                        </>
+                    ) : (
+                        <>No results</>
+                    )}
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="text-sm text-muted-foreground">
-                        Page {table.getState().pagination.pageIndex + 1} of{' '}
-                        {table.getPageCount()}
-                    </div>
+                <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={() => handlePageChange(prevLink?.url ?? null)}
+                        disabled={!prevLink?.url}
                     >
                         Previous
                     </Button>
+                    {pagination.links
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
+                        .map((link, index) => (
+                            <Button
+                                key={index}
+                                variant={link.active ? 'default' : 'outline'}
+                                size="sm"
+                                className="min-w-[40px]"
+                                onClick={() => handlePageChange(link.url)}
+                                disabled={!link.url}
+                            >
+                                {link.label}
+                            </Button>
+                        ))}
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        onClick={() => handlePageChange(nextLink?.url ?? null)}
+                        disabled={!nextLink?.url}
                     >
                         Next
                     </Button>

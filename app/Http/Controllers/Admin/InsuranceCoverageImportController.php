@@ -26,17 +26,22 @@ class InsuranceCoverageImportController extends Controller
             return response()->json(['error' => 'Invalid category'], 400);
         }
 
+        // Check if this is an NHIS plan - use simplified NHIS template
+        $isNhis = $plan->provider && $plan->provider->isNhis();
+
         $fileName = sprintf(
-            'coverage_template_%s_%s_%s.xlsx',
+            '%s_coverage_template_%s_%s_%s.xlsx',
+            $isNhis ? 'nhis' : 'insurance',
             $category,
-            str_replace(' ', '_', $plan->name),
+            str_replace(' ', '_', $plan->plan_name ?? $plan->name ?? 'plan'),
             now()->format('Y-m-d')
         );
 
-        return Excel::download(
-            new CoverageExceptionTemplate($category, $plan->id),
-            $fileName
-        );
+        $template = $isNhis
+            ? new NhisCoverageTemplate($category, $plan->id)
+            : new CoverageExceptionTemplate($category, $plan->id);
+
+        return Excel::download($template, $fileName);
     }
 
     public function preview(Request $request, InsurancePlan $plan)
@@ -95,6 +100,13 @@ class InsuranceCoverageImportController extends Controller
             'file' => 'required|file|mimes:csv,xlsx,xls',
             'category' => 'required|in:drug,lab,consultation,procedure,ward,nursing',
         ]);
+
+        // Check if this is an NHIS plan - use NHIS import logic
+        $isNhis = $plan->provider && $plan->provider->isNhis();
+
+        if ($isNhis) {
+            return $this->importNhisCoverage($request, $plan);
+        }
 
         $results = [
             'created' => 0,

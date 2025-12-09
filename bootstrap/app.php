@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnforceBillingPayment;
+use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\HideLabTestDetails;
@@ -30,9 +31,15 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Append EnsurePasswordChanged to the auth middleware group
+        $middleware->appendToGroup('auth', [
+            EnsurePasswordChanged::class,
+        ]);
+
         $middleware->alias([
             'billing.enforce' => EnforceBillingPayment::class,
             'lab.hide_details' => HideLabTestDetails::class,
+            'password.changed' => EnsurePasswordChanged::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Backup;
 use App\Models\Charge;
 use App\Models\ClaimBatch;
 use App\Models\Drug;
@@ -13,12 +14,14 @@ use App\Models\NhisTariff;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
+use App\Models\User;
 use App\Models\VitalSign;
 use App\Observers\ChargeObserver;
 use App\Observers\DrugObserver;
 use App\Observers\LabServiceObserver;
 use App\Observers\PrescriptionObserver;
 use App\Observers\VitalSignObserver;
+use App\Policies\BackupPolicy;
 use App\Policies\BillingPolicy;
 use App\Policies\ClaimBatchPolicy;
 use App\Policies\GdrgTariffPolicy;
@@ -27,9 +30,12 @@ use App\Policies\NhisMappingPolicy;
 use App\Policies\NhisTariffPolicy;
 use App\Policies\PatientCheckinPolicy;
 use App\Policies\PatientPolicy;
+use App\Policies\RolePolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -49,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         // Register policies
+        Gate::policy(Backup::class, BackupPolicy::class);
         Gate::policy(Charge::class, BillingPolicy::class);
         Gate::policy(ClaimBatch::class, ClaimBatchPolicy::class);
         Gate::policy(GdrgTariff::class, GdrgTariffPolicy::class);
@@ -57,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(NhisTariff::class, NhisTariffPolicy::class);
         Gate::policy(Patient::class, PatientPolicy::class);
         Gate::policy(PatientCheckin::class, PatientCheckinPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
 
         // Register observers
         Charge::observe(ChargeObserver::class);

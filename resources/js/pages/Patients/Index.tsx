@@ -37,19 +37,38 @@ interface InsurancePlan {
     };
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedPatients {
+    data: PatientData[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
+
 interface Props {
-    patients: {
-        data: PatientData[];
-    };
+    patients: PaginatedPatients;
     departments?: Department[];
     insurancePlans?: InsurancePlan[];
     patient?: Patient;
+    filters?: {
+        search?: string;
+    };
 }
 
 export default function PatientsIndex({
     patients,
     departments = [],
     insurancePlans = [],
+    filters = {},
 }: Props) {
     const page = usePage<Props>();
     const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
@@ -133,7 +152,9 @@ export default function PatientsIndex({
                 <DataTable
                     columns={patientsColumns}
                     data={patients?.data || []}
+                    pagination={patients}
                     onRegisterClick={() => setRegistrationModalOpen(true)}
+                    searchValue={filters.search}
                 />
             </div>
 
