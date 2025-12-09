@@ -5,6 +5,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils';
 import { ShieldAlert, ShieldCheck, ShieldOff } from 'lucide-react';
 
 interface InsuranceCoverageBadgeProps {
@@ -87,7 +88,7 @@ export function InsuranceCoverageBadge({
                                 Total Amount:
                             </span>
                             <span className="font-medium">
-                                GHS {numAmount.toFixed(2)}
+                                {formatCurrency(numAmount)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4">
@@ -95,7 +96,7 @@ export function InsuranceCoverageBadge({
                                 Insurance Pays:
                             </span>
                             <span className="font-medium text-green-600 dark:text-green-400">
-                                GHS {numInsuranceCovered.toFixed(2)}
+                                {formatCurrency(numInsuranceCovered)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4">
@@ -103,7 +104,7 @@ export function InsuranceCoverageBadge({
                                 Patient Pays:
                             </span>
                             <span className="font-medium text-orange-600 dark:text-orange-400">
-                                GHS {numPatientCopay.toFixed(2)}
+                                {formatCurrency(numPatientCopay)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4 border-t pt-1">

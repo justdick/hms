@@ -3,6 +3,7 @@
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\PatientNumberingController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\ThemeSettingController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -38,4 +39,14 @@ Route::middleware('auth')->group(function () {
         ->name('patient-numbering.update');
     Route::post('settings/patient-numbering/preview', [PatientNumberingController::class, 'preview'])
         ->name('patient-numbering.preview');
+
+    // Theme Settings API
+    Route::get('api/settings/theme', [ThemeSettingController::class, 'show'])
+        ->name('api.settings.theme.show');
+    Route::put('api/settings/theme', [ThemeSettingController::class, 'update'])
+        ->name('api.settings.theme.update');
+    Route::post('api/settings/theme/reset', [ThemeSettingController::class, 'reset'])
+        ->name('api.settings.theme.reset');
+    Route::post('api/settings/theme/logo', [ThemeSettingController::class, 'uploadLogo'])
+        ->name('api.settings.theme.logo');
 });

@@ -1,3 +1,4 @@
+import { formatCurrency } from '@/lib/utils';
 import { AlertTriangle, Calculator } from 'lucide-react';
 import type { ClaimTotals } from './types';
 
@@ -24,12 +25,6 @@ interface ClaimTotalDisplayProps {
  * ```
  */
 export function ClaimTotalDisplay({ totals, isNhis }: ClaimTotalDisplayProps) {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
-    };
 
     return (
         <section aria-labelledby="claim-total-heading">

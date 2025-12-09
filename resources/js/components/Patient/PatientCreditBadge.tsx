@@ -5,6 +5,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils';
 import { CreditCard, Star } from 'lucide-react';
 
 interface PatientCreditBadgeProps {
@@ -65,7 +66,7 @@ export function PatientCreditBadge({
                                     Total Owing:
                                 </span>
                                 <span className="font-medium text-orange-600 dark:text-orange-400">
-                                    GHS {numTotalOwing.toFixed(2)}
+                                    {formatCurrency(numTotalOwing)}
                                 </span>
                             </div>
                         )}

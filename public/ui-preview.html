@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS UI Theme Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Healthcare Blue Palette */
+            --primary: 210 90% 45%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 210 20% 96%;
+            --secondary-foreground: 210 40% 20%;
+            --accent: 180 60% 45%;
+            --accent-foreground: 0 0% 100%;
+            
+            /* Semantic Colors */
+            --success: 142 70% 45%;
+            --warning: 38 92% 50%;
+            --error: 0 84% 60%;
+            --info: 210 100% 50%;
+            
+            /* Base */
+            --background: 0 0% 98%;
+            --foreground: 210 40% 15%;
+            --card: 0 0% 100%;
+            --card-foreground: 210 40% 15%;
+            --border: 210 20% 90%;
+            --muted: 210 20% 96%;
+            --muted-foreground: 210 15% 45%;
+        }
+        
+        .dark {
+            --primary: 210 90% 55%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 210 30% 20%;
+            --secondary-foreground: 210 20% 90%;
+            --background: 210 30% 10%;
+            --foreground: 210 20% 95%;
+            --card: 210 30% 15%;
+            --card-foreground: 210 20% 95%;
+            --border: 210 30% 25%;
+            --muted: 210 30% 20%;
+            --muted-foreground: 210 15% 60%;
+        }
+        
+        body {
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .card {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+        
+        .btn-primary:hover {
+            background-color: hsl(210 90% 40%);
+        }
+        
+        .stat-card {
+            padding: 1rem 1.25rem;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success { background-color: hsl(142 70% 92%); color: hsl(142 70% 30%); }
+        .badge-warning { background-color: hsl(38 92% 92%); color: hsl(38 92% 30%); }
+        .badge-error { background-color: hsl(0 84% 92%); color: hsl(0 84% 35%); }
+        .badge-info { background-color: hsl(210 100% 92%); color: hsl(210 100% 35%); }
+        .badge-secondary { background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+        
+        .dark .badge-success { background-color: hsl(142 70% 20%); color: hsl(142 70% 70%); }
+        .dark .badge-warning { background-color: hsl(38 92% 20%); color: hsl(38 92% 70%); }
+        .dark .badge-error { background-color: hsl(0 84% 20%); color: hsl(0 84% 70%); }
+        .dark .badge-info { background-color: hsl(210 100% 20%); color: hsl(210 100% 70%); }
+        
+        .sidebar {
+            background-color: hsl(210 40% 20%);
+            color: hsl(210 20% 90%);
+        }
+        
+        .sidebar-item:hover {
+            background-color: hsl(210 40% 25%);
+        }
+        
+        .sidebar-item.active {
+            background-color: hsl(var(--primary));
+        }
+        
+        .table-row:hover {
+            background-color: hsl(var(--muted));
+        }
+        
+        .trend-up { color: hsl(var(--success)); }
+        .trend-down { color: hsl(var(--error)); }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Theme Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button onclick="document.body.classList.toggle('dark')" class="card px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:inline"></i>
+            Toggle Theme
+        </button>
+    </div>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 min-h-screen p-4 flex flex-col">
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                    <i class="fas fa-hospital text-xl"></i>
+                </div>
+                <div>
+                    <div class="font-semibold">City Hospital</div>
+                    <div class="text-xs opacity-70">HMS</div>
+                </div>
+            </div>
+            
+            <nav class="space-y-1 flex-1">
+                <a href="#" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-chart-line w-5"></i> Dashboard
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-users w-5"></i> Patients
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-calendar-check w-5"></i> Check-in
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-stethoscope w-5"></i> Consultations
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-bed w-5"></i> Wards
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-pills w-5"></i> Pharmacy
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-flask w-5"></i> Laboratory
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-file-invoice-dollar w-5"></i> Billing
+                </a>
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-shield-alt w-5"></i> Insurance
+                </a>
+            </nav>
+            
+            <div class="border-t border-white/10 pt-4 mt-4">
+                <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-semibold">Dashboard</h1>
+                    <p class="text-sm" style="color: hsl(var(--muted-foreground))">Welcome back, Dr. Mensah</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="card px-4 py-2 text-sm">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="flex items-center gap-2 card px-3 py-2">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-sm font-medium">DM</div>
+                        <span class="text-sm font-medium">Dr. Mensah</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Stat Cards -->
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="card stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium" style="color: hsl(var(--muted-foreground))">Today's Patients</p>
+                            <p class="text-2xl font-bold mt-1">47</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(210 100% 92%)">
+                            <i class="fas fa-users" style="color: hsl(var(--primary))"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 mt-2 text-xs">
+                        <span class="trend-up"><i class="fas fa-arrow-up"></i> 12%</span>
+                        <span style="color: hsl(var(--muted-foreground))">vs yesterday</span>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium" style="color: hsl(var(--muted-foreground))">Pending Consultations</p>
+                            <p class="text-2xl font-bold mt-1">12</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(38 92% 92%)">
+                            <i class="fas fa-clock" style="color: hsl(var(--warning))"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 mt-2 text-xs">
+                        <span class="trend-down"><i class="fas fa-arrow-down"></i> 5%</span>
+                        <span style="color: hsl(var(--muted-foreground))">vs yesterday</span>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium" style="color: hsl(var(--muted-foreground))">Revenue Today</p>
+                            <p class="text-2xl font-bold mt-1">GH₵ 8,450</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(142 70% 92%)">
+                            <i class="fas fa-dollar-sign" style="color: hsl(var(--success))"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 mt-2 text-xs">
+                        <span class="trend-up"><i class="fas fa-arrow-up"></i> 23%</span>
+                        <span style="color: hsl(var(--muted-foreground))">vs yesterday</span>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium" style="color: hsl(var(--muted-foreground))">Bed Occupancy</p>
+                            <p class="text-2xl font-bold mt-1">78%</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(180 60% 92%)">
+                            <i class="fas fa-bed" style="color: hsl(var(--accent))"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 mt-2 text-xs">
+                        <span style="color: hsl(var(--muted-foreground))">42 of 54 beds</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Recent Patients Table -->
+                <div class="col-span-2 card">
+                    <div class="px-5 py-4 border-b" style="border-color: hsl(var(--border))">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-semibold">Recent Check-ins</h2>
+                            <button class="btn-primary px-3 py-1.5 rounded-lg text-sm font-medium">
+                                <i class="fas fa-plus mr-1"></i> New Check-in
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr style="background-color: hsl(var(--muted))">
+                                    <th class="text-left px-5 py-3 font-medium" style="color: hsl(var(--muted-foreground))">Patient</th>
+                                    <th class="text-left px-5 py-3 font-medium" style="color: hsl(var(--muted-foreground))">Department</th>
+                                    <th class="text-left px-5 py-3 font-medium" style="color: hsl(var(--muted-foreground))">Status</th>
+                                    <th class="text-left px-5 py-3 font-medium" style="color: hsl(var(--muted-foreground))">Time</th>
+                                    <th class="text-right px-5 py-3 font-medium" style="color: hsl(var(--muted-foreground))">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-row border-b" style="border-color: hsl(var(--border))">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-medium">KA</div>
+                                            <div>
+                                                <div class="font-medium">Kwame Asante</div>
+                                                <div class="text-xs" style="color: hsl(var(--muted-foreground))">PAT2025000142</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3">General OPD</td>
+                                    <td class="px-5 py-3"><span class="badge badge-warning">Awaiting Vitals</span></td>
+                                    <td class="px-5 py-3" style="color: hsl(var(--muted-foreground))">10:32 AM</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-sm px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" style="color: hsl(var(--primary))">View</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row border-b" style="border-color: hsl(var(--border))">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white text-xs font-medium">AA</div>
+                                            <div>
+                                                <div class="font-medium">Ama Adjei</div>
+                                                <div class="text-xs" style="color: hsl(var(--muted-foreground))">PAT2025000089</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3">Pediatrics</td>
+                                    <td class="px-5 py-3"><span class="badge badge-info">In Consultation</span></td>
+                                    <td class="px-5 py-3" style="color: hsl(var(--muted-foreground))">10:15 AM</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-sm px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" style="color: hsl(var(--primary))">View</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row border-b" style="border-color: hsl(var(--border))">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xs font-medium">YM</div>
+                                            <div>
+                                                <div class="font-medium">Yaw Mensah</div>
+                                                <div class="text-xs" style="color: hsl(var(--muted-foreground))">PAT2025000201</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3">Emergency</td>
+                                    <td class="px-5 py-3"><span class="badge badge-success">Completed</span></td>
+                                    <td class="px-5 py-3" style="color: hsl(var(--muted-foreground))">09:45 AM</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-sm px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" style="color: hsl(var(--primary))">View</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-medium">EO</div>
+                                            <div>
+                                                <div class="font-medium">Efua Owusu</div>
+                                                <div class="text-xs" style="color: hsl(var(--muted-foreground))">PAT2025000178</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3">Dental</td>
+                                    <td class="px-5 py-3"><span class="badge badge-secondary">Checked In</span></td>
+                                    <td class="px-5 py-3" style="color: hsl(var(--muted-foreground))">09:30 AM</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-sm px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800" style="color: hsl(var(--primary))">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Alerts -->
+                <div class="space-y-6">
+                    <!-- Quick Actions -->
+                    <div class="card p-5">
+                        <h2 class="font-semibold mb-4">Quick Actions</h2>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="flex flex-col items-center gap-2 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800" style="border-color: hsl(var(--border))">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(210 100% 92%)">
+                                    <i class="fas fa-user-plus" style="color: hsl(var(--primary))"></i>
+                                </div>
+                                <span class="text-xs font-medium">New Patient</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-2 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800" style="border-color: hsl(var(--border))">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(142 70% 92%)">
+                                    <i class="fas fa-calendar-plus" style="color: hsl(var(--success))"></i>
+                                </div>
+                                <span class="text-xs font-medium">Check-in</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-2 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800" style="border-color: hsl(var(--border))">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(38 92% 92%)">
+                                    <i class="fas fa-flask" style="color: hsl(var(--warning))"></i>
+                                </div>
+                                <span class="text-xs font-medium">Lab Order</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-2 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800" style="border-color: hsl(var(--border))">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: hsl(180 60% 92%)">
+                                    <i class="fas fa-prescription" style="color: hsl(var(--accent))"></i>
+                                </div>
+                                <span class="text-xs font-medium">Prescription</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div class="card p-5">
+                        <h2 class="font-semibold mb-4">Alerts</h2>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3 p-3 rounded-lg" style="background-color: hsl(0 84% 95%)">
+                                <i class="fas fa-exclamation-circle mt-0.5" style="color: hsl(var(--error))"></i>
+                                <div>
+                                    <p class="text-sm font-medium">Low Stock Alert</p>
+                                    <p class="text-xs" style="color: hsl(var(--muted-foreground))">Paracetamol 500mg - 23 units left</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-lg" style="background-color: hsl(38 92% 95%)">
+                                <i class="fas fa-clock mt-0.5" style="color: hsl(var(--warning))"></i>
+                                <div>
+                                    <p class="text-sm font-medium">Pending Lab Results</p>
+                                    <p class="text-xs" style="color: hsl(var(--muted-foreground))">5 results awaiting review</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-lg" style="background-color: hsl(210 100% 95%)">
+                                <i class="fas fa-info-circle mt-0.5" style="color: hsl(var(--info))"></i>
+                                <div>
+                                    <p class="text-sm font-medium">Insurance Claims</p>
+                                    <p class="text-xs" style="color: hsl(var(--muted-foreground))">12 claims ready for submission</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badge Showcase -->
+            <div class="card p-5 mt-6">
+                <h2 class="font-semibold mb-4">Status Badges</h2>
+                <div class="flex flex-wrap gap-3">
+                    <span class="badge badge-success">Completed</span>
+                    <span class="badge badge-warning">Pending</span>
+                    <span class="badge badge-error">Cancelled</span>
+                    <span class="badge badge-info">In Progress</span>
+                    <span class="badge badge-secondary">Draft</span>
+                    <span class="badge badge-success">Active</span>
+                    <span class="badge badge-warning">Awaiting Vitals</span>
+                    <span class="badge badge-info">In Consultation</span>
+                    <span class="badge badge-error">Critical</span>
+                    <span class="badge badge-secondary">Checked In</span>
+                </div>
+            </div>
+
+            <!-- Form Elements Preview -->
+            <div class="card p-5 mt-6">
+                <h2 class="font-semibold mb-4">Form Elements</h2>
+                <div class="grid grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5">Patient Name</label>
+                        <input type="text" placeholder="Enter patient name" class="w-full px-3 py-2 rounded-lg border text-sm" style="border-color: hsl(var(--border)); background-color: hsl(var(--card))">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5">Department</label>
+                        <select class="w-full px-3 py-2 rounded-lg border text-sm" style="border-color: hsl(var(--border)); background-color: hsl(var(--card))">
+                            <option>Select department</option>
+                            <option>General OPD</option>
+                            <option>Pediatrics</option>
+                            <option>Emergency</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1.5">Actions</label>
+                        <div class="flex gap-2">
+                            <button class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">Save</button>
+                            <button class="px-4 py-2 rounded-lg text-sm font-medium border" style="border-color: hsl(var(--border))">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

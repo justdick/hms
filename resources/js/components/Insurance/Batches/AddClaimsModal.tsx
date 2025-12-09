@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { Loader2, Plus, Search } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
@@ -59,13 +60,6 @@ export default function AddClaimsModal({
                 claim.provider_name?.toLowerCase().includes(term),
         );
     }, [availableClaims, searchTerm]);
-
-    const formatCurrency = (amount: string) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(parseFloat(amount));
-    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {

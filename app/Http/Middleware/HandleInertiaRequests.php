@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\ThemeSettingService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -83,6 +84,10 @@ class HandleInertiaRequests extends Middleware
                         'update' => $request->user()?->can('roles.update') ?? false,
                         'delete' => $request->user()?->can('roles.delete') ?? false,
                     ],
+                    'theme' => [
+                        'view' => $request->user()?->can('settings.view-theme') ?? false,
+                        'manage' => $request->user()?->can('settings.manage-theme') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
@@ -94,6 +99,7 @@ class HandleInertiaRequests extends Middleware
                 'temporary_password' => $request->session()->get('temporary_password'),
             ],
             'patient' => $request->session()->get('patient'),
+            'theme' => fn () => app(ThemeSettingService::class)->getThemeWithFallback(),
         ];
     }
 }

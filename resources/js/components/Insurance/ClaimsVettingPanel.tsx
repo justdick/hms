@@ -18,6 +18,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -280,12 +281,7 @@ export default function ClaimsVettingPanel({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, claim, onClose]);
 
-    const formatCurrency = (amount: string | number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(typeof amount === 'string' ? parseFloat(amount) : amount);
-    };
+
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {

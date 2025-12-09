@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
@@ -38,13 +39,6 @@ export function ServiceBlockAlert({
     activeOverride,
     checkinId,
 }: ServiceBlockAlertProps) {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
-    };
-
     const totalPending = pendingCharges.reduce(
         (sum, charge) => sum + charge.amount,
         0,

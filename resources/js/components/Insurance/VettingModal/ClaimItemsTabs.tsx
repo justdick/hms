@@ -22,6 +22,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatCurrency } from '@/lib/utils';
 import {
     AlertTriangle,
     Beaker,
@@ -70,12 +71,9 @@ export function ClaimItemsTabs({
     const [searching, setSearching] = useState(false);
     const [addingItem, setAddingItem] = useState(false);
 
-    const formatCurrency = (amount: number | null) => {
+    const formatCurrencyOrDash = (amount: number | null) => {
         if (amount === null) return '-';
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
+        return formatCurrency(amount);
     };
 
     const calculateSubtotal = (categoryItems: ClaimItem[]) => {

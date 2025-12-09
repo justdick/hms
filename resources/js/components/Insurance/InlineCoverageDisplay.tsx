@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface InlineCoverageDisplayProps {
     isInsuranceClaim: boolean;
@@ -20,7 +20,7 @@ export function InlineCoverageDisplay({
     if (!isInsuranceClaim) {
         return (
             <div className={cn('text-sm', className)}>
-                <span className="font-medium">GHS {amount.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(amount)}</span>
             </div>
         );
     }
@@ -28,10 +28,10 @@ export function InlineCoverageDisplay({
     if (compact) {
         return (
             <div className={cn('space-y-0.5 text-sm', className)}>
-                <div className="font-medium">GHS {amount.toFixed(2)}</div>
+                <div className="font-medium">{formatCurrency(amount)}</div>
                 <div className="text-xs text-muted-foreground">
-                    Insurance: GHS {insuranceCoveredAmount.toFixed(2)} | Copay:
-                    GHS {patientCopayAmount.toFixed(2)}
+                    Insurance: {formatCurrency(insuranceCoveredAmount)} | Copay:{' '}
+                    {formatCurrency(patientCopayAmount)}
                 </div>
             </div>
         );
@@ -41,18 +41,18 @@ export function InlineCoverageDisplay({
         <div className={cn('space-y-1 text-sm', className)}>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Total:</span>
-                <span className="font-medium">GHS {amount.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(amount)}</span>
             </div>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Insurance:</span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                    GHS {insuranceCoveredAmount.toFixed(2)}
+                    {formatCurrency(insuranceCoveredAmount)}
                 </span>
             </div>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Patient Copay:</span>
                 <span className="font-medium text-orange-600 dark:text-orange-400">
-                    GHS {patientCopayAmount.toFixed(2)}
+                    {formatCurrency(patientCopayAmount)}
                 </span>
             </div>
         </div>

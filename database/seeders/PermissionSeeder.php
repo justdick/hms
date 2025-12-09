@@ -232,6 +232,10 @@ class PermissionSeeder extends Seeder
             'backups.delete' => 'Delete database backups',
             'backups.restore' => 'Restore database from backups',
             'backups.manage-settings' => 'Manage backup settings (schedule, retention, Google Drive)',
+
+            // Theme Settings Management
+            'settings.view-theme' => 'View application theme settings',
+            'settings.manage-theme' => 'Manage application theme and branding settings',
         ];
 
         foreach ($permissions as $name => $description) {

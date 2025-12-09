@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -146,12 +147,7 @@ export default function BillingStatusWidget({
         return null;
     }
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
-    };
+
 
     const getServiceIcon = (service: string, canProceed: boolean) => {
         const IconComponent = canProceed ? CheckCircle : XCircle;

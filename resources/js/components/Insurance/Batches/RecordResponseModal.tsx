@@ -24,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { ClipboardList, Loader2 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
@@ -91,13 +92,6 @@ export default function RecordResponseModal({ isOpen, onClose, batch }: Props) {
             setResponses(initialResponses);
         }
     }, [isOpen, batch.batch_items]);
-
-    const formatCurrency = (amount: string) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(parseFloat(amount));
-    };
 
     const handleResponseChange = (
         claimId: number,

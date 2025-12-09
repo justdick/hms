@@ -6,6 +6,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/lib/utils';
 import { ShieldCheck } from 'lucide-react';
 
 interface ChargeSplitDisplayProps {
@@ -42,7 +43,7 @@ export function ChargeSplitDisplay({
                             Total Amount:
                         </span>
                         <span className="text-2xl font-bold">
-                            GHS {amount.toFixed(2)}
+                            {formatCurrency(amount)}
                         </span>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -80,7 +81,7 @@ export function ChargeSplitDisplay({
                             Total Charge:
                         </span>
                         <span className="font-medium">
-                            GHS {amount.toFixed(2)}
+                            {formatCurrency(amount)}
                         </span>
                     </div>
 
@@ -92,7 +93,7 @@ export function ChargeSplitDisplay({
                         </span>
                         <div className="text-right">
                             <div className="font-medium text-green-600 dark:text-green-400">
-                                GHS {insuranceCoveredAmount.toFixed(2)}
+                                {formatCurrency(insuranceCoveredAmount)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 ({coveragePercentage}%)
@@ -106,7 +107,7 @@ export function ChargeSplitDisplay({
                         </span>
                         <div className="text-right">
                             <div className="font-medium text-orange-600 dark:text-orange-400">
-                                GHS {patientCopayAmount.toFixed(2)}
+                                {formatCurrency(patientCopayAmount)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 ({100 - coveragePercentage}%)
@@ -119,7 +120,7 @@ export function ChargeSplitDisplay({
                     <div className="flex items-center justify-between pt-2">
                         <span className="font-semibold">Patient Owes:</span>
                         <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                            GHS {patientCopayAmount.toFixed(2)}
+                            {formatCurrency(patientCopayAmount)}
                         </span>
                     </div>
                 </div>

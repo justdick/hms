@@ -13,7 +13,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Check, ChevronsUpDown, FileText } from 'lucide-react';
 import { useState } from 'react';
 import type { GdrgTariff } from './types';
@@ -52,13 +52,6 @@ export function GdrgSelector({
 }: GdrgSelectorProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
-    };
 
     const formatDisplayName = (tariff: GdrgTariff) => {
         return `${tariff.name} (${tariff.code} - ${formatCurrency(tariff.tariff_price)})`;

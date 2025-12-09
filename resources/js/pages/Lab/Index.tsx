@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import {
@@ -68,73 +69,30 @@ export default function LabIndex({ groupedOrders, stats, filters }: Props) {
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Pending Orders
-                            </CardTitle>
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.ordered}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Waiting for sample collection
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Samples Collected
-                            </CardTitle>
-                            <TestTube className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.sample_collected}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Ready for processing
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                In Progress
-                            </CardTitle>
-                            <FlaskConical className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.in_progress}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Currently being processed
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Completed Today
-                            </CardTitle>
-                            <Activity className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.completed_today}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Tests completed today
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Pending Orders"
+                        value={stats.ordered}
+                        icon={<FileText className="h-4 w-4" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Samples Collected"
+                        value={stats.sample_collected}
+                        icon={<TestTube className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="In Progress"
+                        value={stats.in_progress}
+                        icon={<FlaskConical className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Completed Today"
+                        value={stats.completed_today}
+                        icon={<Activity className="h-4 w-4" />}
+                        variant="success"
+                    />
                 </div>
 
                 {/* Grouped Orders DataTable */}

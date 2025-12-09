@@ -27,6 +27,7 @@ import {
     LayoutGrid,
     Link2,
     Package,
+    Palette,
     Pill,
     Settings,
     Shield,
@@ -275,6 +276,14 @@ export function AppSidebar() {
             title: 'Roles',
             href: '/admin/roles',
             icon: Shield,
+        });
+    }
+
+    if (auth.permissions?.theme?.view || auth.permissions?.theme?.manage) {
+        adminItems.push({
+            title: 'Theme Settings',
+            href: '/admin/theme-settings',
+            icon: Palette,
         });
     }
 

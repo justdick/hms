@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrentPatientsTable } from '@/components/Ward/CurrentPatientsTable';
 import { useVitalsAlerts } from '@/hooks/use-vitals-alerts';
@@ -242,117 +243,48 @@ export default function WardShow({ ward, stats }: Props) {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Beds
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {ward.total_beds}
-                                    </p>
-                                </div>
-                                <Bed className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Available
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                        {ward.available_beds}
-                                    </p>
-                                </div>
-                                <Users className="h-8 w-8 text-green-600 dark:text-green-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Occupied
-                                    </p>
-                                    <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                        {ward.total_beds - ward.available_beds}
-                                    </p>
-                                </div>
-                                <User className="h-8 w-8 text-red-600 dark:text-red-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Occupancy
-                                    </p>
-                                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                                        {getOccupancyRate()}%
-                                    </p>
-                                </div>
-                                <Activity className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Pending Meds
-                                    </p>
-                                    <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                                        {stats.pending_meds_count}
-                                    </p>
-                                </div>
-                                <Pill className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Vitals Due
-                                    </p>
-                                    <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                                        {stats.vitals_due_count}
-                                    </p>
-                                </div>
-                                <Thermometer className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Vitals Overdue
-                                    </p>
-                                    <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                        {stats.vitals_overdue_count}
-                                    </p>
-                                </div>
-                                <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Beds"
+                        value={ward.total_beds}
+                        icon={<Bed className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Available"
+                        value={ward.available_beds}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Occupied"
+                        value={ward.total_beds - ward.available_beds}
+                        icon={<User className="h-4 w-4" />}
+                        variant="error"
+                    />
+                    <StatCard
+                        label="Occupancy"
+                        value={`${getOccupancyRate()}%`}
+                        icon={<Activity className="h-4 w-4" />}
+                        variant="default"
+                    />
+                    <StatCard
+                        label="Pending Meds"
+                        value={stats.pending_meds_count}
+                        icon={<Pill className="h-4 w-4" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Vitals Due"
+                        value={stats.vitals_due_count}
+                        icon={<Thermometer className="h-4 w-4" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Vitals Overdue"
+                        value={stats.vitals_overdue_count}
+                        icon={<AlertCircle className="h-4 w-4" />}
+                        variant="error"
+                    />
                 </div>
 
                 <Tabs defaultValue="patients" className="w-full">

@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
 import axios from 'axios';
 import {
     ChevronLeft,
@@ -186,7 +187,7 @@ export default function ExceptionTableModal({
     const getCopayDisplay = (exception: CoverageException) => {
         // For NHIS/full coverage, show fixed copay amount if set
         if (exception.patient_copay_amount && parseFloat(String(exception.patient_copay_amount)) > 0) {
-            return `GHS ${parseFloat(String(exception.patient_copay_amount)).toFixed(2)}`;
+            return formatCurrency(parseFloat(String(exception.patient_copay_amount)));
         }
         // For percentage-based coverage, show percentage
         if (exception.patient_copay_percentage && parseFloat(String(exception.patient_copay_percentage)) > 0) {
@@ -198,11 +199,11 @@ export default function ExceptionTableModal({
     const getTariffDisplay = (exception: CoverageException) => {
         // First check NHIS tariff (from mapping)
         if (exception.nhis_tariff_price && parseFloat(String(exception.nhis_tariff_price)) > 0) {
-            return `GHS ${parseFloat(String(exception.nhis_tariff_price)).toFixed(2)}`;
+            return formatCurrency(parseFloat(String(exception.nhis_tariff_price)));
         }
         // Then check custom tariff amount
         if (exception.tariff_amount && parseFloat(String(exception.tariff_amount)) > 0) {
-            return `GHS ${parseFloat(String(exception.tariff_amount)).toFixed(2)}`;
+            return formatCurrency(parseFloat(String(exception.tariff_amount)));
         }
         return '-';
     };
@@ -322,7 +323,7 @@ export default function ExceptionTableModal({
                                             {getCoverageTypeBadge(exception.coverage_type)}
                                             <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                                                 {exception.coverage_type === 'percentage' && `${exception.coverage_value}%`}
-                                                {exception.coverage_type === 'fixed' && `GHS ${parseFloat(String(exception.coverage_value || 0)).toFixed(2)}`}
+                                                {exception.coverage_type === 'fixed' && formatCurrency(parseFloat(String(exception.coverage_value || 0)))}
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-right text-blue-600 dark:text-blue-400">

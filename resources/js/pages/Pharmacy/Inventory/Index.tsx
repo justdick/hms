@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StatCard } from '@/components/ui/stat-card';
+import { formatCurrency } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
@@ -191,73 +193,30 @@ export default function InventoryIndex({ drugs }: Props) {
 
                 {/* Inventory Statistics */}
                 <div className="grid gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Drugs
-                            </CardTitle>
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {totalDrugs}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Active medications
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Low Stock
-                            </CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-orange-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">
-                                {lowStockDrugs}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Require restocking
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Out of Stock
-                            </CardTitle>
-                            <TrendingDown className="h-4 w-4 text-red-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">
-                                {outOfStockDrugs}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Immediate attention needed
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Value
-                            </CardTitle>
-                            <BarChart3 className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                ${totalValue.toLocaleString()}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Current inventory value
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Drugs"
+                        value={totalDrugs}
+                        icon={<Package className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Low Stock"
+                        value={lowStockDrugs}
+                        icon={<AlertTriangle className="h-4 w-4" />}
+                        variant="warning"
+                    />
+                    <StatCard
+                        label="Out of Stock"
+                        value={outOfStockDrugs}
+                        icon={<TrendingDown className="h-4 w-4" />}
+                        variant="error"
+                    />
+                    <StatCard
+                        label="Total Value"
+                        value={formatCurrency(totalValue)}
+                        icon={<BarChart3 className="h-4 w-4" />}
+                        variant="success"
+                    />
                 </div>
 
                 {/* Quick Actions */}

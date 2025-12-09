@@ -42,6 +42,10 @@ export interface Auth {
             update: boolean;
             delete: boolean;
         };
+        theme?: {
+            view: boolean;
+            manage: boolean;
+        };
     };
 }
 
@@ -63,6 +67,29 @@ export interface NavItem {
     items?: NavItem[];
 }
 
+export interface ThemeColors {
+    primary: string;
+    primaryForeground: string;
+    secondary: string;
+    secondaryForeground: string;
+    accent: string;
+    accentForeground: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+}
+
+export interface ThemeBranding {
+    logoUrl: string | null;
+    hospitalName: string;
+}
+
+export interface ThemeConfig {
+    colors: ThemeColors;
+    branding: ThemeBranding;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -74,6 +101,7 @@ export interface SharedData {
         warning?: string;
         info?: string;
     };
+    theme?: ThemeConfig;
     [key: string]: unknown;
 }
 

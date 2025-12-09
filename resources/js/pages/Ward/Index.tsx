@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
@@ -139,86 +140,29 @@ export default function WardIndex({ wards }: Props) {
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-l-4 border-l-blue-500">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Wards
-                                    </p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {wards.length}
-                                    </p>
-                                </div>
-                                <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/20">
-                                    <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-green-500">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Active Wards
-                                    </p>
-                                    <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-                                        {
-                                            wards.filter((w) => w.is_active)
-                                                .length
-                                        }
-                                    </p>
-                                </div>
-                                <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/20">
-                                    <Sparkles className="h-6 w-6 text-green-600 dark:text-green-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-purple-500">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Beds
-                                    </p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {wards.reduce(
-                                            (sum, w) => sum + w.total_beds,
-                                            0,
-                                        )}
-                                    </p>
-                                </div>
-                                <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900/20">
-                                    <Bed className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-emerald-500">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Available Beds
-                                    </p>
-                                    <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                                        {wards.reduce(
-                                            (sum, w) => sum + w.available_beds,
-                                            0,
-                                        )}
-                                    </p>
-                                </div>
-                                <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900/20">
-                                    <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Wards"
+                        value={wards.length}
+                        icon={<Building2 className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Active Wards"
+                        value={wards.filter((w) => w.is_active).length}
+                        icon={<Sparkles className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Total Beds"
+                        value={wards.reduce((sum, w) => sum + w.total_beds, 0)}
+                        icon={<Bed className="h-4 w-4" />}
+                    />
+                    <StatCard
+                        label="Available Beds"
+                        value={wards.reduce((sum, w) => sum + w.available_beds, 0)}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="success"
+                    />
                 </div>
 
                 {/* Search and Filter */}

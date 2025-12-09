@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -9,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import {
@@ -75,11 +77,8 @@ export default function AccountsIndex({
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(amount);
+    const formatAmount = (amount: number) => {
+        return formatCurrency(amount);
     };
 
     const handleFilterApply = () => {
@@ -206,77 +205,34 @@ export default function AccountsIndex({
 
                 {/* Summary Stats */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Collections
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {formatCurrency(totalCollections)}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                For selected period
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Transactions
-                            </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">
-                                {transactionCount}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Total transactions
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Active Cashiers
-                            </CardTitle>
-                            <Users className="h-4 w-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-purple-600">
-                                {collectionsByCashier.length}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Cashiers with collections
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Avg per Transaction
-                            </CardTitle>
-                            <CreditCard className="h-4 w-4 text-orange-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">
-                                {formatCurrency(
-                                    transactionCount > 0
-                                        ? totalCollections / transactionCount
-                                        : 0,
-                                )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Average transaction value
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Collections"
+                        value={formatAmount(totalCollections)}
+                        icon={<DollarSign className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Transactions"
+                        value={transactionCount}
+                        icon={<TrendingUp className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Active Cashiers"
+                        value={collectionsByCashier.length}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="default"
+                    />
+                    <StatCard
+                        label="Avg per Transaction"
+                        value={formatAmount(
+                            transactionCount > 0
+                                ? totalCollections / transactionCount
+                                : 0,
+                        )}
+                        icon={<CreditCard className="h-4 w-4" />}
+                        variant="warning"
+                    />
                 </div>
 
                 {/* Collections by Cashier */}

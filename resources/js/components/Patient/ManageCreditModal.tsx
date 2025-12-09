@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency as formatCurrencyUtil } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CreditCard, Loader2, Star, XCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export function ManageCreditModal({
     patientName,
     isCreditEligible,
     totalOwing = 0,
-    formatCurrency = (amount) => `GHS ${amount.toFixed(2)}`,
+    formatCurrency = formatCurrencyUtil,
 }: ManageCreditModalProps) {
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
