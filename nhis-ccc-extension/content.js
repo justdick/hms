@@ -271,6 +271,11 @@
 
             // Clear pending verification
             chrome.storage.local.remove(['pendingVerification']);
+
+            // Auto-close this tab after 3 seconds
+            setTimeout(() => {
+                window.close();
+            }, 3000);
         } else {
             console.log('HMS NHIS Extension: CCC not found on page');
         }
