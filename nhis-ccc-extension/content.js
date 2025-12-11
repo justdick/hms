@@ -180,14 +180,26 @@
             // Wait a moment then click submit
             await sleep(500);
 
-            const submitBtn =
-                findElementByText('SUBMIT') ||
-                document.querySelector('button[type="submit"]') ||
-                document.querySelector('[class*="submit"]');
+            // Submit button is likely: <a id="submit" class="btn btn-...">SUBMIT</a>
+            const submitBtn = document.querySelector('#submit') ||
+                              document.querySelector('a.btn-login') ||
+                              document.querySelector('a[class*="submit"]');
+            
+            // Fallback: find <a> by text
+            let btn = submitBtn;
+            if (!btn) {
+                const allLinks = document.querySelectorAll('a');
+                for (const link of allLinks) {
+                    if (link.textContent.trim() === 'SUBMIT') {
+                        btn = link;
+                        break;
+                    }
+                }
+            }
 
-            if (submitBtn) {
-                console.log('HMS NHIS Extension: Clicking submit');
-                submitBtn.click();
+            if (btn) {
+                console.log('HMS NHIS Extension: Clicking submit', btn.outerHTML);
+                btn.click();
             } else {
                 console.log('HMS NHIS Extension: Submit button not found');
             }
