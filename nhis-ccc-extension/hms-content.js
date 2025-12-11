@@ -31,14 +31,15 @@
             
             // Store verification request in extension storage (accessible from all tabs)
             try {
-                chrome.storage.local.set({
-                    pendingVerification: {
-                        membershipNumber: event.data.membershipNumber,
-                        credentials: event.data.credentials,
-                        timestamp: Date.now(),
-                        hmsOrigin: window.location.origin
-                    }
-                }, () => {
+                const verificationData = {
+                    membershipNumber: event.data.membershipNumber,
+                    credentials: event.data.credentials,
+                    timestamp: Date.now(),
+                    hmsOrigin: window.location.origin,
+                    hmsUrl: window.location.href
+                };
+                console.log('HMS NHIS Extension: Storing verification data', verificationData);
+                chrome.storage.local.set({ pendingVerification: verificationData }, () => {
                     if (chrome.runtime.lastError) {
                         console.log('HMS NHIS Extension: Storage error', chrome.runtime.lastError);
                         return;
@@ -56,7 +57,9 @@
     // Listen for CCC data from background script
     try {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            console.log('HMS NHIS Extension: Received message from background', message);
             if (message.type === 'NHIS_CCC_RECEIVED') {
+                console.log('HMS NHIS Extension: Forwarding CCC to page', message.data);
                 // Forward to HMS page via postMessage
                 window.postMessage(
                     {
@@ -69,8 +72,9 @@
             }
             return true;
         });
+        console.log('HMS NHIS Extension: Message listener added');
     } catch (e) {
-        console.log('HMS NHIS Extension: Could not add message listener');
+        console.log('HMS NHIS Extension: Could not add message listener', e);
     }
 
     console.log('HMS NHIS Extension: Ready on HMS page');
