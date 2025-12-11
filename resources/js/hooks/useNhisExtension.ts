@@ -89,26 +89,29 @@ export function useNhisExtension(): UseNhisExtensionReturn {
         setIsVerifying(true);
         setCccData(null);
 
-        // Store verification request in localStorage for extension to pick up
-        localStorage.setItem('hms-nhis-pending-verification', JSON.stringify({
+        // Send verification request to extension via postMessage
+        // The extension's hms-content.js listens for this and stores in chrome.storage
+        window.postMessage({
+            type: 'HMS_NHIS_VERIFY_REQUEST',
             membershipNumber,
             credentials: credentials || null,
-            timestamp: Date.now(),
-            origin: window.location.origin
-        }));
+        }, '*');
 
-        // Open NHIA portal
-        window.open(portalUrl || 'https://ccc.nhia.gov.gh/', '_blank');
+        // Give extension time to store the data, then open portal
+        setTimeout(() => {
+            window.open(portalUrl || 'https://ccc.nhia.gov.gh/', '_blank');
+        }, 300);
 
         // Also try to communicate with extension directly
         if (EXTENSION_ID && chrome?.runtime?.sendMessage) {
             try {
                 chrome.runtime.sendMessage(EXTENSION_ID, {
                     type: 'NHIS_VERIFY_REQUEST',
-                    membershipNumber
+                    membershipNumber,
+                    credentials
                 });
             } catch {
-                // Extension communication failed, rely on localStorage
+                // Extension communication failed, rely on postMessage
             }
         }
     }, []);
