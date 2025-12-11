@@ -60,116 +60,60 @@
 
     // Helper: Handle login
     async function handleLogin(creds) {
-        await sleep(1000);
+        await sleep(800);
 
         console.log('HMS NHIS Extension: Looking for login form...');
 
-        // Find all inputs on the page
-        const allInputs = document.querySelectorAll('input');
-        console.log('HMS NHIS Extension: Found', allInputs.length, 'inputs');
-        
-        let usernameInput = null;
-        let passwordInput = null;
-        
-        // Find username and password inputs
-        for (const input of allInputs) {
-            const placeholder = (input.placeholder || '').toLowerCase();
-            const type = (input.type || '').toLowerCase();
-            
-            if (type === 'password' || placeholder.includes('password')) {
-                passwordInput = input;
-            } else if (type === 'text' || placeholder.includes('mobile') || placeholder.includes('user') || placeholder.includes('number')) {
-                usernameInput = input;
-            }
-        }
+        const usernameInput = document.querySelector(
+            'input[type="text"], input[placeholder*="Mobile"], input[placeholder*="User"]',
+        );
+        const passwordInput = document.querySelector(
+            'input[type="password"], input[placeholder*="Password"]',
+        );
 
         console.log('HMS NHIS Extension: Found inputs', { usernameInput, passwordInput });
 
         if (usernameInput && passwordInput) {
             console.log('HMS NHIS Extension: Auto-filling login credentials');
 
-            // Simulate typing in username field
+            // Clear and fill username
             usernameInput.focus();
-            usernameInput.value = '';
-            await sleep(100);
-            
-            // Type character by character to trigger validation
-            for (const char of creds.username) {
-                usernameInput.value += char;
-                usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
-                usernameInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
-                usernameInput.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
-                await sleep(30);
-            }
+            usernameInput.value = creds.username;
+            usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
             usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
-            usernameInput.dispatchEvent(new Event('blur', { bubbles: true }));
 
             await sleep(200);
 
-            // Simulate typing in password field
+            // Clear and fill password
             passwordInput.focus();
-            passwordInput.value = '';
-            await sleep(100);
-            
-            for (const char of creds.password) {
-                passwordInput.value += char;
-                passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-                passwordInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
-                passwordInput.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
-                await sleep(30);
-            }
+            passwordInput.value = creds.password;
+            passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
             passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
-            passwordInput.dispatchEvent(new Event('blur', { bubbles: true }));
 
-            await sleep(500);
+            await sleep(300);
 
-            // Find and click login button
-            let loginBtn = null;
+            // Find and click login button - it's an <a> tag with id="submit"
+            await sleep(300);
             
-            // Method 1: Find by exact text content "LOGIN"
-            const allElements = document.querySelectorAll('div, button, a, span');
-            for (const el of allElements) {
-                const text = el.textContent.trim().toUpperCase();
-                if (text === 'LOGIN' && el.offsetParent !== null) { // visible element
-                    loginBtn = el;
-                    console.log('HMS NHIS Extension: Found LOGIN element', el.tagName, el.className);
-                    break;
+            // The login button is: <a id="submit" class="btn btn-login">LOGIN</a>
+            let loginBtn = document.querySelector('#submit') ||
+                           document.querySelector('a.btn-login') ||
+                           document.querySelector('a[class*="login"]');
+            
+            // Fallback: find by text
+            if (!loginBtn) {
+                const allLinks = document.querySelectorAll('a');
+                for (const link of allLinks) {
+                    if (link.textContent.trim() === 'LOGIN') {
+                        loginBtn = link;
+                        break;
+                    }
                 }
             }
 
             if (loginBtn) {
-                console.log('HMS NHIS Extension: Clicking login button');
-                
-                // Scroll into view
-                loginBtn.scrollIntoView({ behavior: 'instant', block: 'center' });
-                await sleep(100);
-                
-                // Try native click
+                console.log('HMS NHIS Extension: Found login button', loginBtn.outerHTML);
                 loginBtn.click();
-                
-                await sleep(200);
-                
-                // Try mouse events
-                const rect = loginBtn.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                loginBtn.dispatchEvent(new MouseEvent('mousedown', { 
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: centerX, clientY: centerY
-                }));
-                await sleep(50);
-                loginBtn.dispatchEvent(new MouseEvent('mouseup', { 
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: centerX, clientY: centerY
-                }));
-                await sleep(50);
-                loginBtn.dispatchEvent(new MouseEvent('click', { 
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: centerX, clientY: centerY
-                }));
-                
-                console.log('HMS NHIS Extension: Login button clicked');
             } else {
                 console.log('HMS NHIS Extension: Login button not found');
             }
