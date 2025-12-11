@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\NhisSettingsController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Settings\ThemeSettingController;
@@ -34,4 +35,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
     Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+    // NHIS Settings
+    Route::get('nhis-settings', [NhisSettingsController::class, 'index'])->name('nhis-settings.index');
+    Route::put('nhis-settings', [NhisSettingsController::class, 'update'])->name('nhis-settings.update');
 });

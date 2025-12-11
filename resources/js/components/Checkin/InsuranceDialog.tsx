@@ -8,8 +8,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, CreditCard, Shield } from 'lucide-react';
-import { useState } from 'react';
+import { useNhisExtension } from '@/hooks/useNhisExtension';
+import {
+    Building2,
+    CheckCircle2,
+    CreditCard,
+    ExternalLink,
+    Loader2,
+    Shield,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface InsuranceInfo {
     id: number;
@@ -31,12 +39,19 @@ interface InsuranceInfo {
     is_expired?: boolean;
 }
 
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+}
+
 interface InsuranceDialogProps {
     open: boolean;
     onClose: () => void;
     insurance: InsuranceInfo;
     onUseCash: () => void;
     onUseInsurance: (claimCheckCode: string) => void;
+    nhisSettings?: NhisSettings;
 }
 
 export default function InsuranceDialog({
@@ -45,14 +60,62 @@ export default function InsuranceDialog({
     insurance,
     onUseCash,
     onUseInsurance,
+    nhisSettings,
 }: InsuranceDialogProps) {
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
+    
+    // NHIS Extension hook
+    const { isVerifying, cccData, startVerification, clearCccData } = useNhisExtension();
 
     // Check if this is an NHIS provider and if coverage is valid (not expired)
     const isNhisProvider = insurance.plan.provider.is_nhis ?? false;
     const isExpired = insurance.is_expired ?? false;
     const canUseInsurance = !isExpired;
+    
+    // Determine verification mode
+    const verificationMode = nhisSettings?.verification_mode ?? 'manual';
+    const isExtensionMode = verificationMode === 'extension' && isNhisProvider;
+
+    // Auto-fill CCC when received from extension
+    useEffect(() => {
+        if (cccData?.ccc) {
+            setClaimCheckCode(cccData.ccc);
+            setError('');
+        }
+    }, [cccData]);
+
+    // Clear state when dialog closes
+    useEffect(() => {
+        if (!open) {
+            setClaimCheckCode('');
+            setError('');
+            clearCccData();
+        }
+    }, [open, clearCccData]);
+
+    const handleVerifyNhis = () => {
+        if (!insurance.membership_id) {
+            setError('No NHIS membership number found');
+            return;
+        }
+        
+        // Copy membership number to clipboard for manual paste
+        navigator.clipboard.writeText(insurance.membership_id).catch(() => {
+            // Clipboard API might fail, continue anyway
+        });
+        
+        // Start verification (opens portal, extension will auto-fill)
+        startVerification(insurance.membership_id);
+    };
+
+    const handleOpenPortalManual = () => {
+        // Copy membership number to clipboard
+        navigator.clipboard.writeText(insurance.membership_id).catch(() => {});
+        
+        // Open portal
+        window.open(nhisSettings?.nhia_portal_url || 'https://ccc.nhia.gov.gh/', '_blank');
+    };
 
     const handleUseInsurance = () => {
         if (!claimCheckCode.trim()) {
@@ -78,6 +141,7 @@ export default function InsuranceDialog({
     const handleModalClose = () => {
         setClaimCheckCode('');
         setError('');
+        clearCccData();
         onClose();
     };
 
@@ -122,7 +186,7 @@ export default function InsuranceDialog({
                                 <p className="text-muted-foreground">
                                     Membership ID
                                 </p>
-                                <p className="font-medium">
+                                <p className="font-medium font-mono">
                                     {insurance.membership_id}
                                 </p>
                             </div>
@@ -174,7 +238,7 @@ export default function InsuranceDialog({
                         </div>
                     )}
 
-                    {/* Claim Check Code Input */}
+                    {/* CCC Verification Section */}
                     <div
                         className={`space-y-4 rounded-lg border p-4 ${
                             !canUseInsurance
@@ -192,13 +256,66 @@ export default function InsuranceDialog({
                                         for this Visit
                                     </h4>
                                     <p className="text-sm text-muted-foreground">
-                                        Enter the Claim Check Code (CCC) to
-                                        process this visit under{' '}
-                                        {isNhisProvider ? 'NHIS' : 'insurance'}{' '}
-                                        coverage.
+                                        {isExtensionMode
+                                            ? 'Click "Verify NHIS" to automatically get the CCC from the NHIA portal.'
+                                            : 'Enter the Claim Check Code (CCC) to process this visit under insurance coverage.'}
                                     </p>
                                 </div>
 
+                                {/* Extension Mode: Verify Button */}
+                                {isExtensionMode && isNhisProvider && canUseInsurance && (
+                                    <div className="space-y-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleVerifyNhis}
+                                            disabled={isVerifying}
+                                            className="w-full"
+                                        >
+                                            {isVerifying ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Verifying... (check NHIA tab)
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                                    Verify NHIS Membership
+                                                </>
+                                            )}
+                                        </Button>
+                                        
+                                        {cccData && (
+                                            <div className="rounded-md bg-green-50 p-3 dark:bg-green-950/20">
+                                                <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    <span className="text-sm font-medium">
+                                                        Verified: {cccData.memberName}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-xs text-green-600 dark:text-green-500">
+                                                    Status: {cccData.status} • 
+                                                    Coverage: {cccData.coverageStart} to {cccData.coverageEnd}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Manual Mode: Open Portal Button */}
+                                {!isExtensionMode && isNhisProvider && canUseInsurance && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleOpenPortalManual}
+                                        className="w-full"
+                                    >
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        Open NHIA Portal (Membership # copied)
+                                    </Button>
+                                )}
+
+                                {/* CCC Input Field */}
                                 <div className="space-y-2">
                                     <Label htmlFor="claim_check_code">
                                         Claim Check Code (CCC) *
@@ -206,7 +323,11 @@ export default function InsuranceDialog({
                                     <Input
                                         id="claim_check_code"
                                         type="text"
-                                        placeholder="Enter CCC manually..."
+                                        placeholder={
+                                            isExtensionMode
+                                                ? 'Will auto-fill after verification...'
+                                                : 'Enter CCC manually...'
+                                        }
                                         value={claimCheckCode}
                                         onChange={(e) => {
                                             setClaimCheckCode(e.target.value);
@@ -215,7 +336,11 @@ export default function InsuranceDialog({
                                         maxLength={50}
                                         disabled={!canUseInsurance}
                                         className={
-                                            error ? 'border-destructive' : ''
+                                            error
+                                                ? 'border-destructive'
+                                                : cccData?.ccc
+                                                  ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                  : ''
                                         }
                                     />
                                     {error && (
@@ -223,17 +348,17 @@ export default function InsuranceDialog({
                                             {error}
                                         </p>
                                     )}
-                                    <p className="text-xs text-muted-foreground">
-                                        The CCC must be entered manually as
-                                        provided by the insurance company or
-                                        patient.
-                                    </p>
+                                    {!isExtensionMode && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Get the CCC from the NHIA portal after verifying the membership.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <Button
                                     onClick={handleUseInsurance}
                                     className="w-full"
-                                    disabled={!canUseInsurance}
+                                    disabled={!canUseInsurance || !claimCheckCode.trim()}
                                 >
                                     <Shield className="mr-2 h-4 w-4" />
                                     Check-in with{' '}

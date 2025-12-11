@@ -8,6 +8,7 @@ use App\Models\Consultation;
 use App\Models\Department;
 use App\Models\InsuranceClaim;
 use App\Models\InsurancePlan;
+use App\Models\NhisSettings;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use Illuminate\Http\Request;
@@ -345,10 +346,16 @@ class CheckinController extends Controller
         $this->authorize('viewAny', PatientCheckin::class);
 
         $activeInsurance = $patient->activeInsurance;
+        $nhisSettings = NhisSettings::getInstance();
 
         if (! $activeInsurance) {
             return response()->json([
                 'has_insurance' => false,
+                'nhis_settings' => [
+                    'verification_mode' => $nhisSettings->verification_mode,
+                    'nhia_portal_url' => $nhisSettings->nhia_portal_url,
+                    'auto_open_portal' => $nhisSettings->auto_open_portal,
+                ],
             ]);
         }
 
@@ -380,6 +387,11 @@ class CheckinController extends Controller
                 'coverage_start_date' => $activeInsurance->coverage_start_date,
                 'coverage_end_date' => $activeInsurance->coverage_end_date,
                 'is_expired' => $isExpired,
+            ],
+            'nhis_settings' => [
+                'verification_mode' => $nhisSettings->verification_mode,
+                'nhia_portal_url' => $nhisSettings->nhia_portal_url,
+                'auto_open_portal' => $nhisSettings->auto_open_portal,
             ],
         ]);
     }

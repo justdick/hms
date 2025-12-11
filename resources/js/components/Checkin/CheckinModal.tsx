@@ -49,6 +49,12 @@ interface InsuranceInfo {
     is_expired?: boolean;
 }
 
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+}
+
 interface CheckinModalProps {
     open: boolean;
     onClose: () => void;
@@ -68,6 +74,7 @@ export default function CheckinModal({
     const [insuranceInfo, setInsuranceInfo] = useState<InsuranceInfo | null>(
         null,
     );
+    const [nhisSettings, setNhisSettings] = useState<NhisSettings | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [notes, setNotes] = useState('');
     const [checkingInsurance, setCheckingInsurance] = useState(false);
@@ -79,6 +86,7 @@ export default function CheckinModal({
         } else {
             // Reset state when modal closes
             setInsuranceInfo(null);
+            setNhisSettings(null);
             setInsuranceDialogOpen(false);
             setSelectedDepartment('');
             setNotes('');
@@ -114,6 +122,10 @@ export default function CheckinModal({
 
             if (data.has_insurance) {
                 setInsuranceInfo(data.insurance);
+            }
+            
+            if (data.nhis_settings) {
+                setNhisSettings(data.nhis_settings);
             }
         } catch (error) {
             console.error('Error checking insurance:', error);
@@ -421,6 +433,7 @@ export default function CheckinModal({
                     insurance={insuranceInfo}
                     onUseCash={handleUseCash}
                     onUseInsurance={handleUseInsurance}
+                    nhisSettings={nhisSettings ?? undefined}
                 />
             )}
         </>
