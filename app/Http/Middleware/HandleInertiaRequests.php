@@ -88,6 +88,10 @@ class HandleInertiaRequests extends Middleware
                         'view' => $request->user()?->can('settings.view-theme') ?? false,
                         'manage' => $request->user()?->can('settings.manage-theme') ?? false,
                     ],
+                    'nhisSettings' => [
+                        'view' => $request->user()?->can('nhis-settings.view') ?? false,
+                        'manage' => $request->user()?->can('nhis-settings.manage') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

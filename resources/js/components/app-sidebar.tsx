@@ -287,6 +287,14 @@ export function AppSidebar() {
         });
     }
 
+    if (auth.permissions?.nhisSettings?.view || auth.permissions?.nhisSettings?.manage) {
+        adminItems.push({
+            title: 'NHIS Settings',
+            href: '/admin/nhis-settings',
+            icon: Shield,
+        });
+    }
+
     // Add Administration menu if user has any admin permissions
     if (adminItems.length > 0) {
         mainNavItems.push({

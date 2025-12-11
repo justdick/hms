@@ -46,6 +46,10 @@ export interface Auth {
             view: boolean;
             manage: boolean;
         };
+        nhisSettings?: {
+            view: boolean;
+            manage: boolean;
+        };
     };
 }
 
