@@ -6,7 +6,7 @@ use App\Http\Controllers\Vitals\VitalSignController;
 use Illuminate\Support\Facades\Route;
 
 // Check-in Main Routes
-Route::middleware(['auth', 'verified'])->prefix('checkin')->name('checkin.')->group(function () {
+Route::middleware(['auth'])->prefix('checkin')->name('checkin.')->group(function () {
 
     // Check-in Dashboard
     Route::get('/', [CheckinController::class, 'index'])->name('index');

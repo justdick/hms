@@ -11,7 +11,7 @@ use App\Http\Controllers\Billing\ServiceOverrideController;
 use App\Http\Controllers\Billing\StatementController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('billing')->name('billing.')->group(function () {
+Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function () {
     // Main Billing Dashboard - Use NEW integrated system (PaymentController)
     Route::get('/', [PaymentController::class, 'index'])->name('index')->middleware('can:billing.view-all');
 

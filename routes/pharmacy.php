@@ -6,7 +6,7 @@ use App\Http\Controllers\Pharmacy\DrugController;
 use App\Http\Controllers\Pharmacy\PharmacyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'can:pharmacy.view'])->prefix('pharmacy')->name('pharmacy.')->group(function () {
+Route::middleware(['auth', 'can:pharmacy.view'])->prefix('pharmacy')->name('pharmacy.')->group(function () {
     // Main Pharmacy Dashboard
     Route::get('/', [PharmacyController::class, 'index'])->name('index');
 

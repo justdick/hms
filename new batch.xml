@@ -1,0 +1,34 @@
+<claims>
+  <claim>
+    <claimID>1</claimID>
+    <claimCheckCode>12457</claimCheckCode>
+    <preAuthorizationCodes></preAuthorizationCodes>
+    <physicianID></physicianID>
+    <memberNo>24510917</memberNo>
+    <cardSerialNo></cardSerialNo>
+    <surname>OHEMENG</surname>
+    <otherNames>KWAKU</otherNames>
+    <dateOfBirth>1974-08-20</dateOfBirth>
+    <gender>M</gender>
+    <hospitalRecNo>2135/2025</hospitalRecNo>
+    <isDependant>0</isDependant>
+    <typeOfService>outpatient</typeOfService>
+    <isUnbundled>0</isUnbundled>
+    <includesPharmacy>1</includesPharmacy>
+    <typeOfAttendance>EAE</typeOfAttendance>
+    <serviceOutcome>DISC</serviceOutcome>
+    <dateOfService>2025-12-10</dateOfService>
+    <dateOfService>2025-12-10</dateOfService>
+    <specialtyAttended>OPDC</specialtyAttended>
+    <procedure>
+      <serviceDate>2025-12-10</serviceDate>
+      <gdrgCode>OBGY06A</gdrgCode>
+      <ICD10>O03</ICD10>
+    </procedure>
+    <referralInfo>
+      <claimCheckCode></claimCheckCode>
+      <facilityID></facilityID>
+      <facilityName></facilityName>
+    </referralInfo>
+  </claim>
+</claims>

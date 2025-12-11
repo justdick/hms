@@ -6,12 +6,12 @@ use App\Http\Controllers\MinorProcedure\MinorProcedureTypeController;
 use Illuminate\Support\Facades\Route;
 
 // Procedure Type Import Routes (admin prefix)
-Route::middleware(['auth', 'verified'])->prefix('admin/procedure-types')->group(function () {
+Route::middleware(['auth'])->prefix('admin/procedure-types')->group(function () {
     Route::get('/template', [ProcedureTypeImportController::class, 'downloadTemplate'])->name('procedure-types.import.template');
     Route::post('/import', [ProcedureTypeImportController::class, 'import'])->name('procedure-types.import');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('minor-procedures')->name('minor-procedures.')->group(function () {
+Route::middleware(['auth'])->prefix('minor-procedures')->name('minor-procedures.')->group(function () {
 
     // Procedure Types Configuration (must come before /{minorProcedure} route)
     Route::prefix('types')->name('types.')->group(function () {

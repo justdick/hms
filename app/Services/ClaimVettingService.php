@@ -44,6 +44,7 @@ class ClaimVettingService
             'consultation.doctor',
             'checkin.department',
             'checkin.consultation.doctor',
+            'checkin.consultation.diagnoses.diagnosis',
             'admission.wardRounds',
             'claimDiagnoses.diagnosis',
             'items.nhisTariff',
@@ -241,24 +242,33 @@ class ClaimVettingService
                 return [
                     'id' => $claimDiagnosis->id,
                     'diagnosis_id' => $claimDiagnosis->diagnosis_id,
-                    'name' => $claimDiagnosis->diagnosis->name ?? '',
-                    'icd_code' => $claimDiagnosis->diagnosis->icd_code ?? '',
+                    'name' => $claimDiagnosis->diagnosis->diagnosis ?? '',
+                    'icd_code' => $claimDiagnosis->diagnosis->icd_10 ?? '',
                     'is_primary' => $claimDiagnosis->is_primary,
                 ];
             });
         }
 
-        // Fall back to consultation diagnoses
-        if ($claim->consultation) {
-            return $claim->consultation->diagnoses->map(function ($consultationDiagnosis) {
-                return [
-                    'id' => null,
-                    'diagnosis_id' => $consultationDiagnosis->diagnosis_id,
-                    'name' => $consultationDiagnosis->diagnosis->name ?? '',
-                    'icd_code' => $consultationDiagnosis->diagnosis->icd_code ?? '',
-                    'is_primary' => $consultationDiagnosis->type === 'principal',
-                ];
-            });
+        // Get consultation - either directly linked or via checkin
+        $consultation = $claim->consultation ?? $claim->checkin?->consultation;
+
+        // Fall back to consultation diagnoses (only principal diagnoses for claims)
+        if ($consultation) {
+            // Ensure diagnoses are loaded with their diagnosis relationship
+            $consultation->loadMissing('diagnoses.diagnosis');
+
+            // Only include principal diagnoses - provisional diagnoses are not submitted to NHIS
+            return $consultation->diagnoses
+                ->where('type', 'principal')
+                ->map(function ($consultationDiagnosis) {
+                    return [
+                        'id' => null,
+                        'diagnosis_id' => $consultationDiagnosis->diagnosis_id,
+                        'name' => $consultationDiagnosis->diagnosis->diagnosis ?? '',
+                        'icd_code' => $consultationDiagnosis->diagnosis->icd_10 ?? '',
+                        'is_primary' => true,
+                    ];
+                })->values();
         }
 
         return collect();
@@ -266,10 +276,50 @@ class ClaimVettingService
 
     /**
      * Get claim items grouped by type.
+     * For NHIS claims, enriches items with NHIS tariff data and correct quantities.
      */
     protected function getClaimItems(InsuranceClaim $claim): array
     {
+        $isNhis = $claim->isNhisClaim();
+
+        // Load items with charge and prescription for NHIS lookup and quantity
+        $claim->load(['items.charge.prescription.drug']);
+
         $items = $claim->items;
+
+        // Enrich items with correct quantities and NHIS tariff data
+        $items = $items->map(function ($item) use ($isNhis) {
+            // Fix quantity from prescription if available (for drugs)
+            if ($item->item_type === 'drug' && $item->charge?->prescription) {
+                $prescription = $item->charge->prescription;
+                $correctQuantity = $prescription->quantity_to_dispense ?? $prescription->quantity ?? 1;
+                if ($item->quantity !== $correctQuantity) {
+                    $item->quantity = $correctQuantity;
+                }
+            }
+
+            // For NHIS claims, enrich with NHIS tariff data
+            if ($isNhis && $item->nhis_price === null) {
+                // Determine item type for NHIS lookup
+                $itemType = $this->mapClaimItemTypeToNhisType($item->item_type);
+                if ($itemType !== null) {
+                    // Get the item ID from the charge
+                    $itemId = $this->getItemIdFromClaimItem($item);
+                    if ($itemId !== null) {
+                        // Look up NHIS tariff (for display only, not saved yet)
+                        $nhisTariff = $this->nhisTariffService->getTariffForItem($itemType, $itemId);
+                        if ($nhisTariff) {
+                            // Set values on the model instance (not saved to DB)
+                            $item->nhis_tariff_id = $nhisTariff->id;
+                            $item->nhis_code = $nhisTariff->nhis_code;
+                            $item->nhis_price = $nhisTariff->price;
+                        }
+                    }
+                }
+            }
+
+            return $item;
+        });
 
         return [
             'investigations' => $items->where('item_type', 'lab')->values(),

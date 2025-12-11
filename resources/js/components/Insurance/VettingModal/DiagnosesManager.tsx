@@ -111,17 +111,18 @@ export function DiagnosesManager({
         [searchDiagnoses],
     );
 
-    // Clear search when popover closes
+    // Clear search when popover closes (but keep selected diagnosis)
     useEffect(() => {
         if (!open) {
             setSearch('');
             setSearchResults([]);
-            setSelectedDiagnosis(null);
+            // Don't clear selectedDiagnosis here - user needs to click "+" to add it
         }
     }, [open]);
 
     const handleSelectDiagnosis = (diagnosis: SearchedDiagnosis) => {
         setSelectedDiagnosis(diagnosis);
+        setOpen(false); // Close popover after selection
     };
 
     const handleAddDiagnosis = () => {

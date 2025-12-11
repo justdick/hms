@@ -5,12 +5,59 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class LabOrder extends Model
 {
     /** @use HasFactory<\Database\Factories\LabOrderFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        // When a lab order is deleted, also delete related charge and claim items
+        static::deleting(function (LabOrder $labOrder) {
+            // Get the patient checkin ID based on the orderable type
+            $checkinId = null;
+
+            if ($labOrder->orderable_type === Consultation::class) {
+                $labOrder->loadMissing('orderable.patientCheckin');
+                $checkinId = $labOrder->orderable?->patientCheckin?->id;
+            } elseif ($labOrder->orderable_type === WardRound::class) {
+                $labOrder->loadMissing('orderable.patientAdmission.consultation.patientCheckin');
+                $checkinId = $labOrder->orderable?->patientAdmission?->consultation?->patientCheckin?->id;
+            } else {
+                // Fallback to old consultation relationship
+                $labOrder->loadMissing('consultation.patientCheckin');
+                $checkinId = $labOrder->consultation?->patientCheckin?->id;
+            }
+
+            if (! $checkinId) {
+                return;
+            }
+
+            // Load lab service to get the code
+            $labOrder->loadMissing('labService');
+            $serviceCode = $labOrder->labService?->code;
+
+            if (! $serviceCode) {
+                return;
+            }
+
+            // Find and delete related charge
+            $charge = Charge::where('service_type', 'laboratory')
+                ->where('patient_checkin_id', $checkinId)
+                ->where('service_code', $serviceCode)
+                ->first();
+
+            if ($charge) {
+                // Delete claim items linked to this charge
+                InsuranceClaimItem::where('charge_id', $charge->id)->delete();
+                // Delete the charge
+                $charge->delete();
+            }
+        });
+    }
 
     protected $fillable = [
         'consultation_id',
@@ -59,6 +106,12 @@ class LabOrder extends Model
     public function orderedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ordered_by');
+    }
+
+    public function charge(): HasOne
+    {
+        return $this->hasOne(Charge::class, 'service_code', 'id')
+            ->where('service_type', 'lab');
     }
 
     public function scopeByStatus($query, string $status): void

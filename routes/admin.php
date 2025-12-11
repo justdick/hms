@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Theme Settings
     Route::get('theme-settings', [ThemeSettingController::class, 'index'])->name('theme-settings.index');
     // User Management

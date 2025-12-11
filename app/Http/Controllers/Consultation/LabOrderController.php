@@ -95,6 +95,23 @@ class LabOrderController extends Controller
         return back()->with('success', 'Lab order cancelled successfully.');
     }
 
+    public function destroy(Consultation $consultation, LabOrder $labOrder)
+    {
+        $this->authorize('delete', $labOrder);
+
+        // Only allow deletion of orders that haven't been processed
+        if (! in_array($labOrder->status, ['ordered', 'cancelled'])) {
+            return back()->withErrors([
+                'status' => 'This lab order cannot be deleted because it has already been processed.',
+            ]);
+        }
+
+        // Delete the lab order (cascade will handle charge and claim items)
+        $labOrder->delete();
+
+        return back()->with('success', 'Lab order deleted successfully.');
+    }
+
     public function index(Request $request)
     {
         // For lab technicians - show all pending lab orders

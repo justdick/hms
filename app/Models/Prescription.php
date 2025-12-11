@@ -14,6 +14,20 @@ class Prescription extends Model
     /** @use HasFactory<\Database\Factories\PrescriptionFactory> */
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        // When a prescription is deleted, also delete related charge and claim items
+        static::deleting(function (Prescription $prescription) {
+            // Find and delete related charge (which will cascade to claim items)
+            if ($prescription->charge) {
+                // Delete claim items linked to this charge
+                InsuranceClaimItem::where('charge_id', $prescription->charge->id)->delete();
+                // Delete the charge
+                $prescription->charge->delete();
+            }
+        });
+    }
+
     protected $fillable = [
         'consultation_id',
         'prescribable_type',

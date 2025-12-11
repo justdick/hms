@@ -26,6 +26,8 @@ class NhisMappingController extends Controller
     {
         $this->authorize('viewAny', NhisItemMapping::class);
 
+        $perPage = min($request->input('per_page', 20), 100);
+
         $mappings = NhisItemMapping::query()
             ->with(['nhisTariff'])
             ->when($request->input('item_type'), fn ($q, $type) => $q->byItemType($type))
@@ -40,7 +42,7 @@ class NhisMappingController extends Controller
             })
             ->orderBy('item_type')
             ->orderBy('item_code')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Admin/NhisMappings/Index', [

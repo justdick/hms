@@ -13,7 +13,7 @@ use App\Http\Controllers\Ward\WardRoundController;
 use App\Http\Controllers\Ward\WardRoundProcedureController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(function () {
+Route::middleware(['auth'])->prefix('wards')->name('wards.')->group(function () {
     Route::get('/', [WardController::class, 'index'])->name('index');
     Route::get('/create', [WardController::class, 'create'])->name('create');
     Route::post('/', [WardController::class, 'store'])->name('store');
@@ -35,7 +35,7 @@ Route::middleware(['auth', 'verified'])->prefix('wards')->name('wards.')->group(
 });
 
 // Patient Admission Routes
-Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.')->group(function () {
+Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(function () {
     // Bed Assignment
     Route::get('/{admission}/bed-assignment', [BedAssignmentController::class, 'create'])->name('bed-assignment.create');
     Route::post('/{admission}/bed-assignment', [BedAssignmentController::class, 'store'])->name('bed-assignment.store');
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.
 });
 
 // Medication Schedule API Routes (JSON responses for AJAX calls)
-Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {
+Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
     // Vitals Alert API endpoints
     Route::prefix('vitals-alerts')->name('vitals-alerts.')->group(function () {
         Route::get('/active', [VitalsAlertController::class, 'active'])->name('active');
@@ -83,7 +83,7 @@ Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(func
 });
 
 // Continue with Ward Rounds routes
-Route::middleware(['auth', 'verified'])->prefix('admissions')->name('admissions.')->group(function () {
+Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(function () {
 
     // Ward Rounds (IPD Patient Reviews)
     Route::get('/{admission}/ward-rounds', [WardRoundController::class, 'index'])->name('ward-rounds.index');

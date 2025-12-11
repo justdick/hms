@@ -4,7 +4,7 @@ use App\Http\Controllers\Patient\PatientController;
 use Illuminate\Support\Facades\Route;
 
 // Patient Management Routes
-Route::middleware(['auth', 'verified'])->prefix('patients')->name('patients.')->group(function () {
+Route::middleware(['auth'])->prefix('patients')->name('patients.')->group(function () {
 
     // Patient List and Management
     Route::get('/', [PatientController::class, 'index'])->name('index');

@@ -152,6 +152,14 @@ describe('exportXml', function () {
             'insurance_claim_id' => $claim->id,
         ]);
 
+        // Add a drug item so includesPharmacy is 1
+        InsuranceClaimItem::factory()->create([
+            'insurance_claim_id' => $claim->id,
+            'item_type' => 'drug',
+            'code' => 'DRUG001',
+            'description' => 'Test Drug',
+        ]);
+
         // Act
         $response = $this->actingAs($user)
             ->get("/admin/insurance/claims/export-batch/{$batch->id}");

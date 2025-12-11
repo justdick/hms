@@ -23,13 +23,15 @@ class GdrgTariffController extends Controller
     {
         $this->authorize('viewAny', GdrgTariff::class);
 
+        $perPage = min($request->input('per_page', 20), 100);
+
         $tariffs = GdrgTariff::query()
             ->search($request->input('search'))
             ->byMdcCategory($request->input('mdc_category'))
             ->byAgeCategory($request->input('age_category'))
             ->when($request->boolean('active_only'), fn ($q) => $q->active())
             ->orderBy('name')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         // Get distinct MDC categories for filter dropdown

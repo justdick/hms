@@ -8,7 +8,7 @@ use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultation.')->group(function () {
+Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->group(function () {
 
     // Consultation management
     Route::get('/', [ConsultationController::class, 'index'])->name('index');
@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->prefix('consultation')->name('consultat
         Route::post('/', [LabOrderController::class, 'store'])->name('store');
         Route::patch('/{labOrder}', [LabOrderController::class, 'update'])->name('update');
         Route::post('/{labOrder}/cancel', [LabOrderController::class, 'cancel'])->name('cancel');
+        Route::delete('/{labOrder}', [LabOrderController::class, 'destroy'])->name('destroy');
     });
 
     // Procedure management (Theatre tab)

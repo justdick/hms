@@ -54,39 +54,60 @@ class DispensingController extends Controller
             default => null, // 'all' - no date constraint
         };
 
+        // Build query with search and EXISTS checks combined
+        // Don't pre-limit patient search - let the EXISTS filter narrow it down first
         $patients = Patient::query()
             ->where(function ($q) use ($query) {
-                $q->where('first_name', 'like', "%{$query}%")
-                    ->orWhere('last_name', 'like', "%{$query}%")
-                    ->orWhere('patient_number', 'like', "%{$query}%")
-                    ->orWhere('phone_number', 'like', "%{$query}%");
+                $q->where('patient_number', 'like', "%{$query}%")
+                    ->orWhere('phone_number', 'like', "%{$query}%")
+                    ->orWhere('first_name', 'like', "%{$query}%")
+                    ->orWhere('last_name', 'like', "%{$query}%");
             })
             ->where(function ($q) use ($dateConstraint) {
-                // Has prescriptions from consultations OR ward rounds OR minor procedure supplies
-                $q->whereHas('checkins.consultations.prescriptions', function ($q) use ($dateConstraint) {
-                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
-                        ->where('migrated_from_mittag', false);
+                // Use EXISTS subqueries instead of nested whereHas for better performance
+                $q->whereExists(function ($subquery) use ($dateConstraint) {
+                    $subquery->selectRaw('1')
+                        ->from('prescriptions')
+                        ->join('consultations', 'prescriptions.consultation_id', '=', 'consultations.id')
+                        ->join('patient_checkins', 'consultations.patient_checkin_id', '=', 'patient_checkins.id')
+                        ->whereColumn('patient_checkins.patient_id', 'patients.id')
+                        ->whereIn('prescriptions.status', ['prescribed', 'reviewed', 'dispensed'])
+                        ->where('prescriptions.migrated_from_mittag', false);
                     if ($dateConstraint) {
-                        $q->where('created_at', '>=', $dateConstraint);
+                        $subquery->where('prescriptions.created_at', '>=', $dateConstraint);
                     }
-                })->orWhereHas('admissions.wardRounds.prescriptions', function ($q) use ($dateConstraint) {
-                    $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
-                        ->where('migrated_from_mittag', false);
-                    if ($dateConstraint) {
-                        $q->where('created_at', '>=', $dateConstraint);
-                    }
-                })->orWhereHas('checkins.minorProcedures.supplies', function ($q) use ($dateConstraint) {
-                    $q->whereIn('status', ['pending', 'reviewed', 'dispensed']);
-                    if ($dateConstraint) {
-                        $q->where('created_at', '>=', $dateConstraint);
-                    }
-                });
+                })
+                    ->orWhereExists(function ($subquery) use ($dateConstraint) {
+                        $subquery->selectRaw('1')
+                            ->from('prescriptions')
+                            ->join('ward_rounds', function ($join) {
+                                $join->on('prescriptions.prescribable_id', '=', 'ward_rounds.id')
+                                    ->where('prescriptions.prescribable_type', 'App\\Models\\WardRound');
+                            })
+                            ->join('patient_admissions', 'ward_rounds.patient_admission_id', '=', 'patient_admissions.id')
+                            ->whereColumn('patient_admissions.patient_id', 'patients.id')
+                            ->whereIn('prescriptions.status', ['prescribed', 'reviewed', 'dispensed'])
+                            ->where('prescriptions.migrated_from_mittag', false);
+                        if ($dateConstraint) {
+                            $subquery->where('prescriptions.created_at', '>=', $dateConstraint);
+                        }
+                    })
+                    ->orWhereExists(function ($subquery) use ($dateConstraint) {
+                        $subquery->selectRaw('1')
+                            ->from('minor_procedure_supplies')
+                            ->join('minor_procedures', 'minor_procedure_supplies.minor_procedure_id', '=', 'minor_procedures.id')
+                            ->join('patient_checkins', 'minor_procedures.patient_checkin_id', '=', 'patient_checkins.id')
+                            ->whereColumn('patient_checkins.patient_id', 'patients.id')
+                            ->whereIn('minor_procedure_supplies.status', ['pending', 'reviewed', 'dispensed']);
+                        if ($dateConstraint) {
+                            $subquery->where('minor_procedure_supplies.created_at', '>=', $dateConstraint);
+                        }
+                    });
             })
             ->with([
+                // Don't filter checkins by date - only filter prescriptions by date
+                // A checkin from yesterday can have prescriptions created today
                 'checkins' => function ($q) use ($dateConstraint) {
-                    if ($dateConstraint) {
-                        $q->where('created_at', '>=', $dateConstraint);
-                    }
                     $q->latest()
                         ->with([
                             'consultations' => function ($q) use ($dateConstraint) {
@@ -117,9 +138,7 @@ class DispensingController extends Controller
                 'admissions' => function ($q) use ($dateConstraint) {
                     $q->whereNull('discharged_at')
                         ->with(['wardRounds' => function ($q) use ($dateConstraint) {
-                            if ($dateConstraint) {
-                                $q->where('created_at', '>=', $dateConstraint);
-                            }
+                            // Don't filter ward rounds by date - only filter prescriptions
                             $q->with(['prescriptions' => function ($q) use ($dateConstraint) {
                                 $q->whereIn('status', ['prescribed', 'reviewed', 'dispensed'])
                                     ->where('migrated_from_mittag', false)

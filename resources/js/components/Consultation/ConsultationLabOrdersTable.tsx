@@ -20,11 +20,22 @@ import {
     Eye,
     FlaskConical,
     Search,
+    Trash2,
 } from 'lucide-react';
 import * as React from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
     Dialog,
     DialogContent,
@@ -83,6 +94,8 @@ interface LabOrder {
 
 interface ConsultationLabOrdersTableProps {
     labOrders: LabOrder[];
+    consultationId: number;
+    canDelete?: boolean;
 }
 
 const formatDateTime = (dateString: string) => {
@@ -392,6 +405,8 @@ const LabResultsModal = ({
 
 export function ConsultationLabOrdersTable({
     labOrders,
+    consultationId,
+    canDelete = true,
 }: ConsultationLabOrdersTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -403,10 +418,32 @@ export function ConsultationLabOrdersTable({
         null,
     );
     const [modalOpen, setModalOpen] = React.useState(false);
+    const [deleteOrderId, setDeleteOrderId] = React.useState<number | null>(null);
+    const [deleting, setDeleting] = React.useState(false);
 
     const handleViewResults = (order: LabOrder) => {
         setSelectedOrder(order);
         setModalOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (!deleteOrderId) return;
+        
+        setDeleting(true);
+        try {
+            const { router } = await import('@inertiajs/react');
+            router.delete(`/consultation/${consultationId}/lab-orders/${deleteOrderId}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDeleteOrderId(null);
+                },
+                onFinish: () => {
+                    setDeleting(false);
+                },
+            });
+        } catch (error) {
+            setDeleting(false);
+        }
     };
 
     const columns: ColumnDef<LabOrder>[] = [
@@ -530,8 +567,9 @@ export function ConsultationLabOrdersTable({
             header: () => null,
             cell: ({ row }) => {
                 const order = row.original;
+                const canDeleteOrder = canDelete && ['ordered', 'cancelled'].includes(order.status);
                 return (
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-1">
                         <Button
                             variant="ghost"
                             size="sm"
@@ -541,6 +579,16 @@ export function ConsultationLabOrdersTable({
                             <Eye className="mr-2 h-4 w-4" />
                             View
                         </Button>
+                        {canDeleteOrder && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeleteOrderId(order.id)}
+                                className="h-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                 );
             },
@@ -827,6 +875,28 @@ export function ConsultationLabOrdersTable({
                     onOpenChange={setModalOpen}
                 />
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteOrderId !== null} onOpenChange={(open) => !open && setDeleteOrderId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Lab Order</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this lab order? This will also remove the associated charge and any claim items. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {deleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

@@ -88,10 +88,10 @@ class NhisXmlExportService
         $this->appendElement($claimElement, 'isDependant', '0');
 
         // Service information
-        $this->appendElement($claimElement, 'typeOfService', $claim->type_of_service ?? 'OPD');
+        $this->appendElement($claimElement, 'typeOfService', $this->mapToNhisServiceCode($claim->type_of_service));
         $this->appendElement($claimElement, 'isUnbundled', $claim->is_unbundled ? '1' : '0');
         $this->appendElement($claimElement, 'includesPharmacy', $this->hasPharmacyItems($claim) ? '1' : '0');
-        $this->appendElement($claimElement, 'typeOfAttendance', $claim->type_of_attendance ?? 'EAE');
+        $this->appendElement($claimElement, 'typeOfAttendance', $this->mapToNhisAttendanceCode($claim->type_of_attendance));
         $this->appendElement($claimElement, 'serviceOutcome', 'DISC');
 
         // Date of service (appears twice in NHIS format)
@@ -124,15 +124,47 @@ class NhisXmlExportService
         // Get procedure items from claim items
         $procedureItems = $claim->items?->filter(fn ($item) => $item->item_type === 'procedure') ?? collect();
 
+        // Get primary ICD-10 code from claim diagnoses or fallback to primary_diagnosis_code
+        $primaryIcd10 = $this->getPrimaryIcd10($claim);
+
         foreach ($procedureItems as $item) {
             $procedureElement = $this->dom->createElement('procedure');
 
             $this->appendElement($procedureElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
-            $this->appendElement($procedureElement, 'gdrgCode', $claim->gdrgTariff?->code ?? $claim->c_drg_code ?? '');
-            $this->appendElement($procedureElement, 'ICD10', $claim->primary_diagnosis_code ?? '-');
+            // Use the procedure item's NHIS code, not the claim's G-DRG
+            $procedureCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
+            $this->appendElement($procedureElement, 'gdrgCode', $procedureCode);
+            $this->appendElement($procedureElement, 'ICD10', $primaryIcd10);
 
             $claimElement->appendChild($procedureElement);
         }
+    }
+
+    /**
+     * Get the primary ICD-10 code from claim diagnoses.
+     */
+    protected function getPrimaryIcd10(InsuranceClaim $claim): string
+    {
+        // First try claim diagnoses (preferred source)
+        if ($claim->claimDiagnoses && $claim->claimDiagnoses->isNotEmpty()) {
+            // Find primary diagnosis first
+            $primaryDiagnosis = $claim->claimDiagnoses->firstWhere('is_primary', true);
+            if ($primaryDiagnosis && $primaryDiagnosis->diagnosis?->icd_10) {
+                return $primaryDiagnosis->diagnosis->icd_10;
+            }
+            // Fall back to first diagnosis
+            $firstDiagnosis = $claim->claimDiagnoses->first();
+            if ($firstDiagnosis && $firstDiagnosis->diagnosis?->icd_10) {
+                return $firstDiagnosis->diagnosis->icd_10;
+            }
+        }
+
+        // Fall back to legacy primary_diagnosis_code field
+        if ($claim->primary_diagnosis_code) {
+            return $claim->primary_diagnosis_code;
+        }
+
+        return '-';
     }
 
     /**
@@ -200,7 +232,12 @@ class NhisXmlExportService
         // Get NHIS code from tariff or item
         $nhisCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
         $this->appendElement($medicineElement, 'medicineCode', $nhisCode);
-        $this->appendElement($medicineElement, 'dispensedQty', (string) ($item->quantity ?? 1));
+
+        // Get quantity from prescription (preferred) or fall back to item quantity
+        $prescription = $item->charge?->prescription;
+        $dispensedQty = $prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1;
+        $this->appendElement($medicineElement, 'dispensedQty', (string) $dispensedQty);
+
         $this->appendElement($medicineElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
 
         // Add prescription details
@@ -266,11 +303,11 @@ class NhisXmlExportService
 
     /**
      * Check if claim has pharmacy/drug items.
+     * Only returns true if there are actual drug items in the claim.
      */
     protected function hasPharmacyItems(InsuranceClaim $claim): bool
     {
-        return $claim->is_pharmacy_included
-            || ($claim->items?->contains(fn ($item) => $item->item_type === 'drug') ?? false);
+        return $claim->items?->contains(fn ($item) => $item->item_type === 'drug') ?? false;
     }
 
     /**
@@ -453,5 +490,66 @@ class NhisXmlExportService
         }
 
         return '';
+    }
+
+    /**
+     * Map stored attendance type values to NHIS codes.
+     * Handles both legacy values (e.g., 'routine') and NHIS codes.
+     */
+    protected function mapToNhisAttendanceCode(?string $value): string
+    {
+        if (empty($value)) {
+            return 'EAE';
+        }
+
+        // Valid NHIS attendance codes
+        $validCodes = ['EAE', 'ANC', 'PNC', 'FP', 'CWC', 'REV'];
+
+        // If already a valid NHIS code, return as-is
+        if (in_array(strtoupper($value), $validCodes)) {
+            return strtoupper($value);
+        }
+
+        // Map legacy/old values to NHIS codes
+        $value = strtolower($value);
+
+        return match (true) {
+            str_contains($value, 'emergency') => 'EAE',
+            str_contains($value, 'acute') => 'EAE',
+            str_contains($value, 'routine') => 'EAE',
+            str_contains($value, 'antenatal') || str_contains($value, 'anc') => 'ANC',
+            str_contains($value, 'postnatal') || str_contains($value, 'pnc') => 'PNC',
+            str_contains($value, 'family') || str_contains($value, 'fp') => 'FP',
+            str_contains($value, 'child welfare') || str_contains($value, 'cwc') => 'CWC',
+            str_contains($value, 'review') || str_contains($value, 'follow') => 'REV',
+            default => 'EAE',
+        };
+    }
+
+    /**
+     * Map stored service type values to NHIS codes.
+     * Handles both legacy values and NHIS codes.
+     */
+    protected function mapToNhisServiceCode(?string $value): string
+    {
+        if (empty($value)) {
+            return 'OPD';
+        }
+
+        // Valid NHIS service codes
+        $validCodes = ['OPD', 'IPD'];
+
+        // If already a valid NHIS code, return as-is
+        if (in_array(strtoupper($value), $validCodes)) {
+            return strtoupper($value);
+        }
+
+        // Map legacy/old values to NHIS codes
+        $value = strtolower($value);
+
+        return match (true) {
+            str_contains($value, 'inpatient') || str_contains($value, 'ipd') => 'IPD',
+            default => 'OPD',
+        };
     }
 }

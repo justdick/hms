@@ -1833,6 +1833,8 @@ export default function ConsultationShow({
                                 <CardContent>
                                     <ConsultationLabOrdersTable
                                         labOrders={consultation.lab_orders}
+                                        consultationId={consultation.id}
+                                        canDelete={consultation.status === 'in_progress'}
                                     />
                                 </CardContent>
                             </Card>

@@ -4,7 +4,7 @@ use App\Http\Controllers\Backup\BackupController;
 use App\Http\Controllers\Backup\BackupSettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Backup settings routes (must be before {backup} routes to avoid conflict)
     Route::get('backups/settings', [BackupSettingsController::class, 'edit'])->name('backups.settings');
     Route::put('backups/settings', [BackupSettingsController::class, 'update'])->name('backups.settings.update');
