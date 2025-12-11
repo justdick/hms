@@ -45,7 +45,16 @@
     } else if (currentUrl.includes('/Home/membershipCheck')) {
         // Main page - click "Generate New Claims Code"
         await sleep(800);
-        await waitAndClick('Generate New Claims Code');
+        // The button is: <a id="newclaimsCode1" class="btn btn-generate">
+        const generateBtn = document.querySelector('#newclaimsCode1') ||
+                           document.querySelector('a.btn-generate') ||
+                           findElementByText('Generate New Claims Code');
+        if (generateBtn) {
+            console.log('HMS NHIS Extension: Clicking Generate New Claims Code');
+            generateBtn.click();
+        } else {
+            console.log('HMS NHIS Extension: Generate button not found');
+        }
     } else if (currentUrl.includes('/Home/cardType')) {
         // Card type selection - click NHIS Card
         await sleep(500);
