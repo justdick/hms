@@ -21,6 +21,7 @@ interface NhisSettings {
     verification_mode: 'manual' | 'extension';
     nhia_portal_url: string;
     facility_code: string | null;
+    nhia_username: string | null;
     auto_open_portal: boolean;
 }
 
@@ -33,6 +34,8 @@ export default function NhisSettingsIndex({ settings }: Props) {
         verification_mode: settings.verification_mode,
         nhia_portal_url: settings.nhia_portal_url,
         facility_code: settings.facility_code || '',
+        nhia_username: settings.nhia_username || '',
+        nhia_password: '', // Never pre-fill password
         auto_open_portal: settings.auto_open_portal,
     });
     const [saving, setSaving] = useState(false);
@@ -230,6 +233,46 @@ export default function NhisSettingsIndex({ settings }: Props) {
                                     Your facility's Health Provider ID from NHIA
                                 </p>
                             </div>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="nhia_username">
+                                        NHIA Username
+                                    </Label>
+                                    <Input
+                                        id="nhia_username"
+                                        type="text"
+                                        value={formData.nhia_username}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                nhia_username: e.target.value,
+                                            })
+                                        }
+                                        placeholder="e.g., HP11586"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="nhia_password">
+                                        NHIA Password
+                                    </Label>
+                                    <Input
+                                        id="nhia_password"
+                                        type="password"
+                                        value={formData.nhia_password}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                nhia_password: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Leave blank to keep existing"
+                                    />
+                                </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Credentials for automatic login to NHIA portal (used by extension). Password is encrypted.
+                            </p>
 
                             <div className="flex items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">

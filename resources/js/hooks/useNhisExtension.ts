@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
+// Chrome extension API types (only available when extension is installed)
+declare const chrome: {
+    runtime?: {
+        sendMessage: (extensionId: string, message: unknown, callback?: (response: unknown) => void) => void;
+    };
+} | undefined;
+
 interface CccData {
     ccc: string;
     status: string;
@@ -15,7 +22,7 @@ interface UseNhisExtensionReturn {
     isExtensionInstalled: boolean;
     isVerifying: boolean;
     cccData: CccData | null;
-    startVerification: (membershipNumber: string) => void;
+    startVerification: (membershipNumber: string, credentials?: { username: string; password: string }, portalUrl?: string) => void;
     clearCccData: () => void;
 }
 
@@ -54,8 +61,8 @@ export function useNhisExtension(): UseNhisExtensionReturn {
                 chrome.runtime.sendMessage(
                     EXTENSION_ID,
                     { type: 'CHECK_EXTENSION' },
-                    (response) => {
-                        if (response?.installed) {
+                    (response: unknown) => {
+                        if ((response as { installed?: boolean })?.installed) {
                             setIsExtensionInstalled(true);
                         }
                     }
@@ -78,19 +85,20 @@ export function useNhisExtension(): UseNhisExtensionReturn {
         }
     }, []);
 
-    const startVerification = useCallback((membershipNumber: string) => {
+    const startVerification = useCallback((membershipNumber: string, credentials?: { username: string; password: string }, portalUrl?: string) => {
         setIsVerifying(true);
         setCccData(null);
 
         // Store verification request in localStorage for extension to pick up
         localStorage.setItem('hms-nhis-pending-verification', JSON.stringify({
             membershipNumber,
+            credentials: credentials || null,
             timestamp: Date.now(),
             origin: window.location.origin
         }));
 
         // Open NHIA portal
-        window.open('https://ccc.nhia.gov.gh/', '_blank');
+        window.open(portalUrl || 'https://ccc.nhia.gov.gh/', '_blank');
 
         // Also try to communicate with extension directly
         if (EXTENSION_ID && chrome?.runtime?.sendMessage) {

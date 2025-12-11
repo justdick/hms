@@ -10,6 +10,8 @@ class NhisSettings extends Model
         'verification_mode',
         'nhia_portal_url',
         'facility_code',
+        'nhia_username',
+        'nhia_password',
         'auto_open_portal',
     ];
 
@@ -17,6 +19,7 @@ class NhisSettings extends Model
     {
         return [
             'auto_open_portal' => 'boolean',
+            'nhia_password' => 'encrypted',
         ];
     }
 

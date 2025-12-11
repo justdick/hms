@@ -348,6 +348,15 @@ class CheckinController extends Controller
         $activeInsurance = $patient->activeInsurance;
         $nhisSettings = NhisSettings::getInstance();
 
+        // Include credentials for extension mode (only if user has permission)
+        $credentials = null;
+        if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
+            $credentials = [
+                'username' => $nhisSettings->nhia_username,
+                'password' => $nhisSettings->nhia_password, // Decrypted automatically by model
+            ];
+        }
+
         if (! $activeInsurance) {
             return response()->json([
                 'has_insurance' => false,
@@ -355,6 +364,7 @@ class CheckinController extends Controller
                     'verification_mode' => $nhisSettings->verification_mode,
                     'nhia_portal_url' => $nhisSettings->nhia_portal_url,
                     'auto_open_portal' => $nhisSettings->auto_open_portal,
+                    'credentials' => $credentials,
                 ],
             ]);
         }
@@ -392,6 +402,7 @@ class CheckinController extends Controller
                 'verification_mode' => $nhisSettings->verification_mode,
                 'nhia_portal_url' => $nhisSettings->nhia_portal_url,
                 'auto_open_portal' => $nhisSettings->auto_open_portal,
+                'credentials' => $credentials,
             ],
         ]);
     }

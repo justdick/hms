@@ -43,6 +43,10 @@ interface NhisSettings {
     verification_mode: 'manual' | 'extension';
     nhia_portal_url: string;
     auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
 }
 
 interface InsuranceDialogProps {
@@ -105,8 +109,8 @@ export default function InsuranceDialog({
             // Clipboard API might fail, continue anyway
         });
         
-        // Start verification (opens portal, extension will auto-fill)
-        startVerification(insurance.membership_id);
+        // Start verification (opens portal, extension will auto-fill and login)
+        startVerification(insurance.membership_id, nhisSettings?.credentials || undefined, nhisSettings?.nhia_portal_url);
     };
 
     const handleOpenPortalManual = () => {

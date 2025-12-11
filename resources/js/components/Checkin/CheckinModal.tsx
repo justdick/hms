@@ -53,6 +53,10 @@ interface NhisSettings {
     verification_mode: 'manual' | 'extension';
     nhia_portal_url: string;
     auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
 }
 
 interface CheckinModalProps {
