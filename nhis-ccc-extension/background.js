@@ -7,7 +7,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'CCC_CAPTURED') {
         // CCC was captured from NHIA portal - send to HMS tab
         console.log('HMS NHIS Extension BG: CCC captured', message.data);
-        sendCccToHms(message.data);
+        
+        // Get pending verification IMMEDIATELY before it might be cleared
+        chrome.storage.local.get(['pendingVerification'], async (result) => {
+            const pending = result.pendingVerification;
+            console.log('HMS NHIS Extension BG: Got pending for CCC delivery', pending);
+            
+            if (pending) {
+                await sendCccToHmsWithPending(message.data, pending);
+            } else {
+                console.log('HMS NHIS Extension BG: No pending, trying all localhost tabs');
+                await sendCccToAllHmsTabs(message.data);
+            }
+        });
+        
         sendResponse({ success: true });
     }
     
@@ -57,18 +70,8 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
     return true;
 });
 
-async function sendCccToHms(data) {
-    console.log('HMS NHIS Extension BG: Sending CCC to HMS');
-    
-    const result = await chrome.storage.local.get(['pendingVerification']);
-    const pending = result.pendingVerification;
-    
-    console.log('HMS NHIS Extension BG: Pending verification', pending);
-    
-    if (!pending) {
-        console.log('HMS NHIS Extension BG: No pending verification');
-        return;
-    }
+async function sendCccToHmsWithPending(data, pending) {
+    console.log('HMS NHIS Extension BG: Sending CCC to HMS with pending', pending);
     
     // Find all tabs that might be HMS
     const tabs = await chrome.tabs.query({});
@@ -80,35 +83,51 @@ async function sendCccToHms(data) {
             tab.url.includes('localhost') ||
             tab.url.includes('127.0.0.1')
         )) {
-            console.log('HMS NHIS Extension BG: Sending to tab', tab.id, tab.url);
-            
-            try {
-                // Try sending message to content script
-                await chrome.tabs.sendMessage(tab.id, {
-                    type: 'NHIS_CCC_RECEIVED',
-                    data: data
-                });
-                console.log('HMS NHIS Extension BG: Message sent via content script');
-            } catch (e) {
-                console.log('HMS NHIS Extension BG: Content script not available, injecting');
-                // Fallback: inject script to post message
-                try {
-                    await chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        func: (cccData) => {
-                            console.log('HMS NHIS Extension: Injected script posting CCC', cccData);
-                            window.postMessage({ type: 'NHIS_CCC_RECEIVED', data: cccData }, '*');
-                        },
-                        args: [data]
-                    });
-                    console.log('HMS NHIS Extension BG: Script injected');
-                } catch (e2) {
-                    console.log('HMS NHIS Extension BG: Could not inject script', e2);
-                }
-            }
+            await sendToTab(tab, data);
         }
     }
     
-    // Clear pending verification
+    // Clear pending verification after sending
     chrome.storage.local.remove(['pendingVerification']);
+}
+
+async function sendCccToAllHmsTabs(data) {
+    console.log('HMS NHIS Extension BG: Sending CCC to all HMS tabs');
+    
+    const tabs = await chrome.tabs.query({});
+    
+    for (const tab of tabs) {
+        if (tab.url && (tab.url.includes('localhost') || tab.url.includes('127.0.0.1'))) {
+            await sendToTab(tab, data);
+        }
+    }
+}
+
+async function sendToTab(tab, data) {
+    console.log('HMS NHIS Extension BG: Sending to tab', tab.id, tab.url);
+    
+    try {
+        // Try sending message to content script
+        await chrome.tabs.sendMessage(tab.id, {
+            type: 'NHIS_CCC_RECEIVED',
+            data: data
+        });
+        console.log('HMS NHIS Extension BG: Message sent via content script');
+    } catch (e) {
+        console.log('HMS NHIS Extension BG: Content script not available, injecting');
+        // Fallback: inject script to post message
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: (cccData) => {
+                    console.log('HMS NHIS Extension: Injected script posting CCC', cccData);
+                    window.postMessage({ type: 'NHIS_CCC_RECEIVED', data: cccData }, '*');
+                },
+                args: [data]
+            });
+            console.log('HMS NHIS Extension BG: Script injected');
+        } catch (e2) {
+            console.log('HMS NHIS Extension BG: Could not inject script', e2);
+        }
+    }
 }

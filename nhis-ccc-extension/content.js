@@ -260,7 +260,7 @@
         console.log('HMS NHIS Extension: Extracted data', data);
 
         if (data.ccc) {
-            // Send to background script
+            // Send to background script (it will clear pending verification after sending to HMS)
             chrome.runtime.sendMessage({
                 type: 'CCC_CAPTURED',
                 data: data,
@@ -268,9 +268,6 @@
 
             // Show success indicator on page
             showSuccessMessage(data.ccc);
-
-            // Clear pending verification
-            chrome.storage.local.remove(['pendingVerification']);
 
             // Auto-close this tab after 3 seconds
             setTimeout(() => {
