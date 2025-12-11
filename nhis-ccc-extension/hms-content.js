@@ -4,13 +4,21 @@
     'use strict';
 
     // Mark that extension is installed
-    localStorage.setItem('hms-nhis-extension-installed', 'true');
+    try {
+        localStorage.setItem('hms-nhis-extension-installed', 'true');
+    } catch (e) {
+        console.log('HMS NHIS Extension: Could not set localStorage');
+    }
 
     // Create a marker element for detection
     const marker = document.createElement('div');
     marker.id = 'hms-nhis-extension-marker';
     marker.style.display = 'none';
-    marker.dataset.version = chrome.runtime.getManifest().version;
+    try {
+        marker.dataset.version = chrome.runtime.getManifest().version;
+    } catch (e) {
+        marker.dataset.version = 'unknown';
+    }
     document.body.appendChild(marker);
 
     // Listen for verification requests from HMS page
@@ -22,36 +30,48 @@
             console.log('HMS NHIS Extension: Received verify request', event.data);
             
             // Store verification request in extension storage (accessible from all tabs)
-            chrome.storage.local.set({
-                pendingVerification: {
-                    membershipNumber: event.data.membershipNumber,
-                    credentials: event.data.credentials,
-                    timestamp: Date.now(),
-                    hmsOrigin: window.location.origin
-                }
-            }, () => {
-                console.log('HMS NHIS Extension: Stored pending verification');
-                // Acknowledge receipt
-                window.postMessage({ type: 'HMS_NHIS_VERIFY_ACK' }, '*');
-            });
+            try {
+                chrome.storage.local.set({
+                    pendingVerification: {
+                        membershipNumber: event.data.membershipNumber,
+                        credentials: event.data.credentials,
+                        timestamp: Date.now(),
+                        hmsOrigin: window.location.origin
+                    }
+                }, () => {
+                    if (chrome.runtime.lastError) {
+                        console.log('HMS NHIS Extension: Storage error', chrome.runtime.lastError);
+                        return;
+                    }
+                    console.log('HMS NHIS Extension: Stored pending verification');
+                    // Acknowledge receipt
+                    window.postMessage({ type: 'HMS_NHIS_VERIFY_ACK' }, '*');
+                });
+            } catch (e) {
+                console.log('HMS NHIS Extension: Extension context invalidated, please refresh the page');
+            }
         }
     });
 
     // Listen for CCC data from background script
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === 'NHIS_CCC_RECEIVED') {
-            // Forward to HMS page via postMessage
-            window.postMessage(
-                {
-                    type: 'NHIS_CCC_RECEIVED',
-                    data: message.data,
-                },
-                '*',
-            );
-            sendResponse({ received: true });
-        }
-        return true;
-    });
+    try {
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === 'NHIS_CCC_RECEIVED') {
+                // Forward to HMS page via postMessage
+                window.postMessage(
+                    {
+                        type: 'NHIS_CCC_RECEIVED',
+                        data: message.data,
+                    },
+                    '*',
+                );
+                sendResponse({ received: true });
+            }
+            return true;
+        });
+    } catch (e) {
+        console.log('HMS NHIS Extension: Could not add message listener');
+    }
 
     console.log('HMS NHIS Extension: Ready on HMS page');
 })();
