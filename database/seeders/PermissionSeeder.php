@@ -222,6 +222,10 @@ class PermissionSeeder extends Seeder
             'nhis-mappings.view' => 'View NHIS item mappings',
             'nhis-mappings.manage' => 'Manage NHIS item mappings (create, delete, import)',
 
+            // NHIS Settings Management
+            'nhis-settings.view' => 'View NHIS verification settings',
+            'nhis-settings.manage' => 'Manage NHIS verification settings',
+
             // G-DRG Tariff Management
             'gdrg-tariffs.view' => 'View G-DRG tariffs',
             'gdrg-tariffs.manage' => 'Manage G-DRG tariffs (create, update, delete, import)',
@@ -439,6 +443,8 @@ class PermissionSeeder extends Seeder
             'nhis-mappings.manage',
             'gdrg-tariffs.view',
             'gdrg-tariffs.manage',
+            'nhis-settings.view',
+            'nhis-settings.manage',
         ]);
 
         // Admin gets ALL permissions automatically

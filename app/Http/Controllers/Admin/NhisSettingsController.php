@@ -11,7 +11,7 @@ class NhisSettingsController extends Controller
 {
     public function index()
     {
-        $this->authorize('manage', NhisSettings::class);
+        $this->authorize('view', NhisSettings::class);
 
         $settings = NhisSettings::getInstance();
 
