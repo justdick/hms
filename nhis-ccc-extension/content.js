@@ -92,16 +92,34 @@
 
             await sleep(300);
 
-            // Find and click login button
-            const loginBtn =
-                findElementByText('LOGIN') ||
-                document.querySelector('button[type="submit"]') ||
-                document.querySelector('[class*="login"]') ||
-                document.querySelector('div[style*="cursor: pointer"]');
+            // Find and click login button - it's a div with "LOGIN" text
+            await sleep(200);
+            
+            let loginBtn = null;
+            
+            // Method 1: Find by exact text content
+            const allDivs = document.querySelectorAll('div');
+            for (const div of allDivs) {
+                if (div.textContent.trim() === 'LOGIN') {
+                    loginBtn = div;
+                    break;
+                }
+            }
+            
+            // Method 2: Fallback to other selectors
+            if (!loginBtn) {
+                loginBtn = document.querySelector('button[type="submit"]') ||
+                           document.querySelector('[class*="login"]');
+            }
 
             if (loginBtn) {
-                console.log('HMS NHIS Extension: Clicking login button', loginBtn);
+                console.log('HMS NHIS Extension: Found login button', loginBtn.outerHTML);
+                // Try multiple click methods
                 loginBtn.click();
+                
+                // Also try dispatching mouse events
+                await sleep(100);
+                loginBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
             } else {
                 console.log('HMS NHIS Extension: Login button not found');
             }
