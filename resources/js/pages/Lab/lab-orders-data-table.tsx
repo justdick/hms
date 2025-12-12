@@ -62,7 +62,7 @@ interface Filters {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    pagination: PaginationData;
+    pagination?: PaginationData;
     filters?: Filters;
 }
 
@@ -72,6 +72,8 @@ export function LabOrdersDataTable<TData, TValue>({
     pagination,
     filters,
 }: DataTableProps<TData, TValue>) {
+    // If no pagination provided, use client-side pagination defaults
+    const hasPagination = !!pagination;
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -150,17 +152,19 @@ export function LabOrdersDataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        manualPagination: true,
-        pageCount: pagination.last_page,
+        manualPagination: hasPagination,
+        pageCount: pagination?.last_page ?? 1,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
-            pagination: {
-                pageIndex: pagination.current_page - 1,
-                pageSize: pagination.per_page,
-            },
+            ...(hasPagination && {
+                pagination: {
+                    pageIndex: pagination.current_page - 1,
+                    pageSize: pagination.per_page,
+                },
+            }),
         },
     });
 
@@ -179,10 +183,10 @@ export function LabOrdersDataTable<TData, TValue>({
         return Array.from(categorySet);
     }, [data]);
 
-    const prevLink = pagination.links.find((link) =>
+    const prevLink = pagination?.links.find((link) =>
         link.label.includes('Previous'),
     );
-    const nextLink = pagination.links.find((link) =>
+    const nextLink = pagination?.links.find((link) =>
         link.label.includes('Next'),
     );
 
@@ -202,20 +206,22 @@ export function LabOrdersDataTable<TData, TValue>({
                 </div>
 
                 {/* Per Page Selector */}
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Show</span>
-                    <select
-                        value={pagination.per_page}
-                        onChange={(e) => handlePerPageChange(e.target.value)}
-                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
-                    >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
+                {hasPagination && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Show</span>
+                        <select
+                            value={pagination.per_page}
+                            onChange={(e) => handlePerPageChange(e.target.value)}
+                            className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                )}
 
                 {/* Status Filter */}
                 <DropdownMenu>
@@ -430,54 +436,63 @@ export function LabOrdersDataTable<TData, TValue>({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="text-sm text-muted-foreground">
-                    {pagination.from && pagination.to ? (
-                        <>
-                            Showing {pagination.from} to {pagination.to} of{' '}
-                            {pagination.total} patient order(s)
-                        </>
-                    ) : (
-                        <>No results</>
-                    )}
+            {hasPagination && (
+                <div className="flex items-center justify-between space-x-2 py-4">
+                    <div className="text-sm text-muted-foreground">
+                        {pagination.from && pagination.to ? (
+                            <>
+                                Showing {pagination.from} to {pagination.to} of{' '}
+                                {pagination.total} patient order(s)
+                            </>
+                        ) : (
+                            <>No results</>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(prevLink?.url ?? null)}
+                            disabled={!prevLink?.url}
+                        >
+                            Previous
+                        </Button>
+                        {pagination.links
+                            .filter(
+                                (link) =>
+                                    !link.label.includes('Previous') &&
+                                    !link.label.includes('Next'),
+                            )
+                            .map((link, index) => (
+                                <Button
+                                    key={index}
+                                    variant={link.active ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="min-w-[40px]"
+                                    onClick={() => handlePageChange(link.url)}
+                                    disabled={!link.url}
+                                >
+                                    {link.label}
+                                </Button>
+                            ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(nextLink?.url ?? null)}
+                            disabled={!nextLink?.url}
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(prevLink?.url ?? null)}
-                        disabled={!prevLink?.url}
-                    >
-                        Previous
-                    </Button>
-                    {pagination.links
-                        .filter(
-                            (link) =>
-                                !link.label.includes('Previous') &&
-                                !link.label.includes('Next'),
-                        )
-                        .map((link, index) => (
-                            <Button
-                                key={index}
-                                variant={link.active ? 'default' : 'outline'}
-                                size="sm"
-                                className="min-w-[40px]"
-                                onClick={() => handlePageChange(link.url)}
-                                disabled={!link.url}
-                            >
-                                {link.label}
-                            </Button>
-                        ))}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(nextLink?.url ?? null)}
-                        disabled={!nextLink?.url}
-                    >
-                        Next
-                    </Button>
+            )}
+
+            {/* Simple count for non-paginated data */}
+            {!hasPagination && data.length > 0 && (
+                <div className="py-4 text-sm text-muted-foreground">
+                    Showing {data.length} item(s)
                 </div>
-            </div>
+            )}
         </div>
     );
 }
