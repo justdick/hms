@@ -29,14 +29,40 @@ import { columns, LabService } from './columns';
 import CreateTestModal from './CreateTestModal';
 import { DataTable } from './data-table';
 
+interface PaginatedLabServices {
+    data: LabService[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    links: { url: string | null; label: string; active: boolean }[];
+}
+
+interface Stats {
+    total: number;
+    configured: number;
+    pending: number;
+}
+
 interface Props {
-    labServices: LabService[];
+    labServices: PaginatedLabServices;
     categories: string[];
+    stats: Stats;
+    filters: {
+        search?: string;
+        category?: string;
+        status?: string;
+        per_page?: number;
+    };
 }
 
 export default function LabConfigurationIndex({
     labServices,
     categories,
+    stats,
+    filters,
 }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [importModalOpen, setImportModalOpen] = useState(false);
@@ -175,20 +201,20 @@ export default function LabConfigurationIndex({
                 <div className="grid gap-4 md:grid-cols-3">
                     <StatCard
                         label="Total Services"
-                        value={labServices.length}
+                        value={stats.total}
                         icon={<FlaskConical className="h-4 w-4" />}
                         description="Available lab services"
                     />
                     <StatCard
                         label="Configured"
-                        value={labServices.filter(hasParameters).length}
+                        value={stats.configured}
                         icon={<CheckCircle2 className="h-4 w-4" />}
                         variant="success"
                         description="With test parameters"
                     />
                     <StatCard
                         label="Pending"
-                        value={labServices.filter((service) => !hasParameters(service)).length}
+                        value={stats.pending}
                         icon={<AlertCircle className="h-4 w-4" />}
                         variant="warning"
                         description="Need configuration"
@@ -206,7 +232,7 @@ export default function LabConfigurationIndex({
                     <CardContent>
                         <DataTable
                             columns={columns(setEditingService)}
-                            data={labServices}
+                            data={labServices.data}
                         />
                     </CardContent>
                 </Card>
