@@ -13,18 +13,52 @@ use Inertia\Response;
 
 class LabServiceConfigurationController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('configureParameters', LabService::class);
 
-        $labServices = LabService::active()
-            ->orderBy('category')
+        $query = LabService::active();
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if ($category = $request->input('category')) {
+            $query->where('category', $category);
+        }
+
+        // Status filter (configured/pending)
+        if ($status = $request->input('status')) {
+            if ($status === 'configured') {
+                $query->whereNotNull('test_parameters')
+                    ->whereRaw("JSON_LENGTH(test_parameters->'$.parameters') > 0");
+            } elseif ($status === 'pending') {
+                $query->where(function ($q) {
+                    $q->whereNull('test_parameters')
+                        ->orWhereRaw("JSON_LENGTH(test_parameters->'$.parameters') = 0")
+                        ->orWhereRaw("test_parameters->'$.parameters' IS NULL");
+                });
+            }
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $labServices = $query->orderBy('category')
             ->orderBy('name')
-            ->get([
-                'id', 'name', 'code', 'category', 'description', 'preparation_instructions',
-                'price', 'sample_type', 'turnaround_time', 'normal_range',
-                'clinical_significance', 'test_parameters', 'is_active',
-            ]);
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // Stats for all services (not filtered)
+        $allServices = LabService::active()->get(['test_parameters']);
+        $stats = [
+            'total' => $allServices->count(),
+            'configured' => $allServices->filter(fn ($s) => ! empty($s->test_parameters['parameters'] ?? []))->count(),
+            'pending' => $allServices->filter(fn ($s) => empty($s->test_parameters['parameters'] ?? []))->count(),
+        ];
 
         $categories = LabService::active()
             ->distinct('category')
@@ -35,6 +69,13 @@ class LabServiceConfigurationController extends Controller
         return Inertia::render('Lab/Configuration/Index', [
             'labServices' => $labServices,
             'categories' => $categories,
+            'stats' => $stats,
+            'filters' => [
+                'search' => $request->input('search'),
+                'category' => $request->input('category'),
+                'status' => $request->input('status'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
