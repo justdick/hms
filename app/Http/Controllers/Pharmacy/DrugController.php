@@ -29,33 +29,90 @@ class DrugController extends Controller
         ]);
     }
 
-    public function inventory(): Response
+    public function inventory(Request $request): Response
     {
         $this->authorize('viewAny', Drug::class);
 
-        $drugs = Drug::with(['batches' => function ($query) {
+        $perPage = $request->query('per_page', 5);
+        $search = $request->query('search');
+        $category = $request->query('category');
+        $stockStatus = $request->query('stock_status');
+
+        $query = Drug::with(['batches' => function ($query) {
             $query->available()->orderBy('expiry_date');
-        }])
-            ->active()
-            ->get()
-            ->map(function ($drug) {
-                return [
-                    'id' => $drug->id,
-                    'name' => $drug->name,
-                    'category' => $drug->category,
-                    'form' => $drug->form,
-                    'unit_type' => $drug->unit_type,
-                    'unit_price' => $drug->unit_price,
-                    'total_stock' => $drug->total_stock,
-                    'minimum_stock_level' => $drug->minimum_stock_level,
-                    'is_low_stock' => $drug->isLowStock(),
-                    'batches_count' => $drug->batches->count(),
-                    'next_expiry' => $drug->batches->first()?->expiry_date,
-                ];
+        }])->active();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%")
+                    ->orWhere('form', 'LIKE', "%{$search}%")
+                    ->orWhere('drug_code', 'LIKE', "%{$search}%");
             });
+        }
+
+        if ($category) {
+            $query->where('category', $category);
+        }
+
+        $drugs = $query->orderBy('name')->paginate($perPage);
+
+        // Transform the paginated data
+        $drugs->getCollection()->transform(function ($drug) {
+            return [
+                'id' => $drug->id,
+                'name' => $drug->name,
+                'category' => $drug->category,
+                'form' => $drug->form,
+                'unit_type' => $drug->unit_type,
+                'unit_price' => $drug->unit_price,
+                'total_stock' => $drug->total_stock,
+                'minimum_stock_level' => $drug->minimum_stock_level,
+                'is_low_stock' => $drug->isLowStock(),
+                'batches_count' => $drug->batches->count(),
+                'next_expiry' => $drug->batches->first()?->expiry_date,
+            ];
+        });
+
+        // Filter by stock status after transformation (needs computed values)
+        if ($stockStatus) {
+            $filtered = $drugs->getCollection()->filter(function ($drug) use ($stockStatus) {
+                if ($stockStatus === 'out_of_stock') {
+                    return $drug['total_stock'] === 0;
+                }
+                if ($stockStatus === 'low_stock') {
+                    return $drug['is_low_stock'] && $drug['total_stock'] > 0;
+                }
+                if ($stockStatus === 'in_stock') {
+                    return ! $drug['is_low_stock'] && $drug['total_stock'] > 0;
+                }
+
+                return true;
+            });
+            $drugs->setCollection($filtered->values());
+        }
+
+        // Get categories for filter dropdown
+        $categories = Drug::active()->distinct()->pluck('category')->filter()->sort()->values();
+
+        // Stats for the page
+        $allDrugs = Drug::with(['batches' => fn ($q) => $q->available()])->active()->get();
+        $stats = [
+            'total' => $allDrugs->count(),
+            'low_stock' => $allDrugs->filter(fn ($d) => $d->isLowStock())->count(),
+            'out_of_stock' => $allDrugs->filter(fn ($d) => $d->total_stock === 0)->count(),
+            'total_value' => $allDrugs->sum(fn ($d) => $d->total_stock * ($d->unit_price ?? 0)),
+        ];
 
         return Inertia::render('Pharmacy/Inventory/Index', [
             'drugs' => $drugs,
+            'categories' => $categories,
+            'stats' => $stats,
+            'filters' => [
+                'search' => $search,
+                'category' => $category,
+                'stock_status' => $stockStatus,
+            ],
         ]);
     }
 

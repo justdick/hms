@@ -8,7 +8,6 @@ import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
@@ -39,15 +38,46 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { router } from '@inertiajs/react';
+import { useDebouncedCallback } from 'use-debounce';
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginationData {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
+
+interface Filters {
+    search?: string;
+    category?: string;
+    stock_status?: string;
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    pagination: PaginationData;
+    categories: string[];
+    filters?: Filters;
 }
+
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    pagination,
+    categories,
+    filters,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -55,7 +85,60 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
-    const [globalFilter, setGlobalFilter] = React.useState('');
+    const [search, setSearch] = React.useState(filters?.search || '');
+
+    const currentCategory = filters?.category || '';
+    const currentStockStatus = filters?.stock_status || '';
+
+    const stockStatuses = [
+        { value: 'in_stock', label: 'In Stock' },
+        { value: 'low_stock', label: 'Low Stock' },
+        { value: 'out_of_stock', label: 'Out of Stock' },
+    ];
+
+    // Debounced server-side search
+    const debouncedSearch = useDebouncedCallback((value: string) => {
+        router.get(
+            '/pharmacy/inventory',
+            {
+                ...filters,
+                search: value || undefined,
+                page: 1,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    }, 300);
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        debouncedSearch(value);
+    };
+
+    const handleFilterChange = (key: string, value: string | undefined) => {
+        router.get(
+            '/pharmacy/inventory',
+            {
+                ...filters,
+                [key]: value || undefined,
+                page: 1,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const handlePerPageChange = (perPage: string) => {
+        router.get(
+            '/pharmacy/inventory',
+            { ...filters, per_page: perPage, page: 1 },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
 
     const table = useReactTable({
         data,
@@ -63,53 +146,30 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        onGlobalFilterChange: setGlobalFilter,
+        manualPagination: true,
+        pageCount: pagination.last_page,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
-            globalFilter,
+            pagination: {
+                pageIndex: pagination.current_page - 1,
+                pageSize: pagination.per_page,
+            },
         },
     });
 
-    // Get unique categories for filtering
-    const categories = React.useMemo(() => {
-        const categorySet = new Set<string>();
-        data.forEach((item: any) => {
-            if (item.category) {
-                categorySet.add(item.category);
-            }
-        });
-        return Array.from(categorySet);
-    }, [data]);
-
-    // Get stock status options
-    const stockStatuses = React.useMemo(() => {
-        return [
-            { value: 'in_stock', label: 'In Stock' },
-            { value: 'low_stock', label: 'Low Stock' },
-            { value: 'out_of_stock', label: 'Out of Stock' },
-        ];
-    }, []);
-
-    const filteredData = React.useMemo(() => {
-        if (!globalFilter) return data;
-
-        return data.filter((item: any) => {
-            const searchString = globalFilter.toLowerCase();
-            return (
-                item.name?.toLowerCase().includes(searchString) ||
-                item.category?.toLowerCase().includes(searchString) ||
-                item.form?.toLowerCase().includes(searchString)
-            );
-        });
-    }, [data, globalFilter]);
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -118,12 +178,28 @@ export function DataTable<TData, TValue>({
                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                     <Input
                         placeholder="Search drugs, categories..."
-                        value={globalFilter}
+                        value={search}
                         onChange={(event) =>
-                            setGlobalFilter(event.target.value)
+                            handleSearchChange(event.target.value)
                         }
                         className="pl-10"
                     />
+                </div>
+
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show</span>
+                    <select
+                        value={pagination.per_page}
+                        onChange={(e) => handlePerPageChange(e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
                 </div>
 
                 {/* Category Filter */}
@@ -131,7 +207,7 @@ export function DataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <Filter className="mr-2 h-4 w-4" />
-                            Category
+                            Category{currentCategory ? `: ${currentCategory}` : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -140,38 +216,25 @@ export function DataTable<TData, TValue>({
                             Filter by Category
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuCheckboxItem
+                            checked={!currentCategory}
+                            onCheckedChange={(checked) => {
+                                if (checked) {
+                                    handleFilterChange('category', undefined);
+                                }
+                            }}
+                        >
+                            All Categories
+                        </DropdownMenuCheckboxItem>
                         {categories.map((category) => (
                             <DropdownMenuCheckboxItem
                                 key={category}
-                                checked={
-                                    (
-                                        table
-                                            .getColumn('category')
-                                            ?.getFilterValue() as string[]
-                                    )?.includes(category) ?? false
-                                }
+                                checked={currentCategory === category}
                                 onCheckedChange={(checked) => {
-                                    const currentFilter =
-                                        (table
-                                            .getColumn('category')
-                                            ?.getFilterValue() as string[]) ||
-                                        [];
-                                    if (checked) {
-                                        table
-                                            .getColumn('category')
-                                            ?.setFilterValue([
-                                                ...currentFilter,
-                                                category,
-                                            ]);
-                                    } else {
-                                        table
-                                            .getColumn('category')
-                                            ?.setFilterValue(
-                                                currentFilter.filter(
-                                                    (c) => c !== category,
-                                                ),
-                                            );
-                                    }
+                                    handleFilterChange(
+                                        'category',
+                                        checked ? category : undefined,
+                                    );
                                 }}
                             >
                                 {category}
@@ -185,7 +248,7 @@ export function DataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <AlertTriangle className="mr-2 h-4 w-4" />
-                            Stock Status
+                            Stock Status{currentStockStatus ? `: ${stockStatuses.find(s => s.value === currentStockStatus)?.label}` : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -194,38 +257,25 @@ export function DataTable<TData, TValue>({
                             Filter by Stock Status
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuCheckboxItem
+                            checked={!currentStockStatus}
+                            onCheckedChange={(checked) => {
+                                if (checked) {
+                                    handleFilterChange('stock_status', undefined);
+                                }
+                            }}
+                        >
+                            All Statuses
+                        </DropdownMenuCheckboxItem>
                         {stockStatuses.map((status) => (
                             <DropdownMenuCheckboxItem
                                 key={status.value}
-                                checked={
-                                    (
-                                        table
-                                            .getColumn('stock_status')
-                                            ?.getFilterValue() as string[]
-                                    )?.includes(status.value) ?? false
-                                }
+                                checked={currentStockStatus === status.value}
                                 onCheckedChange={(checked) => {
-                                    const currentFilter =
-                                        (table
-                                            .getColumn('stock_status')
-                                            ?.getFilterValue() as string[]) ||
-                                        [];
-                                    if (checked) {
-                                        table
-                                            .getColumn('stock_status')
-                                            ?.setFilterValue([
-                                                ...currentFilter,
-                                                status.value,
-                                            ]);
-                                    } else {
-                                        table
-                                            .getColumn('stock_status')
-                                            ?.setFilterValue(
-                                                currentFilter.filter(
-                                                    (s) => s !== status.value,
-                                                ),
-                                            );
-                                    }
+                                    handleFilterChange(
+                                        'stock_status',
+                                        checked ? status.value : undefined,
+                                    );
                                 }}
                             >
                                 {status.label}
@@ -326,24 +376,48 @@ export function DataTable<TData, TValue>({
 
             {/* Pagination */}
             <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                <div className="text-sm text-muted-foreground">
+                    {pagination.from && pagination.to ? (
+                        <>
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} drug(s)
+                        </>
+                    ) : (
+                        <>No results</>
+                    )}
                 </div>
-                <div className="space-x-2">
+                <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={() => handlePageChange(prevLink?.url ?? null)}
+                        disabled={!prevLink?.url}
                     >
                         Previous
                     </Button>
+                    {pagination.links
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
+                        .map((link, index) => (
+                            <Button
+                                key={index}
+                                variant={link.active ? 'default' : 'outline'}
+                                size="sm"
+                                className="min-w-[40px]"
+                                onClick={() => handlePageChange(link.url)}
+                                disabled={!link.url}
+                            >
+                                {link.label}
+                            </Button>
+                        ))}
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        onClick={() => handlePageChange(nextLink?.url ?? null)}
+                        disabled={!nextLink?.url}
                     >
                         Next
                     </Button>

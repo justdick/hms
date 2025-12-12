@@ -18,100 +18,119 @@ class LabController extends Controller
         $priority = $request->query('priority');
         $category = $request->query('category');
         $search = $request->query('search');
+        $perPage = $request->query('per_page', 5);
 
-        $query = LabOrder::with([
-            'orderable',
-            'labService:id,name,code,category,sample_type,turnaround_time',
-            'orderedBy:id,name',
-        ])
-            ->with(['orderable' => function ($morphTo) {
-                $morphTo->morphWith([
-                    \App\Models\Consultation::class => ['patientCheckin.patient'],
-                    \App\Models\WardRound::class => ['patientAdmission.patient'],
-                ]);
-            }]);
+        // Build base query for filtering
+        $baseQuery = LabOrder::query();
 
         if ($status === 'pending') {
-            // Show all non-completed orders by default
-            $query->whereIn('status', ['ordered', 'sample_collected', 'in_progress']);
+            $baseQuery->whereIn('status', ['ordered', 'sample_collected', 'in_progress']);
         } elseif ($status !== 'all') {
-            $query->byStatus($status);
+            $baseQuery->byStatus($status);
         }
 
         if ($priority) {
-            $query->byPriority($priority);
+            $baseQuery->byPriority($priority);
         }
 
         if ($category) {
-            $query->whereHas('labService', function ($q) use ($category) {
+            $baseQuery->whereHas('labService', function ($q) use ($category) {
                 $q->byCategory($category);
             });
         }
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                // Search in patients from consultations
+            $baseQuery->where(function ($q) use ($search) {
                 $q->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($consultation) use ($search) {
                     $consultation->whereHas('patientCheckin.patient', function ($patient) use ($search) {
                         $patient->where('first_name', 'LIKE', "%{$search}%")
                             ->orWhere('last_name', 'LIKE', "%{$search}%")
-                            ->orWhere('email', 'LIKE', "%{$search}%");
+                            ->orWhere('patient_number', 'LIKE', "%{$search}%");
                     });
                 })
-                // Search in patients from ward rounds
                     ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($wardRound) use ($search) {
                         $wardRound->whereHas('patientAdmission.patient', function ($patient) use ($search) {
                             $patient->where('first_name', 'LIKE', "%{$search}%")
                                 ->orWhere('last_name', 'LIKE', "%{$search}%")
-                                ->orWhere('email', 'LIKE', "%{$search}%");
+                                ->orWhere('patient_number', 'LIKE', "%{$search}%");
                         });
                     })
-                // Search in lab services
                     ->orWhereHas('labService', function ($serviceQuery) use ($search) {
                         $serviceQuery->search($search);
                     });
             });
         }
 
-        // Get all lab orders matching the filters
-        $allOrders = $query->orderByDesc('ordered_at')
-            ->orderByRaw("CASE WHEN priority = 'stat' THEN 1 WHEN priority = 'urgent' THEN 2 ELSE 3 END")
-            ->get();
+        // Get distinct orderable combinations with pagination at DB level
+        $distinctOrderables = (clone $baseQuery)
+            ->select('orderable_type', 'orderable_id')
+            ->selectRaw('MIN(ordered_at) as first_ordered_at')
+            ->selectRaw('MAX(CASE WHEN priority = "stat" THEN 1 WHEN priority = "urgent" THEN 2 ELSE 3 END) as priority_rank')
+            ->groupBy('orderable_type', 'orderable_id')
+            ->orderBy('priority_rank')
+            ->orderByDesc('first_ordered_at')
+            ->paginate($perPage);
 
-        // Group lab orders by orderable (consultation or ward round)
-        $groupedOrders = $allOrders->groupBy(function ($order) {
+        // Get the orderable keys for this page
+        $orderableKeys = $distinctOrderables->getCollection()->map(function ($item) {
+            return $item->orderable_type.'_'.$item->orderable_id;
+        })->toArray();
+
+        // Fetch full lab orders only for this page's orderables
+        $labOrders = collect();
+        if (! empty($orderableKeys)) {
+            $labOrders = (clone $baseQuery)
+                ->with([
+                    'labService:id,name,code,category,sample_type,turnaround_time',
+                    'orderedBy:id,name',
+                    'orderable' => function ($morphTo) {
+                        $morphTo->morphWith([
+                            \App\Models\Consultation::class => ['patientCheckin.patient'],
+                            \App\Models\WardRound::class => ['patientAdmission.patient'],
+                        ]);
+                    },
+                ])
+                ->where(function ($q) use ($distinctOrderables) {
+                    foreach ($distinctOrderables->getCollection() as $item) {
+                        $q->orWhere(function ($subQ) use ($item) {
+                            $subQ->where('orderable_type', $item->orderable_type)
+                                ->where('orderable_id', $item->orderable_id);
+                        });
+                    }
+                })
+                ->get();
+        }
+
+        // Group and transform the orders
+        $groupedData = $labOrders->groupBy(function ($order) {
             return $order->orderable_type.'_'.$order->orderable_id;
         })->map(function ($orders) {
             $firstOrder = $orders->first();
             $orderable = $firstOrder->orderable;
 
-            // Skip if orderable no longer exists (orphaned from seeder deleting wards/consultations)
             if (! $orderable) {
                 return null;
             }
 
-            // Get patient based on orderable type
             if ($orderable instanceof \App\Models\Consultation) {
                 $patient = $orderable->patientCheckin?->patient;
                 $context = $orderable->presenting_complaint;
                 $orderableType = 'consultation';
                 $orderableId = $orderable->id;
-            } else { // WardRound
+            } else {
                 $patient = $orderable->patientAdmission?->patient;
                 $context = $orderable->presenting_complaint ?? 'Ward Round - Day '.$orderable->day_number;
                 $orderableType = 'ward_round';
                 $orderableId = $orderable->id;
             }
 
-            // Skip if patient data is missing
             if (! $patient) {
                 return null;
             }
 
-            // Calculate status summary
             $statusCounts = $orders->countBy('status');
             $highestPriority = $orders->sortBy(function ($order) {
-                return ['stat' => 1, 'urgent' => 2, 'routine' => 3][$order->priority];
+                return ['stat' => 1, 'urgent' => 2, 'routine' => 3][$order->priority] ?? 3;
             })->first()->priority;
 
             return [
@@ -136,18 +155,8 @@ class LabController extends Controller
             ];
         })->filter()->values();
 
-        // Paginate the grouped results
-        $perPage = 25;
-        $currentPage = $request->query('page', 1);
-        $total = $groupedOrders->count();
-
-        $paginatedOrders = new \Illuminate\Pagination\LengthAwarePaginator(
-            $groupedOrders->forPage($currentPage, $perPage),
-            $total,
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // Replace paginator data with transformed grouped data
+        $distinctOrderables->setCollection($groupedData);
 
         $stats = [
             'ordered' => LabOrder::byStatus('ordered')->count(),
@@ -165,7 +174,7 @@ class LabController extends Controller
             ->values();
 
         return Inertia::render('Lab/Index', [
-            'groupedOrders' => $paginatedOrders,
+            'groupedOrders' => $distinctOrderables,
             'stats' => $stats,
             'categories' => $categories,
             'filters' => [

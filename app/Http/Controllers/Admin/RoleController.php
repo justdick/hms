@@ -16,22 +16,35 @@ class RoleController extends Controller
     /**
      * Display a listing of roles with permission counts and user counts.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
         $this->authorize('viewAny', Role::class);
 
-        $roles = Role::withCount(['permissions', 'users'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Role $role) => [
-                'id' => $role->id,
-                'name' => $role->name,
-                'permissions_count' => $role->permissions_count,
-                'users_count' => $role->users_count,
-            ]);
+        $perPage = $request->input('per_page', 5);
+        $search = $request->input('search');
+
+        $query = Role::withCount(['permissions', 'users']);
+
+        if ($search) {
+            $query->where('name', 'LIKE', "%{$search}%");
+        }
+
+        $roles = $query->orderBy('name')->paginate($perPage)->withQueryString();
+
+        // Transform the data while keeping pagination structure
+        $roles->getCollection()->transform(fn (Role $role) => [
+            'id' => $role->id,
+            'name' => $role->name,
+            'permissions_count' => $role->permissions_count,
+            'users_count' => $role->users_count,
+        ]);
 
         return Inertia::render('Admin/Roles/Index', [
             'roles' => $roles,
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 

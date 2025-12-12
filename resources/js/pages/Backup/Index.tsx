@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import {
+    CheckCircle,
     Cloud,
     CloudOff,
     Database,
@@ -18,6 +19,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -183,71 +185,30 @@ export default function BackupIndex({ backups }: Props) {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Backups
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {backups.total}
-                                    </p>
-                                </div>
-                                <Database className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Completed
-                                    </p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {completedBackups.length}
-                                    </p>
-                                </div>
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                                    <div className="h-3 w-3 rounded-full bg-green-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        On Cloud
-                                    </p>
-                                    <p className="text-3xl font-bold text-blue-600">
-                                        {cloudBackups.length}
-                                    </p>
-                                </div>
-                                <Cloud className="h-8 w-8 text-blue-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Total Size
-                                    </p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {formatFileSize(totalSize)}
-                                    </p>
-                                </div>
-                                <HardDrive className="h-8 w-8 text-purple-600" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Backups"
+                        value={backups.total}
+                        icon={<Database className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Completed"
+                        value={completedBackups.length}
+                        icon={<CheckCircle className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="On Cloud"
+                        value={cloudBackups.length}
+                        icon={<Cloud className="h-4 w-4" />}
+                        variant="info"
+                    />
+                    <StatCard
+                        label="Total Size"
+                        value={formatFileSize(totalSize)}
+                        icon={<HardDrive className="h-4 w-4" />}
+                        variant="default"
+                    />
                 </div>
 
                 {/* Backups Table */}

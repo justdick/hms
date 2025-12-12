@@ -44,9 +44,22 @@ class InsuranceClaimPolicy
 
     public function vetClaim(User $user, InsuranceClaim $insuranceClaim): bool
     {
-        // Only allow vetting pending or draft claims
-        if (! in_array($insuranceClaim->status, ['pending_vetting', 'draft'])) {
+        // Allow vetting pending/draft claims OR editing vetted claims before submission
+        if (! in_array($insuranceClaim->status, ['pending_vetting', 'draft', 'vetted'])) {
             return false;
+        }
+
+        // For vetted claims, check if they're in a non-draft batch (finalized/submitted/completed)
+        if ($insuranceClaim->status === 'vetted') {
+            $inNonDraftBatch = $insuranceClaim->batchItems()
+                ->whereHas('batch', function ($query) {
+                    $query->whereIn('status', ['finalized', 'submitted', 'completed']);
+                })
+                ->exists();
+
+            if ($inNonDraftBatch) {
+                return false;
+            }
         }
 
         return $this->checkPermission($user, 'insurance.vet-claims');

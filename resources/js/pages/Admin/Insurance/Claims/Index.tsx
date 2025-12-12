@@ -1,101 +1,48 @@
 import { VettingModal } from '@/components/Insurance';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { ClipboardList, FileCheck, FileText, Send } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ClaimsDataTable } from './claims-data-table';
 import {
-    ClipboardList,
-    Eye,
-    FileCheck,
-    FileText,
-    Filter,
-    Search,
-    Send,
-    X,
-} from 'lucide-react';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+    createClaimsColumns,
+    InsuranceClaim,
+    InsuranceProvider,
+} from './claims-columns';
 
-interface InsuranceProvider {
-    id: number;
-    name: string;
-    code: string;
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
 }
 
-interface PatientInsurance {
-    id: number;
-    membership_id: string;
-    plan: {
-        id: number;
-        plan_name: string;
-        provider: InsuranceProvider;
-    };
+interface PaginationMeta {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
 }
 
-interface InsuranceClaim {
-    id: number;
-    claim_check_code: string;
-    folder_id?: string;
-    patient_full_name: string;
-    membership_id: string;
-    date_of_attendance: string;
-    type_of_service: 'inpatient' | 'outpatient';
-    type_of_attendance: 'emergency' | 'acute' | 'routine';
-    total_claim_amount: string;
-    approved_amount: string;
-    status:
-        | 'pending_vetting'
-        | 'vetted'
-        | 'submitted'
-        | 'approved'
-        | 'rejected'
-        | 'paid'
-        | 'partial';
-    patient_insurance?: PatientInsurance;
-    vetted_by_user?: {
-        id: number;
-        name: string;
-    };
-    submitted_by_user?: {
-        id: number;
-        name: string;
-    };
-    created_at: string;
+interface PaginatedClaims {
+    data: InsuranceClaim[];
+    links: PaginationLink[];
+    meta: PaginationMeta;
 }
 
 interface Filters {
-    [key: string]: string | undefined;
+    search?: string;
     status?: string;
     provider_id?: string;
     date_from?: string;
     date_to?: string;
-    search?: string;
 }
 
 interface Props {
-    claims: {
-        data: InsuranceClaim[];
-        links: any;
-        meta: any;
-    };
+    claims: PaginatedClaims;
     providers: {
         data: InsuranceProvider[];
     };
@@ -108,87 +55,19 @@ interface Props {
     };
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-    pending_vetting: { label: 'Pending Vetting', color: 'bg-yellow-500' },
-    vetted: { label: 'Vetted', color: 'bg-blue-500' },
-    submitted: { label: 'Submitted', color: 'bg-purple-500' },
-    approved: { label: 'Approved', color: 'bg-green-500' },
-    rejected: { label: 'Rejected', color: 'bg-red-500' },
-    paid: { label: 'Paid', color: 'bg-emerald-600' },
-    partial: { label: 'Partial Payment', color: 'bg-orange-500' },
-};
-
-const getStatusConfig = (status: string) => {
-    return statusConfig[status] || { label: status, color: 'bg-gray-400' };
-};
-
 export default function InsuranceClaimsIndex({
     claims,
     providers,
     filters,
     stats,
 }: Props) {
-    const [showFilters, setShowFilters] = useState(false);
-    const [localFilters, setLocalFilters] = useState<Filters>(filters);
-
     // Vetting modal state management
     const [vettingModalOpen, setVettingModalOpen] = useState(false);
     const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
-    const [modalMode, setModalMode] = useState<'vet' | 'view'>('vet');
-
-    useEffect(() => {
-        setLocalFilters(filters);
-    }, [filters]);
-
-    const handleFilterChange = (key: keyof Filters, value: string) => {
-        setLocalFilters((prev) => ({
-            ...prev,
-            [key]: value === 'all' || !value ? undefined : value,
-        }));
-    };
-
-    const handleApplyFilters = (e: FormEvent) => {
-        e.preventDefault();
-        router.get('/admin/insurance/claims', localFilters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
-    const handleClearFilters = () => {
-        setLocalFilters({});
-        router.get(
-            '/admin/insurance/claims',
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
-    };
-
-    const hasActiveFilters = Object.keys(filters).some(
-        (key) => filters[key as keyof Filters],
-    );
-
-    const formatCurrency = (amount: string) => {
-        return new Intl.NumberFormat('en-GH', {
-            style: 'currency',
-            currency: 'GHS',
-        }).format(parseFloat(amount));
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-    };
+    const [modalMode, setModalMode] = useState<'vet' | 'view' | 'edit'>('vet');
 
     /**
      * Opens the vetting modal for a specific claim
-     * Fetches vetting data on click as per Requirements 8.1
      */
     const handleVetClaim = useCallback((claimId: number) => {
         setSelectedClaimId(claimId);
@@ -206,6 +85,15 @@ export default function InsuranceClaimsIndex({
     }, []);
 
     /**
+     * Opens the modal in edit mode for vetted claims
+     */
+    const handleEditClaim = useCallback((claimId: number) => {
+        setSelectedClaimId(claimId);
+        setModalMode('edit');
+        setVettingModalOpen(true);
+    }, []);
+
+    /**
      * Closes the vetting modal and resets selected claim
      */
     const handleCloseVettingModal = useCallback(() => {
@@ -216,11 +104,16 @@ export default function InsuranceClaimsIndex({
 
     /**
      * Handles successful vetting action
-     * Refreshes claims list after approval as per Requirements 13.3
      */
     const handleVetSuccess = useCallback(() => {
         router.reload({ only: ['claims', 'stats'] });
     }, []);
+
+    // Memoize columns to prevent unnecessary re-renders
+    const columns = useMemo(
+        () => createClaimsColumns(handleVetClaim, handleViewClaim, handleEditClaim),
+        [handleVetClaim, handleViewClaim, handleEditClaim],
+    );
 
     return (
         <AppLayout
@@ -244,24 +137,6 @@ export default function InsuranceClaimsIndex({
                             Review and vet insurance claims for submission
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {hasActiveFilters && (
-                            <Badge variant="secondary">
-                                {Object.keys(filters).length} filter
-                                {Object.keys(filters).length > 1
-                                    ? 's'
-                                    : ''}{' '}
-                                active
-                            </Badge>
-                        )}
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowFilters(!showFilters)}
-                        >
-                            <Filter className="mr-2 h-4 w-4" />
-                            {showFilters ? 'Hide Filters' : 'Show Filters'}
-                        </Button>
-                    </div>
                 </div>
 
                 {/* Stats Overview */}
@@ -269,309 +144,45 @@ export default function InsuranceClaimsIndex({
                     <StatCard
                         label="Total Claims"
                         value={stats.total}
-                        icon={<FileText className="h-5 w-5" />}
+                        icon={<FileText className="h-4 w-4" />}
                         variant="info"
                     />
                     <StatCard
                         label="Pending Vetting"
                         value={stats.pending_vetting}
-                        icon={<ClipboardList className="h-5 w-5" />}
+                        icon={<ClipboardList className="h-4 w-4" />}
                         variant="warning"
                     />
                     <StatCard
                         label="Vetted"
                         value={stats.vetted}
-                        icon={<FileCheck className="h-5 w-5" />}
+                        icon={<FileCheck className="h-4 w-4" />}
                     />
                     <StatCard
                         label="Submitted"
                         value={stats.submitted}
-                        icon={<Send className="h-5 w-5" />}
+                        icon={<Send className="h-4 w-4" />}
                         variant="success"
                     />
                 </div>
 
-                {/* Filters Panel */}
-                {showFilters && (
-                    <Card>
-                        <CardContent className="p-6">
-                            <form
-                                onSubmit={handleApplyFilters}
-                                className="space-y-4"
-                            >
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {/* Search */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="search">Search</Label>
-                                        <div className="relative">
-                                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                                            <Input
-                                                id="search"
-                                                placeholder="Claim code, patient..."
-                                                value={
-                                                    localFilters.search || ''
-                                                }
-                                                onChange={(e) =>
-                                                    handleFilterChange(
-                                                        'search',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="pl-9"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Status Filter */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="status">Status</Label>
-                                        <Select
-                                            value={localFilters.status || 'all'}
-                                            onValueChange={(value) =>
-                                                handleFilterChange(
-                                                    'status',
-                                                    value,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger id="status">
-                                                <SelectValue placeholder="All statuses" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">
-                                                    All statuses
-                                                </SelectItem>
-                                                <SelectItem value="pending_vetting">
-                                                    Pending Vetting
-                                                </SelectItem>
-                                                <SelectItem value="vetted">
-                                                    Vetted
-                                                </SelectItem>
-                                                <SelectItem value="submitted">
-                                                    Submitted
-                                                </SelectItem>
-                                                <SelectItem value="approved">
-                                                    Approved
-                                                </SelectItem>
-                                                <SelectItem value="rejected">
-                                                    Rejected
-                                                </SelectItem>
-                                                <SelectItem value="paid">
-                                                    Paid
-                                                </SelectItem>
-                                                <SelectItem value="partial">
-                                                    Partial Payment
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <Button type="submit">Apply Filters</Button>
-                                    {hasActiveFilters && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={handleClearFilters}
-                                        >
-                                            <X className="mr-2 h-4 w-4" />
-                                            Clear All Filters
-                                        </Button>
-                                    )}
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Claims Table */}
+                {/* Claims DataTable */}
                 <Card>
-                    <CardContent className="p-0">
-                        {claims.data.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Claim Code</TableHead>
-                                            <TableHead>Patient</TableHead>
-                                            <TableHead>Insurance</TableHead>
-                                            <TableHead>
-                                                Date of Attendance
-                                            </TableHead>
-                                            <TableHead>Service Type</TableHead>
-                                            <TableHead className="text-right">
-                                                Claim Amount
-                                            </TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">
-                                                Actions
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {claims.data.map((claim) => (
-                                            <TableRow key={claim.id}>
-                                                <TableCell className="font-medium">
-                                                    {claim.claim_check_code}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div>
-                                                        <div className="font-medium">
-                                                            {
-                                                                claim.patient_full_name
-                                                            }
-                                                        </div>
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {
-                                                                claim.membership_id
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div>
-                                                        <div className="font-medium">
-                                                            {claim
-                                                                .patient_insurance
-                                                                ?.plan?.provider
-                                                                .name || 'N/A'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {claim
-                                                                .patient_insurance
-                                                                ?.plan
-                                                                ?.plan_name ||
-                                                                ''}
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatDate(
-                                                        claim.date_of_attendance,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline">
-                                                        {claim.type_of_service}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right font-medium">
-                                                    {formatCurrency(
-                                                        claim.total_claim_amount,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        className={
-                                                            getStatusConfig(
-                                                                claim.status,
-                                                            ).color
-                                                        }
-                                                    >
-                                                        {
-                                                            getStatusConfig(
-                                                                claim.status,
-                                                            ).label
-                                                        }
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {claim.status ===
-                                                            'pending_vetting' && (
-                                                            <Button
-                                                                variant="default"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    handleVetClaim(
-                                                                        claim.id,
-                                                                    )
-                                                                }
-                                                                aria-label={`Vet claim ${claim.claim_check_code}`}
-                                                            >
-                                                                <FileCheck className="mr-1 h-4 w-4" />
-                                                                Vet Claim
-                                                            </Button>
-                                                        )}
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                handleViewClaim(
-                                                                    claim.id,
-                                                                )
-                                                            }
-                                                            aria-label={`View claim ${claim.claim_check_code}`}
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        ) : (
-                            <div className="p-12 text-center">
-                                <ClipboardList className="mx-auto mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" />
-                                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    No claims found
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    {hasActiveFilters
-                                        ? 'Try adjusting your filters'
-                                        : 'Insurance claims will appear here'}
-                                </p>
-                            </div>
-                        )}
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            Claims ({claims.meta?.total || 0})
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ClaimsDataTable
+                            columns={columns}
+                            data={claims.data}
+                            pagination={claims}
+                            filters={filters}
+                        />
                     </CardContent>
                 </Card>
-
-                {/* Pagination */}
-                {claims.data.length > 0 &&
-                    claims.links &&
-                    Array.isArray(claims.links) && (
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                Showing {claims.meta?.from} to {claims.meta?.to}{' '}
-                                of {claims.meta?.total} claims
-                            </div>
-                            <div className="flex gap-2">
-                                {claims.links.map(
-                                    (link: any, index: number) => {
-                                        if (link.url === null) return null;
-
-                                        return (
-                                            <Button
-                                                key={index}
-                                                variant={
-                                                    link.active
-                                                        ? 'default'
-                                                        : 'outline'
-                                                }
-                                                size="sm"
-                                                onClick={() =>
-                                                    router.get(
-                                                        link.url,
-                                                        localFilters,
-                                                        {
-                                                            preserveState: true,
-                                                            preserveScroll: true,
-                                                        },
-                                                    )
-                                                }
-                                                dangerouslySetInnerHTML={{
-                                                    __html: link.label,
-                                                }}
-                                            />
-                                        );
-                                    },
-                                )}
-                            </div>
-                        </div>
-                    )}
             </div>
 
             {/* Vetting/View Modal for Claims */}

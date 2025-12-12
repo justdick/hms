@@ -30,11 +30,44 @@ import { useState } from 'react';
 import { inventoryColumns, type InventoryDrug } from './inventory-columns';
 import { DataTable } from './inventory-data-table';
 
-interface Props {
-    drugs: InventoryDrug[];
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
 }
 
-export default function InventoryIndex({ drugs }: Props) {
+interface PaginatedDrugs {
+    data: InventoryDrug[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
+
+interface Stats {
+    total: number;
+    low_stock: number;
+    out_of_stock: number;
+    total_value: number;
+}
+
+interface Filters {
+    search?: string;
+    category?: string;
+    stock_status?: string;
+}
+
+interface Props {
+    drugs: PaginatedDrugs;
+    categories: string[];
+    stats: Stats;
+    filters: Filters;
+}
+
+export default function InventoryIndex({ drugs, categories, stats, filters }: Props) {
     const [importModalOpen, setImportModalOpen] = useState(false);
     const { data, setData, post, processing, reset } = useForm<{
         file: File | null;
@@ -54,16 +87,6 @@ export default function InventoryIndex({ drugs }: Props) {
             },
         });
     };
-
-    const totalDrugs = drugs.length;
-    const lowStockDrugs = drugs.filter((drug) => drug.is_low_stock).length;
-    const outOfStockDrugs = drugs.filter(
-        (drug) => drug.total_stock === 0,
-    ).length;
-    const totalValue = drugs.reduce(
-        (sum, drug) => sum + drug.total_stock * (drug.unit_price || 0),
-        0,
-    );
 
     return (
         <AppLayout
@@ -97,7 +120,7 @@ export default function InventoryIndex({ drugs }: Props) {
                         <Button variant="outline" asChild>
                             <Link href="/pharmacy/inventory/low-stock">
                                 <AlertTriangle className="mr-1 h-4 w-4" />
-                                Low Stock ({lowStockDrugs})
+                                Low Stock ({stats.low_stock})
                             </Link>
                         </Button>
                         <Button variant="outline" asChild>
@@ -195,25 +218,25 @@ export default function InventoryIndex({ drugs }: Props) {
                 <div className="grid gap-4 md:grid-cols-4">
                     <StatCard
                         label="Total Drugs"
-                        value={totalDrugs}
+                        value={stats.total}
                         icon={<Package className="h-4 w-4" />}
                         variant="info"
                     />
                     <StatCard
                         label="Low Stock"
-                        value={lowStockDrugs}
+                        value={stats.low_stock}
                         icon={<AlertTriangle className="h-4 w-4" />}
                         variant="warning"
                     />
                     <StatCard
                         label="Out of Stock"
-                        value={outOfStockDrugs}
+                        value={stats.out_of_stock}
                         icon={<TrendingDown className="h-4 w-4" />}
                         variant="error"
                     />
                     <StatCard
                         label="Total Value"
-                        value={formatCurrency(totalValue)}
+                        value={formatCurrency(stats.total_value)}
                         icon={<BarChart3 className="h-4 w-4" />}
                         variant="success"
                     />
@@ -246,14 +269,17 @@ export default function InventoryIndex({ drugs }: Props) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Package className="h-5 w-5" />
-                            Inventory Overview ({totalDrugs} drugs)
+                            Inventory Overview ({stats.total} drugs)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {drugs.length > 0 ? (
+                        {drugs.data.length > 0 || filters.search || filters.category || filters.stock_status ? (
                             <DataTable
                                 columns={inventoryColumns}
-                                data={drugs}
+                                data={drugs.data}
+                                pagination={drugs}
+                                categories={categories}
+                                filters={filters}
                             />
                         ) : (
                             <div className="py-12 text-center">

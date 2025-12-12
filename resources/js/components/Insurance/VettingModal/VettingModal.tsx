@@ -60,6 +60,8 @@ export function VettingModal({
     mode = 'vet',
 }: VettingModalProps) {
     const isViewOnly = mode === 'view';
+    const isEditMode = mode === 'edit';
+    const canEdit = mode === 'vet' || mode === 'edit';
     const [vettingData, setVettingData] = useState<VettingData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -343,13 +345,15 @@ export function VettingModal({
                                     className="h-5 w-5"
                                     aria-hidden="true"
                                 />
-                                {isViewOnly ? 'Claim Details' : 'Claim Vetting'} -{' '}
+                                {isViewOnly ? 'Claim Details' : isEditMode ? 'Edit Claim' : 'Claim Vetting'} -{' '}
                                 {vettingData.attendance.claim_check_code}
                             </DialogTitle>
                             <DialogDescription id="vetting-modal-description">
                                 {isViewOnly
                                     ? 'View claim details and status'
-                                    : 'Review claim details and approve or reject for submission'}
+                                    : isEditMode
+                                      ? 'Edit claim details before submission'
+                                      : 'Review claim details and approve or reject for submission'}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -473,6 +477,33 @@ export function VettingModal({
                                         <Button variant="outline" onClick={onClose}>
                                             Close
                                         </Button>
+                                    ) : isEditMode ? (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                onClick={onClose}
+                                                disabled={processing}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                ref={approveButtonRef}
+                                                onClick={handleApprove}
+                                                disabled={processing}
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                                        Save Changes
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </>
                                     ) : showRejectForm ? (
                                         <>
                                             <Button

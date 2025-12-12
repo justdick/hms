@@ -11,7 +11,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, ClipboardList, Search } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -19,11 +19,16 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -33,7 +38,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { router } from '@inertiajs/react';
-import { FlaskConical } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 
 interface PaginationLink {
@@ -42,31 +46,48 @@ interface PaginationLink {
     active: boolean;
 }
 
-interface PaginationData {
+interface PaginationMeta {
     current_page: number;
     from: number | null;
     last_page: number;
     per_page: number;
     to: number | null;
     total: number;
+}
+
+interface PaginationData {
+    data: unknown[];
     links: PaginationLink[];
+    meta: PaginationMeta;
 }
 
 interface Filters {
-    status: string;
-    priority?: string;
-    category?: string;
     search?: string;
+    status?: string;
+    provider_id?: string;
+    date_from?: string;
+    date_to?: string;
 }
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     pagination: PaginationData;
-    filters?: Filters;
+    filters: Filters;
 }
 
-export function LabOrdersDataTable<TData, TValue>({
+const statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'pending_vetting', label: 'Pending Vetting' },
+    { value: 'vetted', label: 'Vetted' },
+    { value: 'submitted', label: 'Submitted' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'partial', label: 'Partial Payment' },
+];
+
+export function ClaimsDataTable<TData, TValue>({
     columns,
     data,
     pagination,
@@ -78,67 +99,9 @@ export function LabOrdersDataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
-    const [search, setSearch] = React.useState(filters?.search || '');
+    const [search, setSearch] = React.useState(filters.search || '');
 
-    const currentStatus = filters?.status || 'pending';
-    const currentPriority = filters?.priority || '';
-    const currentCategory = filters?.category || '';
-
-    const allStatuses = [
-        { value: 'pending', label: 'Pending (All Active)' },
-        { value: 'ordered', label: 'Ordered' },
-        { value: 'sample_collected', label: 'Sample Collected' },
-        { value: 'in_progress', label: 'In Progress' },
-        { value: 'completed', label: 'Completed' },
-        { value: 'cancelled', label: 'Cancelled' },
-        { value: 'all', label: 'All Statuses' },
-    ];
-
-    const priorities = ['stat', 'urgent', 'routine'];
-
-    // Debounced server-side search
-    const debouncedSearch = useDebouncedCallback((value: string) => {
-        router.get(
-            '/lab',
-            {
-                ...filters,
-                search: value || undefined,
-                page: 1, // Reset to first page on search
-            },
-            { preserveState: true, preserveScroll: true },
-        );
-    }, 300);
-
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
-        debouncedSearch(value);
-    };
-
-    const handleFilterChange = (key: string, value: string | undefined) => {
-        router.get(
-            '/lab',
-            {
-                ...filters,
-                [key]: value || undefined,
-                page: 1,
-            },
-            { preserveState: true, preserveScroll: true },
-        );
-    };
-
-    const handlePageChange = (url: string | null) => {
-        if (url) {
-            router.get(url, {}, { preserveState: true, preserveScroll: true });
-        }
-    };
-
-    const handlePerPageChange = (perPage: string) => {
-        router.get(
-            '/lab',
-            { ...filters, per_page: perPage, page: 1 },
-            { preserveState: true, preserveScroll: true },
-        );
-    };
+    const meta = pagination.meta;
 
     const table = useReactTable({
         data,
@@ -151,40 +114,62 @@ export function LabOrdersDataTable<TData, TValue>({
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         manualPagination: true,
-        pageCount: pagination.last_page,
+        pageCount: meta.last_page,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
             pagination: {
-                pageIndex: pagination.current_page - 1,
-                pageSize: pagination.per_page,
+                pageIndex: meta.current_page - 1,
+                pageSize: meta.per_page,
             },
         },
     });
 
-    // Get unique categories from current page data for display
-    const categories = React.useMemo(() => {
-        const categorySet = new Set<string>();
-        data.forEach((item: any) => {
-            if (item.tests && Array.isArray(item.tests)) {
-                item.tests.forEach((test: any) => {
-                    if (test.category) {
-                        categorySet.add(test.category);
-                    }
-                });
-            }
-        });
-        return Array.from(categorySet);
-    }, [data]);
+    // Debounced server-side search
+    const debouncedSearch = useDebouncedCallback((value: string) => {
+        router.get(
+            window.location.pathname,
+            { ...filters, search: value || undefined },
+            { preserveState: true, preserveScroll: true },
+        );
+    }, 300);
 
-    const prevLink = pagination.links.find((link) =>
-        link.label.includes('Previous'),
-    );
-    const nextLink = pagination.links.find((link) =>
-        link.label.includes('Next'),
-    );
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        debouncedSearch(value);
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const handlePerPageChange = (perPage: string) => {
+        router.get(
+            window.location.pathname,
+            { ...filters, per_page: perPage },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const handleStatusFilter = (status: string) => {
+        router.get(
+            window.location.pathname,
+            {
+                ...filters,
+                status: status,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    // Find prev/next links from pagination - handle both array and object formats
+    const links = Array.isArray(pagination.links) ? pagination.links : [];
+    const prevLink = links.find((link) => link.label.includes('Previous'));
+    const nextLink = links.find((link) => link.label.includes('Next'));
 
     return (
         <div className="w-full space-y-4">
@@ -192,7 +177,7 @@ export function LabOrdersDataTable<TData, TValue>({
                 <div className="relative max-w-sm flex-1">
                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                     <Input
-                        placeholder="Search patients, tests..."
+                        placeholder="Search by claim code, patient name..."
                         value={search}
                         onChange={(event) =>
                             handleSearchChange(event.target.value)
@@ -205,11 +190,10 @@ export function LabOrdersDataTable<TData, TValue>({
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Show</span>
                     <select
-                        value={pagination.per_page}
+                        value={meta.per_page}
                         onChange={(e) => handlePerPageChange(e.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-sm"
                     >
-                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -218,130 +202,26 @@ export function LabOrdersDataTable<TData, TValue>({
                 </div>
 
                 {/* Status Filter */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="border-dashed">
-                            Status:{' '}
-                            {
-                                allStatuses.find(
-                                    (s) => s.value === currentStatus,
-                                )?.label
-                            }
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        align="start"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                    >
-                        <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {allStatuses.map((status) => (
-                            <DropdownMenuCheckboxItem
-                                key={status.value}
-                                checked={currentStatus === status.value}
-                                onCheckedChange={(checked) => {
-                                    if (checked) {
-                                        handleFilterChange('status', status.value);
-                                    }
-                                }}
-                            >
-                                {status.label}
-                            </DropdownMenuCheckboxItem>
+                <Select
+                    value={filters.status || 'all'}
+                    onValueChange={handleStatusFilter}
+                >
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {statusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                            </SelectItem>
                         ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Priority Filter */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="border-dashed">
-                            Priority{currentPriority ? `: ${currentPriority.toUpperCase()}` : ''}
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        align="start"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                    >
-                        <DropdownMenuLabel>
-                            Filter by Priority
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem
-                            checked={!currentPriority}
-                            onCheckedChange={(checked) => {
-                                if (checked) {
-                                    handleFilterChange('priority', undefined);
-                                }
-                            }}
-                        >
-                            All Priorities
-                        </DropdownMenuCheckboxItem>
-                        {priorities.map((priority) => (
-                            <DropdownMenuCheckboxItem
-                                key={priority}
-                                checked={currentPriority === priority}
-                                onCheckedChange={(checked) => {
-                                    handleFilterChange(
-                                        'priority',
-                                        checked ? priority : undefined,
-                                    );
-                                }}
-                            >
-                                {priority.toUpperCase()}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Category Filter */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="border-dashed">
-                            Category{currentCategory ? `: ${currentCategory}` : ''}
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        align="start"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                    >
-                        <DropdownMenuLabel>
-                            Filter by Category
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem
-                            checked={!currentCategory}
-                            onCheckedChange={(checked) => {
-                                if (checked) {
-                                    handleFilterChange('category', undefined);
-                                }
-                            }}
-                        >
-                            All Categories
-                        </DropdownMenuCheckboxItem>
-                        {categories.map((category) => (
-                            <DropdownMenuCheckboxItem
-                                key={category}
-                                checked={currentCategory === category}
-                                onCheckedChange={(checked) => {
-                                    handleFilterChange(
-                                        'category',
-                                        checked ? category : undefined,
-                                    );
-                                }}
-                            >
-                                {category}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                    </SelectContent>
+                </Select>
 
                 {/* Column Visibility */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button variant="outline">
                             Columns <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -359,7 +239,7 @@ export function LabOrdersDataTable<TData, TValue>({
                                             column.toggleVisibility(!!value)
                                         }
                                     >
-                                        {column.id.replace('_', ' ')}
+                                        {column.id.replace(/_/g, ' ')}
                                     </DropdownMenuCheckboxItem>
                                 );
                             })}
@@ -415,11 +295,12 @@ export function LabOrdersDataTable<TData, TValue>({
                                     className="h-24 text-center"
                                 >
                                     <div className="flex flex-col items-center gap-2">
-                                        <FlaskConical className="h-8 w-8 text-muted-foreground" />
-                                        <div>No lab orders found.</div>
+                                        <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                                        <div>No claims found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            No lab orders match your current
-                                            filters.
+                                            {filters.search || filters.status
+                                                ? 'Try adjusting your filters.'
+                                                : 'Insurance claims will appear here.'}
                                         </div>
                                     </div>
                                 </TableCell>
@@ -432,10 +313,10 @@ export function LabOrdersDataTable<TData, TValue>({
             {/* Pagination */}
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="text-sm text-muted-foreground">
-                    {pagination.from && pagination.to ? (
+                    {meta.from && meta.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of{' '}
-                            {pagination.total} patient order(s)
+                            Showing {meta.from} to {meta.to} of {meta.total}{' '}
+                            claim(s)
                         </>
                     ) : (
                         <>No results</>
@@ -450,7 +331,7 @@ export function LabOrdersDataTable<TData, TValue>({
                     >
                         Previous
                     </Button>
-                    {pagination.links
+                    {links
                         .filter(
                             (link) =>
                                 !link.label.includes('Previous') &&

@@ -16,12 +16,21 @@ import {
 } from './grouped-consultations-columns';
 import { LabOrdersDataTable } from './lab-orders-data-table';
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
 interface PaginatedOrders {
     data: GroupedConsultation[];
     current_page: number;
+    from: number | null;
     last_page: number;
     per_page: number;
+    to: number | null;
     total: number;
+    links: PaginationLink[];
 }
 
 interface Stats {
@@ -106,6 +115,7 @@ export default function LabIndex({ groupedOrders, stats, filters }: Props) {
                         <LabOrdersDataTable
                             columns={groupedConsultationColumns}
                             data={groupedOrders.data}
+                            pagination={groupedOrders}
                             filters={filters}
                         />
                     </CardContent>

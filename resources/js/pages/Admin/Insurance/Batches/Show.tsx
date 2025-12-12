@@ -41,6 +41,7 @@ import {
     Plus,
     Send,
     Trash2,
+    Unlock,
     User,
 } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
@@ -413,6 +414,16 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Claims ({availableClaims.length}{' '}
                                     available)
+                                </Button>
+                            )}
+                            {batch.is_finalized && !batch.is_submitted && (
+                                <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    onClick={() => router.post(`/admin/insurance/batches/${batch.id}/unfinalize`)}
+                                >
+                                    <Unlock className="mr-2 h-4 w-4" />
+                                    Unfinalize Batch
                                 </Button>
                             )}
                             {can.finalize && (

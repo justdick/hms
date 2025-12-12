@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { Activity, Search, Settings, Users } from 'lucide-react';
@@ -217,19 +218,14 @@ export default function MinorProcedureIndex({
                 </div>
 
                 {/* Queue Count Card */}
-                <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="flex items-center gap-4 p-6">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <Users className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Patients in Queue
-                            </p>
-                            <p className="text-3xl font-bold">{queueCount}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <StatCard
+                        label="Patients in Queue"
+                        value={queueCount}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="info"
+                    />
+                </div>
 
                 {/* Main Content */}
                 <div className="grid grid-cols-1 gap-6">

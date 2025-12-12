@@ -223,6 +223,23 @@ class ClaimBatchController extends Controller
     }
 
     /**
+     * Unfinalize a batch, allowing modifications again.
+     */
+    public function unfinalize(ClaimBatch $batch): RedirectResponse
+    {
+        $this->authorize('finalize', $batch);
+
+        try {
+            $this->claimBatchService->unfinalizeBatch($batch, auth()->user());
+
+            return redirect()->back()
+                ->with('success', 'Batch has been unfinalized. You can now modify it.');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Mark a batch as submitted.
      *
      * _Requirements: 16.1_

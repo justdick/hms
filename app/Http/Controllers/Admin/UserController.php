@@ -52,7 +52,8 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->orderBy('name')->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 5);
+        $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
@@ -62,6 +63,7 @@ class UserController extends Controller
                 'search' => $request->input('search'),
                 'role' => $request->input('role'),
                 'department' => $request->input('department'),
+                'per_page' => $perPage,
             ],
         ]);
     }

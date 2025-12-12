@@ -28,11 +28,20 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Key,
     MoreVertical,
     Pencil,
     Plus,
+    Search,
     Shield,
     Trash2,
     Users,
@@ -46,13 +55,53 @@ interface Role {
     users_count: number;
 }
 
-interface Props {
-    roles: Role[];
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
 }
 
-export default function RolesIndex({ roles }: Props) {
+interface PaginatedRoles {
+    data: Role[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
+
+interface Filters {
+    search?: string;
+    per_page?: number;
+}
+
+interface Props {
+    roles: PaginatedRoles;
+    filters: Filters;
+}
+
+export default function RolesIndex({ roles, filters }: Props) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+    const [search, setSearch] = useState(filters.search || '');
+
+    const handleSearch = () => {
+        router.get('/admin/roles', {
+            search: search || undefined,
+            per_page: filters.per_page,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
 
     const handleDeleteClick = (role: Role) => {
         setRoleToDelete(role);
@@ -113,10 +162,66 @@ export default function RolesIndex({ roles }: Props) {
                     </div>
                 </div>
 
+                {/* Filters */}
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-end">
+                            <div className="flex-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Search
+                                </label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search by role name..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Show
+                                </label>
+                                <Select
+                                    value={String(filters.per_page || 5)}
+                                    onValueChange={(value) => {
+                                        router.get('/admin/roles', {
+                                            search: search || undefined,
+                                            per_page: value,
+                                        }, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="5">5</SelectItem>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button onClick={handleSearch} variant="secondary">
+                                <Search className="mr-2 h-4 w-4" />
+                                Search
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Roles Table */}
                 <Card>
                     <CardContent className="p-0">
-                        {roles.length > 0 ? (
+                        {roles.data.length > 0 ? (
+                            <>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -127,7 +232,7 @@ export default function RolesIndex({ roles }: Props) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {roles.map((role) => (
+                                    {roles.data.map((role) => (
                                         <TableRow key={role.id}>
                                             <TableCell className="font-medium">
                                                 <div className="flex items-center gap-2">
@@ -200,6 +305,32 @@ export default function RolesIndex({ roles }: Props) {
                                     ))}
                                 </TableBody>
                             </Table>
+
+                                {/* Pagination */}
+                                {roles.last_page > 1 && (
+                                    <div className="flex items-center justify-between border-t px-4 py-3 dark:border-gray-700">
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            Showing {roles.from} to {roles.to} of {roles.total} roles
+                                        </div>
+                                        <div className="flex gap-1">
+                                            {roles.links.map((link, index) => (
+                                                <Button
+                                                    key={index}
+                                                    variant={link.active ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    disabled={!link.url}
+                                                    onClick={() => {
+                                                        if (link.url) {
+                                                            router.get(link.url, {}, { preserveState: true });
+                                                        }
+                                                    }}
+                                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="py-12 text-center">
                                 <Shield className="mx-auto mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" />
@@ -207,14 +338,18 @@ export default function RolesIndex({ roles }: Props) {
                                     No roles found
                                 </h3>
                                 <p className="mb-4 text-gray-600 dark:text-gray-400">
-                                    Get started by creating your first role.
+                                    {filters.search
+                                        ? 'Try adjusting your search.'
+                                        : 'Get started by creating your first role.'}
                                 </p>
-                                <Link href="/admin/roles/create">
-                                    <Button>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Role
-                                    </Button>
-                                </Link>
+                                {!filters.search && (
+                                    <Link href="/admin/roles/create">
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Role
+                                        </Button>
+                                    </Link>
+                                )}
                             </div>
                         )}
                     </CardContent>

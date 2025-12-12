@@ -34,9 +34,10 @@ class InsuranceClaimController extends Controller
         $query = InsuranceClaim::query()
             ->with(['patientInsurance.plan.provider', 'vettedBy', 'submittedBy']);
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // Filter by status - default to pending_vetting if no status specified
+        $status = $request->input('status', 'pending_vetting');
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
         }
 
         // Filter by insurance provider
@@ -79,7 +80,10 @@ class InsuranceClaimController extends Controller
         return Inertia::render('Admin/Insurance/Claims/Index', [
             'claims' => InsuranceClaimResource::collection($claims),
             'providers' => InsuranceProviderResource::collection($providers),
-            'filters' => $request->only(['status', 'provider_id', 'date_from', 'date_to', 'search']),
+            'filters' => array_merge(
+                $request->only(['provider_id', 'date_from', 'date_to', 'search']),
+                ['status' => $status]
+            ),
             'stats' => [
                 'total' => InsuranceClaim::count(),
                 'pending_vetting' => InsuranceClaim::where('status', 'pending_vetting')->count(),
@@ -173,7 +177,7 @@ class InsuranceClaimController extends Controller
             $claim->vetted_at = now();
             $claim->save();
 
-            return redirect()->route('admin.insurance.claims.index')
+            return redirect()->back()
                 ->with('success', 'Claim has been rejected.');
         }
 
@@ -225,7 +229,7 @@ class InsuranceClaimController extends Controller
                 $claim->save();
             }
 
-            return redirect()->route('admin.insurance.claims.index')
+            return redirect()->back()
                 ->with('success', 'Claim has been vetted and approved.');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()
@@ -452,6 +456,28 @@ class InsuranceClaimController extends Controller
         $claim->total_claim_amount = $gdrgAmount + $itemsTotal;
         $claim->insurance_covered_amount = $gdrgAmount + $itemsTotal;
         $claim->save();
+
+        // Auto-refresh batch items in draft batches
+        $this->refreshClaimBatchItems($claim);
+    }
+
+    /**
+     * Refresh batch item amounts for a claim in any draft batches.
+     */
+    protected function refreshClaimBatchItems(InsuranceClaim $claim): void
+    {
+        // Update batch items in draft batches only
+        $claim->batchItems()
+            ->whereHas('batch', fn ($q) => $q->where('status', 'draft'))
+            ->each(function ($batchItem) use ($claim) {
+                $batchItem->claim_amount = $claim->total_claim_amount ?? 0;
+                $batchItem->save();
+
+                // Update the batch totals
+                $batch = $batchItem->batch;
+                $batch->total_amount = $batch->batchItems()->sum('claim_amount');
+                $batch->save();
+            });
     }
 
     public function submit(SubmitInsuranceClaimRequest $request): RedirectResponse

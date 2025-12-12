@@ -227,6 +227,27 @@ class ClaimBatchService
     }
 
     /**
+     * Unfinalize a batch, allowing modifications again.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function unfinalizeBatch(ClaimBatch $batch, ?User $user = null): ClaimBatch
+    {
+        if (! $batch->isFinalized()) {
+            throw new InvalidArgumentException('Only finalized batches can be unfinalized.');
+        }
+
+        $previousStatus = $batch->status;
+        $batch->status = 'draft';
+        $batch->save();
+
+        // Record status change
+        $this->recordStatusChange($batch, $previousStatus, 'draft', $user, 'Batch unfinalized for modifications');
+
+        return $batch->fresh();
+    }
+
+    /**
      * Mark a batch as submitted.
      *
      * @param  Carbon|null  $submittedAt  The submission timestamp (defaults to now)

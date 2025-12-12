@@ -93,6 +93,7 @@ interface Props {
         search?: string;
         role?: string;
         department?: string;
+        per_page?: number;
     };
 }
 
@@ -283,10 +284,41 @@ export default function UsersIndex({ users, roles, departments, filters }: Props
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={handleSearch} variant="secondary">
-                                <Search className="mr-2 h-4 w-4" />
-                                Search
-                            </Button>
+                            <div className="flex items-end gap-2">
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Show
+                                    </label>
+                                    <Select
+                                        value={String(filters.per_page || 5)}
+                                        onValueChange={(value) => {
+                                            router.get('/admin/users', {
+                                                search: search || undefined,
+                                                role: roleFilter || undefined,
+                                                department: departmentFilter || undefined,
+                                                per_page: value,
+                                            }, {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="5">5</SelectItem>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Button onClick={handleSearch} variant="secondary">
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Search
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
