@@ -57,6 +57,11 @@ class UserService
             $user->departments()->sync($data['departments']);
         }
 
+        // Sync direct permissions (permissions assigned directly to user, not via role)
+        if (isset($data['direct_permissions']) && is_array($data['direct_permissions'])) {
+            $user->syncPermissions($data['direct_permissions']);
+        }
+
         return [
             'user' => $user,
             'temporary_password' => $temporaryPassword,
@@ -81,6 +86,11 @@ class UserService
         // Sync departments if provided
         if (isset($data['departments']) && is_array($data['departments'])) {
             $user->departments()->sync($data['departments']);
+        }
+
+        // Sync direct permissions if provided and current user has permission
+        if (array_key_exists('direct_permissions', $data) && auth()->user()?->can('users.assign-direct-permissions')) {
+            $user->syncPermissions($data['direct_permissions'] ?? []);
         }
 
         return $user->fresh();

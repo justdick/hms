@@ -114,6 +114,7 @@ class PermissionSeeder extends Seeder
             'users.delete' => 'Delete users',
             'users.reset-password' => 'Reset user passwords',
             'users.manage-permissions' => 'Manage user permissions',
+            'users.assign-direct-permissions' => 'Assign direct permissions to users',
 
             // Role Management
             'roles.view-all' => 'View all roles',
@@ -449,6 +450,19 @@ class PermissionSeeder extends Seeder
 
         // Admin gets ALL permissions automatically
         $admin->syncPermissions(\Spatie\Permission\Models\Permission::all());
+
+        // Create Admin Support role - has all permissions except system admin and direct permission assignment
+        $adminSupport = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Admin Support',
+            'guard_name' => 'web',
+        ]);
+
+        // Admin Support gets all permissions except system.admin and users.assign-direct-permissions
+        $adminSupportPermissions = \Spatie\Permission\Models\Permission::whereNotIn('name', [
+            'system.admin',
+            'users.assign-direct-permissions',
+        ])->get();
+        $adminSupport->syncPermissions($adminSupportPermissions);
 
         // Ensure admin user has admin role with all permissions
         $adminUser = \App\Models\User::where('username', 'admin')->first();

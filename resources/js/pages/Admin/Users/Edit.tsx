@@ -4,9 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, UserCog, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Key, UserCog, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface Role {
     id: number;
@@ -18,6 +24,11 @@ interface Department {
     name: string;
 }
 
+interface Permission {
+    id: number;
+    name: string;
+}
+
 interface UserData {
     id: number;
     name: string;
@@ -25,20 +36,25 @@ interface UserData {
     is_active: boolean;
     roles: string[];
     departments: number[];
+    direct_permissions: string[];
 }
 
 interface Props {
     user: UserData;
     roles: Role[];
     departments: Department[];
+    permissions: Record<string, Permission[]>;
 }
 
-export default function UsersEdit({ user, roles, departments }: Props) {
+export default function UsersEdit({ user, roles, departments, permissions }: Props) {
+    const [permissionsOpen, setPermissionsOpen] = useState(false);
+    
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         username: user.username,
         roles: user.roles,
         departments: user.departments,
+        direct_permissions: user.direct_permissions || [],
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -58,6 +74,52 @@ export default function UsersEdit({ user, roles, departments }: Props) {
             ? data.departments.filter((d) => d !== deptId)
             : [...data.departments, deptId];
         setData('departments', newDepts);
+    };
+
+    const toggleDirectPermission = (permissionName: string) => {
+        const newPermissions = data.direct_permissions.includes(permissionName)
+            ? data.direct_permissions.filter((p) => p !== permissionName)
+            : [...data.direct_permissions, permissionName];
+        setData('direct_permissions', newPermissions);
+    };
+
+    const toggleCategory = (category: string) => {
+        const categoryPermissions = permissions[category].map((p) => p.name);
+        const allSelected = categoryPermissions.every((p) => data.direct_permissions.includes(p));
+
+        if (allSelected) {
+            setData('direct_permissions', data.direct_permissions.filter((p) => !categoryPermissions.includes(p)));
+        } else {
+            const newPermissions = [...new Set([...data.direct_permissions, ...categoryPermissions])];
+            setData('direct_permissions', newPermissions);
+        }
+    };
+
+    const isCategoryFullySelected = (category: string) => {
+        const categoryPermissions = permissions[category].map((p) => p.name);
+        return categoryPermissions.every((p) => data.direct_permissions.includes(p));
+    };
+
+    const isCategoryPartiallySelected = (category: string) => {
+        const categoryPermissions = permissions[category].map((p) => p.name);
+        const selectedCount = categoryPermissions.filter((p) => data.direct_permissions.includes(p)).length;
+        return selectedCount > 0 && selectedCount < categoryPermissions.length;
+    };
+
+    const formatCategoryName = (category: string) => {
+        return category
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
+    const formatPermissionName = (name: string) => {
+        const parts = name.split('.');
+        const action = parts[1] || parts[0];
+        return action
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
     };
 
     return (
@@ -255,6 +317,88 @@ export default function UsersEdit({ user, roles, departments }: Props) {
                                     <p className="text-sm text-red-600">{errors.departments}</p>
                                 )}
                             </div>
+
+                            {/* Direct Permissions Section */}
+                            {permissions && Object.keys(permissions).length > 0 && (
+                                <Collapsible
+                                    open={permissionsOpen}
+                                    onOpenChange={setPermissionsOpen}
+                                    className="space-y-4 border-t pt-4 dark:border-gray-700"
+                                >
+                                    <CollapsibleTrigger asChild>
+                                        <div className="flex cursor-pointer items-center justify-between">
+                                            <div>
+                                                <Label className="flex items-center gap-2">
+                                                    <Key className="h-4 w-4" />
+                                                    Direct Permissions
+                                                    {data.direct_permissions.length > 0 && (
+                                                        <Badge variant="secondary" className="ml-2">
+                                                            {data.direct_permissions.length}
+                                                        </Badge>
+                                                    )}
+                                                </Label>
+                                                <p className="text-sm text-gray-500">
+                                                    Assign permissions directly to this user (in addition to role permissions)
+                                                </p>
+                                            </div>
+                                            <ChevronDown
+                                                className={`h-5 w-5 text-gray-500 transition-transform ${
+                                                    permissionsOpen ? 'rotate-180' : ''
+                                                }`}
+                                            />
+                                        </div>
+                                    </CollapsibleTrigger>
+
+                                    <CollapsibleContent className="space-y-4">
+                                        {Object.entries(permissions).map(([category, categoryPermissions]) => (
+                                            <div key={category} className="rounded-lg border p-3 dark:border-gray-700">
+                                                <div className="mb-2 flex items-center gap-2 border-b pb-2 dark:border-gray-700">
+                                                    <Checkbox
+                                                        id={`direct-category-${category}`}
+                                                        checked={isCategoryFullySelected(category)}
+                                                        ref={(el) => {
+                                                            if (el) {
+                                                                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = isCategoryPartiallySelected(category);
+                                                            }
+                                                        }}
+                                                        onCheckedChange={() => toggleCategory(category)}
+                                                    />
+                                                    <Label
+                                                        htmlFor={`direct-category-${category}`}
+                                                        className="cursor-pointer text-sm font-semibold"
+                                                    >
+                                                        {formatCategoryName(category)}
+                                                    </Label>
+                                                    <span className="text-xs text-gray-500">
+                                                        ({categoryPermissions.filter((p) => data.direct_permissions.includes(p.name)).length}/{categoryPermissions.length})
+                                                    </span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                                                    {categoryPermissions.map((permission) => (
+                                                        <div
+                                                            key={permission.id}
+                                                            className="flex items-center space-x-2"
+                                                        >
+                                                            <Checkbox
+                                                                id={`direct-perm-${permission.id}`}
+                                                                checked={data.direct_permissions.includes(permission.name)}
+                                                                onCheckedChange={() => toggleDirectPermission(permission.name)}
+                                                            />
+                                                            <Label
+                                                                htmlFor={`direct-perm-${permission.id}`}
+                                                                className="cursor-pointer text-xs font-normal"
+                                                                title={permission.name}
+                                                            >
+                                                                {formatPermissionName(permission.name)}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            )}
 
                             {/* Password Note */}
                             <div className="rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">

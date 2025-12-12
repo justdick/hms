@@ -253,53 +253,62 @@ export default function RolesIndex({ roles, filters }: Props) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {/* Desktop Actions */}
-                                                <div className="hidden items-center justify-end gap-2 lg:flex">
-                                                    <Link href={`/admin/roles/${role.id}/edit`}>
-                                                        <Button variant="outline" size="sm">
-                                                            <Pencil className="mr-1 h-3 w-3" />
-                                                            Edit
-                                                        </Button>
-                                                    </Link>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteClick(role)}
-                                                        disabled={role.users_count > 0}
-                                                        className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300'}
-                                                    >
-                                                        <Trash2 className="mr-1 h-3 w-3" />
-                                                        Delete
-                                                    </Button>
-                                                </div>
-
-                                                {/* Mobile Actions */}
-                                                <div className="lg:hidden">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="sm">
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem asChild>
-                                                                <Link href={`/admin/roles/${role.id}/edit`}>
-                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                {/* Protected role indicator */}
+                                                {role.name === 'Admin' ? (
+                                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                        Protected
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        {/* Desktop Actions */}
+                                                        <div className="hidden items-center justify-end gap-2 lg:flex">
+                                                            <Link href={`/admin/roles/${role.id}/edit`}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <Pencil className="mr-1 h-3 w-3" />
                                                                     Edit
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
+                                                                </Button>
+                                                            </Link>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
                                                                 onClick={() => handleDeleteClick(role)}
                                                                 disabled={role.users_count > 0}
-                                                                className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 dark:text-red-400'}
+                                                                className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300'}
                                                             >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <Trash2 className="mr-1 h-3 w-3" />
                                                                 Delete
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
+                                                            </Button>
+                                                        </div>
+
+                                                        {/* Mobile Actions */}
+                                                        <div className="lg:hidden">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm">
+                                                                        <MoreVertical className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem asChild>
+                                                                        <Link href={`/admin/roles/${role.id}/edit`}>
+                                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                                            Edit
+                                                                        </Link>
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleDeleteClick(role)}
+                                                                        disabled={role.users_count > 0}
+                                                                        className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 dark:text-red-400'}
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}

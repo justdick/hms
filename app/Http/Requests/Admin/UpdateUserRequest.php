@@ -30,6 +30,8 @@ class UpdateUserRequest extends FormRequest
             'roles.*' => ['required', 'string', 'exists:roles,name'],
             'departments' => ['nullable', 'array'],
             'departments.*' => ['integer', 'exists:departments,id'],
+            'direct_permissions' => ['nullable', 'array'],
+            'direct_permissions.*' => ['string', 'exists:permissions,name'],
         ];
     }
 

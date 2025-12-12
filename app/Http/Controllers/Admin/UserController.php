@@ -101,7 +101,9 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $user->load(['roles', 'departments']);
+        $user->load(['roles', 'departments', 'permissions']);
+
+        $canAssignDirectPermissions = auth()->user()->can('users.assign-direct-permissions');
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => [
@@ -111,10 +113,44 @@ class UserController extends Controller
                 'is_active' => $user->is_active,
                 'roles' => $user->roles->pluck('name'),
                 'departments' => $user->departments->pluck('id'),
+                'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
             ],
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'departments' => Department::orderBy('name')->get(['id', 'name']),
+            'permissions' => $canAssignDirectPermissions ? $this->getGroupedPermissions() : [],
+            'canAssignDirectPermissions' => $canAssignDirectPermissions,
         ]);
+    }
+
+    /**
+     * Get permissions grouped by category for the UI.
+     */
+    private function getGroupedPermissions(): array
+    {
+        $permissions = \Spatie\Permission\Models\Permission::orderBy('name')->get(['id', 'name']);
+
+        $grouped = [];
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission->name);
+            $category = $parts[0] ?? 'other';
+
+            if (count($parts) === 1) {
+                $category = 'other';
+            }
+
+            if (! isset($grouped[$category])) {
+                $grouped[$category] = [];
+            }
+
+            $grouped[$category][] = [
+                'id' => $permission->id,
+                'name' => $permission->name,
+            ];
+        }
+
+        ksort($grouped);
+
+        return $grouped;
     }
 
     /**

@@ -7,6 +7,19 @@ use App\Models\User;
 class UserPolicy
 {
     /**
+     * The protected admin username that cannot be deleted or deactivated.
+     */
+    public const PROTECTED_ADMIN_USERNAME = 'admin';
+
+    /**
+     * Check if the target user is the protected admin account.
+     */
+    private function isProtectedAdmin(User $model): bool
+    {
+        return $model->username === self::PROTECTED_ADMIN_USERNAME;
+    }
+
+    /**
      * Determine whether the user can view any users.
      */
     public function viewAny(User $user): bool
@@ -40,12 +53,17 @@ class UserPolicy
 
     /**
      * Determine whether the user can toggle the active status of the model.
-     * Users cannot deactivate themselves.
+     * Users cannot deactivate themselves or the protected admin account.
      */
     public function toggleActive(User $user, User $model): bool
     {
         // Prevent self-deactivation
         if ($user->id === $model->id) {
+            return false;
+        }
+
+        // Prevent deactivating the protected admin account
+        if ($this->isProtectedAdmin($model)) {
             return false;
         }
 
@@ -68,11 +86,17 @@ class UserPolicy
 
     /**
      * Determine whether the user can delete the model.
+     * Users cannot delete themselves or the protected admin account.
      */
     public function delete(User $user, User $model): bool
     {
         // Prevent self-deletion
         if ($user->id === $model->id) {
+            return false;
+        }
+
+        // Prevent deleting the protected admin account
+        if ($this->isProtectedAdmin($model)) {
             return false;
         }
 
