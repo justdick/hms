@@ -10,11 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNhisExtension } from '@/hooks/useNhisExtension';
 import {
+    Building2,
     CheckCircle2,
+    CreditCard,
     ExternalLink,
     Loader2,
     Shield,
-    Wallet,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -68,14 +69,19 @@ export default function InsuranceDialog({
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
     
+    // NHIS Extension hook
     const { isVerifying, cccData, startVerification, clearCccData } = useNhisExtension();
 
+    // Check if this is an NHIS provider and if coverage is valid (not expired)
     const isNhisProvider = insurance.plan.provider.is_nhis ?? false;
     const isExpired = insurance.is_expired ?? false;
     const canUseInsurance = !isExpired;
+    
+    // Determine verification mode
     const verificationMode = nhisSettings?.verification_mode ?? 'manual';
     const isExtensionMode = verificationMode === 'extension' && isNhisProvider;
 
+    // Auto-fill CCC when received from extension
     useEffect(() => {
         if (cccData?.ccc) {
             setClaimCheckCode(cccData.ccc);
@@ -83,6 +89,7 @@ export default function InsuranceDialog({
         }
     }, [cccData]);
 
+    // Clear state when dialog closes
     useEffect(() => {
         if (!open) {
             setClaimCheckCode('');
@@ -96,12 +103,21 @@ export default function InsuranceDialog({
             setError('No NHIS membership number found');
             return;
         }
-        navigator.clipboard.writeText(insurance.membership_id).catch(() => {});
+        
+        // Copy membership number to clipboard for manual paste
+        navigator.clipboard.writeText(insurance.membership_id).catch(() => {
+            // Clipboard API might fail, continue anyway
+        });
+        
+        // Start verification (opens portal, extension will auto-fill and login)
         startVerification(insurance.membership_id, nhisSettings?.credentials || undefined, nhisSettings?.nhia_portal_url);
     };
 
     const handleOpenPortalManual = () => {
+        // Copy membership number to clipboard
         navigator.clipboard.writeText(insurance.membership_id).catch(() => {});
+        
+        // Open portal
         window.open(nhisSettings?.nhia_portal_url || 'https://ccc.nhia.gov.gh/', '_blank');
     };
 
@@ -110,8 +126,20 @@ export default function InsuranceDialog({
             setError('Claim Check Code (CCC) is required');
             return;
         }
+
+        if (claimCheckCode.length > 50) {
+            setError('Claim Check Code cannot exceed 50 characters');
+            return;
+        }
+
         setError('');
         onUseInsurance(claimCheckCode.trim());
+    };
+
+    const handleUseCash = () => {
+        setClaimCheckCode('');
+        setError('');
+        onUseCash();
     };
 
     const handleModalClose = () => {
@@ -123,140 +151,256 @@ export default function InsuranceDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleModalClose}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader className="pb-2">
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5 text-primary" />
-                        Insurance Check-in
+                        Active Insurance Detected
                     </DialogTitle>
                     <DialogDescription>
-                        {insurance.plan.provider.name} - {insurance.plan.plan_name}
+                        This patient has active insurance coverage. Choose how
+                        to proceed with check-in.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4">
-                    {/* Compact Insurance Info */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-lg border bg-muted/50 p-3 text-sm">
-                        <div>
-                            <span className="text-muted-foreground">Member ID: </span>
-                            <span className="font-mono font-medium">{insurance.membership_id}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground">Coverage: </span>
-                            <span className="font-medium">
-                                {new Date(insurance.coverage_start_date).toLocaleDateString()} - {insurance.coverage_end_date ? new Date(insurance.coverage_end_date).toLocaleDateString() : 'Ongoing'}
-                            </span>
+                <div className="space-y-6">
+                    {/* Insurance Information Display */}
+                    <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                        <h3 className="flex items-center gap-2 font-medium">
+                            <Building2 className="h-4 w-4" />
+                            Insurance Details
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p className="text-muted-foreground">
+                                    Insurance Provider
+                                </p>
+                                <p className="font-medium">
+                                    {insurance.plan.provider.name}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">Plan</p>
+                                <p className="font-medium">
+                                    {insurance.plan.plan_name}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-muted-foreground">
+                                    Membership ID
+                                </p>
+                                <p className="font-medium font-mono">
+                                    {insurance.membership_id}
+                                </p>
+                            </div>
+                            {insurance.policy_number && (
+                                <div>
+                                    <p className="text-muted-foreground">
+                                        Policy Number
+                                    </p>
+                                    <p className="font-medium">
+                                        {insurance.policy_number}
+                                    </p>
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-muted-foreground">
+                                    Coverage Start
+                                </p>
+                                <p className="font-medium">
+                                    {new Date(
+                                        insurance.coverage_start_date,
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                            {insurance.coverage_end_date && (
+                                <div>
+                                    <p className="text-muted-foreground">
+                                        Coverage End
+                                    </p>
+                                    <p className="font-medium">
+                                        {new Date(
+                                            insurance.coverage_end_date,
+                                        ).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Expired Warning */}
+                    {/* Expired Insurance Warning */}
                     {isExpired && (
-                        <div className="rounded-md border border-amber-500/50 bg-amber-50 p-2 text-sm dark:bg-amber-950/20">
-                            <span className="font-medium text-amber-700 dark:text-amber-400">
-                                ⚠️ Coverage Expired - Insurance option unavailable
-                            </span>
+                        <div className="rounded-lg border border-amber-500/50 bg-amber-50 p-4 dark:bg-amber-950/20">
+                            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                                ⚠️ Insurance Coverage Expired
+                            </p>
+                            <p className="mt-1 text-xs text-amber-600 dark:text-amber-500">
+                                Patient's insurance coverage has expired. Please
+                                renew the coverage to use insurance.
+                            </p>
                         </div>
                     )}
 
-                    {/* Use Insurance Section */}
-                    {canUseInsurance && (
-                        <div className="space-y-3 rounded-lg border bg-primary/5 p-3">
-                            {/* Extension Mode: Verify Button */}
-                            {isExtensionMode && isNhisProvider && (
-                                <>
+                    {/* CCC Verification Section */}
+                    <div
+                        className={`space-y-4 rounded-lg border p-4 ${
+                            !canUseInsurance
+                                ? 'bg-muted opacity-50'
+                                : 'bg-primary/5'
+                        }`}
+                    >
+                        <div className="flex items-start gap-3">
+                            <CreditCard className="mt-1 h-5 w-5 text-primary" />
+                            <div className="flex-1 space-y-4">
+                                <div>
+                                    <h4 className="font-medium">
+                                        Use{' '}
+                                        {isNhisProvider ? 'NHIS' : 'Insurance'}{' '}
+                                        for this Visit
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        {isExtensionMode
+                                            ? 'Click "Verify NHIS" to automatically get the CCC from the NHIA portal.'
+                                            : 'Enter the Claim Check Code (CCC) to process this visit under insurance coverage.'}
+                                    </p>
+                                </div>
+
+                                {/* Extension Mode: Verify Button */}
+                                {isExtensionMode && isNhisProvider && canUseInsurance && (
+                                    <div className="space-y-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleVerifyNhis}
+                                            disabled={isVerifying}
+                                            className="w-full"
+                                        >
+                                            {isVerifying ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Verifying... (check NHIA tab)
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                                    Verify NHIS Membership
+                                                </>
+                                            )}
+                                        </Button>
+                                        
+                                        {cccData && (
+                                            <div className="rounded-md bg-green-50 p-3 dark:bg-green-950/20">
+                                                <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    <span className="text-sm font-medium">
+                                                        Verified: {cccData.memberName}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-xs text-green-600 dark:text-green-500">
+                                                    Status: {cccData.status} • 
+                                                    Coverage: {cccData.coverageStart} to {cccData.coverageEnd}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Manual Mode: Open Portal Button */}
+                                {!isExtensionMode && isNhisProvider && canUseInsurance && (
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={handleVerifyNhis}
-                                        disabled={isVerifying}
+                                        onClick={handleOpenPortalManual}
                                         className="w-full"
-                                        size="sm"
                                     >
-                                        {isVerifying ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Verifying...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <ExternalLink className="mr-2 h-4 w-4" />
-                                                Verify NHIS Membership
-                                            </>
-                                        )}
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        Open NHIA Portal (Membership # copied)
                                     </Button>
-                                    
-                                    {cccData && (
-                                        <div className="flex items-center gap-2 rounded-md bg-green-50 p-2 text-sm dark:bg-green-950/20">
-                                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                            <span className="text-green-700 dark:text-green-400">
-                                                <strong>{cccData.memberName}</strong> • {cccData.status} • {cccData.coverageStart} to {cccData.coverageEnd}
-                                            </span>
-                                        </div>
+                                )}
+
+                                {/* CCC Input Field */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="claim_check_code">
+                                        Claim Check Code (CCC) *
+                                    </Label>
+                                    <Input
+                                        id="claim_check_code"
+                                        type="text"
+                                        placeholder={
+                                            isExtensionMode
+                                                ? 'Will auto-fill after verification...'
+                                                : 'Enter CCC manually...'
+                                        }
+                                        value={claimCheckCode}
+                                        onChange={(e) => {
+                                            setClaimCheckCode(e.target.value);
+                                            setError('');
+                                        }}
+                                        maxLength={50}
+                                        disabled={!canUseInsurance}
+                                        className={
+                                            error
+                                                ? 'border-destructive'
+                                                : cccData?.ccc
+                                                  ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                  : ''
+                                        }
+                                    />
+                                    {error && (
+                                        <p className="text-sm text-destructive">
+                                            {error}
+                                        </p>
                                     )}
-                                </>
-                            )}
+                                    {!isExtensionMode && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Get the CCC from the NHIA portal after verifying the membership.
+                                        </p>
+                                    )}
+                                </div>
 
-                            {/* Manual Mode: Open Portal Button */}
-                            {!isExtensionMode && isNhisProvider && (
                                 <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={handleOpenPortalManual}
+                                    onClick={handleUseInsurance}
                                     className="w-full"
-                                    size="sm"
+                                    disabled={!canUseInsurance || !claimCheckCode.trim()}
                                 >
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    Open NHIA Portal
+                                    <Shield className="mr-2 h-4 w-4" />
+                                    Check-in with{' '}
+                                    {isNhisProvider ? 'NHIS' : 'Insurance'}
                                 </Button>
-                            )}
-
-                            {/* CCC Input */}
-                            <div className="space-y-1">
-                                <Label htmlFor="claim_check_code" className="text-sm">
-                                    CCC (Claim Check Code) *
-                                </Label>
-                                <Input
-                                    id="claim_check_code"
-                                    type="text"
-                                    placeholder={isExtensionMode ? 'Auto-fills after verification...' : 'Enter CCC...'}
-                                    value={claimCheckCode}
-                                    onChange={(e) => {
-                                        setClaimCheckCode(e.target.value);
-                                        setError('');
-                                    }}
-                                    maxLength={50}
-                                    className={`h-9 ${
-                                        error ? 'border-destructive' : cccData?.ccc ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''
-                                    }`}
-                                />
-                                {error && <p className="text-xs text-destructive">{error}</p>}
                             </div>
-
-                            <Button
-                                onClick={handleUseInsurance}
-                                className="w-full"
-                                disabled={!claimCheckCode.trim()}
-                            >
-                                <Shield className="mr-2 h-4 w-4" />
-                                Check-in with {isNhisProvider ? 'NHIS' : 'Insurance'}
-                            </Button>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Cash Payment Option - More compact */}
-                    <Button
-                        onClick={onUseCash}
-                        variant="outline"
-                        className="w-full"
-                    >
-                        <Wallet className="mr-2 h-4 w-4" />
-                        Pay Cash Instead
-                    </Button>
+                    {/* Cash Payment Option */}
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <div>
+                            <h4 className="font-medium">
+                                Or Pay Cash for this Visit
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                                Patient chooses to pay out-of-pocket instead of
+                                using insurance for this visit.
+                            </p>
+                        </div>
 
-                    {/* Cancel */}
+                        <Button
+                            onClick={handleUseCash}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            Proceed without Insurance (Cash Payment)
+                        </Button>
+                    </div>
+
+                    {/* Cancel Option */}
                     <div className="flex justify-end">
-                        <Button onClick={handleModalClose} variant="ghost" size="sm">
-                            Cancel
+                        <Button
+                            onClick={handleModalClose}
+                            variant="ghost"
+                            size="sm"
+                        >
+                            Cancel Check-in
                         </Button>
                     </div>
                 </div>
