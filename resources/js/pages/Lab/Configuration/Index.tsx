@@ -233,6 +233,9 @@ export default function LabConfigurationIndex({
                         <DataTable
                             columns={columns(setEditingService)}
                             data={labServices.data}
+                            pagination={labServices}
+                            filters={filters}
+                            categories={categories}
                         />
                     </CardContent>
                 </Card>

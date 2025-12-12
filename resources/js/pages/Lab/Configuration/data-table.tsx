@@ -8,7 +8,6 @@ import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
@@ -21,6 +20,8 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -33,16 +34,46 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { router } from '@inertiajs/react';
 import { useDebouncedCallback } from 'use-debounce';
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginationData {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
+}
+
+interface Filters {
+    search?: string;
+    category?: string;
+    status?: string;
+    per_page?: number;
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    pagination: PaginationData;
+    filters: Filters;
+    categories: string[];
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    pagination,
+    filters,
+    categories,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -50,6 +81,7 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [search, setSearch] = React.useState(filters.search || '');
 
     const table = useReactTable({
         data,
@@ -57,41 +89,95 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
+        manualPagination: true,
+        pageCount: pagination.last_page,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
+            pagination: {
+                pageIndex: pagination.current_page - 1,
+                pageSize: pagination.per_page,
+            },
         },
     });
 
-    const [search, setSearch] = React.useState('');
-
-    // Get unique categories for category filter
-    const categories = React.useMemo(() => {
-        const categorySet = new Set<string>();
-        data.forEach((item: any) => {
-            if (item.category) {
-                categorySet.add(item.category);
-            }
-        });
-        return Array.from(categorySet);
-    }, [data]);
-
-    // Debounced client-side search
+    // Debounced server-side search
     const debouncedSearch = useDebouncedCallback((value: string) => {
-        table.getColumn('name')?.setFilterValue(value);
+        router.get(
+            window.location.pathname,
+            {
+                search: value || undefined,
+                category: filters.category || undefined,
+                status: filters.status || undefined,
+                per_page: pagination.per_page,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     }, 300);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
         debouncedSearch(value);
     };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const handlePerPageChange = (perPage: string) => {
+        router.get(
+            window.location.pathname,
+            {
+                search: filters.search || undefined,
+                category: filters.category || undefined,
+                status: filters.status || undefined,
+                per_page: perPage,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const handleCategoryChange = (category: string | undefined) => {
+        router.get(
+            window.location.pathname,
+            {
+                search: filters.search || undefined,
+                category: category || undefined,
+                status: filters.status || undefined,
+                per_page: pagination.per_page,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const handleStatusChange = (status: string | undefined) => {
+        router.get(
+            window.location.pathname,
+            {
+                search: filters.search || undefined,
+                category: filters.category || undefined,
+                status: status || undefined,
+                per_page: pagination.per_page,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    // Find prev/next links from pagination
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -106,11 +192,26 @@ export function DataTable<TData, TValue>({
                     />
                 </div>
 
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show</span>
+                    <select
+                        value={pagination.per_page}
+                        onChange={(e) => handlePerPageChange(e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
                 {/* Category Filter */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Category
+                            {filters.category || 'Category'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -119,43 +220,24 @@ export function DataTable<TData, TValue>({
                             Filter by Category
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        {categories.map((category) => (
-                            <DropdownMenuCheckboxItem
-                                key={category}
-                                checked={
-                                    (
-                                        table
-                                            .getColumn('category')
-                                            ?.getFilterValue() as string[]
-                                    )?.includes(category) ?? false
-                                }
-                                onCheckedChange={(checked) => {
-                                    const currentFilter =
-                                        (table
-                                            .getColumn('category')
-                                            ?.getFilterValue() as string[]) ||
-                                        [];
-                                    if (checked) {
-                                        table
-                                            .getColumn('category')
-                                            ?.setFilterValue([
-                                                ...currentFilter,
-                                                category,
-                                            ]);
-                                    } else {
-                                        table
-                                            .getColumn('category')
-                                            ?.setFilterValue(
-                                                currentFilter.filter(
-                                                    (c) => c !== category,
-                                                ),
-                                            );
-                                    }
-                                }}
-                            >
-                                {category}
-                            </DropdownMenuCheckboxItem>
-                        ))}
+                        <DropdownMenuRadioGroup
+                            value={filters.category || ''}
+                            onValueChange={(value) =>
+                                handleCategoryChange(value || undefined)
+                            }
+                        >
+                            <DropdownMenuRadioItem value="">
+                                All Categories
+                            </DropdownMenuRadioItem>
+                            {categories.map((category) => (
+                                <DropdownMenuRadioItem
+                                    key={category}
+                                    value={category}
+                                >
+                                    {category}
+                                </DropdownMenuRadioItem>
+                            ))}
+                        </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -163,79 +245,33 @@ export function DataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Status
+                            {filters.status === 'configured'
+                                ? 'Configured'
+                                : filters.status === 'pending'
+                                  ? 'Setup Needed'
+                                  : 'Status'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                         <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem
-                            checked={
-                                (
-                                    table
-                                        .getColumn('status')
-                                        ?.getFilterValue() as string[]
-                                )?.includes('configured') ?? false
+                        <DropdownMenuRadioGroup
+                            value={filters.status || ''}
+                            onValueChange={(value) =>
+                                handleStatusChange(value || undefined)
                             }
-                            onCheckedChange={(checked) => {
-                                const currentFilter =
-                                    (table
-                                        .getColumn('status')
-                                        ?.getFilterValue() as string[]) || [];
-                                if (checked) {
-                                    table
-                                        .getColumn('status')
-                                        ?.setFilterValue([
-                                            ...currentFilter,
-                                            'configured',
-                                        ]);
-                                } else {
-                                    table
-                                        .getColumn('status')
-                                        ?.setFilterValue(
-                                            currentFilter.filter(
-                                                (s) => s !== 'configured',
-                                            ),
-                                        );
-                                }
-                            }}
                         >
-                            Configured
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                            checked={
-                                (
-                                    table
-                                        .getColumn('status')
-                                        ?.getFilterValue() as string[]
-                                )?.includes('pending') ?? false
-                            }
-                            onCheckedChange={(checked) => {
-                                const currentFilter =
-                                    (table
-                                        .getColumn('status')
-                                        ?.getFilterValue() as string[]) || [];
-                                if (checked) {
-                                    table
-                                        .getColumn('status')
-                                        ?.setFilterValue([
-                                            ...currentFilter,
-                                            'pending',
-                                        ]);
-                                } else {
-                                    table
-                                        .getColumn('status')
-                                        ?.setFilterValue(
-                                            currentFilter.filter(
-                                                (s) => s !== 'pending',
-                                            ),
-                                        );
-                                }
-                            }}
-                        >
-                            Setup Needed
-                        </DropdownMenuCheckboxItem>
+                            <DropdownMenuRadioItem value="">
+                                All Statuses
+                            </DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="configured">
+                                Configured
+                            </DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="pending">
+                                Setup Needed
+                            </DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -318,7 +354,8 @@ export function DataTable<TData, TValue>({
                                         <FlaskConical className="h-8 w-8 text-muted-foreground" />
                                         <div>No lab services found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            Try adjusting your search or filters.
+                                            Try adjusting your search or
+                                            filters.
                                         </div>
                                     </div>
                                 </TableCell>
@@ -327,25 +364,51 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    Showing {table.getRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} lab service(s).
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                    {pagination.from && pagination.to ? (
+                        <>
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} lab service(s)
+                        </>
+                    ) : (
+                        <>No results</>
+                    )}
                 </div>
-                <div className="space-x-2">
+                <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={() => handlePageChange(prevLink?.url ?? null)}
+                        disabled={!prevLink?.url}
                     >
                         Previous
                     </Button>
+                    {pagination.links
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
+                        .map((link, index) => (
+                            <Button
+                                key={index}
+                                variant={link.active ? 'default' : 'outline'}
+                                size="sm"
+                                className="min-w-[40px]"
+                                onClick={() => handlePageChange(link.url)}
+                                disabled={!link.url}
+                            >
+                                {link.label}
+                            </Button>
+                        ))}
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        onClick={() => handlePageChange(nextLink?.url ?? null)}
+                        disabled={!nextLink?.url}
                     >
                         Next
                     </Button>
