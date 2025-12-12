@@ -106,9 +106,7 @@ export function PrescriptionReviewTable({
                     {prescriptionsData.map((pd, index) => {
                         const review = reviews[index];
                         const rowError = getErrorForRow(index);
-                        const needsReason =
-                            review.action === 'external' ||
-                            review.action === 'cancel';
+                        const needsReason = review.action === 'cancel';
                         const isPartial = review.action === 'partial';
 
                         return (
@@ -327,8 +325,7 @@ export function MobileReviewCards({
             {prescriptionsData.map((pd, index) => {
                 const review = reviews[index];
                 const rowError = getErrorForRow(index);
-                const needsReason =
-                    review.action === 'external' || review.action === 'cancel';
+                const needsReason = review.action === 'cancel';
                 const isPartial = review.action === 'partial';
 
                 return (

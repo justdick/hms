@@ -103,15 +103,33 @@ export function ReviewPrescriptionsModal({
         prescriptionsData.map((pd) => {
             // If prescription is already reviewed, determine the action based on quantity
             const isReviewed = pd.prescription.status === 'reviewed';
-            const quantityToDispense = isReviewed
-                ? pd.prescription.quantity_to_dispense ||
-                  pd.prescription.quantity
-                : pd.prescription.quantity;
 
-            // Determine action based on current state
+            // Determine action based on current state and stock availability
             let action: 'keep' | 'partial' | 'external' | 'cancel' = 'keep';
-            if (isReviewed && quantityToDispense < pd.prescription.quantity) {
-                action = 'partial';
+            let quantityToDispense: number | null = pd.prescription.quantity;
+
+            if (isReviewed) {
+                // Already reviewed - use existing values
+                quantityToDispense =
+                    pd.prescription.quantity_to_dispense ||
+                    pd.prescription.quantity;
+                if (quantityToDispense < pd.prescription.quantity) {
+                    action = 'partial';
+                }
+            } else {
+                // Not yet reviewed - apply smart defaults based on stock
+                if (pd.stock_status.in_stock === 0) {
+                    // Out of stock - default to external
+                    action = 'external';
+                    quantityToDispense = null;
+                } else if (
+                    pd.stock_status.in_stock < pd.prescription.quantity
+                ) {
+                    // Partial stock available - default to partial with available qty
+                    action = 'partial';
+                    quantityToDispense = pd.max_dispensable;
+                }
+                // Otherwise keep defaults: action='keep', qty=prescribed
             }
 
             return {
@@ -127,13 +145,30 @@ export function ReviewPrescriptionsModal({
     const [supplyReviews, setSupplyReviews] = useState<SupplyReviewForm[]>(
         suppliesData.map((sd) => {
             const isReviewed = sd.supply.status === 'reviewed';
-            const quantityToDispense = isReviewed
-                ? sd.supply.quantity_to_dispense || sd.supply.quantity
-                : sd.supply.quantity;
 
+            // Determine action based on current state and stock availability
             let action: 'keep' | 'partial' | 'external' | 'cancel' = 'keep';
-            if (isReviewed && quantityToDispense < sd.supply.quantity) {
-                action = 'partial';
+            let quantityToDispense: number | null = sd.supply.quantity;
+
+            if (isReviewed) {
+                // Already reviewed - use existing values
+                quantityToDispense =
+                    sd.supply.quantity_to_dispense || sd.supply.quantity;
+                if (quantityToDispense < sd.supply.quantity) {
+                    action = 'partial';
+                }
+            } else {
+                // Not yet reviewed - apply smart defaults based on stock
+                if (sd.stock_status.in_stock === 0) {
+                    // Out of stock - default to external
+                    action = 'external';
+                    quantityToDispense = null;
+                } else if (sd.stock_status.in_stock < sd.supply.quantity) {
+                    // Partial stock available - default to partial with available qty
+                    action = 'partial';
+                    quantityToDispense = sd.max_dispensable;
+                }
+                // Otherwise keep defaults: action='keep', qty=requested
             }
 
             return {
@@ -162,7 +197,10 @@ export function ReviewPrescriptionsModal({
                 newReviews[index].quantity_to_dispense =
                     prescriptionsData[index].prescription.quantity;
             } else if (value === 'partial') {
-                // Set to null so user must enter manually to avoid mistakes
+                // Prefill with max available stock (pharmacist can reduce if needed)
+                newReviews[index].quantity_to_dispense =
+                    prescriptionsData[index].max_dispensable;
+            } else if (value === 'external' || value === 'cancel') {
                 newReviews[index].quantity_to_dispense = null;
             }
         }
@@ -172,7 +210,7 @@ export function ReviewPrescriptionsModal({
 
     const updateSupplyReview = (
         index: number,
-        field: keyof SupplyReviewForm,
+        field: keyof ReviewForm,
         value: any,
     ) => {
         const newReviews = [...supplyReviews];
@@ -183,6 +221,10 @@ export function ReviewPrescriptionsModal({
                 newReviews[index].quantity_to_dispense =
                     suppliesData[index].supply.quantity;
             } else if (value === 'partial') {
+                // Prefill with max available stock (pharmacist can reduce if needed)
+                newReviews[index].quantity_to_dispense =
+                    suppliesData[index].max_dispensable;
+            } else if (value === 'external' || value === 'cancel') {
                 newReviews[index].quantity_to_dispense = null;
             }
         }
