@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -111,14 +110,6 @@ export default function InsuranceDialog({
         
         // Start verification (opens portal, extension will auto-fill and login)
         startVerification(insurance.membership_id, nhisSettings?.credentials || undefined, nhisSettings?.nhia_portal_url);
-    };
-
-    const handleOpenPortalManual = () => {
-        // Copy membership number to clipboard
-        navigator.clipboard.writeText(insurance.membership_id).catch(() => {});
-        
-        // Open portal
-        window.open(nhisSettings?.nhia_portal_url || 'https://ccc.nhia.gov.gh/', '_blank');
     };
 
     const handleUseInsurance = () => {
@@ -253,19 +244,7 @@ export default function InsuranceDialog({
                             </>
                         )}
 
-                        {/* Manual Mode: Open Portal Button */}
-                        {!isExtensionMode && isNhisProvider && canUseInsurance && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleOpenPortalManual}
-                                className="w-full"
-                            >
-                                <ExternalLink className="mr-2 h-3 w-3" />
-                                Open NHIA Portal (Membership # copied)
-                            </Button>
-                        )}
+
 
                         {/* CCC Input Field */}
                         <div className="space-y-1">
