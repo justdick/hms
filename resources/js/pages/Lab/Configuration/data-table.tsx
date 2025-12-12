@@ -12,7 +12,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, FlaskConical, Search } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useDebouncedCallback } from 'use-debounce';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -69,6 +70,8 @@ export function DataTable<TData, TValue>({
         },
     });
 
+    const [search, setSearch] = React.useState('');
+
     // Get unique categories for category filter
     const categories = React.useMemo(() => {
         const categorySet = new Set<string>();
@@ -80,22 +83,28 @@ export function DataTable<TData, TValue>({
         return Array.from(categorySet);
     }, [data]);
 
+    // Debounced client-side search
+    const debouncedSearch = useDebouncedCallback((value: string) => {
+        table.getColumn('name')?.setFilterValue(value);
+    }, 300);
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        debouncedSearch(value);
+    };
+
     return (
         <div className="w-full space-y-4">
             <div className="flex items-center gap-4">
-                <Input
-                    placeholder="Filter by name..."
-                    value={
-                        (table.getColumn('name')?.getFilterValue() as string) ??
-                        ''
-                    }
-                    onChange={(event) =>
-                        table
-                            .getColumn('name')
-                            ?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
+                <div className="relative max-w-sm flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by name or code..."
+                        value={search}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
 
                 {/* Category Filter */}
                 <DropdownMenu>
@@ -305,7 +314,13 @@ export function DataTable<TData, TValue>({
                                     colSpan={columns.length}
                                     className="h-24 text-center"
                                 >
-                                    No results.
+                                    <div className="flex flex-col items-center gap-2">
+                                        <FlaskConical className="h-8 w-8 text-muted-foreground" />
+                                        <div>No lab services found.</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            Try adjusting your search or filters.
+                                        </div>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}

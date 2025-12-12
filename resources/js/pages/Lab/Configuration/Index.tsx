@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
@@ -172,60 +173,26 @@ export default function LabConfigurationIndex({
 
                 {/* Stats Summary */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Total Services
-                            </CardTitle>
-                            <FlaskConical className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {labServices.length}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Available lab services
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Configured
-                            </CardTitle>
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">
-                                {labServices.filter(hasParameters).length}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                With test parameters
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Pending
-                            </CardTitle>
-                            <AlertCircle className="h-4 w-4 text-orange-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-orange-600">
-                                {
-                                    labServices.filter(
-                                        (service) => !hasParameters(service),
-                                    ).length
-                                }
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Need configuration
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <StatCard
+                        label="Total Services"
+                        value={labServices.length}
+                        icon={<FlaskConical className="h-4 w-4" />}
+                        description="Available lab services"
+                    />
+                    <StatCard
+                        label="Configured"
+                        value={labServices.filter(hasParameters).length}
+                        icon={<CheckCircle2 className="h-4 w-4" />}
+                        variant="success"
+                        description="With test parameters"
+                    />
+                    <StatCard
+                        label="Pending"
+                        value={labServices.filter((service) => !hasParameters(service)).length}
+                        icon={<AlertCircle className="h-4 w-4" />}
+                        variant="warning"
+                        description="Need configuration"
+                    />
                 </div>
 
                 {/* Lab Services DataTable */}
