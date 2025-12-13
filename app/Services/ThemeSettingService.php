@@ -21,6 +21,13 @@ class ThemeSettingService
             'warning' => '38 92% 50%',
             'error' => '0 84% 60%',
             'info' => '210 100% 50%',
+            // Sidebar colors
+            'sidebar' => '210 20% 98%',
+            'sidebarForeground' => '210 40% 20%',
+            'sidebarPrimary' => '210 90% 45%',
+            'sidebarPrimaryForeground' => '0 0% 100%',
+            'sidebarAccent' => '210 30% 94%',
+            'sidebarAccentForeground' => '210 40% 25%',
         ],
         'branding' => [
             'logoUrl' => null,

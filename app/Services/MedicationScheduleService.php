@@ -195,6 +195,15 @@ class MedicationScheduleService
             return; // No schedule pattern configured
         }
 
+        // Check if schedule already exists for this prescription (prevent duplicates)
+        $existingCount = MedicationAdministration::where('prescription_id', $prescription->id)
+            ->where('status', 'scheduled')
+            ->count();
+
+        if ($existingCount > 0) {
+            return; // Schedule already exists, use reconfigureSchedule() to change it
+        }
+
         $schedulePattern = $prescription->schedule_pattern;
         $duration = $this->parseDuration($prescription->duration);
         $startDate = now()->startOfDay();
@@ -209,6 +218,16 @@ class MedicationScheduleService
             // Create MedicationAdministration records for each time
             foreach ($times as $time) {
                 $scheduledDateTime = $currentDate->copy()->setTimeFromTimeString($time);
+
+                // Skip if record already exists for this prescription and time
+                // (e.g., already given/held/refused from previous schedule)
+                $exists = MedicationAdministration::where('prescription_id', $prescription->id)
+                    ->where('scheduled_time', $scheduledDateTime)
+                    ->exists();
+
+                if ($exists) {
+                    continue;
+                }
 
                 MedicationAdministration::create([
                     'prescription_id' => $prescription->id,
@@ -397,11 +416,12 @@ class MedicationScheduleService
      */
     public function reconfigureSchedule(Prescription $prescription, array $newPattern, User $user): void
     {
-        // Cancel all future scheduled administrations
+        // Delete all future scheduled/cancelled administrations (not given/held/refused)
+        // We delete to allow new records with same scheduled_time (unique constraint)
         MedicationAdministration::where('prescription_id', $prescription->id)
-            ->where('status', 'scheduled')
+            ->whereIn('status', ['scheduled', 'cancelled'])
             ->where('scheduled_time', '>', now())
-            ->update(['status' => 'cancelled']);
+            ->delete();
 
         // Update prescription schedule_pattern
         $prescription->update([

@@ -19,6 +19,13 @@ export interface ThemeColors {
     warning: string;
     error: string;
     info: string;
+    // Sidebar colors
+    sidebar: string;
+    sidebarForeground: string;
+    sidebarPrimary: string;
+    sidebarPrimaryForeground: string;
+    sidebarAccent: string;
+    sidebarAccentForeground: string;
 }
 
 export interface ThemeBranding {
@@ -50,6 +57,12 @@ export const defaultTheme: ThemeConfig = {
         warning: '38 92% 50%',
         error: '0 84% 60%',
         info: '210 100% 50%',
+        sidebar: '210 20% 98%',
+        sidebarForeground: '210 40% 20%',
+        sidebarPrimary: '210 90% 45%',
+        sidebarPrimaryForeground: '0 0% 100%',
+        sidebarAccent: '210 30% 94%',
+        sidebarAccentForeground: '210 40% 25%',
     },
     branding: {
         logoUrl: null,
@@ -98,6 +111,12 @@ function applyThemeVariables(theme: ThemeConfig): void {
         warning: '--warning',
         error: '--error',
         info: '--info',
+        sidebar: '--sidebar',
+        sidebarForeground: '--sidebar-foreground',
+        sidebarPrimary: '--sidebar-primary',
+        sidebarPrimaryForeground: '--sidebar-primary-foreground',
+        sidebarAccent: '--sidebar-accent',
+        sidebarAccentForeground: '--sidebar-accent-foreground',
     };
 
     // Apply color variables

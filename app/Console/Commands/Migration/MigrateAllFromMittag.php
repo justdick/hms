@@ -87,11 +87,12 @@ class MigrateAllFromMittag extends Command
             '8_lab_services' => 'migrate:lab-services-from-mittag',
             '9_lab_parameters' => 'migrate:lab-parameters-from-mittag',
             '10_lab_orders' => 'migrate:lab-orders-from-mittag',
-            '11_admissions' => 'migrate:admissions-from-mittag',
-            '12_ipd_vitals' => 'migrate:vitals-from-mittag --source=ipd',
-            '13_ward_rounds' => 'migrate:ward-rounds-from-mittag',
-            '14_nursing_notes' => 'migrate:nursing-notes-from-mittag',
-            '15_patient_insurance' => 'migrate:patient-insurance-from-mittag',
+            '11_wards' => 'migrate:wards-from-mittag',
+            '12_admissions' => 'migrate:admissions-from-mittag',
+            '13_ipd_vitals' => 'migrate:vitals-from-mittag --source=ipd',
+            '14_ward_rounds' => 'migrate:ward-rounds-from-mittag',
+            '15_nursing_notes' => 'migrate:nursing-notes-from-mittag',
+            '16_patient_insurance' => 'migrate:patient-insurance-from-mittag',
         ];
 
         // Filter by --only option
@@ -170,6 +171,7 @@ class MigrateAllFromMittag extends Command
             'lab_param_list' => 'Lab Parameters',
             'lab_daily_register' => 'Lab Orders',
             'lab_results' => 'Lab Results',
+            'wards' => 'Wards',
             'ipd_register' => 'Admissions',
             'ipd_vitals' => 'IPD Vitals',
             'ipd_review' => 'Ward Rounds',

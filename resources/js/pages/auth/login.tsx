@@ -49,7 +49,7 @@ export default function Login({ status }: LoginProps) {
                                         tabIndex={1}
                                         autoComplete="username"
                                         placeholder="Enter your username"
-                                        className="h-11 pl-10 transition-shadow focus:ring-2 focus:ring-blue-500/20"
+                                        className="h-11 pl-10 transition-shadow focus:ring-2 focus:ring-primary/20"
                                     />
                                 </div>
                                 <InputError message={errors.username} />
@@ -69,7 +69,7 @@ export default function Login({ status }: LoginProps) {
                                         tabIndex={2}
                                         autoComplete="current-password"
                                         placeholder="Enter your password"
-                                        className="h-11 pl-10 transition-shadow focus:ring-2 focus:ring-blue-500/20"
+                                        className="h-11 pl-10 transition-shadow focus:ring-2 focus:ring-primary/20"
                                     />
                                 </div>
                                 <InputError message={errors.password} />
@@ -81,16 +81,16 @@ export default function Login({ status }: LoginProps) {
                                 id="remember"
                                 name="remember"
                                 tabIndex={3}
-                                className="border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
-                            <Label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+                            <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
                                 Keep me signed in
                             </Label>
                         </div>
 
                         <Button
                             type="submit"
-                            className="mt-2 h-11 w-full bg-gradient-to-r from-blue-600 to-indigo-600 font-medium shadow-lg shadow-blue-500/25 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/30"
+                            className="mt-2 h-11 w-full bg-primary font-medium shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-primary/30"
                             tabIndex={4}
                             disabled={processing}
                             data-test="login-button"

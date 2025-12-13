@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { format, isAfter, isPast, isToday } from 'date-fns';
 import {
     AlertCircle,
+    AlertTriangle,
     CheckCircle2,
     Circle,
     Clock,
@@ -73,6 +75,8 @@ interface MedicationAdministrationRecordProps {
     onAdminister: (med: MedicationAdministration) => void;
     onHold: (med: MedicationAdministration) => void;
     onRefuse: (med: MedicationAdministration) => void;
+    pendingScheduleCount?: number;
+    onNavigateToHistory?: () => void;
 }
 
 export function MedicationAdministrationRecord({
@@ -80,6 +84,8 @@ export function MedicationAdministrationRecord({
     onAdminister,
     onHold,
     onRefuse,
+    pendingScheduleCount = 0,
+    onNavigateToHistory,
 }: MedicationAdministrationRecordProps) {
     // Get today's unique scheduled times, sorted
     const todayTimeSlots = useMemo(() => {
@@ -136,6 +142,32 @@ export function MedicationAdministrationRecord({
                     <p className="text-muted-foreground">
                         No medications scheduled for today
                     </p>
+                    {pendingScheduleCount > 0 && (
+                        <Alert
+                            variant="default"
+                            className="mt-6 max-w-md border-orange-500 bg-orange-50 dark:border-orange-600 dark:bg-orange-950/30"
+                        >
+                            <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                            <AlertTitle className="text-orange-800 dark:text-orange-300">
+                                Schedule Configuration Required
+                            </AlertTitle>
+                            <AlertDescription className="text-orange-700 dark:text-orange-400">
+                                {pendingScheduleCount} prescription
+                                {pendingScheduleCount !== 1 ? 's need' : ' needs'}{' '}
+                                schedule configuration before medications appear
+                                here.
+                                {onNavigateToHistory && (
+                                    <Button
+                                        variant="link"
+                                        className="h-auto p-0 pl-1 text-orange-700 underline dark:text-orange-400"
+                                        onClick={onNavigateToHistory}
+                                    >
+                                        Go to Medication History →
+                                    </Button>
+                                )}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </CardContent>
             </Card>
         );

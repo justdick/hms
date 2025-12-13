@@ -113,15 +113,19 @@ class MigrateAdmissionsFromMittag extends Command
     private function buildWardMap(): void
     {
         // Map old ward IDs to new ward IDs
-        // Old system: 1, 2, 3, 4, 9
-        // We'll map to first available wards
-        $this->wardMap = [
-            1 => 1, // Ward A
-            2 => 2, // Ward B
-            3 => 3, // ICU-1
-            4 => 4, // NICU
-            9 => 5, // Pediatric Wing (or default)
-        ];
+        // Wards are migrated with same IDs from Mittag, so direct mapping works
+        // Old system: 1 (Male), 2 (Female), 3 (Paediatric), 4 (Maternity), 9 (Emergency/Same Day)
+        $existingWards = DB::table('wards')->pluck('id')->toArray();
+
+        // Direct mapping - wards migrated with same IDs
+        foreach ([1, 2, 3, 4, 9] as $wardId) {
+            if (in_array($wardId, $existingWards)) {
+                $this->wardMap[$wardId] = $wardId;
+            } else {
+                // Fallback to first available ward if specific ward doesn't exist
+                $this->wardMap[$wardId] = $existingWards[0] ?? 1;
+            }
+        }
     }
 
     private function migrateAdmission(object $old): void

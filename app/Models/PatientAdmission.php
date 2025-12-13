@@ -165,57 +165,80 @@ class PatientAdmission extends Model
 
     public function hasUnpaidCopays(): bool
     {
-        // Check if patient has active insurance
-        if (! $this->patient->activeInsurance) {
-            return false;
-        }
-
         // Get all charges for this patient's checkin/consultation
         $checkinId = $this->consultation?->patient_checkin_id;
         if (! $checkinId) {
             return false;
         }
 
-        // Check for unpaid insurance-covered charges
+        // Check for any unpaid charges (insurance copays or cash patient charges)
         return Charge::where('patient_checkin_id', $checkinId)
-            ->where('is_insurance_claim', true)
+            ->where('status', 'pending')
             ->where(function ($query) {
-                $query->where('patient_copay_amount', '>', 0)
-                    ->whereNull('paid_at');
+                // Insurance patients: check unpaid copay amounts
+                $query->where(function ($q) {
+                    $q->where('is_insurance_claim', true)
+                        ->where('patient_copay_amount', '>', 0)
+                        ->whereNull('paid_at');
+                })
+                // Cash patients: check unpaid full amounts
+                    ->orWhere(function ($q) {
+                        $q->where('is_insurance_claim', false)
+                            ->whereNull('paid_at');
+                    });
             })
             ->exists();
     }
 
     public function getUnpaidCopayAmount(): float
     {
-        // Check if patient has active insurance
-        if (! $this->patient->activeInsurance) {
-            return 0;
-        }
-
         // Get all charges for this patient's checkin/consultation
         $checkinId = $this->consultation?->patient_checkin_id;
         if (! $checkinId) {
             return 0;
         }
 
-        // Sum unpaid copay amounts
-        return (float) Charge::where('patient_checkin_id', $checkinId)
+        // Sum unpaid amounts for insurance copays
+        $unpaidCopays = (float) Charge::where('patient_checkin_id', $checkinId)
+            ->where('status', 'pending')
             ->where('is_insurance_claim', true)
-            ->where(function ($query) {
-                $query->where('patient_copay_amount', '>', 0)
-                    ->whereNull('paid_at');
-            })
+            ->where('patient_copay_amount', '>', 0)
+            ->whereNull('paid_at')
             ->sum('patient_copay_amount');
+
+        // Sum unpaid amounts for cash patients (full charge amount)
+        $unpaidCash = (float) Charge::where('patient_checkin_id', $checkinId)
+            ->where('status', 'pending')
+            ->where('is_insurance_claim', false)
+            ->whereNull('paid_at')
+            ->sum('amount');
+
+        return $unpaidCopays + $unpaidCash;
+    }
+
+    /**
+     * Check if patient has any outstanding balance (alias for hasUnpaidCopays).
+     */
+    public function hasOutstandingBalance(): bool
+    {
+        return $this->hasUnpaidCopays();
+    }
+
+    /**
+     * Get total outstanding balance (alias for getUnpaidCopayAmount).
+     */
+    public function getOutstandingBalance(): float
+    {
+        return $this->getUnpaidCopayAmount();
     }
 
     public function markAsDischarged(User $dischargedBy, ?string $notes = null): void
     {
-        // Check for unpaid copays before allowing discharge
-        if ($this->hasUnpaidCopays()) {
-            $unpaidAmount = $this->getUnpaidCopayAmount();
+        // Check for unpaid charges before allowing discharge
+        if ($this->hasOutstandingBalance()) {
+            $unpaidAmount = number_format($this->getOutstandingBalance(), 2);
             throw new \RuntimeException(
-                "Cannot discharge patient with unpaid copays. Outstanding amount: GHS {$unpaidAmount}. Please collect payment at billing before discharge."
+                "Cannot discharge patient with outstanding balance. Amount owed: GHS {$unpaidAmount}. Please collect payment at billing before discharge."
             );
         }
 

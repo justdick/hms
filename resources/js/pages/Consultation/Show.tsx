@@ -449,7 +449,6 @@ export default function ConsultationShow({
         reset: resetAdmission,
     } = useForm({
         ward_id: '',
-        admission_reason: '',
         admission_notes: '',
     });
 
@@ -1121,27 +1120,6 @@ export default function ConsultationShow({
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor="admission_reason">
-                                                        Admission Reason
-                                                    </Label>
-                                                    <Textarea
-                                                        id="admission_reason"
-                                                        placeholder="Reason for admission..."
-                                                        value={
-                                                            admissionData.admission_reason
-                                                        }
-                                                        onChange={(e) =>
-                                                            setAdmissionData(
-                                                                'admission_reason',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        required
-                                                        rows={3}
-                                                    />
-                                                </div>
-
-                                                <div>
                                                     <Label htmlFor="admission_notes">
                                                         Admission Notes
                                                         (Optional)
@@ -1179,8 +1157,7 @@ export default function ConsultationShow({
                                                         type="submit"
                                                         disabled={
                                                             admissionProcessing ||
-                                                            !admissionData.ward_id ||
-                                                            !admissionData.admission_reason
+                                                            !admissionData.ward_id
                                                         }
                                                         className="flex-1 bg-green-600 hover:bg-green-700"
                                                     >

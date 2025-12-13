@@ -8,7 +8,6 @@ use App\Models\Bed;
 use App\Models\Consultation;
 use App\Models\PatientAdmission;
 use App\Models\Ward;
-use App\Services\MedicationScheduleService;
 use App\Services\VitalsScheduleService;
 use Illuminate\Http\Request;
 
@@ -16,7 +15,6 @@ class AdmissionController extends Controller
 {
     public function __construct(
         protected VitalsScheduleService $vitalsScheduleService,
-        protected MedicationScheduleService $medicationScheduleService
     ) {}
 
     public function store(Request $request, Consultation $consultation)
@@ -25,7 +23,6 @@ class AdmissionController extends Controller
 
         $request->validate([
             'ward_id' => 'required|exists:wards,id',
-            'admission_reason' => 'required|string|max:1000',
             'admission_notes' => 'nullable|string|max:2000',
         ]);
 
@@ -44,7 +41,6 @@ class AdmissionController extends Controller
             'ward_id' => $ward->id,
             'attending_doctor_id' => $request->user()->id,
             'status' => 'admitted',
-            'admission_reason' => $request->admission_reason,
             'admission_notes' => $request->admission_notes,
             'admitted_at' => now(),
         ]);
@@ -66,11 +62,9 @@ class AdmissionController extends Controller
             $request->user()
         );
 
-        // Generate medication administration schedules for consultation prescriptions
-        $consultation->load('prescriptions');
-        foreach ($consultation->prescriptions as $prescription) {
-            $this->medicationScheduleService->generateSchedule($prescription);
-        }
+        // Note: Medication schedules are NOT auto-generated here.
+        // Ward staff must configure medication schedules via "Medication History" tab
+        // to ensure appropriate timing for ward rounds.
 
         // Fire admission event for billing
         event(new PatientAdmitted(

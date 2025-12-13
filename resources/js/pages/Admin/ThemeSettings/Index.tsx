@@ -3,29 +3,60 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTheme, type ThemeConfig, type ThemeColors } from '@/contexts/theme-context';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { AlertCircle, Check, Palette, RefreshCw, Save, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { HslColorPicker } from 'react-colorful';
+
+// Get CSRF token from cookie (more reliable than meta tag on first load)
+function getCsrfToken(): string {
+    // Try meta tag first
+    const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (metaToken) return metaToken;
+
+    // Fall back to XSRF-TOKEN cookie (Laravel sets this)
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'XSRF-TOKEN') {
+            return decodeURIComponent(value);
+        }
+    }
+    return '';
+}
 
 interface Props {
     theme: ThemeConfig;
     canManageTheme: boolean;
 }
 
-// Color configuration for the picker
-const colorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
+// Color configuration for the picker - grouped by section
+const mainColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
     { key: 'primary', label: 'Primary', description: 'Main brand color' },
     { key: 'primaryForeground', label: 'Primary Foreground', description: 'Text on primary' },
     { key: 'secondary', label: 'Secondary', description: 'Secondary elements' },
     { key: 'secondaryForeground', label: 'Secondary Foreground', description: 'Text on secondary' },
     { key: 'accent', label: 'Accent', description: 'Accent highlights' },
     { key: 'accentForeground', label: 'Accent Foreground', description: 'Text on accent' },
+];
+
+const statusColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
     { key: 'success', label: 'Success', description: 'Success states' },
     { key: 'warning', label: 'Warning', description: 'Warning states' },
     { key: 'error', label: 'Error', description: 'Error states' },
     { key: 'info', label: 'Info', description: 'Info states' },
+];
+
+const sidebarColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
+    { key: 'sidebar', label: 'Sidebar Background', description: 'Sidebar background color' },
+    { key: 'sidebarForeground', label: 'Sidebar Text', description: 'Text color in sidebar' },
+    { key: 'sidebarPrimary', label: 'Sidebar Primary', description: 'Active/selected items' },
+    { key: 'sidebarPrimaryForeground', label: 'Sidebar Primary Text', description: 'Text on active items' },
+    { key: 'sidebarAccent', label: 'Sidebar Accent', description: 'Hover/highlight background' },
+    { key: 'sidebarAccentForeground', label: 'Sidebar Accent Text', description: 'Text on hover items' },
 ];
 
 // Convert HSL string to CSS hsl() format
@@ -49,7 +80,7 @@ function formatHSL(h: number, s: number, l: number): string {
     return `${h} ${s}% ${l}%`;
 }
 
-// Color swatch component with HSL input
+// Color swatch component with visual color picker
 function ColorSwatch({
     colorKey,
     value,
@@ -66,80 +97,97 @@ function ColorSwatch({
     disabled?: boolean;
 }) {
     const parsed = parseHSL(value);
-    const [h, setH] = useState(parsed?.h ?? 0);
-    const [s, setS] = useState(parsed?.s ?? 50);
-    const [l, setL] = useState(parsed?.l ?? 50);
+    const [localColor, setLocalColor] = useState({ h: parsed?.h ?? 0, s: parsed?.s ?? 50, l: parsed?.l ?? 50 });
+    const [isOpen, setIsOpen] = useState(false);
+    const isInternalChange = useRef(false);
 
+    // Sync from prop only when it changes externally
     useEffect(() => {
+        if (isInternalChange.current) {
+            isInternalChange.current = false;
+            return;
+        }
         const newParsed = parseHSL(value);
         if (newParsed) {
-            setH(newParsed.h);
-            setS(newParsed.s);
-            setL(newParsed.l);
+            setLocalColor({ h: newParsed.h, s: newParsed.s, l: newParsed.l });
         }
     }, [value]);
 
-    const handleChange = useCallback((newH: number, newS: number, newL: number) => {
+    const handlePickerChange = useCallback((color: { h: number; s: number; l: number }) => {
         const clamped = {
-            h: Math.max(0, Math.min(360, newH)),
-            s: Math.max(0, Math.min(100, newS)),
-            l: Math.max(0, Math.min(100, newL)),
+            h: Math.max(0, Math.min(360, Math.round(color.h))),
+            s: Math.max(0, Math.min(100, Math.round(color.s))),
+            l: Math.max(0, Math.min(100, Math.round(color.l))),
         };
-        setH(clamped.h);
-        setS(clamped.s);
-        setL(clamped.l);
+        setLocalColor(clamped);
+        isInternalChange.current = true;
         onChange(formatHSL(clamped.h, clamped.s, clamped.l));
     }, [onChange]);
 
+    const handleInputChange = useCallback((field: 'h' | 's' | 'l', val: number) => {
+        const max = field === 'h' ? 360 : 100;
+        const clamped = Math.max(0, Math.min(max, val));
+        const newColor = { ...localColor, [field]: clamped };
+        setLocalColor(newColor);
+        isInternalChange.current = true;
+        onChange(formatHSL(newColor.h, newColor.s, newColor.l));
+    }, [localColor, onChange]);
+
     return (
-        <div className="flex items-center gap-4 rounded-lg border p-3 dark:border-gray-700">
-            <div
-                className="h-12 w-12 shrink-0 rounded-md border shadow-sm dark:border-gray-600"
-                style={{ backgroundColor: hslToCSS(value) }}
-            />
-            <div className="flex-1 space-y-2">
-                <div>
-                    <Label className="font-medium">{label}</Label>
-                    <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                <div className="flex gap-2">
-                    <div className="flex-1">
-                        <Label className="text-xs">H (0-360)</Label>
-                        <Input
-                            type="number"
-                            min={0}
-                            max={360}
-                            value={h}
-                            onChange={(e) => handleChange(parseInt(e.target.value) || 0, s, l)}
-                            disabled={disabled}
-                            className="h-8"
-                        />
+        <div className="flex items-center gap-3 rounded-lg border p-3 dark:border-gray-700">
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
+                <PopoverTrigger asChild disabled={disabled}>
+                    <button
+                        className="h-10 w-10 shrink-0 rounded-md border shadow-sm transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                        style={{ backgroundColor: hslToCSS(value) }}
+                        aria-label={`Pick color for ${label}`}
+                    />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                    <HslColorPicker
+                        color={localColor}
+                        onChange={handlePickerChange}
+                    />
+                    <div className="mt-3 flex gap-2">
+                        <div className="flex-1">
+                            <Label className="text-xs">H</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={360}
+                                value={localColor.h}
+                                onChange={(e) => handleInputChange('h', parseInt(e.target.value) || 0)}
+                                className="h-7 text-xs"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Label className="text-xs">S</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={localColor.s}
+                                onChange={(e) => handleInputChange('s', parseInt(e.target.value) || 0)}
+                                className="h-7 text-xs"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Label className="text-xs">L</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={localColor.l}
+                                onChange={(e) => handleInputChange('l', parseInt(e.target.value) || 0)}
+                                className="h-7 text-xs"
+                            />
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <Label className="text-xs">S (%)</Label>
-                        <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={s}
-                            onChange={(e) => handleChange(h, parseInt(e.target.value) || 0, l)}
-                            disabled={disabled}
-                            className="h-8"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <Label className="text-xs">L (%)</Label>
-                        <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={l}
-                            onChange={(e) => handleChange(h, s, parseInt(e.target.value) || 0)}
-                            disabled={disabled}
-                            className="h-8"
-                        />
-                    </div>
-                </div>
+                </PopoverContent>
+            </Popover>
+            <div className="flex-1 min-w-0">
+                <Label className="font-medium text-sm">{label}</Label>
+                <p className="text-xs text-muted-foreground truncate">{description}</p>
             </div>
         </div>
     );
@@ -196,13 +244,16 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
         setSaveStatus('idle');
         setErrorMessage(null);
 
+        const csrfToken = getCsrfToken();
         try {
             const response = await fetch('/api/settings/theme', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     colors: localTheme.colors,
                     branding: { hospitalName: localTheme.branding.hospitalName },
@@ -234,13 +285,16 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
         setIsResetting(true);
         setErrorMessage(null);
 
+        const csrfToken = getCsrfToken();
         try {
             const response = await fetch('/api/settings/theme/reset', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                 },
+                credentials: 'same-origin',
             });
 
             const data = await response.json();
@@ -281,6 +335,7 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
         setIsUploading(true);
         setErrorMessage(null);
 
+        const csrfToken = getCsrfToken();
         try {
             const formData = new FormData();
             formData.append('logo', file);
@@ -288,8 +343,10 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
             const response = await fetch('/api/settings/theme/logo', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                 },
+                credentials: 'same-origin',
                 body: formData,
             });
 
@@ -561,27 +618,126 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                     </Card>
                 </div>
 
-                {/* Color Settings */}
+                {/* Main Colors */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Color Palette</CardTitle>
+                        <CardTitle>Main Colors</CardTitle>
                         <CardDescription>
-                            Customize the application colors using HSL values
+                            Primary brand colors used throughout the application
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {colorConfig.map(({ key, label, description }) => (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {mainColorConfig.map(({ key, label, description }) => (
                                 <ColorSwatch
                                     key={key}
                                     colorKey={key}
-                                    value={localTheme.colors[key]}
+                                    value={localTheme.colors[key] ?? '0 0% 50%'}
                                     label={label}
                                     description={description}
                                     onChange={(value) => handleColorChange(key, value)}
                                     disabled={!canManageTheme}
                                 />
                             ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Status Colors */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Status Colors</CardTitle>
+                        <CardDescription>
+                            Colors for success, warning, error, and info states
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            {statusColorConfig.map(({ key, label, description }) => (
+                                <ColorSwatch
+                                    key={key}
+                                    colorKey={key}
+                                    value={localTheme.colors[key] ?? '0 0% 50%'}
+                                    label={label}
+                                    description={description}
+                                    onChange={(value) => handleColorChange(key, value)}
+                                    disabled={!canManageTheme}
+                                />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Sidebar Colors */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Sidebar Colors</CardTitle>
+                        <CardDescription>
+                            Customize the sidebar appearance including the area around the logo
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {sidebarColorConfig.map(({ key, label, description }) => (
+                                <ColorSwatch
+                                    key={key}
+                                    colorKey={key}
+                                    value={localTheme.colors[key] ?? '0 0% 50%'}
+                                    label={label}
+                                    description={description}
+                                    onChange={(value) => handleColorChange(key, value)}
+                                    disabled={!canManageTheme}
+                                />
+                            ))}
+                        </div>
+                        {/* Sidebar Preview */}
+                        <div className="mt-4 rounded-lg border p-4 dark:border-gray-700">
+                            <p className="mb-2 text-sm font-medium">Sidebar Preview</p>
+                            <div
+                                className="w-48 rounded-lg p-3"
+                                style={{ backgroundColor: hslToCSS(localTheme.colors.sidebar ?? '210 20% 98%') }}
+                            >
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div
+                                        className="h-8 w-8 rounded flex items-center justify-center text-xs font-bold"
+                                        style={{
+                                            backgroundColor: hslToCSS(localTheme.colors.sidebarPrimary ?? '210 90% 45%'),
+                                            color: hslToCSS(localTheme.colors.sidebarPrimaryForeground ?? '0 0% 100%'),
+                                        }}
+                                    >
+                                        H
+                                    </div>
+                                    <span
+                                        className="text-sm font-semibold truncate"
+                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                    >
+                                        Hospital
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    <div
+                                        className="rounded px-2 py-1.5 text-xs"
+                                        style={{
+                                            backgroundColor: hslToCSS(localTheme.colors.sidebarAccent ?? '210 30% 94%'),
+                                            color: hslToCSS(localTheme.colors.sidebarAccentForeground ?? '210 40% 25%'),
+                                        }}
+                                    >
+                                        Dashboard
+                                    </div>
+                                    <div
+                                        className="px-2 py-1.5 text-xs"
+                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                    >
+                                        Patients
+                                    </div>
+                                    <div
+                                        className="px-2 py-1.5 text-xs"
+                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                    >
+                                        Check-in
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

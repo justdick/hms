@@ -327,54 +327,72 @@ export default function WardShow({ ward, stats }: Props) {
                                                             admission.bed_id ===
                                                             bed.id,
                                                     );
+                                                
+                                                const bedContent = (
+                                                    <div className="text-center">
+                                                        <div className="mb-2 flex justify-center">
+                                                            {getBedTypeIcon(
+                                                                bed.type,
+                                                            )}
+                                                        </div>
+                                                        <div className="text-sm font-semibold">
+                                                            Bed{' '}
+                                                            {bed.bed_number}
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 capitalize dark:text-gray-400">
+                                                            {bed.type}
+                                                        </div>
+                                                        <div className="mt-2">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`text-xs ${getBedStatusColor(bed.status).split(' ')[1]} ${getBedStatusColor(bed.status).split(' ')[2]}`}
+                                                            >
+                                                                {bed.status}
+                                                            </Badge>
+                                                        </div>
+                                                        {currentPatient && (
+                                                            <div className="bg-opacity-50 dark:bg-opacity-50 mt-2 rounded bg-white p-2 text-xs dark:bg-gray-900">
+                                                                <div className="font-medium dark:text-gray-100">
+                                                                    {
+                                                                        currentPatient
+                                                                            .patient
+                                                                            .first_name
+                                                                    }{' '}
+                                                                    {
+                                                                        currentPatient
+                                                                            .patient
+                                                                            .last_name
+                                                                    }
+                                                                </div>
+                                                                <div className="text-gray-600 dark:text-gray-400">
+                                                                    {
+                                                                        currentPatient.admission_number
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+
+                                                // If bed is occupied, make it clickable to go to patient page
+                                                if (currentPatient) {
+                                                    return (
+                                                        <Link
+                                                            key={bed.id}
+                                                            href={`/wards/${ward.id}/patients/${currentPatient.id}`}
+                                                            className={`relative block rounded-lg border-2 p-4 transition-transform hover:scale-105 hover:shadow-lg ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''} cursor-pointer`}
+                                                        >
+                                                            {bedContent}
+                                                        </Link>
+                                                    );
+                                                }
+
                                                 return (
                                                     <div
                                                         key={bed.id}
                                                         className={`relative rounded-lg border-2 p-4 ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''}`}
                                                     >
-                                                        <div className="text-center">
-                                                            <div className="mb-2 flex justify-center">
-                                                                {getBedTypeIcon(
-                                                                    bed.type,
-                                                                )}
-                                                            </div>
-                                                            <div className="text-sm font-semibold">
-                                                                Bed{' '}
-                                                                {bed.bed_number}
-                                                            </div>
-                                                            <div className="text-xs text-gray-600 capitalize dark:text-gray-400">
-                                                                {bed.type}
-                                                            </div>
-                                                            <div className="mt-2">
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className={`text-xs ${getBedStatusColor(bed.status).split(' ')[1]} ${getBedStatusColor(bed.status).split(' ')[2]}`}
-                                                                >
-                                                                    {bed.status}
-                                                                </Badge>
-                                                            </div>
-                                                            {currentPatient && (
-                                                                <div className="bg-opacity-50 dark:bg-opacity-50 mt-2 rounded bg-white p-2 text-xs dark:bg-gray-900">
-                                                                    <div className="font-medium dark:text-gray-100">
-                                                                        {
-                                                                            currentPatient
-                                                                                .patient
-                                                                                .first_name
-                                                                        }{' '}
-                                                                        {
-                                                                            currentPatient
-                                                                                .patient
-                                                                                .last_name
-                                                                        }
-                                                                    </div>
-                                                                    <div className="text-gray-600 dark:text-gray-400">
-                                                                        {
-                                                                            currentPatient.admission_number
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                        {bedContent}
                                                     </div>
                                                 );
                                             })}

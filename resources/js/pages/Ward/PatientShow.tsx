@@ -125,6 +125,13 @@ interface ConsultationPrescription {
     route?: string;
     dose_quantity?: string;
     instructions?: string;
+    schedule_pattern?: {
+        day_1?: string[];
+        day_2?: string[];
+        subsequent?: string[];
+        [key: string]: string[] | undefined;
+    };
+    discontinued_at?: string;
 }
 
 interface Prescription {
@@ -222,6 +229,13 @@ interface WardRoundPrescription {
     duration: string;
     instructions?: string;
     status: string;
+    schedule_pattern?: {
+        day_1?: string[];
+        day_2?: string[];
+        subsequent?: string[];
+        [key: string]: string[] | undefined;
+    };
+    discontinued_at?: string;
 }
 
 interface WardRound {
@@ -449,6 +463,13 @@ export default function WardPatientShow({
             med.status === 'scheduled' && isToday(new Date(med.scheduled_time)),
     );
 
+    // Calculate medications that are due now (scheduled time has passed)
+    const dueMeds = allMedications.filter(
+        (med) =>
+            med.status === 'scheduled' &&
+            new Date(med.scheduled_time) <= new Date(),
+    );
+
     // Keep all pending meds for other uses
     const pendingMeds = allMedications.filter(
         (med) => med.status === 'scheduled',
@@ -461,6 +482,13 @@ export default function WardPatientShow({
             (round) => round.prescriptions || [],
         ) || []),
     ];
+
+    // Count prescriptions needing schedule configuration
+    const pendingScheduleCount = useMemo(() => {
+        return allPrescriptions.filter(
+            (p) => !p.schedule_pattern && !p.discontinued_at,
+        ).length;
+    }, [allPrescriptions]);
 
     // Collect all lab orders from ward rounds
     const allLabOrders = useMemo(() => {
@@ -919,25 +947,59 @@ export default function WardPatientShow({
                         <TabsTrigger
                             value="medications"
                             className="flex items-center gap-2"
+                            title={
+                                dueMeds.length > 0
+                                    ? `${dueMeds.length} medication(s) due now!`
+                                    : todayPendingMeds.length > 0
+                                      ? `${todayPendingMeds.length} medication(s) scheduled today`
+                                      : 'Medication Administration Record'
+                            }
                         >
                             <Pill className="h-4 w-4" />
                             Medication Administration
-                            {todayPendingMeds &&
+                            {dueMeds.length > 0 ? (
+                                <Badge
+                                    variant="destructive"
+                                    className="ml-1 animate-pulse"
+                                >
+                                    {dueMeds.length} due
+                                </Badge>
+                            ) : (
                                 todayPendingMeds.length > 0 && (
-                                    <Badge
-                                        variant="destructive"
-                                        className="ml-1"
-                                    >
+                                    <Badge variant="secondary" className="ml-1">
                                         {todayPendingMeds.length}
                                     </Badge>
-                                )}
+                                )
+                            )}
                         </TabsTrigger>
                         <TabsTrigger
                             value="history"
                             className="flex items-center gap-2"
+                            title={
+                                pendingScheduleCount > 0
+                                    ? `${pendingScheduleCount} prescription(s) need schedule configuration`
+                                    : 'View and configure medication schedules'
+                            }
                         >
                             <ClipboardList className="h-4 w-4" />
                             Medication History
+                            {pendingScheduleCount > 0 && (
+                                <Badge
+                                    variant="outline"
+                                    className="ml-1 border-orange-500 bg-orange-50 text-orange-700 dark:border-orange-600 dark:bg-orange-950/30 dark:text-orange-400"
+                                >
+                                    {pendingScheduleCount}
+                                </Badge>
+                            )}
+                            {allPrescriptions.length > 0 &&
+                                pendingScheduleCount === 0 && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-1"
+                                    >
+                                        {allPrescriptions.length}
+                                    </Badge>
+                                )}
                         </TabsTrigger>
                         {allLabOrders.length > 0 && (
                             <TabsTrigger
@@ -1152,6 +1214,10 @@ export default function WardPatientShow({
                                     // Open the panel to refuse
                                     setMedicationPanelOpen(true);
                                 }}
+                                pendingScheduleCount={pendingScheduleCount}
+                                onNavigateToHistory={() =>
+                                    handleNavigateToTab('history')
+                                }
                             />
                         </div>
                     </TabsContent>

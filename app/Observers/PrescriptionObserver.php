@@ -3,14 +3,12 @@
 namespace App\Observers;
 
 use App\Models\Prescription;
-use App\Services\MedicationScheduleService;
 use App\Services\PharmacyBillingService;
 
 class PrescriptionObserver
 {
     public function __construct(
         protected PharmacyBillingService $billingService,
-        protected MedicationScheduleService $scheduleService
     ) {}
 
     /**
@@ -24,10 +22,9 @@ class PrescriptionObserver
             $this->billingService->createChargeForPrescription($prescription);
         }
 
-        // Generate medication administration schedule for admitted patients
-        if ($prescription->frequency && $prescription->duration) {
-            $this->scheduleService->generateSchedule($prescription);
-        }
+        // Note: Medication schedules are NOT auto-generated here.
+        // Ward staff must configure medication schedules via "Medication History" tab
+        // to ensure appropriate timing for ward rounds.
     }
 
     /**
@@ -35,12 +32,9 @@ class PrescriptionObserver
      */
     public function updated(Prescription $prescription): void
     {
-        // Regenerate schedule if frequency or duration changed
-        if ($prescription->isDirty(['frequency', 'duration', 'dose_quantity'])) {
-            if ($prescription->frequency && $prescription->duration) {
-                $this->scheduleService->regenerateSchedule($prescription);
-            }
-        }
+        // Note: Schedule regeneration is handled manually by ward staff
+        // via the "Reconfigure Schedule" feature in "Medication History" tab.
+        // This ensures ward staff maintain control over medication timing.
     }
 
     /**
