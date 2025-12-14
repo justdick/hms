@@ -9,7 +9,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,5 +45,19 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle session expiration - redirect unauthenticated users to login
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            $status = $response->getStatusCode();
+
+            // Session expired or CSRF mismatch
+            if (in_array($status, [403, 419])) {
+                // If user is not authenticated, redirect to login
+                if (! $request->user()) {
+                    return redirect()->route('login')
+                        ->with('error', 'Your session has expired. Please log in again.');
+                }
+            }
+
+            return $response;
+        });
     })->create();

@@ -285,11 +285,23 @@ export default function WardRoundCreate({
         post: postPrescription,
         processing: prescriptionProcessing,
         reset: resetPrescription,
-    } = useForm({
-        drug_id: null as number | null,
+    } = useForm<{
+        drug_id: number | null;
+        medication_name: string;
+        dose_quantity: string;
+        frequency: string;
+        duration: string;
+        quantity_to_dispense: string | number;
+        schedule_pattern: object | null;
+        instructions: string;
+    }>({
+        drug_id: null,
         medication_name: '',
+        dose_quantity: '',
         frequency: '',
         duration: '',
+        quantity_to_dispense: '',
+        schedule_pattern: null,
         instructions: '',
     });
 

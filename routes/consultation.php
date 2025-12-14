@@ -6,7 +6,13 @@ use App\Http\Controllers\Consultation\ConsultationProcedureController;
 use App\Http\Controllers\Consultation\ConsultationTransferController;
 use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
+use App\Http\Controllers\Consultation\PrescriptionParserController;
 use Illuminate\Support\Facades\Route;
+
+// API route for prescription parsing (used by Smart Prescription Input)
+Route::middleware(['auth'])->prefix('api')->group(function () {
+    Route::post('/prescriptions/parse', [PrescriptionParserController::class, 'parse'])->name('api.prescriptions.parse');
+});
 
 Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->group(function () {
 
@@ -19,6 +25,7 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
     Route::post('/{consultation}/transfer', [ConsultationTransferController::class, 'store'])->name('transfer');
 
     // Prescription management
+    Route::post('/prescriptions/parse', [PrescriptionParserController::class, 'parse'])->name('prescriptions.parse');
     Route::post('/{consultation}/prescriptions', [ConsultationController::class, 'storePrescription'])->name('prescriptions.store');
     Route::delete('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'destroyPrescription'])->name('prescriptions.destroy');
 

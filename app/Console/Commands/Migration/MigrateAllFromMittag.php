@@ -80,6 +80,7 @@ class MigrateAllFromMittag extends Command
             '1_diagnoses' => 'migrate:diagnoses-from-mittag',
             '2_patients' => 'migrate:patients-from-mittag',
             '3_drugs' => 'migrate:drugs-from-mittag',
+            '3b_fix_drug_forms' => 'migrate:fix-drug-forms',
             '4_checkins' => 'migrate:checkins-from-mittag',
             '5_opd_vitals' => 'migrate:vitals-from-mittag --source=opd',
             '6_consultations' => 'migrate:consultations-from-mittag',

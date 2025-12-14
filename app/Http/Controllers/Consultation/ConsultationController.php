@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Consultation;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Models\Consultation;
 use App\Models\Department;
 use App\Models\Drug;
@@ -262,30 +263,24 @@ class ConsultationController extends Controller
         return redirect()->back()->with('success', 'Consultation updated successfully.');
     }
 
-    public function storePrescription(Request $request, Consultation $consultation, MedicationScheduleService $scheduleService)
+    public function storePrescription(StorePrescriptionRequest $request, Consultation $consultation, MedicationScheduleService $scheduleService)
     {
         $this->authorize('update', $consultation);
 
-        $request->validate([
-            'medication_name' => 'required|string|max:255',
-            'drug_id' => 'nullable|exists:drugs,id',
-            'dose_quantity' => 'nullable|string|max:50',
-            'frequency' => 'required|string|max:100',
-            'duration' => 'required|string|max:100',
-            'quantity_to_dispense' => 'nullable|integer|min:1',
-            'instructions' => 'nullable|string|max:1000',
-        ]);
+        // Get prescription data (handles both Smart and Classic modes)
+        $prescriptionData = $request->getPrescriptionData();
 
         $prescription = Prescription::create([
             'consultation_id' => $consultation->id,
-            'medication_name' => $request->medication_name,
-            'drug_id' => $request->drug_id,
-            'dose_quantity' => $request->dose_quantity,
-            'frequency' => $request->frequency,
-            'duration' => $request->duration,
-            'quantity' => $request->quantity_to_dispense, // Set for billing
-            'quantity_to_dispense' => $request->quantity_to_dispense, // Set for dispensing
-            'instructions' => $request->instructions,
+            'medication_name' => $prescriptionData['medication_name'],
+            'drug_id' => $prescriptionData['drug_id'],
+            'dose_quantity' => $prescriptionData['dose_quantity'],
+            'frequency' => $prescriptionData['frequency'],
+            'duration' => $prescriptionData['duration'],
+            'quantity' => $prescriptionData['quantity_to_dispense'], // Set for billing
+            'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
+            'schedule_pattern' => $prescriptionData['schedule_pattern'], // Store for MAR reference
+            'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
         ]);
 

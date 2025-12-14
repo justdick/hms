@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ward;
 
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Http\Requests\StoreWardRoundRequest;
 use App\Models\MinorProcedureType;
 use App\Models\PatientAdmission;
@@ -302,7 +303,7 @@ class WardRoundController extends Controller
         return back();
     }
 
-    public function addPrescription(PatientAdmission $admission, WardRound $wardRound)
+    public function addPrescription(StorePrescriptionRequest $request, PatientAdmission $admission, WardRound $wardRound)
     {
         $this->authorize('update', $wardRound);
 
@@ -310,25 +311,19 @@ class WardRoundController extends Controller
             return response()->json(['error' => 'Cannot update completed ward round'], 403);
         }
 
-        $validated = request()->validate([
-            'drug_id' => 'required|exists:drugs,id',
-            'medication_name' => 'nullable|string',
-            'dose_quantity' => 'nullable|string|max:50',
-            'frequency' => 'required|string',
-            'duration' => 'required|string',
-            'quantity_to_dispense' => 'nullable|integer|min:1',
-            'instructions' => 'nullable|string',
-        ]);
+        // Get prescription data (handles both Smart and Classic modes)
+        $prescriptionData = $request->getPrescriptionData();
 
         $wardRound->prescriptions()->create([
-            'drug_id' => $validated['drug_id'],
-            'medication_name' => $validated['medication_name'] ?? null,
-            'dose_quantity' => $validated['dose_quantity'] ?? null,
-            'frequency' => $validated['frequency'],
-            'duration' => $validated['duration'],
-            'quantity' => $validated['quantity_to_dispense'] ?? null, // Set for billing
-            'quantity_to_dispense' => $validated['quantity_to_dispense'] ?? null, // Set for dispensing
-            'instructions' => $validated['instructions'] ?? null,
+            'drug_id' => $prescriptionData['drug_id'],
+            'medication_name' => $prescriptionData['medication_name'],
+            'dose_quantity' => $prescriptionData['dose_quantity'],
+            'frequency' => $prescriptionData['frequency'],
+            'duration' => $prescriptionData['duration'],
+            'quantity' => $prescriptionData['quantity_to_dispense'], // Set for billing
+            'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
+            'schedule_pattern' => $prescriptionData['schedule_pattern'], // Store for MAR reference
+            'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
         ]);
 

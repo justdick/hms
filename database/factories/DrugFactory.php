@@ -46,4 +46,173 @@ class DrugFactory extends Factory
             'unit_price' => $price,
         ]);
     }
+
+    // ========================================
+    // Drug Form States for Quantity Testing
+    // ========================================
+
+    /**
+     * Piece-based drug forms
+     */
+    public function tablet(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'tablet',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function capsule(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'capsule',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function suppository(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'suppository',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function sachet(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'sachet',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function lozenge(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'lozenge',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function pessary(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'pessary',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function enema(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'enema',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function injection(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'injection',
+            'unit_type' => 'vial',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function ivBag(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'iv_bag',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function nebulizer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'nebulizer',
+            'unit_type' => 'vial',
+            'bottle_size' => null,
+        ]);
+    }
+
+    /**
+     * Volume-based drug forms
+     */
+    public function syrup(int $bottleSize = 100): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'syrup',
+            'unit_type' => 'bottle',
+            'bottle_size' => $bottleSize,
+        ]);
+    }
+
+    public function suspension(int $bottleSize = 100): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'suspension',
+            'unit_type' => 'bottle',
+            'bottle_size' => $bottleSize,
+        ]);
+    }
+
+    /**
+     * Interval-based drug forms
+     */
+    public function patch(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'patch',
+            'unit_type' => 'piece',
+            'bottle_size' => null,
+        ]);
+    }
+
+    /**
+     * Fixed-unit drug forms
+     */
+    public function cream(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'cream',
+            'unit_type' => 'tube',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function drops(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'drops',
+            'unit_type' => 'bottle',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function inhaler(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'inhaler',
+            'unit_type' => 'device',
+            'bottle_size' => null,
+        ]);
+    }
+
+    public function combinationPack(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'form' => 'combination_pack',
+            'unit_type' => 'pack',
+            'bottle_size' => null,
+        ]);
+    }
 }

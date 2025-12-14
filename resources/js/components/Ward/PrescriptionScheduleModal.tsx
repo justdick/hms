@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import {
     CheckCircle,
     Clock,
+    Info,
     Loader2,
     MinusCircle,
     XCircle,
@@ -32,6 +33,56 @@ import {
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ScheduleAdjustmentBadge } from './ScheduleAdjustmentBadge';
+
+/**
+ * Check if the schedule pattern is a smart input pattern
+ */
+function isSmartSchedulePattern(
+    pattern: Prescription['schedule_pattern'],
+): pattern is SmartSchedulePattern {
+    if (!pattern) return false;
+    return (
+        'type' in pattern &&
+        ['standard', 'split_dose', 'custom_interval', 'taper'].includes(
+            pattern.type as string,
+        )
+    );
+}
+
+/**
+ * Format smart schedule pattern for display
+ */
+function formatSmartPattern(pattern: SmartSchedulePattern): string {
+    switch (pattern.type) {
+        case 'split_dose':
+            if (pattern.pattern) {
+                const { morning, noon, evening } = pattern.pattern;
+                return `Split dose: ${morning}-${noon}-${evening} (${pattern.daily_total}/day)`;
+            }
+            return 'Split dose pattern';
+
+        case 'custom_interval':
+            if (pattern.intervals_hours) {
+                const intervals = pattern.intervals_hours
+                    .map((h) => `${h}h`)
+                    .join(', ');
+                return `Custom intervals: ${intervals} (${pattern.total_doses} doses)`;
+            }
+            return 'Custom interval schedule';
+
+        case 'taper':
+            if (pattern.doses) {
+                return `Taper: ${pattern.doses.join('-')} over ${pattern.duration_days} days`;
+            }
+            return 'Taper schedule';
+
+        case 'standard':
+            return `Standard: ${pattern.frequency_code} (${pattern.times_per_day}x daily)`;
+
+        default:
+            return 'Custom schedule';
+    }
+}
 
 interface Drug {
     id: number;
@@ -72,12 +123,31 @@ interface MedicationAdministration {
     schedule_adjustments?: MedicationScheduleAdjustment[];
 }
 
+interface SmartSchedulePattern {
+    type: 'standard' | 'split_dose' | 'custom_interval' | 'taper';
+    frequency_code?: string;
+    times_per_day?: number;
+    pattern?: {
+        morning: number;
+        noon: number;
+        evening: number;
+    };
+    daily_total?: number;
+    intervals_hours?: number[];
+    dose_per_interval?: number;
+    total_doses?: number;
+    doses?: number[];
+    duration_days?: number;
+}
+
 interface Prescription {
     id: number;
     drug?: Drug;
     medication_name: string;
     frequency?: string;
     duration?: string;
+    dose_quantity?: string;
+    schedule_pattern?: SmartSchedulePattern;
 }
 
 interface PrescriptionScheduleModalProps {
@@ -200,6 +270,48 @@ export function PrescriptionScheduleModal({
                             ` for ${prescription.duration}`}
                     </DialogDescription>
                 </DialogHeader>
+
+                {/* Display original smart input pattern if available */}
+                {isSmartSchedulePattern(prescription.schedule_pattern) && (
+                    <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-800 dark:bg-purple-950/20">
+                        <div className="flex items-start gap-2">
+                            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-purple-900 dark:text-purple-200">
+                                    Original Prescription Pattern
+                                </p>
+                                <p className="text-sm text-purple-700 dark:text-purple-300">
+                                    {prescription.dose_quantity && (
+                                        <span className="font-medium">
+                                            {prescription.dose_quantity}{' '}
+                                        </span>
+                                    )}
+                                    {formatSmartPattern(
+                                        prescription.schedule_pattern,
+                                    )}
+                                </p>
+                                {prescription.schedule_pattern.type ===
+                                    'custom_interval' &&
+                                    prescription.schedule_pattern
+                                        .intervals_hours && (
+                                        <div className="mt-2 flex flex-wrap gap-1">
+                                            {prescription.schedule_pattern.intervals_hours.map(
+                                                (h, idx) => (
+                                                    <Badge
+                                                        key={idx}
+                                                        variant="outline"
+                                                        className="border-purple-300 bg-purple-100 text-purple-800 dark:border-purple-700 dark:bg-purple-900/50 dark:text-purple-200"
+                                                    >
+                                                        {h}h
+                                                    </Badge>
+                                                ),
+                                            )}
+                                        </div>
+                                    )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="flex items-center justify-center py-8">

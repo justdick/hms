@@ -65,7 +65,7 @@ class MedicationScheduleController extends Controller
     public function configureSchedule(
         ConfigureScheduleRequest $request,
         Prescription $prescription
-    ) {
+    ): JsonResponse {
         // Save the schedule pattern to the prescription
         $prescription->update([
             'schedule_pattern' => $request->input('schedule_pattern'),
@@ -74,7 +74,9 @@ class MedicationScheduleController extends Controller
         // Generate the medication administration records
         $this->scheduleService->generateScheduleFromPattern($prescription);
 
-        return back()->with('success', 'Medication schedule configured successfully.');
+        return response()->json([
+            'message' => 'Medication schedule configured successfully.',
+        ]);
     }
 
     /**
@@ -83,14 +85,16 @@ class MedicationScheduleController extends Controller
     public function reconfigureSchedule(
         ConfigureScheduleRequest $request,
         Prescription $prescription
-    ) {
+    ): JsonResponse {
         $this->scheduleService->reconfigureSchedule(
             $prescription,
             $request->input('schedule_pattern'),
             $request->user()
         );
 
-        return back()->with('success', 'Medication schedule reconfigured successfully.');
+        return response()->json([
+            'message' => 'Medication schedule reconfigured successfully.',
+        ]);
     }
 
     /**

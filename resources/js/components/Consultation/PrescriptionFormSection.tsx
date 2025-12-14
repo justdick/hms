@@ -31,7 +31,10 @@ import {
     Plus,
     Trash2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ModeToggle, type PrescriptionMode } from '@/components/Prescription/ModeToggle';
+import { SmartPrescriptionInput } from '@/components/Prescription/SmartPrescriptionInput';
+import type { ParsedPrescription } from '@/components/Prescription/InterpretationPanel';
 
 interface Drug {
     id: number;
@@ -128,11 +131,75 @@ export default function PrescriptionFormSection({
 }: Props) {
     const [drugComboOpen, setDrugComboOpen] = useState(false);
     const [manuallyEdited, setManuallyEdited] = useState(false);
+    const [mode, setMode] = useState<PrescriptionMode>('smart');
+    const [smartInput, setSmartInput] = useState('');
+    const [parsedResult, setParsedResult] = useState<ParsedPrescription | null>(null);
 
     const selectedDrug = drugs.find((d) => d.id === prescriptionData.drug_id);
 
-    // Auto-calculate quantity based on frequency, duration, and dose_quantity
+    // Handle mode switching - preserve drug selection, clear other fields
+    const handleModeChange = useCallback((newMode: PrescriptionMode) => {
+        setMode(newMode);
+        // Clear form fields except drug selection
+        setPrescriptionData('dose_quantity', '');
+        setPrescriptionData('frequency', '');
+        setPrescriptionData('duration', '');
+        setPrescriptionData('quantity_to_dispense', '');
+        setPrescriptionData('schedule_pattern', null);
+        // Clear smart input when switching modes
+        setSmartInput('');
+        setParsedResult(null);
+        setManuallyEdited(false);
+    }, [setPrescriptionData]);
+
+    // Handle switching to classic mode from interpretation panel
+    const handleSwitchToClassic = useCallback(() => {
+        handleModeChange('classic');
+    }, [handleModeChange]);
+
+    // Handle parsed result from smart input
+    const handleParsedResult = useCallback((result: ParsedPrescription | null) => {
+        setParsedResult(result);
+        if (result?.isValid) {
+            // Update form data with parsed values
+            if (result.doseQuantity) {
+                setPrescriptionData('dose_quantity', result.doseQuantity);
+            }
+            if (result.frequency) {
+                setPrescriptionData('frequency', result.frequency);
+            }
+            if (result.duration) {
+                setPrescriptionData('duration', result.duration);
+            }
+            if (result.quantityToDispense !== null) {
+                setPrescriptionData('quantity_to_dispense', result.quantityToDispense);
+            }
+            if (result.schedulePattern) {
+                setPrescriptionData('schedule_pattern', result.schedulePattern);
+            }
+        }
+    }, [setPrescriptionData]);
+
+    // Handle smart mode form submission
+    const handleSmartSubmit = useCallback((e: React.FormEvent) => {
+        e.preventDefault();
+        if (!parsedResult?.isValid || !selectedDrug) {
+            return;
+        }
+        // Call the original onSubmit - form data is already populated from handleParsedResult
+        onSubmit(e);
+        // Clear smart input after successful submission (mode is maintained)
+        setSmartInput('');
+        setParsedResult(null);
+    }, [parsedResult, selectedDrug, onSubmit]);
+
+    // Auto-calculate quantity based on frequency, duration, and dose_quantity (Classic mode only)
     useEffect(() => {
+        // Skip auto-calculation in smart mode - it's handled by the parser
+        if (mode === 'smart') {
+            return;
+        }
+
         if (
             !selectedDrug ||
             !prescriptionData.frequency ||
@@ -175,10 +242,13 @@ export default function PrescriptionFormSection({
             }
         }
     }, [
+        mode,
         prescriptionData.frequency,
         prescriptionData.duration,
         prescriptionData.dose_quantity,
         selectedDrug,
+        manuallyEdited,
+        setPrescriptionData,
     ]);
 
     // Reset manual edit flag when drug changes
@@ -186,479 +256,428 @@ export default function PrescriptionFormSection({
         setManuallyEdited(false);
     }, [selectedDrug?.id]);
 
+    // Drug selector component (shared between modes)
+    const DrugSelector = (
+        <div className="space-y-2 md:col-span-2">
+            <Label>Drug *</Label>
+            <Popover
+                open={drugComboOpen}
+                onOpenChange={setDrugComboOpen}
+            >
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={drugComboOpen}
+                        className={cn(
+                            'w-full justify-between',
+                            !prescriptionData.drug_id &&
+                                'text-muted-foreground',
+                        )}
+                    >
+                        {selectedDrug ? (
+                            <span className="flex items-center gap-2 truncate">
+                                <span className="font-medium">
+                                    {selectedDrug.name}
+                                </span>
+                                {selectedDrug.strength && (
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        {selectedDrug.strength}
+                                    </span>
+                                )}
+                                <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                >
+                                    {selectedDrug.form}
+                                </Badge>
+                            </span>
+                        ) : (
+                            'Select drug...'
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                    className="w-[500px] p-0"
+                    align="start"
+                >
+                    <Command
+                        filter={(value, search) => {
+                            const searchLower = search.toLowerCase().trim();
+                            const valueLower = value.toLowerCase();
+                            
+                            if (!searchLower) return 1;
+                            
+                            if (valueLower.includes(searchLower)) return 1;
+                            
+                            const valueWords = valueLower.split(/\s+/);
+                            const startsWithMatch = valueWords.some(word => 
+                                word.startsWith(searchLower)
+                            );
+                            if (startsWithMatch) return 0.8;
+                            
+                            const searchWords = searchLower.split(/\s+/).filter(Boolean);
+                            if (searchWords.length > 1) {
+                                const allWordsMatch = searchWords.every(word => 
+                                    valueLower.includes(word)
+                                );
+                                if (allWordsMatch) return 0.6;
+                            }
+                            
+                            return 0;
+                        }}
+                    >
+                        <CommandInput placeholder="Search drugs..." />
+                        <CommandList>
+                            <CommandEmpty>
+                                No drug found.
+                            </CommandEmpty>
+                            <CommandGroup>
+                                {drugs.map((drug) => (
+                                    <CommandItem
+                                        key={drug.id}
+                                        value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
+                                        onSelect={() => {
+                                            setPrescriptionData('drug_id', drug.id);
+                                            setPrescriptionData('medication_name', drug.name);
+                                            setDrugComboOpen(false);
+                                        }}
+                                    >
+                                        <Check
+                                            className={cn(
+                                                'mr-2 h-4 w-4',
+                                                prescriptionData.drug_id === drug.id
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0',
+                                            )}
+                                        />
+                                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                                            <span className="truncate font-medium">
+                                                {drug.name}
+                                            </span>
+                                            {drug.strength && (
+                                                <span className="shrink-0 text-sm text-gray-600 dark:text-gray-400">
+                                                    {drug.strength}
+                                                </span>
+                                            )}
+                                            <Badge
+                                                variant="secondary"
+                                                className="shrink-0 text-xs"
+                                            >
+                                                {drug.form}
+                                            </Badge>
+                                        </div>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+
     return (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left Column: Add New Prescription Form */}
             {consultationStatus === 'in_progress' && (
                 <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-800 dark:from-green-950/20 dark:to-emerald-950/20">
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        <Plus className="h-5 w-5" />
-                        Add New Prescription
-                    </h3>
-                    <form onSubmit={onSubmit} className="space-y-4">
-                        {/* Drug Selection and Dose Quantity in same row */}
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            {/* Drug Selection with Combobox - Takes 2 columns */}
-                            <div className="space-y-2 md:col-span-2">
-                                <Label>Drug *</Label>
-                                <Popover
-                                    open={drugComboOpen}
-                                    onOpenChange={setDrugComboOpen}
-                                >
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={drugComboOpen}
-                                            className={cn(
-                                                'w-full justify-between',
-                                                !prescriptionData.drug_id &&
-                                                    'text-muted-foreground',
-                                            )}
-                                        >
-                                            {selectedDrug ? (
-                                                <span className="flex items-center gap-2 truncate">
-                                                    <span className="font-medium">
-                                                        {selectedDrug.name}
-                                                    </span>
-                                                    {selectedDrug.strength && (
-                                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {
-                                                                selectedDrug.strength
-                                                            }
-                                                        </span>
-                                                    )}
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                    >
-                                                        {selectedDrug.form}
-                                                    </Badge>
-                                                </span>
-                                            ) : (
-                                                'Select drug...'
-                                            )}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                        className="w-[500px] p-0"
-                                        align="start"
-                                    >
-                                        <Command
-                                            filter={(value, search) => {
-                                                const searchLower = search.toLowerCase().trim();
-                                                const valueLower = value.toLowerCase();
-                                                
-                                                if (!searchLower) return 1;
-                                                
-                                                // Direct substring match (highest priority)
-                                                if (valueLower.includes(searchLower)) return 1;
-                                                
-                                                // Check if search matches start of any word in value
-                                                const valueWords = valueLower.split(/\s+/);
-                                                const startsWithMatch = valueWords.some(word => 
-                                                    word.startsWith(searchLower)
-                                                );
-                                                if (startsWithMatch) return 0.8;
-                                                
-                                                // Multi-word search: all words must be found
-                                                const searchWords = searchLower.split(/\s+/).filter(Boolean);
-                                                if (searchWords.length > 1) {
-                                                    const allWordsMatch = searchWords.every(word => 
-                                                        valueLower.includes(word)
-                                                    );
-                                                    if (allWordsMatch) return 0.6;
-                                                }
-                                                
-                                                return 0;
-                                            }}
-                                        >
-                                            <CommandInput placeholder="Search drugs..." />
-                                            <CommandList>
-                                                <CommandEmpty>
-                                                    No drug found.
-                                                </CommandEmpty>
-                                                <CommandGroup>
-                                                    {drugs.map((drug) => (
-                                                        <CommandItem
-                                                            key={drug.id}
-                                                            value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
-                                                            onSelect={() => {
-                                                                setPrescriptionData(
-                                                                    'drug_id',
-                                                                    drug.id,
-                                                                );
-                                                                setPrescriptionData(
-                                                                    'medication_name',
-                                                                    drug.name,
-                                                                );
-                                                                setDrugComboOpen(
-                                                                    false,
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    'mr-2 h-4 w-4',
-                                                                    prescriptionData.drug_id ===
-                                                                        drug.id
-                                                                        ? 'opacity-100'
-                                                                        : 'opacity-0',
-                                                                )}
-                                                            />
-                                                            <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                                <span className="truncate font-medium">
-                                                                    {drug.name}
-                                                                </span>
-                                                                {drug.strength && (
-                                                                    <span className="shrink-0 text-sm text-gray-600 dark:text-gray-400">
-                                                                        {
-                                                                            drug.strength
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className="shrink-0 text-xs"
-                                                                >
-                                                                    {drug.form}
-                                                                </Badge>
-                                                            </div>
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <Plus className="h-5 w-5" />
+                            Add New Prescription
+                        </h3>
+                        <ModeToggle mode={mode} onChange={handleModeChange} />
+                    </div>
+
+                    {mode === 'smart' ? (
+                        /* Smart Mode Form */
+                        <form onSubmit={handleSmartSubmit} className="space-y-4">
+                            {/* Drug Selection */}
+                            <div className="grid grid-cols-1 gap-4">
+                                {DrugSelector}
                             </div>
 
-                            {/* Dose Quantity Field - Takes 1 column */}
-                            {selectedDrug && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="dose_quantity">
-                                        Dose Quantity *
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            id="dose_quantity"
-                                            placeholder={
-                                                selectedDrug.unit_type ===
-                                                'piece'
-                                                    ? '1'
-                                                    : selectedDrug.unit_type ===
-                                                            'bottle' ||
-                                                        selectedDrug.unit_type ===
-                                                            'vial'
-                                                      ? '5'
-                                                      : '1'
-                                            }
-                                            value={
-                                                prescriptionData.dose_quantity ||
-                                                ''
-                                            }
-                                            onChange={(e) =>
-                                                setPrescriptionData(
-                                                    'dose_quantity',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                            required
-                                        />
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {selectedDrug.unit_type === 'piece'
-                                                ? `${selectedDrug.form}(s) per dose`
-                                                : selectedDrug.unit_type ===
-                                                        'bottle' ||
-                                                    selectedDrug.unit_type ===
-                                                        'vial'
-                                                  ? 'ml per dose'
-                                                  : 'per dose'}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        {selectedDrug.unit_type === 'piece' ? (
-                                            <>
-                                                e.g., "1" for one tablet, "2"
-                                                for two tablets per dose
-                                            </>
-                                        ) : selectedDrug.unit_type ===
-                                              'bottle' ||
-                                          selectedDrug.unit_type === 'vial' ? (
-                                            <>
-                                                e.g., "5" for 5ml, "10" for 10ml
-                                                per dose
-                                            </>
-                                        ) : (
-                                            <>Enter dose quantity</>
-                                        )}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Frequency and Duration in two columns */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="frequency">Frequency *</Label>
-                                <Select
-                                    value={prescriptionData.frequency}
-                                    onValueChange={(value) =>
-                                        setPrescriptionData('frequency', value)
-                                    }
-                                    required
-                                >
-                                    <SelectTrigger id="frequency">
-                                        <SelectValue placeholder="Select frequency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Once daily">
-                                            Once daily
-                                        </SelectItem>
-                                        <SelectItem value="Twice daily (BID)">
-                                            Twice daily (BID)
-                                        </SelectItem>
-                                        <SelectItem value="Three times daily (TID)">
-                                            Three times daily (TID)
-                                        </SelectItem>
-                                        <SelectItem value="Four times daily (QID)">
-                                            Four times daily (QID)
-                                        </SelectItem>
-                                        <SelectItem value="Every 4 hours">
-                                            Every 4 hours
-                                        </SelectItem>
-                                        <SelectItem value="Every 6 hours">
-                                            Every 6 hours
-                                        </SelectItem>
-                                        <SelectItem value="Every 8 hours">
-                                            Every 8 hours
-                                        </SelectItem>
-                                        <SelectItem value="Every 12 hours">
-                                            Every 12 hours
-                                        </SelectItem>
-                                        <SelectItem value="As needed (PRN)">
-                                            As needed (PRN)
-                                        </SelectItem>
-                                        <SelectItem value="Before meals">
-                                            Before meals
-                                        </SelectItem>
-                                        <SelectItem value="After meals">
-                                            After meals
-                                        </SelectItem>
-                                        <SelectItem value="At bedtime">
-                                            At bedtime
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="duration">Duration *</Label>
-                                <Select
-                                    value={prescriptionData.duration}
-                                    onValueChange={(value) =>
-                                        setPrescriptionData('duration', value)
-                                    }
-                                    required
-                                >
-                                    <SelectTrigger id="duration">
-                                        <SelectValue placeholder="Select duration" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="3 days">
-                                            3 days
-                                        </SelectItem>
-                                        <SelectItem value="5 days">
-                                            5 days
-                                        </SelectItem>
-                                        <SelectItem value="7 days">
-                                            7 days
-                                        </SelectItem>
-                                        <SelectItem value="10 days">
-                                            10 days
-                                        </SelectItem>
-                                        <SelectItem value="14 days">
-                                            14 days
-                                        </SelectItem>
-                                        <SelectItem value="21 days">
-                                            21 days
-                                        </SelectItem>
-                                        <SelectItem value="30 days">
-                                            30 days
-                                        </SelectItem>
-                                        <SelectItem value="60 days">
-                                            60 days
-                                        </SelectItem>
-                                        <SelectItem value="90 days">
-                                            90 days
-                                        </SelectItem>
-                                        <SelectItem value="Until review">
-                                            Until review
-                                        </SelectItem>
-                                        <SelectItem value="Ongoing">
-                                            Ongoing
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        {/* Quantity Display - Auto-calculated for tablets, Manual for bottles */}
-                        {prescriptionData.quantity_to_dispense &&
-                            selectedDrug &&
-                            selectedDrug.unit_type === 'piece' && (
-                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
-                                    <div className="flex items-center gap-2">
-                                        <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                        <div>
-                                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                                Calculated Quantity
-                                            </p>
-                                            <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                                {
-                                                    prescriptionData.quantity_to_dispense
-                                                }{' '}
-                                                {selectedDrug.form === 'tablet'
-                                                    ? 'tablets'
-                                                    : selectedDrug.form ===
-                                                        'capsule'
-                                                      ? 'capsules'
-                                                      : 'pieces'}
-                                            </p>
-                                            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                                Auto-calculated from frequency ×
-                                                duration
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* Calculated Quantity Display for bottles/vials/tubes */}
-                        {prescriptionData.quantity_to_dispense &&
-                            selectedDrug &&
-                            (selectedDrug.unit_type === 'bottle' ||
-                                selectedDrug.unit_type === 'vial') && (
-                                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
-                                    <div className="flex items-center gap-2">
-                                        <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                        <div>
-                                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                                Calculated Quantity
-                                            </p>
-                                            <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                                {
-                                                    prescriptionData.quantity_to_dispense
-                                                }{' '}
-                                                {selectedDrug.unit_type ===
-                                                'bottle'
-                                                    ? prescriptionData.quantity_to_dispense ===
-                                                      1
-                                                        ? 'bottle'
-                                                        : 'bottles'
-                                                    : prescriptionData.quantity_to_dispense ===
-                                                        1
-                                                      ? 'vial'
-                                                      : 'vials'}
-                                            </p>
-                                            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                                Based on{' '}
-                                                {prescriptionData.dose_quantity ||
-                                                    '5'}
-                                                ml per dose,{' '}
-                                                {selectedDrug.bottle_size ||
-                                                    (selectedDrug.unit_type ===
-                                                    'bottle'
-                                                        ? 100
-                                                        : 10)}
-                                                ml per {selectedDrug.unit_type}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                        {/* Manual Quantity Input for tubes and other types */}
-                        {selectedDrug &&
-                            selectedDrug.unit_type !== 'piece' &&
-                            selectedDrug.unit_type !== 'bottle' &&
-                            selectedDrug.unit_type !== 'vial' &&
-                            prescriptionData.frequency &&
-                            prescriptionData.duration && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantity_to_dispense">
-                                        Quantity to Dispense *
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            id="quantity_to_dispense"
-                                            min="1"
-                                            value={
-                                                prescriptionData.quantity_to_dispense ||
-                                                1
-                                            }
-                                            onChange={(e) => {
-                                                setManuallyEdited(true);
-                                                setPrescriptionData(
-                                                    'quantity_to_dispense',
-                                                    parseInt(e.target.value) ||
-                                                        1,
-                                                );
-                                            }}
-                                            className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                            required
-                                        />
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {selectedDrug.unit_type === 'tube'
-                                                ? (prescriptionData.quantity_to_dispense ||
-                                                      1) === 1
-                                                    ? 'tube'
-                                                    : 'tubes'
-                                                : selectedDrug.unit_type}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        Enter the number of{' '}
-                                        {selectedDrug.unit_type === 'tube'
-                                            ? 'tubes'
-                                            : 'units'}{' '}
-                                        needed for this prescription
-                                    </p>
-                                </div>
-                            )}
-
-                        {/* Instructions */}
-                        <div className="space-y-2">
-                            <Label htmlFor="instructions">
-                                Instructions (Optional)
-                            </Label>
-                            <Textarea
-                                id="instructions"
-                                placeholder="Special instructions for the patient..."
-                                value={prescriptionData.instructions}
-                                onChange={(e) =>
-                                    setPrescriptionData(
-                                        'instructions',
-                                        e.target.value,
-                                    )
-                                }
-                                rows={3}
+                            {/* Smart Prescription Input */}
+                            <SmartPrescriptionInput
+                                drug={selectedDrug || null}
+                                value={smartInput}
+                                onChange={setSmartInput}
+                                onParsedResult={handleParsedResult}
+                                onSwitchToClassic={handleSwitchToClassic}
+                                disabled={processing}
                             />
-                        </div>
 
-                        <Button
-                            type="submit"
-                            disabled={processing || !prescriptionData.drug_id}
-                            className="w-full"
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            {processing ? 'Adding...' : 'Add Prescription'}
-                        </Button>
-                    </form>
+                            {/* Instructions */}
+                            <div className="space-y-2">
+                                <Label htmlFor="instructions-smart">
+                                    Instructions (Optional)
+                                </Label>
+                                <Textarea
+                                    id="instructions-smart"
+                                    placeholder="Special instructions for the patient..."
+                                    value={prescriptionData.instructions}
+                                    onChange={(e) =>
+                                        setPrescriptionData('instructions', e.target.value)
+                                    }
+                                    rows={3}
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                disabled={processing || !prescriptionData.drug_id || !parsedResult?.isValid}
+                                className="w-full"
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                {processing ? 'Adding...' : 'Add Prescription'}
+                            </Button>
+                        </form>
+                    ) : (
+                        /* Classic Mode Form */
+                        <form onSubmit={onSubmit} className="space-y-4">
+                            {/* Drug Selection and Dose Quantity in same row */}
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                {DrugSelector}
+
+                                {/* Dose Quantity Field - Takes 1 column */}
+                                {selectedDrug && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dose_quantity">
+                                            Dose Quantity *
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                id="dose_quantity"
+                                                placeholder={
+                                                    selectedDrug.unit_type === 'piece'
+                                                        ? '1'
+                                                        : selectedDrug.unit_type === 'bottle' ||
+                                                            selectedDrug.unit_type === 'vial'
+                                                          ? '5'
+                                                          : '1'
+                                                }
+                                                value={prescriptionData.dose_quantity || ''}
+                                                onChange={(e) =>
+                                                    setPrescriptionData('dose_quantity', e.target.value)
+                                                }
+                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.unit_type === 'piece'
+                                                    ? `${selectedDrug.form}(s) per dose`
+                                                    : selectedDrug.unit_type === 'bottle' ||
+                                                        selectedDrug.unit_type === 'vial'
+                                                      ? 'ml per dose'
+                                                      : 'per dose'}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {selectedDrug.unit_type === 'piece' ? (
+                                                <>e.g., "1" for one tablet, "2" for two tablets per dose</>
+                                            ) : selectedDrug.unit_type === 'bottle' ||
+                                              selectedDrug.unit_type === 'vial' ? (
+                                                <>e.g., "5" for 5ml, "10" for 10ml per dose</>
+                                            ) : (
+                                                <>Enter dose quantity</>
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Frequency and Duration in two columns */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="frequency">Frequency *</Label>
+                                    <Select
+                                        value={prescriptionData.frequency}
+                                        onValueChange={(value) =>
+                                            setPrescriptionData('frequency', value)
+                                        }
+                                        required
+                                    >
+                                        <SelectTrigger id="frequency">
+                                            <SelectValue placeholder="Select frequency" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Once daily">Once daily</SelectItem>
+                                            <SelectItem value="Twice daily (BID)">Twice daily (BID)</SelectItem>
+                                            <SelectItem value="Three times daily (TID)">Three times daily (TID)</SelectItem>
+                                            <SelectItem value="Four times daily (QID)">Four times daily (QID)</SelectItem>
+                                            <SelectItem value="Every 4 hours">Every 4 hours</SelectItem>
+                                            <SelectItem value="Every 6 hours">Every 6 hours</SelectItem>
+                                            <SelectItem value="Every 8 hours">Every 8 hours</SelectItem>
+                                            <SelectItem value="Every 12 hours">Every 12 hours</SelectItem>
+                                            <SelectItem value="As needed (PRN)">As needed (PRN)</SelectItem>
+                                            <SelectItem value="Before meals">Before meals</SelectItem>
+                                            <SelectItem value="After meals">After meals</SelectItem>
+                                            <SelectItem value="At bedtime">At bedtime</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="duration">Duration *</Label>
+                                    <Select
+                                        value={prescriptionData.duration}
+                                        onValueChange={(value) =>
+                                            setPrescriptionData('duration', value)
+                                        }
+                                        required
+                                    >
+                                        <SelectTrigger id="duration">
+                                            <SelectValue placeholder="Select duration" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="3 days">3 days</SelectItem>
+                                            <SelectItem value="5 days">5 days</SelectItem>
+                                            <SelectItem value="7 days">7 days</SelectItem>
+                                            <SelectItem value="10 days">10 days</SelectItem>
+                                            <SelectItem value="14 days">14 days</SelectItem>
+                                            <SelectItem value="21 days">21 days</SelectItem>
+                                            <SelectItem value="30 days">30 days</SelectItem>
+                                            <SelectItem value="60 days">60 days</SelectItem>
+                                            <SelectItem value="90 days">90 days</SelectItem>
+                                            <SelectItem value="Until review">Until review</SelectItem>
+                                            <SelectItem value="Ongoing">Ongoing</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Quantity Display - Auto-calculated for tablets */}
+                            {prescriptionData.quantity_to_dispense &&
+                                selectedDrug &&
+                                selectedDrug.unit_type === 'piece' && (
+                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <div className="flex items-center gap-2">
+                                            <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            <div>
+                                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                    Calculated Quantity
+                                                </p>
+                                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                                    {prescriptionData.quantity_to_dispense}{' '}
+                                                    {selectedDrug.form === 'tablet'
+                                                        ? 'tablets'
+                                                        : selectedDrug.form === 'capsule'
+                                                          ? 'capsules'
+                                                          : 'pieces'}
+                                                </p>
+                                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                    Auto-calculated from frequency × duration
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                            {/* Calculated Quantity Display for bottles/vials */}
+                            {prescriptionData.quantity_to_dispense &&
+                                selectedDrug &&
+                                (selectedDrug.unit_type === 'bottle' ||
+                                    selectedDrug.unit_type === 'vial') && (
+                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <div className="flex items-center gap-2">
+                                            <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            <div>
+                                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                    Calculated Quantity
+                                                </p>
+                                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                                    {prescriptionData.quantity_to_dispense}{' '}
+                                                    {selectedDrug.unit_type === 'bottle'
+                                                        ? prescriptionData.quantity_to_dispense === 1
+                                                            ? 'bottle'
+                                                            : 'bottles'
+                                                        : prescriptionData.quantity_to_dispense === 1
+                                                          ? 'vial'
+                                                          : 'vials'}
+                                                </p>
+                                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                    Based on {prescriptionData.dose_quantity || '5'}ml per dose,{' '}
+                                                    {selectedDrug.bottle_size ||
+                                                        (selectedDrug.unit_type === 'bottle' ? 100 : 10)}
+                                                    ml per {selectedDrug.unit_type}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                            {/* Manual Quantity Input for tubes and other types */}
+                            {selectedDrug &&
+                                selectedDrug.unit_type !== 'piece' &&
+                                selectedDrug.unit_type !== 'bottle' &&
+                                selectedDrug.unit_type !== 'vial' &&
+                                prescriptionData.frequency &&
+                                prescriptionData.duration && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantity_to_dispense">
+                                            Quantity to Dispense *
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                id="quantity_to_dispense"
+                                                min="1"
+                                                value={prescriptionData.quantity_to_dispense || 1}
+                                                onChange={(e) => {
+                                                    setManuallyEdited(true);
+                                                    setPrescriptionData(
+                                                        'quantity_to_dispense',
+                                                        parseInt(e.target.value) || 1,
+                                                    );
+                                                }}
+                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.unit_type === 'tube'
+                                                    ? (prescriptionData.quantity_to_dispense || 1) === 1
+                                                        ? 'tube'
+                                                        : 'tubes'
+                                                    : selectedDrug.unit_type}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Enter the number of{' '}
+                                            {selectedDrug.unit_type === 'tube' ? 'tubes' : 'units'}{' '}
+                                            needed for this prescription
+                                        </p>
+                                    </div>
+                                )}
+
+                            {/* Instructions */}
+                            <div className="space-y-2">
+                                <Label htmlFor="instructions">
+                                    Instructions (Optional)
+                                </Label>
+                                <Textarea
+                                    id="instructions"
+                                    placeholder="Special instructions for the patient..."
+                                    value={prescriptionData.instructions}
+                                    onChange={(e) =>
+                                        setPrescriptionData('instructions', e.target.value)
+                                    }
+                                    rows={3}
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                disabled={processing || !prescriptionData.drug_id}
+                                className="w-full"
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                {processing ? 'Adding...' : 'Add Prescription'}
+                            </Button>
+                        </form>
+                    )}
                 </div>
             )}
 
@@ -715,11 +734,9 @@ export default function PrescriptionFormSection({
                                     <div className="flex items-center gap-2">
                                         <Badge
                                             variant={
-                                                prescription.status ===
-                                                'prescribed'
+                                                prescription.status === 'prescribed'
                                                     ? 'default'
-                                                    : prescription.status ===
-                                                        'dispensed'
+                                                    : prescription.status === 'dispensed'
                                                       ? 'outline'
                                                       : 'destructive'
                                             }
@@ -727,16 +744,11 @@ export default function PrescriptionFormSection({
                                             {prescription.status.toUpperCase()}
                                         </Badge>
                                         {consultationStatus === 'in_progress' &&
-                                            prescription.status ===
-                                                'prescribed' && (
+                                            prescription.status === 'prescribed' && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() =>
-                                                        onDelete(
-                                                            prescription.id,
-                                                        )
-                                                    }
+                                                    onClick={() => onDelete(prescription.id)}
                                                     className="text-red-600 hover:bg-red-50 hover:text-red-700"
                                                 >
                                                     <Trash2 className="h-4 w-4" />

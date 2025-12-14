@@ -419,11 +419,23 @@ export default function ConsultationShow({
         post: postPrescription,
         processing: prescriptionProcessing,
         reset: resetPrescription,
-    } = useForm({
+    } = useForm<{
+        medication_name: string;
+        drug_id: number | null;
+        dose_quantity: string;
+        frequency: string;
+        duration: string;
+        quantity_to_dispense: string | number;
+        schedule_pattern: object | null;
+        instructions: string;
+    }>({
         medication_name: '',
-        drug_id: null as number | null,
+        drug_id: null,
+        dose_quantity: '',
         frequency: '',
         duration: '',
+        quantity_to_dispense: '',
+        schedule_pattern: null,
         instructions: '',
     });
 
