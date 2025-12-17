@@ -1,0 +1,175 @@
+# Implementation Plan
+
+- [ ] 1. Set up database and models
+  - [ ] 1.1 Create PricingChangeLog migration
+    - Create migration for pricing_change_logs table with item_type, item_id, item_code, field_changed, insurance_plan_id, old_value, new_value, changed_by, timestamps
+    - Add indexes for item_type+item_id and insurance_plan_id
+    - _Requirements: 9.1_
+  - [ ] 1.2 Create PricingChangeLog model
+    - Create model with fillable fields and relationships to User
+    - Add scope methods for filtering by item and date range
+    - _Requirements: 9.1, 9.2_
+  - [ ] 1.3 Write property test for audit logging
+    - **Property 13: Audit log captures all price changes**
+    - **Validates: Requirements 9.1, 9.2**
+
+- [ ] 2. Create PricingDashboardService
+  - [ ] 2.1 Create service class with getPricingData method
+    - Implement method to aggregate pricing from Drug, LabService, DepartmentBilling
+    - Include NHIS tariff lookup via NhisItemMapping
+    - Include InsuranceCoverageRule data for selected plan
+    - Support filtering by category and search term
+    - Return paginated PricingItem DTOs
+    - _Requirements: 1.2, 1.3, 1.4_
+  - [ ] 2.2 Write property test for search filtering
+    - **Property 9: Search returns matching items only**
+    - **Validates: Requirements 1.4**
+  - [ ] 2.3 Implement updateCashPrice method
+    - Update Drug.unit_price, LabService.price, or DepartmentBilling.consultation_fee based on item type
+    - Create PricingChangeLog entry
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [ ] 2.4 Write property test for cash price updates
+    - **Property 1: Cash price updates persist to correct model**
+    - **Validates: Requirements 2.1, 2.2, 2.3**
+  - [ ] 2.5 Implement updateInsuranceCopay method
+    - Create or update InsuranceCoverageRule with patient_copay_amount
+    - Use item-specific item_code for the rule
+    - Create PricingChangeLog entry
+    - _Requirements: 3.3, 4.4_
+  - [ ] 2.6 Write property test for copay updates
+    - **Property 3: NHIS copay updates create or update coverage rules**
+    - **Validates: Requirements 3.3**
+  - [ ] 2.7 Implement updateInsuranceCoverage method
+    - Update InsuranceCoverageRule with tariff_amount, coverage_value, coverage_type
+    - Create PricingChangeLog entry
+    - _Requirements: 4.2, 4.3_
+  - [ ] 2.8 Write property test for private insurance coverage updates
+    - **Property 6: Private insurance coverage updates persist correctly**
+    - **Validates: Requirements 4.2, 4.3, 4.4**
+  - [ ] 2.9 Implement bulkUpdateCopay method
+    - Loop through items and call updateInsuranceCopay for each
+    - Collect successes and errors
+    - Return summary
+    - _Requirements: 5.2, 5.3_
+  - [ ] 2.10 Write property test for bulk updates
+    - **Property 8: Bulk update applies to all selected items**
+    - **Validates: Requirements 5.2, 5.3**
+
+- [ ] 3. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Implement export and import functionality
+  - [ ] 4.1 Implement exportToCsv method
+    - Generate CSV with item name, code, category, cash price, insurance columns
+    - Respect current filters
+    - _Requirements: 7.1, 7.2, 7.3_
+  - [ ] 4.2 Write property test for export
+    - **Property 10: Export contains all filtered data**
+    - **Validates: Requirements 7.1, 7.2, 7.3**
+  - [ ] 4.3 Implement importFromFile method
+    - Parse CSV/Excel file
+    - Match items by code
+    - Update cash prices and/or copay based on columns present
+    - Skip invalid rows, collect errors
+    - Return summary
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
+  - [ ] 4.4 Write property test for import matching
+    - **Property 11: Import matches items by code**
+    - **Validates: Requirements 8.2**
+  - [ ] 4.5 Write property test for import error handling
+    - **Property 12: Import handles invalid rows gracefully**
+    - **Validates: Requirements 8.5, 8.6**
+  - [ ] 4.6 Implement generateImportTemplate method
+    - Generate CSV template with headers and sample data
+    - Include current pricing data for reference
+    - _Requirements: 8.1_
+
+- [ ] 5. Create controller and routes
+  - [ ] 5.1 Create PricingDashboardController
+    - Implement index method returning Inertia page with pricing data
+    - Implement updateCashPrice, updateInsuranceCopay, updateInsuranceCoverage methods
+    - Implement bulkUpdate method
+    - Implement export and import methods
+    - _Requirements: 1.1, 2.1-2.5, 3.1-3.5, 4.1-4.5, 5.1-5.4, 7.1-7.3, 8.1-8.6_
+  - [ ] 5.2 Create Form Request classes
+    - UpdateCashPriceRequest with validation for item_type, item_id, price (positive number)
+    - UpdateInsuranceCopayRequest with validation for plan_id, item_type, item_id, copay
+    - UpdateInsuranceCoverageRequest with validation for coverage fields
+    - BulkUpdatePricingRequest with validation for items array and copay
+    - ImportPricingRequest with validation for file upload
+    - _Requirements: 2.5_
+  - [ ] 5.3 Write property test for price validation
+    - **Property 2: Price validation rejects invalid values**
+    - **Validates: Requirements 2.5**
+  - [ ] 5.4 Register routes in admin routes file
+    - GET /admin/pricing-dashboard
+    - PUT /admin/pricing-dashboard/cash-price
+    - PUT /admin/pricing-dashboard/insurance-copay
+    - PUT /admin/pricing-dashboard/insurance-coverage
+    - POST /admin/pricing-dashboard/bulk-update
+    - GET /admin/pricing-dashboard/export
+    - POST /admin/pricing-dashboard/import
+    - GET /admin/pricing-dashboard/import-template
+    - _Requirements: All_
+  - [ ] 5.5 Create PricingDashboardPolicy
+    - Define authorization for viewing and editing pricing
+    - _Requirements: All_
+
+- [ ] 6. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 7. Create frontend components
+  - [ ] 7.1 Create PricingDashboard/Index.tsx page
+    - Plan selector dropdown
+    - Category filter tabs
+    - Search input
+    - Pricing table with inline editing
+    - Pagination
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - [ ] 7.2 Create PricingTable component
+    - Display items with editable price/copay cells
+    - Different columns for NHIS vs private insurance
+    - Show "Not Mapped" indicator for unmapped NHIS items
+    - Show calculated "Patient Pays" for private insurance
+    - _Requirements: 3.1, 3.2, 3.4, 3.5, 4.1, 4.5, 6.1_
+  - [ ] 7.3 Write property test for unmapped item handling
+    - **Property 4: Unmapped items are correctly identified**
+    - **Validates: Requirements 3.4, 6.1, 6.2**
+  - [ ] 7.4 Write property test for NHIS tariff display
+    - **Property 5: NHIS tariff display matches master data**
+    - **Validates: Requirements 3.2**
+  - [ ] 7.5 Write property test for patient pays calculation
+    - **Property 7: Patient pays calculation is correct**
+    - **Validates: Requirements 4.5**
+  - [ ] 7.6 Create PlanSelector component
+    - Dropdown with all insurance plans
+    - NHIS plan highlighted/grouped separately
+    - _Requirements: 1.1_
+  - [ ] 7.7 Create BulkEditModal component
+    - Checkbox selection for items
+    - Input for copay amount
+    - Confirmation and summary display
+    - _Requirements: 5.1, 5.4_
+  - [ ] 7.8 Create PricingExportButton component
+    - Export button that downloads CSV
+    - _Requirements: 7.1_
+  - [ ] 7.9 Create PricingImportModal component
+    - File upload input
+    - Preview of changes before applying
+    - Progress and result summary
+    - _Requirements: 8.1, 8.6_
+  - [ ] 7.10 Create ItemHistoryModal component
+    - Display pricing change history for an item
+    - Show user, timestamp, old/new values
+    - _Requirements: 9.2_
+
+- [ ] 8. Add unmapped items filter and mapping link
+  - [ ] 8.1 Add "Unmapped Only" filter option
+    - Filter to show only items without NHIS mapping
+    - _Requirements: 6.2_
+  - [ ] 8.2 Add link to NHIS mapping page for unmapped items
+    - Show action button/link to navigate to NHIS item mapping
+    - _Requirements: 6.3_
+
+- [ ] 9. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
