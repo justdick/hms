@@ -28,8 +28,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             DepartmentSeeder::class,
-            // MinorProceduresDepartmentSeeder::class,
-            // MinorProcedureTypesSeeder::class,
+            MinorProceduresDepartmentSeeder::class,
+            MinorProcedureTypesSeeder::class,
             TestDataSeeder::class,
             PaymentMethodSeeder::class,
             // LabServiceSeeder::class,

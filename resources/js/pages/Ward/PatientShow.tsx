@@ -677,7 +677,10 @@ export default function WardPatientShow({
                             <Link
                                 href={`/consultation/${admission.consultation.id}`}
                             >
-                                <Button variant="outline">
+                                <Button
+                                    variant="outline"
+                                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white"
+                                >
                                     <FileText className="mr-2 h-4 w-4" />
                                     View Consultation
                                 </Button>
@@ -706,170 +709,121 @@ export default function WardPatientShow({
 
                 {/* Patient Info Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Patient Information
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 transition-all hover:shadow-md dark:border-blue-800 dark:bg-blue-950">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                Patient Information
+                            </p>
+                            <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="space-y-1 text-sm">
+                            {admission.patient.date_of_birth && (
+                                <p className="font-semibold text-blue-700 dark:text-blue-300">
+                                    Age: {calculateAge(admission.patient.date_of_birth)} years
                                 </p>
-                                <div className="space-y-1 text-sm">
-                                    {admission.patient.date_of_birth && (
-                                        <p className="text-gray-900 dark:text-gray-100">
-                                            Age:{' '}
-                                            {calculateAge(
-                                                admission.patient.date_of_birth,
-                                            )}{' '}
-                                            years
-                                        </p>
-                                    )}
-                                    {admission.patient.gender && (
-                                        <p className="text-gray-900 dark:text-gray-100">
-                                            Gender: {admission.patient.gender}
-                                        </p>
-                                    )}
-                                    {admission.patient.phone_number && (
-                                        <p className="text-gray-900 dark:text-gray-100">
-                                            Phone:{' '}
-                                            {admission.patient.phone_number}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Ward & Bed
-                                    </p>
-                                    <Button
-                                        size="sm"
-                                        variant={
-                                            admission.bed
-                                                ? 'outline'
-                                                : 'default'
-                                        }
-                                        onClick={loadBedData}
-                                    >
-                                        <BedIcon className="mr-2 h-3 w-3" />
-                                        {admission.bed
-                                            ? 'Change Bed'
-                                            : 'Assign Bed'}
-                                    </Button>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                        <BedIcon className="h-4 w-4" />
-                                        {admission.bed ? (
-                                            <span>
-                                                Bed {admission.bed.bed_number}
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-500 dark:text-gray-400">
-                                                No bed assigned
-                                            </span>
-                                        )}
-                                    </div>
-                                    {admission.ward && (
-                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                            Ward: {admission.ward.name} (
-                                            {admission.ward.code})
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Attending Physician
+                            )}
+                            {admission.patient.gender && (
+                                <p className="text-blue-600 dark:text-blue-400">
+                                    {admission.patient.gender}
                                 </p>
-                                {admission.consultation?.doctor ? (
-                                    <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                        <Stethoscope className="h-4 w-4" />
-                                        <span>
-                                            Dr.{' '}
-                                            {admission.consultation.doctor.name}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        Not assigned
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Admission Date
+                            )}
+                            {admission.patient.phone_number && (
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                    {admission.patient.phone_number}
                                 </p>
-                                <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <Calendar className="h-4 w-4" />
-                                    {formatDateTime(admission.admitted_at)}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            )}
+                        </div>
+                    </div>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Insurance Coverage
+                    <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 transition-all hover:shadow-md dark:border-purple-800 dark:bg-purple-950">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                                Ward & Bed
+                            </p>
+                            <Button
+                                size="sm"
+                                variant={admission.bed ? 'ghost' : 'default'}
+                                className={
+                                    admission.bed
+                                        ? 'h-6 px-2 text-purple-600 hover:bg-purple-100 hover:text-purple-700 dark:text-purple-400 dark:hover:bg-purple-900'
+                                        : 'h-6 px-2 bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700'
+                                }
+                                onClick={loadBedData}
+                            >
+                                <BedIcon className="mr-1 h-3 w-3" />
+                                {admission.bed ? 'Change' : 'Assign Bed'}
+                            </Button>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="font-semibold text-purple-700 dark:text-purple-300">
+                                {admission.bed ? `Bed ${admission.bed.bed_number}` : 'No bed assigned'}
+                            </p>
+                            {admission.ward && (
+                                <p className="text-sm text-purple-600 dark:text-purple-400">
+                                    {admission.ward.name} ({admission.ward.code})
                                 </p>
-                                {admission.patient.active_insurance ? (
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                            <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                            <span className="font-medium">
-                                                {
-                                                    admission.patient
-                                                        .active_insurance.plan
-                                                        .provider.name
-                                                }
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                                            {
-                                                admission.patient
-                                                    .active_insurance.plan
-                                                    .plan_name
-                                            }{' '}
-                                            (
-                                            {
-                                                admission.patient
-                                                    .active_insurance.plan
-                                                    .plan_type
-                                            }
-                                            )
-                                        </p>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                                            Member:{' '}
-                                            {
-                                                admission.patient
-                                                    .active_insurance
-                                                    .member_number
-                                            }
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        No active insurance
-                                    </p>
-                                )}
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-4 transition-all hover:shadow-md dark:border-green-800 dark:bg-green-950">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                                Attending Physician
+                            </p>
+                            <Stethoscope className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        {admission.consultation?.doctor ? (
+                            <p className="font-semibold text-green-700 dark:text-green-300">
+                                Dr. {admission.consultation.doctor.name}
+                            </p>
+                        ) : (
+                            <p className="text-sm text-green-600 dark:text-green-400">
+                                Not assigned
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 transition-all hover:shadow-md dark:border-amber-800 dark:bg-amber-950">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                                Admission
+                            </p>
+                            <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <p className="font-semibold text-amber-700 dark:text-amber-300">
+                            Day {calculateAdmissionDays()}
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                            {formatDateTime(admission.admitted_at)}
+                        </p>
+                    </div>
+
+                    <div className="rounded-lg border border-teal-200 bg-teal-50 p-4 transition-all hover:shadow-md dark:border-teal-800 dark:bg-teal-950">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-teal-900 dark:text-teal-100">
+                                Insurance
+                            </p>
+                            <ShieldCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        {admission.patient.active_insurance ? (
+                            <div className="space-y-1">
+                                <p className="font-semibold text-teal-700 dark:text-teal-300">
+                                    {admission.patient.active_insurance.plan.provider.name}
+                                </p>
+                                <p className="text-xs text-teal-600 dark:text-teal-400">
+                                    {admission.patient.active_insurance.plan.plan_name} ({admission.patient.active_insurance.plan.plan_type})
+                                </p>
+                                <p className="text-xs text-teal-600 dark:text-teal-400">
+                                    Member: {admission.patient.active_insurance.member_number}
+                                </p>
                             </div>
-                        </CardContent>
-                    </Card>
+                        ) : (
+                            <p className="text-sm text-teal-600 dark:text-teal-400">
+                                No active insurance
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Alert Badges */}
@@ -929,24 +883,24 @@ export default function WardPatientShow({
                     defaultValue="overview"
                     className="w-full"
                 >
-                    <TabsList>
+                    <TabsList className="grid w-full grid-cols-7 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                         <TabsTrigger
                             value="overview"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-slate-50 text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300"
                         >
                             <LayoutDashboard className="h-4 w-4" />
                             Overview
                         </TabsTrigger>
                         <TabsTrigger
                             value="vitals"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-rose-50 text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
                         >
                             <Heart className="h-4 w-4" />
                             Vital Signs
                         </TabsTrigger>
                         <TabsTrigger
                             value="medications"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-green-50 text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300"
                             title={
                                 dueMeds.length > 0
                                     ? `${dueMeds.length} medication(s) due now!`
@@ -956,7 +910,7 @@ export default function WardPatientShow({
                             }
                         >
                             <Pill className="h-4 w-4" />
-                            Medication Administration
+                            MAR
                             {dueMeds.length > 0 ? (
                                 <Badge
                                     variant="destructive"
@@ -974,7 +928,7 @@ export default function WardPatientShow({
                         </TabsTrigger>
                         <TabsTrigger
                             value="history"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-emerald-50 text-emerald-700 shadow-none transition-all hover:bg-emerald-100 data-[state=active]:border-emerald-600 data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900 dark:data-[state=active]:border-emerald-400 dark:data-[state=active]:bg-emerald-900 dark:data-[state=active]:text-emerald-300"
                             title={
                                 pendingScheduleCount > 0
                                     ? `${pendingScheduleCount} prescription(s) need schedule configuration`
@@ -982,7 +936,7 @@ export default function WardPatientShow({
                             }
                         >
                             <ClipboardList className="h-4 w-4" />
-                            Medication History
+                            Rx History
                             {pendingScheduleCount > 0 && (
                                 <Badge
                                     variant="outline"
@@ -1001,25 +955,28 @@ export default function WardPatientShow({
                                     </Badge>
                                 )}
                         </TabsTrigger>
-                        {allLabOrders.length > 0 && (
-                            <TabsTrigger
-                                value="labs"
-                                className="flex items-center gap-2"
-                            >
-                                <FlaskConical className="h-4 w-4" />
-                                Labs
-                            </TabsTrigger>
-                        )}
+                        <TabsTrigger
+                            value="labs"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-teal-50 text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
+                        >
+                            <FlaskConical className="h-4 w-4" />
+                            Labs
+                            {allLabOrders.length > 0 && (
+                                <Badge variant="secondary" className="ml-1">
+                                    {allLabOrders.length}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
                         <TabsTrigger
                             value="notes"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-blue-50 text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
                         >
                             <FileText className="h-4 w-4" />
                             Nursing Notes
                         </TabsTrigger>
                         <TabsTrigger
                             value="rounds"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-violet-50 text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
                         >
                             <Stethoscope className="h-4 w-4" />
                             Ward Rounds

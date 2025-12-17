@@ -27,7 +27,9 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
     // Prescription management
     Route::post('/prescriptions/parse', [PrescriptionParserController::class, 'parse'])->name('prescriptions.parse');
     Route::post('/{consultation}/prescriptions', [ConsultationController::class, 'storePrescription'])->name('prescriptions.store');
+    Route::patch('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'updatePrescription'])->name('prescriptions.update');
     Route::delete('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'destroyPrescription'])->name('prescriptions.destroy');
+    Route::post('/{consultation}/prescriptions/refill', [ConsultationController::class, 'refillPrescriptions'])->name('prescriptions.refill');
 
     // Admission management
     Route::post('/{consultation}/admit', [AdmissionController::class, 'store'])->name('admit');
@@ -40,8 +42,9 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
         Route::delete('/{diagnosis}', [DiagnosisController::class, 'destroy'])->name('destroy');
     });
 
-    // ICD code search
+    // ICD code search and custom diagnosis creation
     Route::get('/diagnoses/search', [DiagnosisController::class, 'search'])->name('diagnoses.search');
+    Route::post('/diagnoses/custom', [DiagnosisController::class, 'storeCustom'])->name('diagnoses.store-custom');
 
     // Lab order management
     Route::prefix('/{consultation}/lab-orders')->name('lab-orders.')->group(function () {

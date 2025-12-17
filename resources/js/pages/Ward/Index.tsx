@@ -6,11 +6,9 @@ import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    ArrowRight,
     Bed,
     Building2,
     Edit,
-    Eye,
     Hospital,
     Plus,
     Search,
@@ -19,7 +17,6 @@ import {
     ToggleRight,
     Trash2,
     Users,
-    Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -38,6 +35,7 @@ interface Ward {
     available_beds: number;
     is_active: boolean;
     beds: Bed[];
+    admitted_patients_count: number;
     created_at: string;
 }
 
@@ -139,7 +137,7 @@ export default function WardIndex({ wards }: Props) {
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     <StatCard
                         label="Total Wards"
                         value={wards.length}
@@ -160,8 +158,14 @@ export default function WardIndex({ wards }: Props) {
                     <StatCard
                         label="Available Beds"
                         value={wards.reduce((sum, w) => sum + w.available_beds, 0)}
-                        icon={<Users className="h-4 w-4" />}
+                        icon={<Bed className="h-4 w-4" />}
                         variant="success"
+                    />
+                    <StatCard
+                        label="Admitted Patients"
+                        value={wards.reduce((sum, w) => sum + w.admitted_patients_count, 0)}
+                        icon={<Users className="h-4 w-4" />}
+                        variant="warning"
                     />
                 </div>
 
@@ -237,84 +241,74 @@ export default function WardIndex({ wards }: Props) {
                                 return (
                                     <Card
                                         key={ward.id}
-                                        className={`group transition-all hover:shadow-lg ${!ward.is_active ? 'border-gray-300 opacity-75' : 'hover:border-blue-300'}`}
+                                        className={`group transition-all hover:shadow-lg ${!ward.is_active ? 'border-gray-300 opacity-75' : 'hover:border-blue-300 cursor-pointer'}`}
                                     >
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                                                        {ward.name}
-                                                    </CardTitle>
-                                                    <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                        Code: {ward.code}
+                                        <Link href={`/wards/${ward.id}`} className="block">
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                                            {ward.name}
+                                                        </CardTitle>
+                                                        <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                            Code: {ward.code}
+                                                        </p>
+                                                    </div>
+                                                    <Badge
+                                                        variant={
+                                                            ward.is_active
+                                                                ? 'default'
+                                                                : 'secondary'
+                                                        }
+                                                        className="shrink-0"
+                                                    >
+                                                        {ward.is_active
+                                                            ? 'Active'
+                                                            : 'Inactive'}
+                                                    </Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                                {/* Patient Count - Prominent */}
+                                            <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-900/20">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                            Admitted Patients
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                                                        {ward.admitted_patients_count}
                                                     </p>
                                                 </div>
-                                                <Badge
-                                                    variant={
-                                                        ward.is_active
-                                                            ? 'default'
-                                                            : 'secondary'
-                                                    }
-                                                    className="shrink-0"
-                                                >
-                                                    {ward.is_active
-                                                        ? 'Active'
-                                                        : 'Inactive'}
-                                                </Badge>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            {ward.description && (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {ward.description}
-                                                </p>
-                                            )}
 
                                             {/* Bed Status Grid */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <Bed className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                                            Total
-                                                        </span>
-                                                    </div>
-                                                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="rounded-lg bg-blue-50 p-2 text-center dark:bg-blue-900/10">
+                                                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                                                         {ward.total_beds}
                                                     </p>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                        Total Beds
+                                                    </span>
                                                 </div>
-                                                <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <Bed className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                                            Available
-                                                        </span>
-                                                    </div>
-                                                    <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
+                                                <div className="rounded-lg bg-green-50 p-2 text-center dark:bg-green-900/10">
+                                                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                                                         {bedStatus.available}
                                                     </p>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                        Available
+                                                    </span>
                                                 </div>
-                                                <div className="rounded-lg bg-orange-50 p-3 dark:bg-orange-900/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <Users className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                                            Occupied
-                                                        </span>
-                                                    </div>
-                                                    <p className="mt-1 text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                                <div className="rounded-lg bg-orange-50 p-2 text-center dark:bg-orange-900/10">
+                                                    <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
                                                         {bedStatus.occupied}
                                                     </p>
-                                                </div>
-                                                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                                                    <div className="flex items-center gap-2">
-                                                        <Wrench className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                                            Maintenance
-                                                        </span>
-                                                    </div>
-                                                    <p className="mt-1 text-2xl font-bold text-gray-600 dark:text-gray-400">
-                                                        {bedStatus.maintenance}
-                                                    </p>
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                        Occupied
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -340,64 +334,41 @@ export default function WardIndex({ wards }: Props) {
                                                 </div>
                                             </div>
 
-                                            {/* Actions */}
-                                            <div className="flex items-center justify-between gap-2 border-t pt-4 dark:border-gray-700">
-                                                <Link
-                                                    href={`/wards/${ward.id}`}
-                                                    className="flex-1"
-                                                >
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="w-full gap-2"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                        View Details
-                                                        <ArrowRight className="ml-auto h-4 w-4" />
-                                                    </Button>
-                                                </Link>
+                                            </CardContent>
+                                        </Link>
 
-                                                <div className="flex gap-1">
-                                                    <Link
-                                                        href={`/wards/${ward.id}/edit`}
-                                                    >
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-9 w-9 p-0"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-9 w-9 p-0"
-                                                        onClick={() =>
-                                                            handleToggleStatus(
-                                                                ward,
-                                                            )
-                                                        }
-                                                    >
-                                                        {ward.is_active ? (
-                                                            <ToggleLeft className="h-4 w-4 text-orange-600" />
-                                                        ) : (
-                                                            <ToggleRight className="h-4 w-4 text-green-600" />
-                                                        )}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-                                                        onClick={() =>
-                                                            handleDelete(ward)
-                                                        }
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </CardContent>
+                                        {/* Actions */}
+                                        <div className="flex items-center justify-end gap-1 border-t px-6 py-3 dark:border-gray-700">
+                                            <Link href={`/wards/${ward.id}/edit`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-9 w-9 p-0"
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-9 w-9 p-0"
+                                                onClick={() => handleToggleStatus(ward)}
+                                            >
+                                                {ward.is_active ? (
+                                                    <ToggleLeft className="h-4 w-4 text-orange-600" />
+                                                ) : (
+                                                    <ToggleRight className="h-4 w-4 text-green-600" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+                                                onClick={() => handleDelete(ward)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </Card>
                                 );
                             })}

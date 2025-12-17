@@ -30,6 +30,7 @@ class Prescription extends Model
 
     protected $fillable = [
         'consultation_id',
+        'refilled_from_prescription_id',
         'prescribable_type',
         'prescribable_id',
         'drug_id',
@@ -72,6 +73,21 @@ class Prescription extends Model
     public function consultation(): BelongsTo
     {
         return $this->belongsTo(Consultation::class);
+    }
+
+    public function refilledFrom(): BelongsTo
+    {
+        return $this->belongsTo(Prescription::class, 'refilled_from_prescription_id');
+    }
+
+    public function refills(): HasMany
+    {
+        return $this->hasMany(Prescription::class, 'refilled_from_prescription_id');
+    }
+
+    public function isRefill(): bool
+    {
+        return $this->refilled_from_prescription_id !== null;
     }
 
     public function drug(): BelongsTo

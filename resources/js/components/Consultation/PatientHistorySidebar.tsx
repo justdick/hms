@@ -196,7 +196,10 @@ export function PatientHistorySidebar({
         <>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
-                    <Button variant="outline" className="gap-2">
+                    <Button
+                        variant="outline"
+                        className="gap-2 border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:text-violet-400 dark:hover:bg-violet-600 dark:hover:text-white"
+                    >
                         <History className="h-4 w-4" />
                         Previous Visits (
                         {previousConsultations.length +

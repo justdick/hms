@@ -77,11 +77,11 @@ export default function VitalsOverview({
         return null;
     };
 
-    // Determine vital status based on normal ranges
+    // Determine vital status based on normal ranges (Celsius)
     const getTemperatureStatus = (temp: number) => {
-        if (temp < 96) return 'low';
-        if (temp > 100.4) return 'high';
-        if (temp > 99) return 'elevated';
+        if (temp < 35.5) return 'low';
+        if (temp > 38) return 'high';
+        if (temp > 37.2) return 'elevated';
         return 'normal';
     };
 
@@ -184,8 +184,8 @@ export default function VitalsOverview({
                         <VitalCard
                             title="Temperature"
                             current={latestVitals.temperature.toString()}
-                            unit="°F"
-                            normalRange="97-99°F"
+                            unit="°C"
+                            normalRange="36.1-37.2°C"
                             status={tempStatus}
                             trend={getTrendData('temperature')}
                             lastReading={formatDateTime(
@@ -280,7 +280,7 @@ export default function VitalsOverview({
                                         </span>
                                         <div className="flex gap-4">
                                             <span>
-                                                T: {vital.temperature}°F
+                                                T: {vital.temperature}°C
                                             </span>
                                             <span>
                                                 BP:{' '}

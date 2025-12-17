@@ -18,6 +18,7 @@ class Consultation extends Model
         'patient_checkin_id',
         'doctor_id',
         'started_at',
+        'service_date',
         'completed_at',
         'status',
         'presenting_complaint',
@@ -34,10 +35,23 @@ class Consultation extends Model
     {
         return [
             'started_at' => 'datetime',
+            'service_date' => 'date',
             'completed_at' => 'datetime',
             'follow_up_date' => 'date',
             'status' => 'string',
         ];
+    }
+
+    /**
+     * Check if this consultation was backdated (entered after the service date).
+     */
+    public function isBackdated(): bool
+    {
+        if (! $this->service_date || ! $this->created_at) {
+            return false;
+        }
+
+        return $this->service_date->toDateString() !== $this->created_at->toDateString();
     }
 
     public function patientCheckin(): BelongsTo

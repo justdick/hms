@@ -16,6 +16,7 @@ export interface Diagnosis {
     name: string;
     icd_code: string;
     is_primary: boolean;
+    type?: 'principal' | 'provisional';
 }
 
 export interface ClaimItem {

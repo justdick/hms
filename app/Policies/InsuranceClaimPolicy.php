@@ -34,8 +34,8 @@ class InsuranceClaimPolicy
 
     public function delete(User $user, InsuranceClaim $insuranceClaim): bool
     {
-        // Only allow deleting draft claims
-        if ($insuranceClaim->status !== 'draft') {
+        // Only allow deleting draft or pending_vetting claims
+        if (! in_array($insuranceClaim->status, ['draft', 'pending_vetting'])) {
             return false;
         }
 

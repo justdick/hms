@@ -178,8 +178,8 @@ class MigrateAdmissionsFromMittag extends Command
             // Map ward
             $wardId = $this->wardMap[$old->ward] ?? 1;
 
-            // Map status/outcome
-            $status = $this->mapStatus($old->outcome);
+            // Map status/outcome - check discharge date to determine if still admitted
+            $status = $this->mapStatus($old->outcome, $old->date_discharged);
 
             // Generate admission number
             $admissionNumber = $this->generateAdmissionNumber($old);
@@ -246,8 +246,13 @@ class MigrateAdmissionsFromMittag extends Command
         return "ADM{$year}{$sequence}";
     }
 
-    private function mapStatus(?string $outcome): string
+    private function mapStatus(?string $outcome, ?string $dischargeDate): string
     {
+        // If no discharge date, patient is still admitted
+        if (! $dischargeDate || $dischargeDate === '0000-00-00') {
+            return 'admitted';
+        }
+
         return match (strtolower(trim($outcome ?? ''))) {
             'discharged', '' => 'discharged',
             'referred' => 'transferred',

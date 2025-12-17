@@ -81,7 +81,11 @@ export default function CheckinModal({
     const [nhisSettings, setNhisSettings] = useState<NhisSettings | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [notes, setNotes] = useState('');
+    const [serviceDate, setServiceDate] = useState('');
     const [checkingInsurance, setCheckingInsurance] = useState(false);
+
+    // Get today's date in YYYY-MM-DD format for date input
+    const today = new Date().toISOString().split('T')[0];
 
     useEffect(() => {
         if (open && patient) {
@@ -94,6 +98,7 @@ export default function CheckinModal({
             setInsuranceDialogOpen(false);
             setSelectedDepartment('');
             setNotes('');
+            setServiceDate('');
         }
     }, [open, patient]);
 
@@ -180,6 +185,11 @@ export default function CheckinModal({
             formData.notes = notes;
         }
 
+        // Include service_date if backdating (not today)
+        if (serviceDate && serviceDate !== today) {
+            formData.service_date = serviceDate;
+        }
+
         if (hasInsurance && claimCheckCode) {
             formData.has_insurance = true;
             formData.claim_check_code = claimCheckCode;
@@ -218,64 +228,44 @@ export default function CheckinModal({
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="space-y-6">
+                            <div className="space-y-3">
                                 {/* Patient Information */}
-                                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                                    <h3 className="flex items-center gap-2 font-medium">
+                                <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
+                                    <h3 className="flex items-center gap-2 text-sm font-medium">
                                         <User className="h-4 w-4" />
                                         Patient Information
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <p className="text-muted-foreground">
-                                                Name
-                                            </p>
-                                            <p className="font-medium">
-                                                {patient.full_name}
-                                            </p>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-muted-foreground">Name:</span>
+                                            <span className="font-medium">{patient.full_name}</span>
                                         </div>
-                                        <div>
-                                            <p className="text-muted-foreground">
-                                                Patient Number
-                                            </p>
-                                            <p className="font-medium">
-                                                {patient.patient_number}
-                                            </p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-muted-foreground">Patient #:</span>
+                                            <span className="font-medium">{patient.patient_number}</span>
                                         </div>
-                                        <div>
-                                            <p className="text-muted-foreground">
-                                                Age & Gender
-                                            </p>
-                                            <p className="font-medium">
-                                                {patient.age} years,{' '}
-                                                {patient.gender}
-                                            </p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-muted-foreground">Age/Gender:</span>
+                                            <span className="font-medium">{patient.age}y, {patient.gender}</span>
                                         </div>
-                                        <div>
-                                            <p className="text-muted-foreground">
-                                                Phone
-                                            </p>
-                                            <p className="font-medium">
-                                                {patient.phone_number ||
-                                                    'Not provided'}
-                                            </p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-muted-foreground">Phone:</span>
+                                            <span className="font-medium">{patient.phone_number || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Insurance Status Alert */}
                                 {checkingInsurance && (
-                                    <div className="rounded-lg border bg-muted/50 p-4 text-center">
-                                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                                        <p className="mt-2 text-sm text-muted-foreground">
-                                            Checking insurance coverage...
-                                        </p>
+                                    <div className="flex items-center justify-center gap-2 rounded-lg border bg-muted/50 p-2 text-sm text-muted-foreground">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Checking insurance...
                                     </div>
                                 )}
 
                                 {!checkingInsurance && insuranceInfo && (
                                     <div
-                                        className={`rounded-lg border p-4 ${
+                                        className={`rounded-lg border p-2 ${
                                             insuranceInfo.is_expired
                                                 ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20'
                                                 : 'border-primary/20 bg-primary/5'
@@ -288,139 +278,111 @@ export default function CheckinModal({
                                                     : 'text-primary'
                                             }`}
                                         >
-                                            {insuranceInfo.is_expired
-                                                ? '⚠️'
-                                                : '✓'}{' '}
-                                            {insuranceInfo.plan.provider.name} -{' '}
-                                            {insuranceInfo.plan.plan_name}
-                                        </p>
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            Member ID:{' '}
-                                            {insuranceInfo.membership_id}
+                                            {insuranceInfo.is_expired ? '⚠️' : '✓'}{' '}
+                                            {insuranceInfo.plan.provider.name} - {insuranceInfo.plan.plan_name}
+                                            <span className="ml-2 font-normal text-muted-foreground">
+                                                ({insuranceInfo.membership_id})
+                                            </span>
                                             {insuranceInfo.coverage_end_date && (
-                                                <>
-                                                    {' '}
-                                                    • Expires:{' '}
-                                                    {new Date(
-                                                        insuranceInfo.coverage_end_date,
-                                                    ).toLocaleDateString()}
+                                                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                                    Exp: {new Date(insuranceInfo.coverage_end_date).toLocaleDateString()}
                                                     {insuranceInfo.is_expired && (
-                                                        <span className="text-amber-600 dark:text-amber-500">
-                                                            {' '}
-                                                            (EXPIRED)
-                                                        </span>
+                                                        <span className="ml-1 text-amber-600 dark:text-amber-500">(EXPIRED)</span>
                                                     )}
-                                                </>
+                                                </span>
                                             )}
                                         </p>
                                         {insuranceInfo.is_expired && (
-                                            <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                                                ⚠️ Warning: Insurance coverage
-                                                has expired. Insurance payment
-                                                option will not be available.
+                                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                                                Insurance expired - cash payment only
                                             </p>
                                         )}
                                     </div>
                                 )}
 
                                 {/* Check-in Details */}
-                                <div className="space-y-4">
-                                    <h3 className="flex items-center gap-2 font-medium">
+                                <div className="space-y-2">
+                                    <h3 className="flex items-center gap-2 text-sm font-medium">
                                         <Calendar className="h-4 w-4" />
                                         Check-in Details
                                     </h3>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="department_id">
-                                            Select Clinic/Department *
+                                    <div className="space-y-1">
+                                        <Label htmlFor="department_id" className="text-sm">
+                                            Clinic/Department *
                                         </Label>
                                         {departments.length === 0 ? (
-                                            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                                            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-sm text-destructive">
                                                 No active departments available.
-                                                Please contact an administrator.
                                             </div>
                                         ) : (
                                             <select
                                                 id="department_id"
                                                 value={selectedDepartment}
                                                 onChange={(e) =>
-                                                    setSelectedDepartment(
-                                                        e.target.value,
-                                                    )
+                                                    setSelectedDepartment(e.target.value)
                                                 }
                                                 required
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                <option value="">
-                                                    Choose a clinic...
-                                                </option>
-                                                {departments.map(
-                                                    (department) => (
-                                                        <option
-                                                            key={department.id}
-                                                            value={
-                                                                department.id
-                                                            }
-                                                        >
-                                                            {department.name} -{' '}
-                                                            {
-                                                                department.description
-                                                            }
-                                                        </option>
-                                                    ),
-                                                )}
+                                                <option value="">Choose a clinic...</option>
+                                                {departments.map((department) => (
+                                                    <option key={department.id} value={department.id}>
+                                                        {department.name} - {department.description}
+                                                    </option>
+                                                ))}
                                             </select>
                                         )}
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="notes">
-                                            Notes (Optional)
+                                    <div className="space-y-1">
+                                        <Label htmlFor="service_date" className="text-sm">
+                                            Service Date
+                                        </Label>
+                                        <input
+                                            type="date"
+                                            id="service_date"
+                                            value={serviceDate || today}
+                                            onChange={(e) => setServiceDate(e.target.value)}
+                                            max={today}
+                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Label htmlFor="notes" className="text-sm">
+                                            Notes <span className="text-xs text-muted-foreground">(optional)</span>
                                         </Label>
                                         <textarea
                                             id="notes"
                                             value={notes}
-                                            onChange={(e) =>
-                                                setNotes(e.target.value)
-                                            }
-                                            placeholder="Any additional notes about the patient's visit..."
-                                            rows={3}
-                                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            placeholder="Additional notes..."
+                                            rows={2}
+                                            className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex justify-end gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleModalClose}
-                                    >
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={handleModalClose}>
                                         Cancel
                                     </Button>
                                     <Button
                                         type="button"
+                                        size="sm"
                                         onClick={() => {
                                             if (!selectedDepartment) {
-                                                toast.error(
-                                                    'Please select a department',
-                                                );
+                                                toast.error('Please select a department');
                                                 return;
                                             }
-                                            handleDepartmentSelected(
-                                                selectedDepartment,
-                                            );
+                                            handleDepartmentSelected(selectedDepartment);
                                         }}
-                                        disabled={
-                                            checkingInsurance ||
-                                            departments.length === 0
-                                        }
+                                        disabled={checkingInsurance || departments.length === 0}
                                     >
-                                        {checkingInsurance && (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        )}
-                                        Continue to Check-in
+                                        {checkingInsurance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Check-in
                                     </Button>
                                 </div>
                             </div>

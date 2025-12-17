@@ -50,6 +50,10 @@ export interface Auth {
             view: boolean;
             manage: boolean;
         };
+        pricing?: {
+            view: boolean;
+            edit: boolean;
+        };
     };
 }
 

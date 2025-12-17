@@ -3,9 +3,13 @@
 use App\Http\Controllers\Admin\LabServiceImportController;
 use App\Http\Controllers\Lab\LabController;
 use App\Http\Controllers\Lab\LabServiceConfigurationController;
+use App\Http\Controllers\Lab\LabServiceSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('lab')->name('lab.')->group(function () {
+    // Lab service search for async select
+    Route::get('/services/search', [LabServiceSearchController::class, 'search'])->name('services.search');
+
     Route::get('/', [LabController::class, 'index'])->middleware('lab.hide_details')->name('index');
     Route::get('/consultations/{consultation}', [LabController::class, 'showConsultation'])->middleware('lab.hide_details')->name('consultations.show');
     Route::get('/ward-rounds/{wardRound}', [LabController::class, 'showWardRound'])->middleware('lab.hide_details')->name('ward-rounds.show');

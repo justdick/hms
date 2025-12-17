@@ -38,6 +38,8 @@ class LabServiceFactory extends Factory
             'sample_type' => $test['sample_type'],
             'turnaround_time' => $test['turnaround_time'],
             'is_active' => $this->faker->boolean(95),
+            'is_imaging' => false,
+            'modality' => null,
         ];
     }
 
@@ -52,6 +54,24 @@ class LabServiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_active' => false,
+        ]);
+    }
+
+    public function imaging(?string $modality = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_imaging' => true,
+            'modality' => $modality ?? $this->faker->randomElement(['X-Ray', 'CT', 'MRI', 'Ultrasound', 'Mammography']),
+            'category' => 'Imaging',
+            'sample_type' => 'None',
+        ]);
+    }
+
+    public function laboratory(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_imaging' => false,
+            'modality' => null,
         ]);
     }
 }

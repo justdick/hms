@@ -233,6 +233,7 @@ class ClaimVettingService
     /**
      * Get diagnoses for the claim.
      * Returns claim-specific diagnoses if they exist, otherwise consultation diagnoses.
+     * Includes both principal and provisional diagnoses, with duplicates removed.
      */
     protected function getDiagnoses(InsuranceClaim $claim): Collection
     {
@@ -245,6 +246,7 @@ class ClaimVettingService
                     'name' => $claimDiagnosis->diagnosis->diagnosis ?? '',
                     'icd_code' => $claimDiagnosis->diagnosis->icd_10 ?? '',
                     'is_primary' => $claimDiagnosis->is_primary,
+                    'type' => $claimDiagnosis->is_primary ? 'principal' : 'provisional',
                 ];
             });
         }
@@ -252,13 +254,13 @@ class ClaimVettingService
         // Get consultation - either directly linked or via checkin
         $consultation = $claim->consultation ?? $claim->checkin?->consultation;
 
-        // Fall back to consultation diagnoses (only principal diagnoses for claims)
+        // Fall back to consultation diagnoses (both principal and provisional)
         if ($consultation) {
             // Ensure diagnoses are loaded with their diagnosis relationship
             $consultation->loadMissing('diagnoses.diagnosis');
 
-            // Only include principal diagnoses - provisional diagnoses are not submitted to NHIS
-            return $consultation->diagnoses
+            // Get principal diagnoses first (they take priority)
+            $principalDiagnoses = $consultation->diagnoses
                 ->where('type', 'principal')
                 ->map(function ($consultationDiagnosis) {
                     return [
@@ -267,8 +269,33 @@ class ClaimVettingService
                         'name' => $consultationDiagnosis->diagnosis->diagnosis ?? '',
                         'icd_code' => $consultationDiagnosis->diagnosis->icd_10 ?? '',
                         'is_primary' => true,
+                        'type' => 'principal',
                     ];
-                })->values();
+                });
+
+            // Get provisional diagnoses
+            $provisionalDiagnoses = $consultation->diagnoses
+                ->where('type', 'provisional')
+                ->map(function ($consultationDiagnosis) {
+                    return [
+                        'id' => null,
+                        'diagnosis_id' => $consultationDiagnosis->diagnosis_id,
+                        'name' => $consultationDiagnosis->diagnosis->diagnosis ?? '',
+                        'icd_code' => $consultationDiagnosis->diagnosis->icd_10 ?? '',
+                        'is_primary' => false,
+                        'type' => 'provisional',
+                    ];
+                });
+
+            // Get diagnosis IDs that are already in principal diagnoses
+            $principalDiagnosisIds = $principalDiagnoses->pluck('diagnosis_id')->toArray();
+
+            // Filter out provisional diagnoses that are already in principal (deduplicate)
+            $uniqueProvisionalDiagnoses = $provisionalDiagnoses
+                ->filter(fn ($diagnosis) => ! in_array($diagnosis['diagnosis_id'], $principalDiagnosisIds));
+
+            // Merge principal and unique provisional diagnoses
+            return $principalDiagnoses->merge($uniqueProvisionalDiagnoses)->values();
         }
 
         return collect();

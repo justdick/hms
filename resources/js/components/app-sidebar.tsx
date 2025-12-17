@@ -19,6 +19,7 @@ import {
     ClipboardList,
     CreditCard,
     Database,
+    DollarSign,
     FileText,
     FlaskConical,
     FolderSync,
@@ -33,7 +34,6 @@ import {
     Shield,
     Stethoscope,
     TableProperties,
-    UserCheck,
     Users,
     Wallet,
 } from 'lucide-react';
@@ -106,14 +106,16 @@ function buildBillingNavItems(billingPermissions?: {
         });
     }
 
-    // Credit Patients - requires manage-credit permission
-    if (billingPermissions?.manageCredit) {
+    // Patient Accounts - requires collect permission (unified prepaid + credit)
+    if (billingPermissions?.collect || billingPermissions?.viewAll) {
         items.push({
-            title: 'Credit Patients',
-            href: '/billing/accounts/credit-patients',
-            icon: UserCheck,
+            title: 'Patient Accounts',
+            href: '/billing/patient-accounts',
+            icon: Wallet,
         });
     }
+
+
 
     // Configuration - requires configure permission
     if (billingPermissions?.configure) {
@@ -292,6 +294,14 @@ export function AppSidebar() {
             title: 'NHIS Settings',
             href: '/admin/nhis-settings',
             icon: Shield,
+        });
+    }
+
+    if (auth.permissions?.pricing?.view || auth.permissions?.pricing?.edit) {
+        adminItems.push({
+            title: 'Pricing Dashboard',
+            href: '/admin/pricing-dashboard',
+            icon: DollarSign,
         });
     }
 

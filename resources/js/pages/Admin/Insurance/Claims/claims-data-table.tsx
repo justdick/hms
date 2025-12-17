@@ -46,19 +46,15 @@ interface PaginationLink {
     active: boolean;
 }
 
-interface PaginationMeta {
+interface PaginationData {
+    data: unknown[];
     current_page: number;
     from: number | null;
     last_page: number;
     per_page: number;
     to: number | null;
     total: number;
-}
-
-interface PaginationData {
-    data: unknown[];
     links: PaginationLink[];
-    meta: PaginationMeta;
 }
 
 interface Filters {
@@ -101,8 +97,6 @@ export function ClaimsDataTable<TData, TValue>({
     const [rowSelection, setRowSelection] = React.useState({});
     const [search, setSearch] = React.useState(filters.search || '');
 
-    const meta = pagination.meta;
-
     const table = useReactTable({
         data,
         columns,
@@ -114,15 +108,15 @@ export function ClaimsDataTable<TData, TValue>({
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         manualPagination: true,
-        pageCount: meta.last_page,
+        pageCount: pagination.last_page,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
             pagination: {
-                pageIndex: meta.current_page - 1,
-                pageSize: meta.per_page,
+                pageIndex: pagination.current_page - 1,
+                pageSize: pagination.per_page,
             },
         },
     });
@@ -166,10 +160,9 @@ export function ClaimsDataTable<TData, TValue>({
         );
     };
 
-    // Find prev/next links from pagination - handle both array and object formats
-    const links = Array.isArray(pagination.links) ? pagination.links : [];
-    const prevLink = links.find((link) => link.label.includes('Previous'));
-    const nextLink = links.find((link) => link.label.includes('Next'));
+    // Find prev/next links from pagination
+    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
+    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
 
     return (
         <div className="w-full space-y-4">
@@ -190,14 +183,14 @@ export function ClaimsDataTable<TData, TValue>({
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Show</span>
                     <select
-                        value={meta.per_page}
+                        value={pagination.per_page}
                         onChange={(e) => handlePerPageChange(e.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-sm"
                     >
+                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
-                        <option value="100">100</option>
                     </select>
                 </div>
 
@@ -313,9 +306,9 @@ export function ClaimsDataTable<TData, TValue>({
             {/* Pagination */}
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="text-sm text-muted-foreground">
-                    {meta.from && meta.to ? (
+                    {pagination.from && pagination.to ? (
                         <>
-                            Showing {meta.from} to {meta.to} of {meta.total}{' '}
+                            Showing {pagination.from} to {pagination.to} of {pagination.total}{' '}
                             claim(s)
                         </>
                     ) : (
@@ -331,7 +324,7 @@ export function ClaimsDataTable<TData, TValue>({
                     >
                         Previous
                     </Button>
-                    {links
+                    {pagination.links
                         .filter(
                             (link) =>
                                 !link.label.includes('Previous') &&

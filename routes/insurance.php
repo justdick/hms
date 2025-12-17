@@ -59,6 +59,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::post('claims/{claim}/mark-rejected', [InsuranceClaimController::class, 'markAsRejected'])->name('claims.mark-rejected');
     Route::post('claims/{claim}/resubmit', [InsuranceClaimController::class, 'resubmit'])->name('claims.resubmit');
     Route::put('claims/{claim}', [InsuranceClaimController::class, 'update'])->name('claims.update');
+    Route::delete('claims/{claim}', [InsuranceClaimController::class, 'destroy'])->name('claims.destroy');
     Route::post('claims/{claim}/prepare-resubmission', [InsuranceClaimController::class, 'prepareForResubmission'])->name('claims.prepare-resubmission');
 
     // Reports & Analytics (Phase 9)

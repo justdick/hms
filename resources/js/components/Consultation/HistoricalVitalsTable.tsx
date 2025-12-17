@@ -89,7 +89,7 @@ export function HistoricalVitalsTable({ vitals }: Props) {
                                     </TableCell>
                                     <TableCell>
                                         <span className="font-mono">
-                                            {vital.temperature}°F
+                                            {vital.temperature}°C
                                         </span>
                                     </TableCell>
                                     <TableCell>

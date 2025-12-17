@@ -18,19 +18,15 @@ interface PaginationLink {
     active: boolean;
 }
 
-interface PaginationMeta {
+interface PaginatedClaims {
+    data: InsuranceClaim[];
     current_page: number;
     from: number | null;
     last_page: number;
     per_page: number;
     to: number | null;
     total: number;
-}
-
-interface PaginatedClaims {
-    data: InsuranceClaim[];
     links: PaginationLink[];
-    meta: PaginationMeta;
 }
 
 interface Filters {
@@ -109,10 +105,24 @@ export default function InsuranceClaimsIndex({
         router.reload({ only: ['claims', 'stats'] });
     }, []);
 
+    /**
+     * Handles claim deletion
+     */
+    const handleDeleteClaim = useCallback((claimId: number) => {
+        if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
+            router.delete(`/admin/insurance/claims/${claimId}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload({ only: ['claims', 'stats'] });
+                },
+            });
+        }
+    }, []);
+
     // Memoize columns to prevent unnecessary re-renders
     const columns = useMemo(
-        () => createClaimsColumns(handleVetClaim, handleViewClaim, handleEditClaim),
-        [handleVetClaim, handleViewClaim, handleEditClaim],
+        () => createClaimsColumns(handleVetClaim, handleViewClaim, handleEditClaim, handleDeleteClaim),
+        [handleVetClaim, handleViewClaim, handleEditClaim, handleDeleteClaim],
     );
 
     return (
@@ -171,7 +181,7 @@ export default function InsuranceClaimsIndex({
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <ClipboardList className="h-5 w-5" />
-                            Claims ({claims.meta?.total || 0})
+                            Claims ({claims.total || 0})
                         </CardTitle>
                     </CardHeader>
                     <CardContent>

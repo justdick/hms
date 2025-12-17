@@ -15,10 +15,19 @@ class StoreWardRoundRequest extends FormRequest
 
     public function rules(): array
     {
+        // Get admission for date validation
+        $admission = $this->route('admission');
+        $admittedAt = $admission?->admitted_at?->toDateString();
+
         return [
             // Round metadata
             'round_type' => ['nullable', 'in:daily_round,specialist_consult,procedure_note'],
-            'round_datetime' => ['nullable', 'date', 'before_or_equal:now'],
+            // Allow future dates for scheduling, but must be >= admission date
+            'round_datetime' => [
+                'nullable',
+                'date',
+                $admittedAt ? "after_or_equal:{$admittedAt}" : 'date',
+            ],
 
             // Clinical documentation fields (matching consultation structure)
             'presenting_complaint' => ['nullable', 'string', 'max:2000'],
@@ -65,7 +74,7 @@ class StoreWardRoundRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'round_datetime.before_or_equal' => 'Ward round time cannot be in the future.',
+            'round_datetime.after_or_equal' => 'Ward round date cannot be before the admission date.',
             'follow_up_date.after' => 'Follow-up date must be in the future.',
 
             'lab_orders.*.test_id.required' => 'Lab test is required.',

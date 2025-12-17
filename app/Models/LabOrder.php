@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -114,6 +115,14 @@ class LabOrder extends Model
             ->where('service_type', 'lab');
     }
 
+    /**
+     * Get the imaging attachments for this lab order.
+     */
+    public function imagingAttachments(): HasMany
+    {
+        return $this->hasMany(ImagingAttachment::class);
+    }
+
     public function scopeByStatus($query, string $status): void
     {
         $query->where('status', $status);
@@ -155,5 +164,41 @@ class LabOrder extends Model
             'result_values' => $resultValues,
             'result_notes' => $resultNotes,
         ]);
+    }
+
+    /**
+     * Check if this lab order is for an imaging service.
+     */
+    public function isImaging(): bool
+    {
+        return $this->labService?->is_imaging ?? false;
+    }
+
+    /**
+     * Scope to filter only imaging orders.
+     */
+    public function scopeImaging($query): void
+    {
+        $query->whereHas('labService', function ($q) {
+            $q->where('is_imaging', true);
+        });
+    }
+
+    /**
+     * Scope to filter only laboratory orders (non-imaging).
+     */
+    public function scopeLaboratory($query): void
+    {
+        $query->whereHas('labService', function ($q) {
+            $q->where('is_imaging', false);
+        });
+    }
+
+    /**
+     * Check if this order has any imaging attachments.
+     */
+    public function getHasImagesAttribute(): bool
+    {
+        return $this->imagingAttachments()->exists();
     }
 }

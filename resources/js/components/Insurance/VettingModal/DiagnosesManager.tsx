@@ -30,7 +30,8 @@ import type { Diagnosis } from './types';
 interface SearchedDiagnosis {
     id: number;
     name: string;
-    icd_code: string;
+    icd_code: string | null;
+    is_custom?: boolean;
 }
 
 interface DiagnosesManagerProps {
@@ -263,14 +264,23 @@ export function DiagnosesManager({
                                                                                 diagnosis.name
                                                                             }
                                                                         </span>
-                                                                        <Badge
-                                                                            variant="outline"
-                                                                            className="text-xs"
-                                                                        >
-                                                                            {
-                                                                                diagnosis.icd_code
-                                                                            }
-                                                                        </Badge>
+                                                                        {diagnosis.is_custom ? (
+                                                                            <Badge
+                                                                                variant="secondary"
+                                                                                className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                                                            >
+                                                                                Custom
+                                                                            </Badge>
+                                                                        ) : diagnosis.icd_code ? (
+                                                                            <Badge
+                                                                                variant="outline"
+                                                                                className="text-xs"
+                                                                            >
+                                                                                {
+                                                                                    diagnosis.icd_code
+                                                                                }
+                                                                            </Badge>
+                                                                        ) : null}
                                                                     </div>
                                                                 </div>
                                                             </CommandItem>
@@ -336,12 +346,24 @@ export function DiagnosesManager({
                                         {diagnosis.name}
                                     </p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        ICD-10: {diagnosis.icd_code}
+                                        {diagnosis.icd_code ? `ICD-10: ${diagnosis.icd_code}` : 'Custom diagnosis'}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2">
+                                {diagnosis.type && (
+                                    <Badge
+                                        variant="outline"
+                                        className={
+                                            diagnosis.type === 'principal'
+                                                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                                : 'border-gray-400 text-gray-500 dark:text-gray-400'
+                                        }
+                                    >
+                                        {diagnosis.type === 'principal' ? 'Principal' : 'Provisional'}
+                                    </Badge>
+                                )}
                                 {diagnosis.is_primary && (
                                     <Badge className="bg-yellow-500">
                                         Primary

@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Charge;
-use App\Models\Patient;
 use App\Models\PaymentMethod;
 use App\Services\CollectionService;
-use App\Services\CreditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,8 +14,7 @@ use Inertia\Response;
 class AccountsController extends Controller
 {
     public function __construct(
-        private CollectionService $collectionService,
-        private CreditService $creditService
+        private CollectionService $collectionService
     ) {}
 
     /**
@@ -100,59 +97,5 @@ class AccountsController extends Controller
         }
 
         return $breakdown;
-    }
-
-    /**
-     * Display the credit patients list.
-     */
-    public function creditPatients(Request $request): Response
-    {
-        $this->authorize('manageCredit', Patient::class);
-
-        $search = $request->query('search');
-
-        $patientsQuery = Patient::creditEligible()
-            ->with(['creditAuthorizedByUser:id,name']);
-
-        // Apply search filter if provided
-        if ($search) {
-            $patientsQuery->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('patient_number', 'like', "%{$search}%")
-                    ->orWhere('phone_number', 'like', "%{$search}%");
-            });
-        }
-
-        $patients = $patientsQuery->get()->map(function ($patient) {
-            $totalOwing = $this->creditService->getPatientOwingAmount($patient);
-
-            return [
-                'id' => $patient->id,
-                'patient_number' => $patient->patient_number,
-                'full_name' => $patient->full_name,
-                'first_name' => $patient->first_name,
-                'last_name' => $patient->last_name,
-                'phone_number' => $patient->phone_number,
-                'is_credit_eligible' => $patient->is_credit_eligible,
-                'credit_reason' => $patient->credit_reason,
-                'credit_authorized_by' => $patient->creditAuthorizedByUser?->name,
-                'credit_authorized_at' => $patient->credit_authorized_at?->format('M j, Y g:i A'),
-                'total_owing' => $totalOwing,
-            ];
-        });
-
-        // Calculate summary statistics
-        $totalPatients = $patients->count();
-        $totalOwing = $patients->sum('total_owing');
-
-        return Inertia::render('Billing/CreditPatients/Index', [
-            'patients' => $patients,
-            'totalPatients' => $totalPatients,
-            'totalOwing' => (float) $totalOwing,
-            'filters' => [
-                'search' => $search,
-            ],
-        ]);
     }
 }

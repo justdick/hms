@@ -92,6 +92,10 @@ class HandleInertiaRequests extends Middleware
                         'view' => $request->user()?->can('nhis-settings.view') ?? false,
                         'manage' => $request->user()?->can('nhis-settings.manage') ?? false,
                     ],
+                    'pricing' => [
+                        'view' => $request->user()?->can('pricing.view') ?? false,
+                        'edit' => $request->user()?->can('pricing.edit') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

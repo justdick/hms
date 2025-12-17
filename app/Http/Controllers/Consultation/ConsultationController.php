@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Consultation;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Prescription\RefillPrescriptionsRequest;
 use App\Http\Requests\Prescription\StorePrescriptionRequest;
+use App\Http\Requests\Prescription\UpdatePrescriptionRequest;
 use App\Models\Consultation;
 use App\Models\Department;
 use App\Models\Drug;
-use App\Models\LabService;
 use App\Models\MinorProcedureType;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
@@ -143,15 +144,24 @@ class ConsultationController extends Controller
                 ->orderBy('performed_at', 'desc')
                 ->limit(10)
                 ->get(),
-            'previousPrescriptions' => Prescription::with('consultation.doctor:id,name')
+            'previousPrescriptions' => Prescription::with([
+                'drug:id,name,form,strength,unit_type,bottle_size',
+                'consultation.doctor:id,name',
+                'consultation.patientCheckin.department:id,name',
+            ])
                 ->whereHas('consultation.patientCheckin', function ($query) use ($patient) {
                     $query->where('patient_id', $patient->id);
                 })
                 ->whereHas('consultation', function ($query) use ($consultation) {
-                    $query->where('id', '!=', $consultation->id);
+                    $query->where('id', '!=', $consultation->id)
+                        ->where('status', 'completed');
+                })
+                // Only show prescriptions created in this system, not migrated ones
+                ->where(function ($query) {
+                    $query->whereNull('migrated_from_mittag')
+                        ->orWhere('migrated_from_mittag', false);
                 })
                 ->orderBy('created_at', 'desc')
-                ->limit(20)
                 ->get(),
             'allergies' => [], // Could be extended with actual allergy data
         ];
@@ -168,7 +178,7 @@ class ConsultationController extends Controller
 
         return Inertia::render('Consultation/Show', [
             'consultation' => $consultation,
-            'labServices' => LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
+            // Lab services loaded via async search - too many to load upfront
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
             'availableWards' => Ward::active()->available()->get(['id', 'name', 'code', 'available_beds']),
@@ -183,20 +193,39 @@ class ConsultationController extends Controller
     {
         $this->authorize('create', Consultation::class);
 
+        $patientCheckin = PatientCheckin::findOrFail($request->patient_checkin_id);
+
         $request->validate([
             'patient_checkin_id' => 'required|exists:patient_checkins,id',
             'presenting_complaint' => 'nullable|string',
+            'service_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:today',
+                // Service date must be >= check-in's service_date
+                function ($attribute, $value, $fail) use ($patientCheckin) {
+                    if ($value && $patientCheckin->service_date) {
+                        if ($value < $patientCheckin->service_date->toDateString()) {
+                            $fail('Consultation date cannot be before the check-in date ('.$patientCheckin->service_date->format('Y-m-d').').');
+                        }
+                    }
+                },
+            ],
         ]);
-
-        $patientCheckin = PatientCheckin::findOrFail($request->patient_checkin_id);
 
         // Ensure user can access this patient check-in
         $this->authorize('view', $patientCheckin);
+
+        // Use provided service_date, or inherit from check-in, or default to today
+        $serviceDate = $request->service_date
+            ?? $patientCheckin->service_date?->toDateString()
+            ?? now()->toDateString();
 
         $consultation = Consultation::create([
             'patient_checkin_id' => $patientCheckin->id,
             'doctor_id' => $request->user()->id,
             'started_at' => now(),
+            'service_date' => $serviceDate,
             'status' => 'in_progress',
             'presenting_complaint' => $request->presenting_complaint,
         ]);
@@ -310,6 +339,100 @@ class ConsultationController extends Controller
         $prescription->delete();
 
         return redirect()->back()->with('success', 'Prescription deleted successfully.');
+    }
+
+    public function updatePrescription(UpdatePrescriptionRequest $request, Consultation $consultation, Prescription $prescription)
+    {
+        $this->authorize('update', $consultation);
+
+        // Ensure prescription belongs to this consultation
+        if ($prescription->consultation_id !== $consultation->id) {
+            abort(404);
+        }
+
+        // Only allow editing if prescription is still 'prescribed' (not yet reviewed/dispensed)
+        if ($prescription->status !== 'prescribed') {
+            return redirect()->back()->with('error', 'Cannot edit a prescription that has already been reviewed or dispensed.');
+        }
+
+        $prescription->update([
+            'drug_id' => $request->drug_id,
+            'medication_name' => $request->medication_name,
+            'dose_quantity' => $request->dose_quantity,
+            'frequency' => $request->frequency,
+            'duration' => $request->duration,
+            'quantity' => $request->quantity_to_dispense,
+            'quantity_to_dispense' => $request->quantity_to_dispense,
+            'instructions' => $request->instructions,
+        ]);
+
+        return redirect()->back()->with('success', 'Prescription updated successfully.');
+    }
+
+    public function refillPrescriptions(RefillPrescriptionsRequest $request, Consultation $consultation, MedicationScheduleService $scheduleService)
+    {
+        $this->authorize('update', $consultation);
+
+        $prescriptionIds = $request->prescription_ids;
+        $patient = $consultation->patientCheckin->patient;
+
+        // Fetch the original prescriptions with drug info
+        $originalPrescriptions = Prescription::with('drug')
+            ->whereIn('id', $prescriptionIds)
+            ->whereHas('consultation.patientCheckin', function ($query) use ($patient) {
+                $query->where('patient_id', $patient->id);
+            })
+            ->get();
+
+        if ($originalPrescriptions->isEmpty()) {
+            return redirect()->back()->with('error', 'No valid prescriptions found to refill.');
+        }
+
+        $refillCount = 0;
+        $skippedDrugs = [];
+
+        foreach ($originalPrescriptions as $original) {
+            // Check if drug still exists and is active
+            if ($original->drug && ! $original->drug->is_active) {
+                $skippedDrugs[] = $original->medication_name;
+
+                continue;
+            }
+
+            // Create new prescription as refill
+            $newPrescription = Prescription::create([
+                'consultation_id' => $consultation->id,
+                'refilled_from_prescription_id' => $original->id,
+                'drug_id' => $original->drug_id,
+                'medication_name' => $original->medication_name,
+                'dose_quantity' => $original->dose_quantity,
+                'frequency' => $original->frequency,
+                'duration' => $original->duration,
+                'quantity' => $original->quantity_to_dispense ?? $original->quantity,
+                'quantity_to_dispense' => $original->quantity_to_dispense ?? $original->quantity,
+                'schedule_pattern' => $original->schedule_pattern,
+                'instructions' => $original->instructions,
+                'status' => 'prescribed',
+            ]);
+
+            // Generate medication administration schedule for admitted patients
+            $consultation->load('patientAdmission');
+            if ($consultation->patientAdmission) {
+                $scheduleService->generateSchedule($newPrescription);
+            }
+
+            $refillCount++;
+        }
+
+        $message = $refillCount === 1
+            ? '1 prescription refilled successfully.'
+            : "{$refillCount} prescriptions refilled successfully.";
+
+        if (! empty($skippedDrugs)) {
+            $message .= ' Skipped inactive drugs: '.implode(', ', $skippedDrugs);
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     public function complete(Request $request, Consultation $consultation)

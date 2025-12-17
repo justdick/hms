@@ -41,7 +41,8 @@
         "read-log-entries",
         "get-config",
         "search-docs",
-        "list-artisan-commands"
+        "list-artisan-commands",
+        "database-connections"
       ]
     },
     "shadcn": {

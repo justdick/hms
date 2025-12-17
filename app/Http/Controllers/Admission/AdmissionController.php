@@ -33,6 +33,12 @@ class AdmissionController extends Controller
             return redirect()->back()->withErrors(['ward_id' => 'No available beds in the selected ward.']);
         }
 
+        // Use consultation's service_date for admitted_at to maintain date consistency
+        // This ensures backdated consultations result in backdated admissions
+        $admittedAt = $consultation->service_date
+            ? $consultation->service_date->startOfDay()
+            : now();
+
         $admission = PatientAdmission::create([
             'admission_number' => PatientAdmission::generateAdmissionNumber(),
             'patient_id' => $consultation->patientCheckin->patient->id,
@@ -42,7 +48,7 @@ class AdmissionController extends Controller
             'attending_doctor_id' => $request->user()->id,
             'status' => 'admitted',
             'admission_notes' => $request->admission_notes,
-            'admitted_at' => now(),
+            'admitted_at' => $admittedAt,
         ]);
 
         // Decrease available beds count (nurses will assign specific bed later)

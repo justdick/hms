@@ -72,13 +72,17 @@ class InsuranceClaimController extends Controller
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
-        $claims = $query->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 5);
+        $paginated = $query->paginate($perPage)->withQueryString();
+
+        // Transform data while keeping flat pagination structure
+        $claims = $paginated->through(fn ($claim) => (new InsuranceClaimResource($claim))->resolve());
 
         // Get all providers for filter dropdown
         $providers = InsuranceProvider::orderBy('name')->get();
 
         return Inertia::render('Admin/Insurance/Claims/Index', [
-            'claims' => InsuranceClaimResource::collection($claims),
+            'claims' => $claims,
             'providers' => InsuranceProviderResource::collection($providers),
             'filters' => array_merge(
                 $request->only(['provider_id', 'date_from', 'date_to', 'search']),
@@ -837,5 +841,19 @@ class InsuranceClaimController extends Controller
             'claims' => $claims,
             'exportDate' => now(),
         ])->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * Soft delete a claim.
+     * Only draft or pending_vetting claims can be deleted.
+     */
+    public function destroy(InsuranceClaim $claim): RedirectResponse
+    {
+        $this->authorize('delete', $claim);
+
+        $claim->delete();
+
+        return redirect()->route('admin.insurance.claims.index')
+            ->with('success', 'Claim deleted successfully.');
     }
 }

@@ -112,7 +112,7 @@ class BillingService
         );
     }
 
-    public function canProceedWithService(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): bool
+    public function canProceedWithService(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null, float $serviceAmount = 0): bool
     {
         // Check for active service access override first
         $activeOverride = $this->getActiveOverride($checkin, $serviceType, $serviceCode);
@@ -126,11 +126,24 @@ class BillingService
             return true;
         }
 
-        // Check if patient is credit-eligible (VIP/credit account)
-        if ($this->isPatientCreditEligible($checkin)) {
+        // Check if patient has deposit balance (auto-pays charges)
+        $patient = $checkin->patient;
+        if ($patient && $patient->deposit_balance > 0) {
             return true;
         }
 
+        // Check if patient has credit privilege and is within limit
+        if ($patient && $patient->hasCreditPrivilege()) {
+            // Check if adding this service would exceed credit limit
+            if ($patient->canReceiveServices($serviceAmount)) {
+                return true;
+            }
+
+            // Credit limit would be exceeded - block service
+            return false;
+        }
+
+        // No deposit, no credit - check service charge rules
         $rule = ServiceChargeRule::where('service_type', $serviceType)
             ->where(function ($query) use ($serviceCode) {
                 $query->whereNull('service_code')
@@ -139,6 +152,7 @@ class BillingService
             ->where('is_active', true)
             ->first();
 
+        // If no rule or payment not mandatory, allow service
         if (! $rule || $rule->payment_required !== 'mandatory') {
             return true;
         }
@@ -330,13 +344,43 @@ class BillingService
     }
 
     /**
-     * Check if patient is credit-eligible (VIP/credit account).
+     * Check if patient is credit-eligible (has deposit or credit privilege).
+     * Uses the unified PatientAccount system.
      */
     public function isPatientCreditEligible(PatientCheckin $checkin): bool
     {
         $patient = $checkin->patient;
 
-        return $patient && $patient->is_credit_eligible === true;
+        if (! $patient) {
+            return false;
+        }
+
+        // Check PatientAccount for deposit or credit privilege
+        if ($patient->hasCreditPrivilege()) {
+            return true;
+        }
+
+        // Check if patient has deposit balance
+        if ($patient->deposit_balance > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if patient can receive a service of given amount.
+     * Considers deposit balance and credit limit.
+     */
+    public function canPatientAffordService(PatientCheckin $checkin, float $amount): bool
+    {
+        $patient = $checkin->patient;
+
+        if (! $patient) {
+            return false;
+        }
+
+        return $patient->canReceiveServices($amount);
     }
 
     /**

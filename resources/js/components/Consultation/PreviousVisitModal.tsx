@@ -329,10 +329,10 @@ export function PreviousVisitModal({ visit, open, onOpenChange }: Props) {
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                                {latestVitals.temperature}°F
+                                                {latestVitals.temperature}°C
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                Normal: 97-99°F
+                                                Normal: 36.1-37.2°C
                                             </p>
                                         </CardContent>
                                     </Card>

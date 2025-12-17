@@ -1,35 +1,11 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, FileText, Lightbulb, Sparkles } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-
-interface MedicalHistoryTemplate {
-    id: string;
-    name: string;
-    category: string;
-    presentingComplaint?: string;
-    historyPresentingComplaint?: string;
-    onDirectQuestioning?: string;
-    examinationFindings?: string;
-    assessment?: string;
-    plan?: string;
-}
-
-interface QuickPhrase {
-    abbreviation: string;
-    expansion: string;
-    category: string;
-}
+import { CheckCircle, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface PatientHistories {
     past_medical_surgical_history: string;
@@ -56,102 +32,6 @@ interface MedicalHistoryNotesProps {
     status: string;
 }
 
-const commonTemplates: MedicalHistoryTemplate[] = [
-    {
-        id: 'hypertension-followup',
-        name: 'Hypertension Follow-up',
-        category: 'Cardiology',
-        presentingComplaint: 'Follow-up for hypertension management',
-        historyPresentingComplaint:
-            'Patient reports compliance with antihypertensive medications for the past 3 months. Currently on Amlodipine 5mg OD. No chest pain or palpitations.',
-        onDirectQuestioning:
-            'No headaches, dizziness, visual disturbances. No shortness of breath or pedal edema. No epistaxis.',
-        examinationFindings:
-            'BP: 130/80 mmHg, HR: 72/min regular. CVS: S1 S2 normal, no murmurs. Chest: clear. Abdomen: soft, non-tender. No pedal edema.',
-        assessment: 'Hypertension, well-controlled on current regimen',
-        plan: 'Continue Amlodipine 5mg OD. Lifestyle modifications reinforced. Recheck BP in 3 months.',
-    },
-    {
-        id: 'diabetes-followup',
-        name: 'Diabetes Follow-up',
-        category: 'Endocrinology',
-        presentingComplaint: 'Routine diabetes management review',
-        historyPresentingComplaint:
-            'Patient monitoring blood glucose regularly, fasting sugars 110-130 mg/dL. Currently on Metformin 500mg BD. Diet compliance good.',
-        onDirectQuestioning:
-            'No polyuria, polydipsia, or polyphagia. No visual changes. No numbness or tingling in extremities.',
-        examinationFindings:
-            'Weight stable at 70kg. Foot exam: pulses present, no ulcers. Monofilament test normal. Fundoscopy: no diabetic retinopathy.',
-        assessment: 'Type 2 Diabetes Mellitus, stable on current regimen',
-        plan: 'Continue Metformin 500mg BD. HbA1c in 3 months. Annual ophthalmology referral scheduled.',
-    },
-    {
-        id: 'urti',
-        name: 'Upper Respiratory Tract Infection',
-        category: 'General',
-        presentingComplaint: 'Cough and sore throat for 3 days',
-        historyPresentingComplaint:
-            'Dry cough started 3 days ago, now productive with white sputum. Sore throat, worse on swallowing. Low-grade fever noted at home.',
-        onDirectQuestioning:
-            'No shortness of breath or chest pain. No ear pain or discharge. No rash.',
-        examinationFindings:
-            'Temp: 37.8°C. Throat: erythematous, no exudate. Tonsils not enlarged. Chest: clear to auscultation bilaterally. No cervical lymphadenopathy.',
-        assessment: 'Acute viral upper respiratory tract infection',
-        plan: 'Symptomatic treatment. Paracetamol 1g QDS PRN. Throat lozenges. Adequate hydration. Review if worsening or fever persists >3 days.',
-    },
-];
-
-const quickPhrases: QuickPhrase[] = [
-    {
-        abbreviation: 'wnl',
-        expansion: 'within normal limits',
-        category: 'general',
-    },
-    {
-        abbreviation: 'sob',
-        expansion: 'shortness of breath',
-        category: 'symptoms',
-    },
-    { abbreviation: 'cp', expansion: 'chest pain', category: 'symptoms' },
-    {
-        abbreviation: 'nkda',
-        expansion: 'no known drug allergies',
-        category: 'general',
-    },
-    {
-        abbreviation: 'rrr',
-        expansion: 'regular rate and rhythm',
-        category: 'cardiac',
-    },
-    {
-        abbreviation: 'ctab',
-        expansion: 'clear to auscultation bilaterally',
-        category: 'pulmonary',
-    },
-    {
-        abbreviation: 'nab',
-        expansion: 'no acute distress',
-        category: 'general',
-    },
-    {
-        abbreviation: 'heent',
-        expansion: 'head, eyes, ears, nose, throat',
-        category: 'examination',
-    },
-    {
-        abbreviation: 'rom',
-        expansion: 'range of motion',
-        category: 'musculoskeletal',
-    },
-    { abbreviation: 'rto', expansion: 'return to office', category: 'plan' },
-    {
-        abbreviation: 'pmsh',
-        expansion: 'past medical/surgical history',
-        category: 'history',
-    },
-    { abbreviation: 'nill', expansion: 'nil significant', category: 'general' },
-];
-
 export default function MedicalHistoryNotes({
     initialData,
     patientHistories,
@@ -163,8 +43,7 @@ export default function MedicalHistoryNotes({
 }: MedicalHistoryNotesProps) {
     const [data, setData] = useState(initialData);
     const [histories, setHistories] = useState(patientHistories);
-    const [showTemplates, setShowTemplates] = useState(false);
-    const [showPhrases, setShowPhrases] = useState(false);
+
     const [completionStats, setCompletionStats] = useState({
         presenting_complaint: 0,
         history_presenting_complaint: 0,
@@ -173,15 +52,6 @@ export default function MedicalHistoryNotes({
         assessment_notes: 0,
         plan_notes: 0,
     });
-
-    const textareaRefs = {
-        presenting_complaint: useRef<HTMLTextAreaElement>(null),
-        history_presenting_complaint: useRef<HTMLTextAreaElement>(null),
-        on_direct_questioning: useRef<HTMLTextAreaElement>(null),
-        examination_findings: useRef<HTMLTextAreaElement>(null),
-        assessment_notes: useRef<HTMLTextAreaElement>(null),
-        plan_notes: useRef<HTMLTextAreaElement>(null),
-    };
 
     useEffect(() => {
         const stats = Object.keys(data).reduce(
@@ -217,78 +87,6 @@ export default function MedicalHistoryNotes({
         onPatientHistoryUpdate(key, value);
     };
 
-    const applyTemplate = (template: MedicalHistoryTemplate) => {
-        const newData = {
-            ...data,
-            presenting_complaint:
-                template.presentingComplaint || data.presenting_complaint,
-            history_presenting_complaint:
-                template.historyPresentingComplaint ||
-                data.history_presenting_complaint,
-            on_direct_questioning:
-                template.onDirectQuestioning || data.on_direct_questioning,
-            examination_findings:
-                template.examinationFindings || data.examination_findings,
-            assessment_notes: template.assessment || data.assessment_notes,
-            plan_notes: template.plan || data.plan_notes,
-        };
-        setData(newData);
-        onDataChange(newData);
-        setShowTemplates(false);
-    };
-
-    const insertQuickPhrase = (phrase: QuickPhrase, fieldKey: string) => {
-        const textarea =
-            textareaRefs[fieldKey as keyof typeof textareaRefs].current;
-        if (!textarea) return;
-
-        const { selectionStart, selectionEnd } = textarea;
-        const currentValue = data[fieldKey as keyof typeof data];
-        const beforeCursor = currentValue.substring(0, selectionStart);
-        const afterCursor = currentValue.substring(selectionEnd);
-
-        const words = beforeCursor.split(' ');
-        const lastWord = words[words.length - 1];
-
-        let newValue;
-        if (lastWord === phrase.abbreviation) {
-            words[words.length - 1] = phrase.expansion;
-            newValue = words.join(' ') + afterCursor;
-        } else {
-            newValue = beforeCursor + phrase.expansion + afterCursor;
-        }
-
-        handleDataChange(fieldKey, newValue);
-
-        setTimeout(() => {
-            const newPosition = beforeCursor.length + phrase.expansion.length;
-            textarea.setSelectionRange(newPosition, newPosition);
-            textarea.focus();
-        }, 0);
-    };
-
-    const handleTextareaKeyDown = (
-        e: React.KeyboardEvent,
-        fieldKey: string,
-    ) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const textarea = e.currentTarget as HTMLTextAreaElement;
-            const { selectionStart } = textarea;
-            const currentValue = data[fieldKey as keyof typeof data];
-            const beforeCursor = currentValue.substring(0, selectionStart);
-            const words = beforeCursor.split(' ');
-            const lastWord = words[words.length - 1];
-
-            const matchingPhrase = quickPhrases.find(
-                (phrase) => phrase.abbreviation === lastWord,
-            );
-            if (matchingPhrase) {
-                insertQuickPhrase(matchingPhrase, fieldKey);
-            }
-        }
-    };
-
     const getCompletionColor = (count: number) => {
         if (count === 0) return 'text-gray-400 dark:text-gray-500';
         if (count < 10) return 'text-yellow-600 dark:text-yellow-500';
@@ -306,91 +104,10 @@ export default function MedicalHistoryNotes({
             {/* Consultation Notes Card with Tabs */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Consultation Notes
-                            <Badge variant="outline" className="ml-2">
-                                Smart Assistant
-                            </Badge>
-                        </CardTitle>
-                        <div className="flex items-center gap-2">
-                            <Popover
-                                open={showTemplates}
-                                onOpenChange={setShowTemplates}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        <Lightbulb className="mr-1 h-4 w-4" />
-                                        Templates
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-medium">
-                                            Choose Template
-                                        </h4>
-                                        {commonTemplates.map((template) => (
-                                            <div
-                                                key={template.id}
-                                                className="cursor-pointer rounded border p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                onClick={() =>
-                                                    applyTemplate(template)
-                                                }
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium">
-                                                        {template.name}
-                                                    </span>
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                    >
-                                                        {template.category}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-
-                            <Popover
-                                open={showPhrases}
-                                onOpenChange={setShowPhrases}
-                            >
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        <Sparkles className="mr-1 h-4 w-4" />
-                                        Quick Phrases
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-medium">
-                                            Quick Phrases (Press Tab to expand)
-                                        </h4>
-                                        <div className="grid grid-cols-2 gap-2 text-xs">
-                                            {quickPhrases.map((phrase) => (
-                                                <div
-                                                    key={phrase.abbreviation}
-                                                    className="rounded border p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                    title={phrase.expansion}
-                                                >
-                                                    <code className="font-mono font-bold">
-                                                        {phrase.abbreviation}
-                                                    </code>
-                                                    <p className="truncate text-gray-600 dark:text-gray-400">
-                                                        {phrase.expansion}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    </div>
+                    <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Consultation Notes
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={onSubmit}>
@@ -398,58 +115,58 @@ export default function MedicalHistoryNotes({
                             defaultValue="presenting_complaint"
                             className="w-full"
                         >
-                            <TabsList className="grid h-auto w-full grid-cols-5 gap-1 p-1 lg:grid-cols-9">
+                            <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 lg:grid-cols-9 dark:border-gray-700">
                                 <TabsTrigger
                                     value="presenting_complaint"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-blue-50 text-xs text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
                                 >
                                     PC
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="history_presenting_complaint"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-teal-50 text-xs text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
                                 >
                                     HPC
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="on_direct_questioning"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-cyan-50 text-xs text-cyan-700 shadow-none transition-all hover:bg-cyan-100 data-[state=active]:border-cyan-600 data-[state=active]:bg-cyan-100 data-[state=active]:text-cyan-700 data-[state=active]:shadow-none dark:bg-cyan-950 dark:text-cyan-300 dark:hover:bg-cyan-900 dark:data-[state=active]:border-cyan-400 dark:data-[state=active]:bg-cyan-900 dark:data-[state=active]:text-cyan-300"
                                 >
                                     ODQ
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="past_history"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
                                 >
                                     PMH
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="drug_history"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-amber-50 text-xs text-amber-700 shadow-none transition-all hover:bg-amber-100 data-[state=active]:border-amber-600 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:shadow-none dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-900 dark:data-[state=active]:border-amber-400 dark:data-[state=active]:bg-amber-900 dark:data-[state=active]:text-amber-300"
                                 >
                                     DH
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="family_history"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-rose-50 text-xs text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
                                 >
                                     FH
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="social_history"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-orange-50 text-xs text-orange-700 shadow-none transition-all hover:bg-orange-100 data-[state=active]:border-orange-600 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-700 data-[state=active]:shadow-none dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:data-[state=active]:border-orange-400 dark:data-[state=active]:bg-orange-900 dark:data-[state=active]:text-orange-300"
                                 >
                                     SH
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="examination_findings"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-green-50 text-xs text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300"
                                 >
                                     Exam
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="plan_notes"
-                                    className="text-xs"
+                                    className="rounded-md border-b-2 border-transparent bg-indigo-50 text-xs text-indigo-700 shadow-none transition-all hover:bg-indigo-100 data-[state=active]:border-indigo-600 data-[state=active]:bg-indigo-100 data-[state=active]:text-indigo-700 data-[state=active]:shadow-none dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900 dark:data-[state=active]:border-indigo-400 dark:data-[state=active]:bg-indigo-900 dark:data-[state=active]:text-indigo-300"
                                 >
                                     Plan
                                 </TabsTrigger>
@@ -482,7 +199,6 @@ export default function MedicalHistoryNotes({
                                     </div>
                                 </div>
                                 <Textarea
-                                    ref={textareaRefs.presenting_complaint}
                                     id="presenting_complaint"
                                     placeholder="Primary reason for today's visit..."
                                     value={data.presenting_complaint}
@@ -493,13 +209,7 @@ export default function MedicalHistoryNotes({
                                         );
                                         autoResize(e.target);
                                     }}
-                                    onKeyDown={(e) =>
-                                        handleTextareaKeyDown(
-                                            e,
-                                            'presenting_complaint',
-                                        )
-                                    }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -530,9 +240,6 @@ export default function MedicalHistoryNotes({
                                     </div>
                                 </div>
                                 <Textarea
-                                    ref={
-                                        textareaRefs.history_presenting_complaint
-                                    }
                                     id="history_presenting_complaint"
                                     placeholder="Detailed history of current complaint: onset, duration, character, progression, relieving/aggravating factors..."
                                     value={data.history_presenting_complaint}
@@ -543,13 +250,7 @@ export default function MedicalHistoryNotes({
                                         );
                                         autoResize(e.target);
                                     }}
-                                    onKeyDown={(e) =>
-                                        handleTextareaKeyDown(
-                                            e,
-                                            'history_presenting_complaint',
-                                        )
-                                    }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -580,7 +281,6 @@ export default function MedicalHistoryNotes({
                                     </div>
                                 </div>
                                 <Textarea
-                                    ref={textareaRefs.on_direct_questioning}
                                     id="on_direct_questioning"
                                     placeholder="Systematic review: associated symptoms, other system reviews..."
                                     value={data.on_direct_questioning}
@@ -591,13 +291,7 @@ export default function MedicalHistoryNotes({
                                         );
                                         autoResize(e.target);
                                     }}
-                                    onKeyDown={(e) =>
-                                        handleTextareaKeyDown(
-                                            e,
-                                            'on_direct_questioning',
-                                        )
-                                    }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -623,7 +317,7 @@ export default function MedicalHistoryNotes({
                                             e.target.value,
                                         )
                                     }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -647,7 +341,7 @@ export default function MedicalHistoryNotes({
                                             e.target.value,
                                         )
                                     }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -671,7 +365,7 @@ export default function MedicalHistoryNotes({
                                             e.target.value,
                                         )
                                     }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -695,7 +389,7 @@ export default function MedicalHistoryNotes({
                                             e.target.value,
                                         )
                                     }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -726,7 +420,6 @@ export default function MedicalHistoryNotes({
                                     </div>
                                 </div>
                                 <Textarea
-                                    ref={textareaRefs.examination_findings}
                                     id="examination_findings"
                                     placeholder="Physical examination findings, vital signs, diagnostic results..."
                                     value={data.examination_findings}
@@ -737,13 +430,7 @@ export default function MedicalHistoryNotes({
                                         );
                                         autoResize(e.target);
                                     }}
-                                    onKeyDown={(e) =>
-                                        handleTextareaKeyDown(
-                                            e,
-                                            'examination_findings',
-                                        )
-                                    }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
                             </TabsContent>
 
@@ -770,7 +457,6 @@ export default function MedicalHistoryNotes({
                                     </div>
                                 </div>
                                 <Textarea
-                                    ref={textareaRefs.plan_notes}
                                     id="plan_notes"
                                     placeholder="Treatment plan, medications, investigations, follow-up instructions, patient education..."
                                     value={data.plan_notes}
@@ -781,10 +467,7 @@ export default function MedicalHistoryNotes({
                                         );
                                         autoResize(e.target);
                                     }}
-                                    onKeyDown={(e) =>
-                                        handleTextareaKeyDown(e, 'plan_notes')
-                                    }
-                                    className="min-h-[200px] resize-none"
+                                    className="min-h-[120px] resize-none"
                                 />
 
                                 {/* Follow-up Date */}

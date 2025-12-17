@@ -324,14 +324,24 @@ class PrescriptionParserService
 
     /**
      * Parse custom interval schedule (e.g., "4 tabs 0h,8h,24h,36h,48h,60h").
+     *
+     * Supports formats:
+     * - "4 tabs 0h,8h,24h,36h,48h,60h" - with 'h' suffix
+     * - "4 tabs at 0,8,24,36,48,60" - with 'at' keyword
+     * - "4mg 0,8,12,24" - dose with mg/ml followed by comma-separated hours
+     * - "4mg 0,8,12,24 HRS" or "4mg 0,8,12,24HRS" - with optional HRS suffix
      */
     public function parseCustomIntervals(string $input): ?ParsedPrescriptionResult
     {
-        // Pattern 1: "4 tabs 0h,8h,24h,36h,48h,60h"
-        $pattern1 = '/^(\d+(?:\.\d+)?)\s*(tabs?|capsules?|caps?|ml)?\s*((?:\d+h?,?\s*)+)$/i';
+        // Pattern 1: "4 tabs 0h,8h,24h,36h,48h,60h" - hours with 'h' suffix
+        $pattern1 = '/^(\d+(?:\.\d+)?)\s*(tabs?|capsules?|caps?|ml|mg)?\s*((?:\d+h?,?\s*)+)$/i';
 
-        // Pattern 2: "0,8,24,36,48,60" with dose prefix
-        $pattern2 = '/^(\d+(?:\.\d+)?)\s*(tabs?|capsules?|caps?|ml)?\s*at\s*((?:\d+,?\s*)+)$/i';
+        // Pattern 2: "4 tabs at 0,8,24,36,48,60" - with 'at' keyword
+        $pattern2 = '/^(\d+(?:\.\d+)?)\s*(tabs?|capsules?|caps?|ml|mg)?\s*at\s*((?:\d+,?\s*)+)$/i';
+
+        // Pattern 3: "4mg 0,8,12,24" or "4mg 0,8,12,24 HRS" - dose unit followed by comma-separated numbers
+        // This pattern requires mg/ml unit to distinguish from other patterns
+        $pattern3 = '/^(\d+(?:\.\d+)?)\s*(mg|ml)\s+((?:\d+,)+\d+)\s*(?:hrs?)?$/i';
 
         $doseValue = null;
         $doseUnit = '';
@@ -345,11 +355,15 @@ class PrescriptionParserService
             $doseValue = $matches[1];
             $doseUnit = $matches[2] ?? '';
             $intervalsStr = $matches[3];
+        } elseif (preg_match($pattern3, $input, $matches)) {
+            $doseValue = $matches[1];
+            $doseUnit = $matches[2] ?? '';
+            $intervalsStr = $matches[3];
         } else {
             return null;
         }
 
-        // Parse intervals
+        // Parse intervals - remove 'h' suffix and split by comma/space
         $intervalsStr = preg_replace('/h/i', '', $intervalsStr);
         $intervals = array_map('intval', preg_split('/[,\s]+/', trim($intervalsStr)));
         $intervals = array_filter($intervals, fn ($v) => $v >= 0 || $v === 0);

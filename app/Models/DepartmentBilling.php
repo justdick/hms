@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DepartmentBilling extends Model
 {
+    /** @use HasFactory<\Database\Factories\DepartmentBillingFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'department_id',
         'department_code',

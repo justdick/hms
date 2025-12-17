@@ -6,11 +6,13 @@ use App\Models\Charge;
 use App\Models\InsuranceClaim;
 use App\Models\InsuranceClaimItem;
 use App\Services\InsuranceService;
+use App\Services\PatientAccountService;
 
 class ChargeObserver
 {
     public function __construct(
-        protected InsuranceService $insuranceService
+        protected InsuranceService $insuranceService,
+        protected PatientAccountService $patientAccountService
     ) {}
 
     /**
@@ -78,6 +80,18 @@ class ChargeObserver
      */
     public function created(Charge $charge): void
     {
+        // Handle insurance claim item creation
+        $this->handleInsuranceClaimItem($charge);
+
+        // Auto-apply patient deposits to charge
+        $this->autoApplyDeposit($charge);
+    }
+
+    /**
+     * Handle insurance claim item creation for a charge.
+     */
+    protected function handleInsuranceClaimItem(Charge $charge): void
+    {
         // Skip if not an insurance claim
         if (! $charge->is_insurance_claim || ! $charge->insurance_claim_id) {
             return;
@@ -134,6 +148,20 @@ class ChargeObserver
         $claim->increment('total_claim_amount', $coverage['subtotal']);
         $claim->increment('insurance_covered_amount', $coverage['insurance_pays']);
         $claim->increment('patient_copay_amount', $coverage['patient_pays']);
+    }
+
+    /**
+     * Auto-apply patient account balance to a newly created charge.
+     */
+    protected function autoApplyDeposit(Charge $charge): void
+    {
+        // Only apply to pending charges
+        if ($charge->status !== 'pending') {
+            return;
+        }
+
+        // Apply from patient account (handles both prepaid balance and credit limit)
+        $this->patientAccountService->applyToCharge($charge);
     }
 
     /**

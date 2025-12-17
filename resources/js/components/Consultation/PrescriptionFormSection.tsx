@@ -27,14 +27,18 @@ import {
     Calculator,
     Check,
     ChevronsUpDown,
+    Pencil,
     Pill,
     Plus,
+    RefreshCw,
     Trash2,
+    X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { ModeToggle, type PrescriptionMode } from '@/components/Prescription/ModeToggle';
 import { SmartPrescriptionInput } from '@/components/Prescription/SmartPrescriptionInput';
 import type { ParsedPrescription } from '@/components/Prescription/InterpretationPanel';
+import { RefillPrescriptionModal } from './RefillPrescriptionModal';
 
 interface Drug {
     id: number;
@@ -47,14 +51,54 @@ interface Drug {
     bottle_size?: number;
 }
 
+// Helper to extract pack size from drug name (e.g., "(24's)", "(6 tabs)", "(12`s)")
+function extractPackSize(name: string): { baseName: string; packSize: string | null } {
+    const packMatch = name.match(/\s*(\(\d+['`]?s?\)|\(\d+\s*tabs?\))\s*$/i);
+    if (packMatch) {
+        return {
+            baseName: name.slice(0, packMatch.index).trim(),
+            packSize: packMatch[1],
+        };
+    }
+    return { baseName: name, packSize: null };
+}
+
 interface Prescription {
     id: number;
     medication_name: string;
     frequency: string;
     duration: string;
     dose_quantity?: string;
+    quantity_to_dispense?: number;
     instructions?: string;
     status: string;
+    drug_id?: number;
+    refilled_from_prescription_id?: number;
+}
+
+interface PreviousPrescription {
+    id: number;
+    medication_name: string;
+    dose_quantity?: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
+    status: string;
+    drug?: Drug;
+    consultation: {
+        id: number;
+        started_at: string;
+        doctor: {
+            id: number;
+            name: string;
+        };
+        patient_checkin: {
+            department: {
+                id: number;
+                name: string;
+            };
+        };
+    };
 }
 
 interface Props {
@@ -64,8 +108,14 @@ interface Props {
     setPrescriptionData: (field: string, value: any) => void;
     onSubmit: (e: React.FormEvent) => void;
     onDelete: (id: number) => void;
+    onEdit: (prescription: Prescription) => void;
+    onCancelEdit: () => void;
+    onUpdate: (e: React.FormEvent) => void;
+    editingPrescription: Prescription | null;
     processing: boolean;
+    consultationId: number;
     consultationStatus: string;
+    previousPrescriptions?: PreviousPrescription[];
 }
 
 // Helper function to parse frequency to get daily count
@@ -126,31 +176,120 @@ export default function PrescriptionFormSection({
     setPrescriptionData,
     onSubmit,
     onDelete,
+    onEdit,
+    onCancelEdit,
+    onUpdate,
+    editingPrescription,
     processing,
+    consultationId,
     consultationStatus,
+    previousPrescriptions = [],
 }: Props) {
     const [drugComboOpen, setDrugComboOpen] = useState(false);
     const [manuallyEdited, setManuallyEdited] = useState(false);
     const [mode, setMode] = useState<PrescriptionMode>('smart');
     const [smartInput, setSmartInput] = useState('');
     const [parsedResult, setParsedResult] = useState<ParsedPrescription | null>(null);
+    const [showRefillModal, setShowRefillModal] = useState(false);
+
+    const isEditing = editingPrescription !== null;
 
     const selectedDrug = drugs.find((d) => d.id === prescriptionData.drug_id);
 
-    // Handle mode switching - preserve drug selection, clear other fields
+    // Force classic mode when editing (existing prescriptions have structured data)
+    // Start in smart mode when editing, with values converted to smart format
+    useEffect(() => {
+        if (isEditing && prescriptionData.frequency) {
+            setMode('smart');
+            // Generate smart input from existing values
+            const parts: string[] = [];
+            if (prescriptionData.dose_quantity) {
+                parts.push(prescriptionData.dose_quantity);
+            }
+            if (prescriptionData.frequency) {
+                parts.push(frequencyToSmartFormat(prescriptionData.frequency));
+            }
+            if (prescriptionData.duration) {
+                const durationMatch = prescriptionData.duration.match(/^(\d+)\s+days?$/i);
+                if (durationMatch) {
+                    parts.push(`x ${durationMatch[1]}D`);
+                }
+            }
+            setSmartInput(parts.join(' '));
+            setParsedResult(null);
+        }
+    }, [isEditing]);
+
+    // Helper to convert frequency to smart input format
+    const frequencyToSmartFormat = (frequency: string): string => {
+        const map: { [key: string]: string } = {
+            'Once daily': '1 daily',
+            'Twice daily (BID)': 'BD',
+            'Three times daily (TID)': 'TDS',
+            'Four times daily (QID)': 'QID',
+            'Every 4 hours': 'Q4H',
+            'Every 6 hours': 'Q6H',
+            'Every 8 hours': 'Q8H',
+            'Every 12 hours': 'Q12H',
+            'At bedtime': 'nocte',
+            'As needed (PRN)': 'PRN',
+            'Before meals': 'AC',
+            'After meals': 'PC',
+        };
+        return map[frequency] || frequency;
+    };
+
+    // Generate smart input string from current form values
+    const generateSmartInputFromValues = useCallback((): string => {
+        const parts: string[] = [];
+        
+        if (prescriptionData.dose_quantity) {
+            parts.push(prescriptionData.dose_quantity);
+        }
+        
+        if (prescriptionData.frequency) {
+            parts.push(frequencyToSmartFormat(prescriptionData.frequency));
+        }
+        
+        if (prescriptionData.duration) {
+            // Convert "X days" to "x D" format
+            const durationMatch = prescriptionData.duration.match(/^(\d+)\s+days?$/i);
+            if (durationMatch) {
+                parts.push(`x ${durationMatch[1]}D`);
+            } else if (prescriptionData.duration !== 'As directed') {
+                parts.push(prescriptionData.duration);
+            }
+        }
+        
+        return parts.join(' ');
+    }, [prescriptionData.dose_quantity, prescriptionData.frequency, prescriptionData.duration]);
+
+    // Handle mode switching - preserve values when editing
     const handleModeChange = useCallback((newMode: PrescriptionMode) => {
-        setMode(newMode);
-        // Clear form fields except drug selection
-        setPrescriptionData('dose_quantity', '');
-        setPrescriptionData('frequency', '');
-        setPrescriptionData('duration', '');
-        setPrescriptionData('quantity_to_dispense', '');
-        setPrescriptionData('schedule_pattern', null);
-        // Clear smart input when switching modes
-        setSmartInput('');
-        setParsedResult(null);
-        setManuallyEdited(false);
-    }, [setPrescriptionData]);
+        if (isEditing) {
+            // When editing, preserve values and convert between modes
+            if (newMode === 'smart') {
+                // Generate smart input from current classic values
+                const smartText = generateSmartInputFromValues();
+                setSmartInput(smartText);
+            }
+            // Values are already in prescriptionData, just switch mode
+            setMode(newMode);
+            setParsedResult(null);
+            setManuallyEdited(false);
+        } else {
+            // Not editing - clear fields when switching (original behavior)
+            setMode(newMode);
+            setPrescriptionData('dose_quantity', '');
+            setPrescriptionData('frequency', '');
+            setPrescriptionData('duration', '');
+            setPrescriptionData('quantity_to_dispense', '');
+            setPrescriptionData('schedule_pattern', null);
+            setSmartInput('');
+            setParsedResult(null);
+            setManuallyEdited(false);
+        }
+    }, [isEditing, generateSmartInputFromValues, setPrescriptionData]);
 
     // Handle switching to classic mode from interpretation panel
     const handleSwitchToClassic = useCallback(() => {
@@ -276,22 +415,30 @@ export default function PrescriptionFormSection({
                         )}
                     >
                         {selectedDrug ? (
-                            <span className="flex items-center gap-2 truncate">
-                                <span className="font-medium">
-                                    {selectedDrug.name}
-                                </span>
-                                {selectedDrug.strength && (
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {selectedDrug.strength}
+                            (() => {
+                                const { baseName, packSize } = extractPackSize(selectedDrug.name);
+                                return (
+                                    <span className="flex items-center gap-2 truncate">
+                                        <span className="truncate font-medium">
+                                            {baseName}
+                                        </span>
+                                        {packSize && (
+                                            <Badge
+                                                variant="outline"
+                                                className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400"
+                                            >
+                                                {packSize}
+                                            </Badge>
+                                        )}
+                                        <Badge
+                                            variant="secondary"
+                                            className="shrink-0 text-xs"
+                                        >
+                                            {selectedDrug.form}
+                                        </Badge>
                                     </span>
-                                )}
-                                <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                >
-                                    {selectedDrug.form}
-                                </Badge>
-                            </span>
+                                );
+                            })()
                         ) : (
                             'Select drug...'
                         )}
@@ -334,42 +481,48 @@ export default function PrescriptionFormSection({
                                 No drug found.
                             </CommandEmpty>
                             <CommandGroup>
-                                {drugs.map((drug) => (
-                                    <CommandItem
-                                        key={drug.id}
-                                        value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
-                                        onSelect={() => {
-                                            setPrescriptionData('drug_id', drug.id);
-                                            setPrescriptionData('medication_name', drug.name);
-                                            setDrugComboOpen(false);
-                                        }}
-                                    >
-                                        <Check
-                                            className={cn(
-                                                'mr-2 h-4 w-4',
-                                                prescriptionData.drug_id === drug.id
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                                            <span className="truncate font-medium">
-                                                {drug.name}
-                                            </span>
-                                            {drug.strength && (
-                                                <span className="shrink-0 text-sm text-gray-600 dark:text-gray-400">
-                                                    {drug.strength}
+                                {drugs.map((drug) => {
+                                    const { baseName, packSize } = extractPackSize(drug.name);
+                                    return (
+                                        <CommandItem
+                                            key={drug.id}
+                                            value={`${drug.name} ${drug.form} ${drug.strength || ''} ${drug.generic_name || ''}`}
+                                            onSelect={() => {
+                                                setPrescriptionData('drug_id', drug.id);
+                                                setPrescriptionData('medication_name', drug.name);
+                                                setDrugComboOpen(false);
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    'mr-2 h-4 w-4 shrink-0',
+                                                    prescriptionData.drug_id === drug.id
+                                                        ? 'opacity-100'
+                                                        : 'opacity-0',
+                                                )}
+                                            />
+                                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                                                <span className="truncate font-medium">
+                                                    {baseName}
                                                 </span>
-                                            )}
-                                            <Badge
-                                                variant="secondary"
-                                                className="shrink-0 text-xs"
-                                            >
-                                                {drug.form}
-                                            </Badge>
-                                        </div>
-                                    </CommandItem>
-                                ))}
+                                                {packSize && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400"
+                                                    >
+                                                        {packSize}
+                                                    </Badge>
+                                                )}
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="shrink-0 text-xs"
+                                                >
+                                                    {drug.form}
+                                                </Badge>
+                                            </div>
+                                        </CommandItem>
+                                    );
+                                })}
                             </CommandGroup>
                         </CommandList>
                     </Command>
@@ -385,10 +538,44 @@ export default function PrescriptionFormSection({
                 <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-800 dark:from-green-950/20 dark:to-emerald-950/20">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            <Plus className="h-5 w-5" />
-                            Add New Prescription
+                            {isEditing ? (
+                                <>
+                                    <Pencil className="h-5 w-5" />
+                                    Edit Prescription
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="h-5 w-5" />
+                                    Add New Prescription
+                                </>
+                            )}
                         </h3>
-                        <ModeToggle mode={mode} onChange={handleModeChange} />
+                        <div className="flex items-center gap-2">
+                            {!isEditing && previousPrescriptions.length > 0 && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowRefillModal(true)}
+                                >
+                                    <RefreshCw className="mr-1.5 h-4 w-4" />
+                                    Refill
+                                </Button>
+                            )}
+                            {isEditing ? (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={onCancelEdit}
+                                >
+                                    <X className="mr-1.5 h-4 w-4" />
+                                    Cancel
+                                </Button>
+                            ) : (
+                                <ModeToggle mode={mode} onChange={handleModeChange} />
+                            )}
+                        </div>
                     </div>
 
                     {mode === 'smart' ? (
@@ -436,118 +623,110 @@ export default function PrescriptionFormSection({
                         </form>
                     ) : (
                         /* Classic Mode Form */
-                        <form onSubmit={onSubmit} className="space-y-4">
-                            {/* Drug Selection and Dose Quantity in same row */}
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <form onSubmit={isEditing ? onUpdate : onSubmit} className="space-y-4">
+                            {/* Drug Selection - Full width */}
+                            <div className="grid grid-cols-1 gap-4">
                                 {DrugSelector}
+                            </div>
 
-                                {/* Dose Quantity Field - Takes 1 column */}
-                                {selectedDrug && (
+                            {/* Dose, Frequency, Duration in same row */}
+                            {selectedDrug && (
+                                <div className="grid grid-cols-3 gap-4">
+                                    {/* Dose Quantity */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="dose_quantity">
-                                            Dose Quantity *
-                                        </Label>
+                                        <Label htmlFor="dose_quantity">Dose *</Label>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="text"
                                                 id="dose_quantity"
-                                                placeholder={
-                                                    selectedDrug.unit_type === 'piece'
-                                                        ? '1'
-                                                        : selectedDrug.unit_type === 'bottle' ||
-                                                            selectedDrug.unit_type === 'vial'
-                                                          ? '5'
-                                                          : '1'
-                                                }
+                                                placeholder="1"
                                                 value={prescriptionData.dose_quantity || ''}
                                                 onChange={(e) =>
                                                     setPrescriptionData('dose_quantity', e.target.value)
                                                 }
-                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="flex h-10 w-16 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                                 required
                                             />
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {selectedDrug.unit_type === 'piece'
-                                                    ? `${selectedDrug.form}(s) per dose`
-                                                    : selectedDrug.unit_type === 'bottle' ||
-                                                        selectedDrug.unit_type === 'vial'
-                                                      ? 'ml per dose'
-                                                      : 'per dose'}
+                                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.form === 'tablet' || selectedDrug.form === 'capsule'
+                                                    ? `${selectedDrug.form}(s)`
+                                                    : selectedDrug.form === 'injection'
+                                                      ? 'amp(s)'
+                                                      : selectedDrug.unit_type === 'bottle' || selectedDrug.unit_type === 'vial'
+                                                        ? 'ml'
+                                                        : selectedDrug.form === 'syrup' || selectedDrug.form === 'suspension'
+                                                          ? 'ml'
+                                                          : selectedDrug.form}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {selectedDrug.unit_type === 'piece' ? (
-                                                <>e.g., "1" for one tablet, "2" for two tablets per dose</>
-                                            ) : selectedDrug.unit_type === 'bottle' ||
-                                              selectedDrug.unit_type === 'vial' ? (
-                                                <>e.g., "5" for 5ml, "10" for 10ml per dose</>
-                                            ) : (
-                                                <>Enter dose quantity</>
-                                            )}
-                                        </p>
                                     </div>
-                                )}
-                            </div>
 
-                            {/* Frequency and Duration in two columns */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="frequency">Frequency *</Label>
-                                    <Select
-                                        value={prescriptionData.frequency}
-                                        onValueChange={(value) =>
-                                            setPrescriptionData('frequency', value)
-                                        }
-                                        required
-                                    >
-                                        <SelectTrigger id="frequency">
-                                            <SelectValue placeholder="Select frequency" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Once daily">Once daily</SelectItem>
-                                            <SelectItem value="Twice daily (BID)">Twice daily (BID)</SelectItem>
-                                            <SelectItem value="Three times daily (TID)">Three times daily (TID)</SelectItem>
-                                            <SelectItem value="Four times daily (QID)">Four times daily (QID)</SelectItem>
-                                            <SelectItem value="Every 4 hours">Every 4 hours</SelectItem>
-                                            <SelectItem value="Every 6 hours">Every 6 hours</SelectItem>
-                                            <SelectItem value="Every 8 hours">Every 8 hours</SelectItem>
-                                            <SelectItem value="Every 12 hours">Every 12 hours</SelectItem>
-                                            <SelectItem value="As needed (PRN)">As needed (PRN)</SelectItem>
-                                            <SelectItem value="Before meals">Before meals</SelectItem>
-                                            <SelectItem value="After meals">After meals</SelectItem>
-                                            <SelectItem value="At bedtime">At bedtime</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                    {/* Frequency */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="frequency">Frequency *</Label>
+                                        <Select
+                                            value={prescriptionData.frequency}
+                                            onValueChange={(value) =>
+                                                setPrescriptionData('frequency', value)
+                                            }
+                                            required
+                                        >
+                                            <SelectTrigger id="frequency">
+                                                <SelectValue placeholder="Select" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Once daily">Once daily</SelectItem>
+                                                <SelectItem value="Twice daily (BID)">Twice daily (BID)</SelectItem>
+                                                <SelectItem value="Three times daily (TID)">Three times daily (TID)</SelectItem>
+                                                <SelectItem value="Four times daily (QID)">Four times daily (QID)</SelectItem>
+                                                <SelectItem value="Every 4 hours">Every 4 hours</SelectItem>
+                                                <SelectItem value="Every 6 hours">Every 6 hours</SelectItem>
+                                                <SelectItem value="Every 8 hours">Every 8 hours</SelectItem>
+                                                <SelectItem value="Every 12 hours">Every 12 hours</SelectItem>
+                                                <SelectItem value="As needed (PRN)">As needed (PRN)</SelectItem>
+                                                <SelectItem value="Before meals">Before meals</SelectItem>
+                                                <SelectItem value="After meals">After meals</SelectItem>
+                                                <SelectItem value="At bedtime">At bedtime</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="duration">Duration *</Label>
-                                    <Select
-                                        value={prescriptionData.duration}
-                                        onValueChange={(value) =>
-                                            setPrescriptionData('duration', value)
-                                        }
-                                        required
-                                    >
-                                        <SelectTrigger id="duration">
-                                            <SelectValue placeholder="Select duration" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="3 days">3 days</SelectItem>
-                                            <SelectItem value="5 days">5 days</SelectItem>
-                                            <SelectItem value="7 days">7 days</SelectItem>
-                                            <SelectItem value="10 days">10 days</SelectItem>
-                                            <SelectItem value="14 days">14 days</SelectItem>
-                                            <SelectItem value="21 days">21 days</SelectItem>
-                                            <SelectItem value="30 days">30 days</SelectItem>
-                                            <SelectItem value="60 days">60 days</SelectItem>
-                                            <SelectItem value="90 days">90 days</SelectItem>
-                                            <SelectItem value="Until review">Until review</SelectItem>
-                                            <SelectItem value="Ongoing">Ongoing</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    {/* Duration */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="duration">Duration *</Label>
+                                        <Select
+                                            value={prescriptionData.duration}
+                                            onValueChange={(value) =>
+                                                setPrescriptionData('duration', value)
+                                            }
+                                            required
+                                        >
+                                            <SelectTrigger id="duration">
+                                                <SelectValue placeholder="Select" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1 day">1 day</SelectItem>
+                                                <SelectItem value="2 days">2 days</SelectItem>
+                                                <SelectItem value="3 days">3 days</SelectItem>
+                                                <SelectItem value="4 days">4 days</SelectItem>
+                                                <SelectItem value="5 days">5 days</SelectItem>
+                                                <SelectItem value="6 days">6 days</SelectItem>
+                                                <SelectItem value="7 days">7 days</SelectItem>
+                                                <SelectItem value="10 days">10 days</SelectItem>
+                                                <SelectItem value="14 days">14 days</SelectItem>
+                                                <SelectItem value="21 days">21 days</SelectItem>
+                                                <SelectItem value="28 days">28 days</SelectItem>
+                                                <SelectItem value="30 days">30 days</SelectItem>
+                                                <SelectItem value="42 days">42 days</SelectItem>
+                                                <SelectItem value="60 days">60 days</SelectItem>
+                                                <SelectItem value="90 days">90 days</SelectItem>
+                                                <SelectItem value="120 days">120 days</SelectItem>
+                                                <SelectItem value="180 days">180 days</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Quantity Display - Auto-calculated for tablets */}
                             {prescriptionData.quantity_to_dispense &&
@@ -673,13 +852,30 @@ export default function PrescriptionFormSection({
                                 disabled={processing || !prescriptionData.drug_id}
                                 className="w-full"
                             >
-                                <Plus className="mr-2 h-4 w-4" />
-                                {processing ? 'Adding...' : 'Add Prescription'}
+                                {isEditing ? (
+                                    <>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        {processing ? 'Updating...' : 'Update Prescription'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        {processing ? 'Adding...' : 'Add Prescription'}
+                                    </>
+                                )}
                             </Button>
                         </form>
                     )}
                 </div>
             )}
+
+            {/* Refill Modal */}
+            <RefillPrescriptionModal
+                open={showRefillModal}
+                onOpenChange={setShowRefillModal}
+                consultationId={consultationId}
+                previousPrescriptions={previousPrescriptions}
+            />
 
             {/* Right Column: Current Prescriptions */}
             <div
@@ -732,6 +928,12 @@ export default function PrescriptionFormSection({
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2">
+                                        {prescription.refilled_from_prescription_id && (
+                                            <Badge variant="outline" className="text-xs">
+                                                <RefreshCw className="mr-1 h-3 w-3" />
+                                                Refill
+                                            </Badge>
+                                        )}
                                         <Badge
                                             variant={
                                                 prescription.status === 'prescribed'
@@ -745,14 +947,26 @@ export default function PrescriptionFormSection({
                                         </Badge>
                                         {consultationStatus === 'in_progress' &&
                                             prescription.status === 'prescribed' && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => onDelete(prescription.id)}
-                                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => onEdit(prescription)}
+                                                        className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                        title="Edit prescription"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => onDelete(prescription.id)}
+                                                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        title="Delete prescription"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </>
                                             )}
                                     </div>
                                 </div>

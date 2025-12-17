@@ -196,7 +196,7 @@ export function RecordVitalsModal({
                                             className="flex items-center gap-2"
                                         >
                                             <Thermometer className="h-4 w-4" />
-                                            Temperature (°F){' '}
+                                            Temperature (°C){' '}
                                             <span className="text-red-500">
                                                 *
                                             </span>
@@ -208,7 +208,7 @@ export function RecordVitalsModal({
                                             step="0.1"
                                             min="35"
                                             max="45"
-                                            placeholder="98.6"
+                                            placeholder="37.0"
                                             required
                                         />
                                         {errors.temperature && (

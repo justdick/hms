@@ -13,6 +13,9 @@ class WardController extends Controller
     public function index()
     {
         $wards = Ward::with(['beds:id,ward_id,status'])
+            ->withCount(['admissions as admitted_patients_count' => function ($query) {
+                $query->where('status', 'admitted');
+            }])
             ->orderBy('name')
             ->get();
 

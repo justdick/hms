@@ -4,6 +4,7 @@ use App\Http\Controllers\Billing\AccountsController;
 use App\Http\Controllers\Billing\BillAdjustmentController;
 use App\Http\Controllers\Billing\BillingConfigurationController;
 use App\Http\Controllers\Billing\HistoryController;
+use App\Http\Controllers\Billing\PatientAccountController;
 use App\Http\Controllers\Billing\PaymentController;
 use App\Http\Controllers\Billing\ReconciliationController;
 use App\Http\Controllers\Billing\ReportController;
@@ -38,10 +39,18 @@ Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function
     Route::post('/checkin/{checkin}/billing-override', [PaymentController::class, 'createBillingOverride'])->name('billing-override.create')->middleware('can:billing.override');
     Route::get('/checkin/{checkin}/owing-charges', [PaymentController::class, 'getOwingCharges'])->name('owing-charges')->middleware('can:billing.view-dept');
 
-    // Patient Credit Tag Routes
-    Route::post('/patients/{patient}/credit-tag', [PaymentController::class, 'addCreditTag'])->name('patients.credit-tag.add')->middleware('can:billing.manage-credit');
-    Route::delete('/patients/{patient}/credit-tag', [PaymentController::class, 'removeCreditTag'])->name('patients.credit-tag.remove')->middleware('can:billing.manage-credit');
-    Route::get('/credit-patients', [PaymentController::class, 'getCreditPatients'])->name('credit-patients')->middleware('can:billing.manage-credit');
+    // Patient Account Routes (Unified prepaid + credit system)
+    Route::prefix('patient-accounts')->name('patient-accounts.')->group(function () {
+        Route::get('/', [PatientAccountController::class, 'index'])->name('index')->middleware('can:billing.collect');
+        Route::post('/deposit', [PatientAccountController::class, 'deposit'])->name('deposit')->middleware('can:billing.create');
+        Route::get('/search-patients', [PatientAccountController::class, 'searchPatients'])->name('search-patients')->middleware('can:billing.collect');
+        Route::get('/patient/{patient}', [PatientAccountController::class, 'show'])->name('show')->middleware('can:billing.collect');
+        Route::get('/patient/{patient}/summary', [PatientAccountController::class, 'summary'])->name('summary')->middleware('can:billing.collect');
+        Route::get('/patient/{patient}/transactions', [PatientAccountController::class, 'transactions'])->name('transactions')->middleware('can:billing.collect');
+        Route::post('/patient/{patient}/credit-limit', [PatientAccountController::class, 'setCreditLimit'])->name('credit-limit')->middleware('can:billing.manage-credit');
+        Route::post('/patient/{patient}/adjustment', [PatientAccountController::class, 'adjustment'])->name('adjustment')->middleware('can:billing.manage-credit');
+        Route::post('/patient/{patient}/refund', [PatientAccountController::class, 'refund'])->name('refund')->middleware('can:billing.refund-deposits');
+    });
 
     // Bill Adjustment Routes
     Route::post('/charges/{charge}/waive', [BillAdjustmentController::class, 'waive'])->name('charges.waive');
@@ -66,9 +75,6 @@ Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function
     // Finance Officer Accounts Section
     Route::prefix('accounts')->name('accounts.')->middleware('can:billing.view-all')->group(function () {
         Route::get('/', [AccountsController::class, 'index'])->name('index');
-
-        // Credit Patients Route
-        Route::get('/credit-patients', [AccountsController::class, 'creditPatients'])->name('credit-patients')->middleware('can:billing.manage-credit');
 
         // Reconciliation Routes
         Route::prefix('reconciliation')->name('reconciliation.')->middleware('can:billing.reconcile')->group(function () {

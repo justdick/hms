@@ -25,6 +25,8 @@ class LabService extends Model
         'clinical_significance',
         'test_parameters',
         'is_active',
+        'is_imaging',
+        'modality',
     ];
 
     protected function casts(): array
@@ -32,6 +34,7 @@ class LabService extends Model
         return [
             'price' => 'decimal:2',
             'is_active' => 'boolean',
+            'is_imaging' => 'boolean',
             'test_parameters' => 'array',
         ];
     }
@@ -67,5 +70,15 @@ class LabService extends Model
                 ->orWhere('code', 'LIKE', "%{$term}%")
                 ->orWhere('description', 'LIKE', "%{$term}%");
         });
+    }
+
+    public function scopeImaging($query): void
+    {
+        $query->where('is_imaging', true);
+    }
+
+    public function scopeLaboratory($query): void
+    {
+        $query->where('is_imaging', false);
     }
 }

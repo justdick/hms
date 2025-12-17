@@ -30,6 +30,7 @@ use App\Policies\NhisMappingPolicy;
 use App\Policies\NhisTariffPolicy;
 use App\Policies\PatientCheckinPolicy;
 use App\Policies\PatientPolicy;
+use App\Policies\PricingDashboardPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -66,6 +67,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PatientCheckin::class, PatientCheckinPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
+
+        // Register string-based policies for non-model resources
+        $pricingPolicy = new PricingDashboardPolicy;
+        Gate::define('viewAny-pricing-dashboard', fn (User $user) => $pricingPolicy->viewAny($user));
+        Gate::define('updateCashPrice-pricing-dashboard', fn (User $user) => $pricingPolicy->updateCashPrice($user));
+        Gate::define('updateInsuranceCopay-pricing-dashboard', fn (User $user) => $pricingPolicy->updateInsuranceCopay($user));
+        Gate::define('updateInsuranceCoverage-pricing-dashboard', fn (User $user) => $pricingPolicy->updateInsuranceCoverage($user));
+        Gate::define('bulkUpdate-pricing-dashboard', fn (User $user) => $pricingPolicy->bulkUpdate($user));
+        Gate::define('export-pricing-dashboard', fn (User $user) => $pricingPolicy->export($user));
+        Gate::define('import-pricing-dashboard', fn (User $user) => $pricingPolicy->import($user));
 
         // Register observers
         Charge::observe(ChargeObserver::class);

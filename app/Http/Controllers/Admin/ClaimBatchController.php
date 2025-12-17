@@ -64,7 +64,11 @@ class ClaimBatchController extends Controller
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
-        $batches = $query->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 5);
+        $paginated = $query->paginate($perPage)->withQueryString();
+
+        // Transform data while keeping flat pagination structure
+        $batches = $paginated->through(fn ($batch) => (new ClaimBatchResource($batch))->resolve());
 
         // Get vetted claims available for batching
         $vettedClaimsCount = InsuranceClaim::where('status', 'vetted')
@@ -72,7 +76,7 @@ class ClaimBatchController extends Controller
             ->count();
 
         return Inertia::render('Admin/Insurance/Batches/Index', [
-            'batches' => ClaimBatchResource::collection($batches),
+            'batches' => $batches,
             'filters' => $request->only(['status', 'period', 'search']),
             'stats' => [
                 'total' => ClaimBatch::count(),

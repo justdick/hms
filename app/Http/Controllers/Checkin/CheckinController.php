@@ -86,8 +86,28 @@ class CheckinController extends Controller
             'department_id' => 'required|exists:departments,id',
             'notes' => 'nullable|string',
             'has_insurance' => 'nullable|boolean',
-            'claim_check_code' => 'nullable|required_if:has_insurance,true|string|max:50|unique:patient_checkins,claim_check_code',
+            'claim_check_code' => [
+                'nullable',
+                'required_if:has_insurance,true',
+                'string',
+                'max:50',
+            ],
+            'service_date' => 'nullable|date|before_or_equal:today',
         ]);
+
+        // Check for duplicate CCC for same patient within 24 hours
+        if (! empty($validated['claim_check_code'])) {
+            $duplicateCcc = PatientCheckin::where('patient_id', $validated['patient_id'])
+                ->where('claim_check_code', $validated['claim_check_code'])
+                ->where('checked_in_at', '>=', now()->subHours(24))
+                ->exists();
+
+            if ($duplicateCcc) {
+                return back()->withErrors([
+                    'claim_check_code' => 'This CCC was already used for this patient within the last 24 hours.',
+                ])->withInput();
+            }
+        }
 
         $patient = Patient::with('activeInsurance.plan.provider')->find($validated['patient_id']);
 
@@ -134,11 +154,17 @@ class CheckinController extends Controller
             ])->withInput();
         }
 
+        // Use provided service_date or default to today
+        $serviceDate = ! empty($validated['service_date'])
+            ? $validated['service_date']
+            : now()->toDateString();
+
         $checkin = PatientCheckin::create([
             'patient_id' => $validated['patient_id'],
             'department_id' => $validated['department_id'],
             'checked_in_by' => auth()->id(),
             'checked_in_at' => now(),
+            'service_date' => $serviceDate,
             'status' => 'checked_in',
             'notes' => $validated['notes'] ?? null,
             'claim_check_code' => $validated['claim_check_code'] ?? null,

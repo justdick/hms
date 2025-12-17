@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Calendar, Eye, FileCheck, Pencil } from 'lucide-react';
+import { ArrowUpDown, Calendar, Eye, FileCheck, Pencil, Trash2 } from 'lucide-react';
 
 export interface InsuranceProvider {
     id: number;
@@ -102,6 +102,7 @@ export const createClaimsColumns = (
     onVetClaim: (claimId: number) => void,
     onViewClaim: (claimId: number) => void,
     onEditClaim: (claimId: number) => void,
+    onDeleteClaim: (claimId: number) => void,
 ): ColumnDef<InsuranceClaim>[] => [
     {
         accessorKey: 'claim_check_code',
@@ -156,18 +157,13 @@ export const createClaimsColumns = (
         },
     },
     {
-        id: 'insurance',
-        header: 'Insurance',
+        accessorKey: 'folder_id',
+        id: 'folder_id',
+        header: 'Folder No.',
         cell: ({ row }) => {
-            const claim = row.original;
             return (
-                <div className="space-y-1">
-                    <div className="font-medium">
-                        {claim.patient_insurance?.plan?.provider.name || 'N/A'}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                        {claim.patient_insurance?.plan?.plan_name || ''}
-                    </div>
+                <div className="font-mono text-sm">
+                    {row.original.folder_id || 'N/A'}
                 </div>
             );
         },
@@ -287,6 +283,17 @@ export const createClaimsColumns = (
                     >
                         <Eye className="h-4 w-4" />
                     </Button>
+                    {claim.status === 'pending_vetting' && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDeleteClaim(claim.id)}
+                            aria-label={`Delete claim ${claim.claim_check_code}`}
+                            className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                 </div>
             );
         },

@@ -98,6 +98,7 @@ class PermissionSeeder extends Seeder
             'billing.manage-credit' => 'Add or remove patient credit tags',
             'billing.void' => 'Void payments',
             'billing.refund' => 'Process refunds',
+            'billing.refund-deposits' => 'Refund advance deposits',
 
             // Department Management
             'departments.view' => 'View departments',
@@ -241,6 +242,10 @@ class PermissionSeeder extends Seeder
             // Theme Settings Management
             'settings.view-theme' => 'View application theme settings',
             'settings.manage-theme' => 'Manage application theme and branding settings',
+
+            // Pricing Dashboard Management
+            'pricing.view' => 'View unified pricing dashboard',
+            'pricing.edit' => 'Edit prices and copay amounts in pricing dashboard',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -446,6 +451,8 @@ class PermissionSeeder extends Seeder
             'gdrg-tariffs.manage',
             'nhis-settings.view',
             'nhis-settings.manage',
+            'pricing.view',
+            'pricing.edit',
         ]);
 
         // Admin gets ALL permissions automatically

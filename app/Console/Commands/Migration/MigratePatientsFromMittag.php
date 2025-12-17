@@ -133,7 +133,12 @@ class MigratePatientsFromMittag extends Command
     private function mapPatientData(object $old): array
     {
         // Parse name - old system has sname (surname), fname (first), mname (middle)
+        // Combine first name and middle name into first_name field
         $firstName = trim($old->fname) ?: 'Unknown';
+        $middleName = trim($old->mname ?? '');
+        if ($middleName) {
+            $firstName = $firstName.' '.$middleName;
+        }
         $lastName = trim($old->sname) ?: 'Unknown';
 
         // Map gender

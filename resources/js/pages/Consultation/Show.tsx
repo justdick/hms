@@ -1,6 +1,7 @@
 import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
+import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
 import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
@@ -117,9 +118,38 @@ interface Prescription {
     medication_name: string;
     frequency: string;
     duration: string;
+    dose_quantity?: string;
+    quantity_to_dispense?: number;
+    instructions?: string;
+    status: string;
+    drug_id?: number;
+    drug?: Drug;
+    refilled_from_prescription_id?: number;
+}
+
+interface PreviousPrescription {
+    id: number;
+    medication_name: string;
+    dose_quantity?: string;
+    frequency: string;
+    duration: string;
     instructions?: string;
     status: string;
     drug?: Drug;
+    consultation: {
+        id: number;
+        started_at: string;
+        doctor: {
+            id: number;
+            name: string;
+        };
+        patient_checkin: {
+            department: {
+                id: number;
+                name: string;
+            };
+        };
+    };
 }
 
 interface LabService {
@@ -203,6 +233,7 @@ interface ConsultationProcedure {
 interface Consultation {
     id: number;
     started_at: string;
+    service_date?: string;
     completed_at?: string;
     status: string;
     presenting_complaint?: string;
@@ -217,6 +248,7 @@ interface Consultation {
         patient: PatientWithAdmission;
         department: Department;
         checked_in_at: string;
+        service_date?: string;
         vital_signs?: VitalSigns[]; // Note: Laravel serializes vitalSigns relationship as vital_signs in JSON
     };
     doctor: Doctor;
@@ -260,7 +292,6 @@ interface ServiceAccessOverride {
 
 interface Props {
     consultation: Consultation;
-    labServices: LabService[];
     patientHistory?: {
         previousConsultations: {
             id: number;
@@ -303,7 +334,7 @@ interface Props {
             }[];
             lab_orders?: LabOrder[];
         }[];
-        previousPrescriptions: Prescription[];
+        previousPrescriptions: PreviousPrescription[];
         previousMinorProcedures?: {
             id: number;
             performed_at: string;
@@ -365,7 +396,6 @@ interface Props {
 
 export default function ConsultationShow({
     consultation,
-    labServices,
     patientHistory,
     patientHistories,
     availableWards,
@@ -378,13 +408,20 @@ export default function ConsultationShow({
     pendingCharges = [],
     activeOverride,
 }: Props) {
-    const [activeTab, setActiveTab] = useState('notes');
+    const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Lab order state
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
+    const [selectedLabService, setSelectedLabService] = useState<{
+        id: number;
+        name: string;
+        code: string;
+        category: string;
+        sample_type: string;
+    } | null>(null);
     const {
         data: labOrderData,
         setData: setLabOrderData,
@@ -452,6 +489,17 @@ export default function ConsultationShow({
         type: 'diagnosis' | 'prescription';
         id: number | null;
     }>({ open: false, type: 'diagnosis', id: null });
+    const [editingPrescription, setEditingPrescription] = useState<{
+        id: number;
+        medication_name: string;
+        frequency: string;
+        duration: string;
+        dose_quantity?: string;
+        quantity_to_dispense?: number;
+        instructions?: string;
+        status: string;
+        drug_id?: number;
+    } | null>(null);
 
     const {
         data: admissionData,
@@ -581,6 +629,58 @@ export default function ConsultationShow({
         });
     };
 
+    const handlePrescriptionEdit = (prescription: {
+        id: number;
+        medication_name: string;
+        frequency: string;
+        duration: string;
+        dose_quantity?: string;
+        quantity_to_dispense?: number;
+        instructions?: string;
+        status: string;
+        drug_id?: number;
+    }) => {
+        setEditingPrescription(prescription);
+        // Populate form with prescription data
+        setPrescriptionData('drug_id', prescription.drug_id || null);
+        setPrescriptionData('medication_name', prescription.medication_name);
+        setPrescriptionData('dose_quantity', prescription.dose_quantity || '');
+        setPrescriptionData('frequency', prescription.frequency);
+        setPrescriptionData('duration', prescription.duration);
+        setPrescriptionData('quantity_to_dispense', prescription.quantity_to_dispense || '');
+        setPrescriptionData('instructions', prescription.instructions || '');
+    };
+
+    const handlePrescriptionCancelEdit = () => {
+        setEditingPrescription(null);
+        resetPrescription();
+    };
+
+    const handlePrescriptionUpdate = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingPrescription) return;
+
+        router.patch(
+            `/consultation/${consultation.id}/prescriptions/${editingPrescription.id}`,
+            {
+                drug_id: prescriptionData.drug_id,
+                medication_name: prescriptionData.medication_name,
+                dose_quantity: prescriptionData.dose_quantity,
+                frequency: prescriptionData.frequency,
+                duration: prescriptionData.duration,
+                quantity_to_dispense: prescriptionData.quantity_to_dispense,
+                instructions: prescriptionData.instructions,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setEditingPrescription(null);
+                    resetPrescription();
+                },
+            }
+        );
+    };
+
     const handleDiagnosisAdd = (
         diagnosisId: number,
         type: 'provisional' | 'principal',
@@ -606,6 +706,7 @@ export default function ConsultationShow({
         postLabOrder(`/consultation/${consultation.id}/lab-orders`, {
             onSuccess: () => {
                 resetLabOrder();
+                setSelectedLabService(null);
                 setShowLabOrderDialog(false);
             },
         });
@@ -815,10 +916,15 @@ export default function ConsultationShow({
                                 <div className="flex items-center gap-2">
                                     <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                                     <span className="text-gray-700 dark:text-gray-300">
-                                        {formatDateTime(
-                                            consultation.patient_checkin
-                                                .checked_in_at,
-                                        )}
+                                        {new Date(
+                                            consultation.service_date ||
+                                                consultation.patient_checkin.service_date ||
+                                                consultation.started_at,
+                                        ).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                        })}
                                     </span>
                                 </div>
                             </div>
@@ -826,10 +932,6 @@ export default function ConsultationShow({
 
                         <div className="flex items-center gap-3">
                             {getStatusBadge(consultation.status)}
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                Started:{' '}
-                                {formatDateTime(consultation.started_at)}
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1022,7 +1124,7 @@ export default function ConsultationShow({
                                                                 .latest_vital_signs[0]
                                                                 .temperature
                                                         }
-                                                        °F
+                                                        °C
                                                     </span>
                                                 </div>
                                             </div>
@@ -1063,6 +1165,7 @@ export default function ConsultationShow({
                                 <Button
                                     onClick={() => setShowCompleteDialog(true)}
                                     variant="outline"
+                                    className="border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
                                 >
                                     Complete Consultation
                                 </Button>
@@ -1075,7 +1178,7 @@ export default function ConsultationShow({
                                         <DialogTrigger asChild>
                                             <Button
                                                 variant="outline"
-                                                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                                                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
                                             >
                                                 <UserPlus className="mr-2 h-4 w-4" />
                                                 Admit Patient
@@ -1190,7 +1293,7 @@ export default function ConsultationShow({
                                     <DialogTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                                            className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white"
                                         >
                                             <ArrowRightLeft className="mr-2 h-4 w-4" />
                                             Transfer Patient
@@ -1323,89 +1426,50 @@ export default function ConsultationShow({
                     onValueChange={setActiveTab}
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-6">
-                        <TabsTrigger
-                            value="notes"
-                            className="flex items-center gap-2"
-                        >
-                            <FileText className="h-4 w-4" />
-                            Consultation Notes
-                        </TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-6 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                         <TabsTrigger
                             value="vitals"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-rose-50 text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
                         >
                             <Activity className="h-4 w-4" />
                             Vitals
                         </TabsTrigger>
                         <TabsTrigger
+                            value="notes"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-blue-50 text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Consultation Notes
+                        </TabsTrigger>
+                        <TabsTrigger
                             value="diagnosis"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-violet-50 text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
                         >
                             <FileText className="h-4 w-4" />
                             Diagnosis
                         </TabsTrigger>
                         <TabsTrigger
                             value="prescriptions"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-green-50 text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300"
                         >
                             <Pill className="h-4 w-4" />
                             Prescriptions
                         </TabsTrigger>
                         <TabsTrigger
                             value="orders"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-teal-50 text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
                         >
                             <TestTube className="h-4 w-4" />
                             Lab Orders
                         </TabsTrigger>
                         <TabsTrigger
                             value="theatre"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-amber-50 text-amber-700 shadow-none transition-all hover:bg-amber-100 data-[state=active]:border-amber-600 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:shadow-none dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-900 dark:data-[state=active]:border-amber-400 dark:data-[state=active]:bg-amber-900 dark:data-[state=active]:text-amber-300"
                         >
                             <Stethoscope className="h-4 w-4" />
                             Theatre
                         </TabsTrigger>
                     </TabsList>
-
-                    {/* Medical History & Consultation Notes Tab */}
-                    <TabsContent value="notes">
-                        <div className="space-y-6">
-                            <MedicalHistoryNotes
-                                initialData={{
-                                    presenting_complaint:
-                                        data.presenting_complaint,
-                                    history_presenting_complaint:
-                                        data.history_presenting_complaint,
-                                    on_direct_questioning:
-                                        data.on_direct_questioning,
-                                    examination_findings:
-                                        data.examination_findings,
-                                    assessment_notes: data.assessment_notes,
-                                    plan_notes: data.plan_notes,
-                                    follow_up_date: data.follow_up_date,
-                                }}
-                                patientHistories={{
-                                    past_medical_surgical_history:
-                                        data.past_medical_surgical_history,
-                                    drug_history: data.drug_history,
-                                    family_history: data.family_history,
-                                    social_history: data.social_history,
-                                }}
-                                onDataChange={(newData) => {
-                                    Object.keys(newData).forEach((key) => {
-                                        handleDataChange(key, newData[key]);
-                                    });
-                                }}
-                                onPatientHistoryUpdate={
-                                    handlePatientHistoryUpdate
-                                }
-                                onSubmit={handleSubmit}
-                                processing={processing || isSaving}
-                                status={consultation.status}
-                            />
-                        </div>
-                    </TabsContent>
 
                     {/* Vitals Tab */}
                     <TabsContent value="vitals">
@@ -1433,10 +1497,10 @@ export default function ConsultationShow({
                                                     <Activity className="h-5 w-5 text-blue-600" />
                                                 </div>
                                                 <p className="text-3xl font-bold text-blue-600">
-                                                    {latestVitals.temperature}°F
+                                                    {latestVitals.temperature}°C
                                                 </p>
                                                 <p className="mt-2 text-xs text-blue-700">
-                                                    Normal: 97-99°F
+                                                    Normal: 36.1-37.2°C
                                                 </p>
                                             </div>
                                             <div className="rounded-lg border border-red-200 bg-red-50 p-6 transition-all hover:shadow-md">
@@ -1544,7 +1608,7 @@ export default function ConsultationShow({
                                                                     {
                                                                         vitals.temperature
                                                                     }
-                                                                    °F
+                                                                    °C
                                                                 </p>
                                                             </div>
                                                             <div>
@@ -1591,6 +1655,45 @@ export default function ConsultationShow({
                                     </CardContent>
                                 </Card>
                             )}
+                        </div>
+                    </TabsContent>
+
+                    {/* Medical History & Consultation Notes Tab */}
+                    <TabsContent value="notes">
+                        <div className="space-y-6">
+                            <MedicalHistoryNotes
+                                initialData={{
+                                    presenting_complaint:
+                                        data.presenting_complaint,
+                                    history_presenting_complaint:
+                                        data.history_presenting_complaint,
+                                    on_direct_questioning:
+                                        data.on_direct_questioning,
+                                    examination_findings:
+                                        data.examination_findings,
+                                    assessment_notes: data.assessment_notes,
+                                    plan_notes: data.plan_notes,
+                                    follow_up_date: data.follow_up_date,
+                                }}
+                                patientHistories={{
+                                    past_medical_surgical_history:
+                                        data.past_medical_surgical_history,
+                                    drug_history: data.drug_history,
+                                    family_history: data.family_history,
+                                    social_history: data.social_history,
+                                }}
+                                onDataChange={(newData) => {
+                                    Object.keys(newData).forEach((key) => {
+                                        handleDataChange(key, newData[key]);
+                                    });
+                                }}
+                                onPatientHistoryUpdate={
+                                    handlePatientHistoryUpdate
+                                }
+                                onSubmit={handleSubmit}
+                                processing={processing || isSaving}
+                                status={consultation.status}
+                            />
                         </div>
                     </TabsContent>
 
@@ -1647,8 +1750,14 @@ export default function ConsultationShow({
                                                 id,
                                             })
                                         }
+                                        onEdit={handlePrescriptionEdit}
+                                        onCancelEdit={handlePrescriptionCancelEdit}
+                                        onUpdate={handlePrescriptionUpdate}
+                                        editingPrescription={editingPrescription}
                                         processing={prescriptionProcessing}
+                                        consultationId={consultation.id}
                                         consultationStatus={consultation.status}
+                                        previousPrescriptions={patientHistory?.previousPrescriptions}
                                     />
                                 </CardContent>
                             </Card>
@@ -1685,49 +1794,34 @@ export default function ConsultationShow({
                                                     className="space-y-4"
                                                 >
                                                     <div>
-                                                        <Label htmlFor="lab_service">
-                                                            Select Lab Test
+                                                        <Label>
+                                                            Search Lab Test
                                                         </Label>
-                                                        <Select
-                                                            value={
-                                                                labOrderData.lab_service_id
-                                                            }
-                                                            onValueChange={(
-                                                                value,
-                                                            ) =>
+                                                        <AsyncLabServiceSelect
+                                                            onSelect={(service) => {
+                                                                setSelectedLabService(service);
                                                                 setLabOrderData(
                                                                     'lab_service_id',
-                                                                    value,
-                                                                )
+                                                                    service.id.toString(),
+                                                                );
+                                                            }}
+                                                            excludeIds={consultation.lab_orders?.map(
+                                                                (o) => o.lab_service.id,
+                                                            ) || []}
+                                                            placeholder={
+                                                                selectedLabService
+                                                                    ? selectedLabService.name
+                                                                    : 'Search by test name or code...'
                                                             }
-                                                            required
-                                                        >
-                                                            <SelectTrigger id="lab_service">
-                                                                <SelectValue placeholder="Choose a lab test" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {labServices.map(
-                                                                    (
-                                                                        service,
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                service.id
-                                                                            }
-                                                                            value={service.id.toString()}
-                                                                        >
-                                                                            {
-                                                                                service.name
-                                                                            }{' '}
-                                                                            - $
-                                                                            {
-                                                                                service.price
-                                                                            }
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
+                                                        />
+                                                        {selectedLabService && (
+                                                            <div className="mt-2 rounded-md bg-muted p-2 text-sm">
+                                                                <p className="font-medium">{selectedLabService.name}</p>
+                                                                <p className="text-muted-foreground">
+                                                                    {selectedLabService.code} • {selectedLabService.category} • {selectedLabService.sample_type}
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div>

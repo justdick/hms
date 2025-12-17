@@ -175,8 +175,10 @@ class MedicationScheduleService
 
     /**
      * Generate medication administration schedule from pattern.
+     *
+     * @param  Carbon|null  $startFrom  Optional start date (e.g., for backdated ward rounds)
      */
-    public function generateScheduleFromPattern(Prescription $prescription): void
+    public function generateScheduleFromPattern(Prescription $prescription, ?Carbon $startFrom = null): void
     {
         // Get patient admission
         $admission = $this->getPatientAdmission($prescription);
@@ -206,7 +208,9 @@ class MedicationScheduleService
 
         $schedulePattern = $prescription->schedule_pattern;
         $duration = $this->parseDuration($prescription->duration);
-        $startDate = now()->startOfDay();
+
+        // Use provided start date, or get from ward round if backdated, or default to today
+        $startDate = $startFrom ?? $this->getScheduleStartDate($prescription);
 
         // Generate schedule for each day
         for ($dayNumber = 1; $dayNumber <= $duration; $dayNumber++) {
@@ -240,6 +244,24 @@ class MedicationScheduleService
                 ]);
             }
         }
+    }
+
+    /**
+     * Get the start date for medication schedule based on prescription source.
+     * For backdated ward rounds, use the round_datetime.
+     */
+    private function getScheduleStartDate(Prescription $prescription): Carbon
+    {
+        // If prescription is from a ward round, use the round's datetime
+        if ($prescription->prescribable_type === 'App\Models\WardRound') {
+            $wardRound = $prescription->prescribable;
+            if ($wardRound && $wardRound->round_datetime) {
+                return Carbon::parse($wardRound->round_datetime)->startOfDay();
+            }
+        }
+
+        // Default to today
+        return now()->startOfDay();
     }
 
     /**

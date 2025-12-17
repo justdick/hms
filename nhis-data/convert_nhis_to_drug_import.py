@@ -17,6 +17,29 @@ drugs = []
 for item in nhis_items:
     nhis_code = item['nhis_code']
     name = item['name'].strip()
+    unit = item.get('unit', '').strip()
+    
+    # The NHIS CSV has names split across 'name' and 'unit' columns
+    # e.g., name="Artemether + Lumefantrine Tablet, 20 mg + 120" unit="mg (24's) 1 Course"
+    # We need to combine them to get the full name with pack size
+    if unit:
+        # Extract pack size info like "(24's)", "(6's)", "(12 tabs)" from unit
+        # Note: Handle various apostrophe characters: ' ` and Unicode right single quote
+        pack_match = re.search(r"(\(\d+['`\u2019]?s?\)|\(\d+\s*tabs?\))", unit, re.IGNORECASE)
+        if pack_match:
+            pack_size = pack_match.group(1)
+            # Normalize apostrophe to standard single quote
+            pack_size = pack_size.replace('\u2019', "'").replace('`', "'")
+            # Check if name appears truncated (ends mid-word or with partial strength)
+            # If unit starts with continuation of strength (e.g., "mg"), append it
+            if unit.startswith('mg'):
+                # Name was cut off mid-strength, append the rest
+                strength_continuation = re.match(r'^(mg[^(]*)', unit)
+                if strength_continuation:
+                    name = name + ' ' + strength_continuation.group(1).strip()
+            # Append pack size to name
+            if pack_size not in name:
+                name = name + ' ' + pack_size
     
     # Try to extract form from name
     form = 'other'

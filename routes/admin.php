@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\NhisSettingsController;
+use App\Http\Controllers\Admin\PricingDashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Settings\ThemeSettingController;
@@ -39,4 +40,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // NHIS Settings
     Route::get('nhis-settings', [NhisSettingsController::class, 'index'])->name('nhis-settings.index');
     Route::put('nhis-settings', [NhisSettingsController::class, 'update'])->name('nhis-settings.update');
+
+    // Pricing Dashboard
+    Route::get('pricing-dashboard', [PricingDashboardController::class, 'index'])->name('pricing-dashboard.index');
+    Route::put('pricing-dashboard/cash-price', [PricingDashboardController::class, 'updateCashPrice'])->name('pricing-dashboard.update-cash-price');
+    Route::put('pricing-dashboard/insurance-copay', [PricingDashboardController::class, 'updateInsuranceCopay'])->name('pricing-dashboard.update-insurance-copay');
+    Route::put('pricing-dashboard/insurance-coverage', [PricingDashboardController::class, 'updateInsuranceCoverage'])->name('pricing-dashboard.update-insurance-coverage');
+    Route::post('pricing-dashboard/bulk-update', [PricingDashboardController::class, 'bulkUpdate'])->name('pricing-dashboard.bulk-update');
+    Route::get('pricing-dashboard/export', [PricingDashboardController::class, 'export'])->name('pricing-dashboard.export');
+    Route::post('pricing-dashboard/import', [PricingDashboardController::class, 'import'])->name('pricing-dashboard.import');
+    Route::get('pricing-dashboard/import-template', [PricingDashboardController::class, 'downloadImportTemplate'])->name('pricing-dashboard.import-template');
+    Route::get('pricing-dashboard/item-history', [PricingDashboardController::class, 'itemHistory'])->name('pricing-dashboard.item-history');
 });

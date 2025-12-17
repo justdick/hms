@@ -37,7 +37,6 @@ import {
     Phone,
     Printer,
     Receipt,
-    ShieldCheck,
     Smartphone,
     User,
     Wallet,
@@ -51,8 +50,6 @@ interface Patient {
     last_name: string;
     patient_number: string;
     phone_number: string;
-    is_credit_eligible?: boolean;
-    credit_reason?: string | null;
 }
 
 interface Department {
@@ -345,12 +342,6 @@ export function PatientBillingModal({
                                         )}
                                     </div>
                                 </div>
-                                {patient.patient.is_credit_eligible && (
-                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                                        <ShieldCheck className="mr-1 h-3 w-3" />
-                                        Credit Account
-                                    </Badge>
-                                )}
                             </div>
 
                             {/* Summary Cards */}

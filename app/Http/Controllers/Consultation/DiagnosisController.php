@@ -7,6 +7,7 @@ use App\Models\Consultation;
 use App\Models\ConsultationDiagnosis;
 use App\Models\Diagnosis;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DiagnosisController extends Controller
 {
@@ -18,25 +19,53 @@ class DiagnosisController extends Controller
             return response()->json([]);
         }
 
-        // Use FULLTEXT search for better performance with 12,500+ diagnoses
-        // Fall back to LIKE if FULLTEXT doesn't return results (for partial matches)
-        $diagnoses = Diagnosis::query()
-            ->whereFullText(['diagnosis', 'icd_10'], $query)
-            ->orderBy('diagnosis')
-            ->limit(20)
-            ->get(['id', 'diagnosis as name', 'icd_10 as icd_code']);
+        $diagnoses = collect();
 
-        // If no FULLTEXT results, fall back to LIKE for partial matching
+        // Use FULLTEXT search for better performance with 12,500+ diagnoses
+        // Fall back to LIKE if FULLTEXT doesn't return results or isn't supported
+        try {
+            $diagnoses = Diagnosis::query()
+                ->whereFullText(['diagnosis', 'icd_10'], $query)
+                ->orderBy('diagnosis')
+                ->limit(20)
+                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
+        } catch (\RuntimeException $e) {
+            // FULLTEXT not supported (e.g., SQLite in tests)
+        }
+
+        // Fall back to LIKE for partial matching
         if ($diagnoses->isEmpty()) {
             $diagnoses = Diagnosis::query()
                 ->where('diagnosis', 'like', "{$query}%")
                 ->orWhere('icd_10', 'like', "{$query}%")
                 ->orderBy('diagnosis')
                 ->limit(20)
-                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code']);
+                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
         }
 
         return response()->json($diagnoses);
+    }
+
+    public function storeCustom(Request $request)
+    {
+        $validated = $request->validate([
+            'diagnosis' => 'required|string|max:255|unique:diagnoses,diagnosis',
+        ]);
+
+        $diagnosis = Diagnosis::create([
+            'diagnosis' => $validated['diagnosis'],
+            'code' => 'CUSTOM-'.strtoupper(Str::random(8)),
+            'icd_10' => null,
+            'is_custom' => true,
+            'created_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'id' => $diagnosis->id,
+            'name' => $diagnosis->diagnosis,
+            'icd_code' => null,
+            'is_custom' => true,
+        ]);
     }
 
     public function store(Request $request, Consultation $consultation)

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -25,10 +24,6 @@ class Patient extends Model
         'emergency_contact_phone',
         'national_id',
         'status',
-        'is_credit_eligible',
-        'credit_reason',
-        'credit_authorized_by',
-        'credit_authorized_at',
         'past_medical_surgical_history',
         'drug_history',
         'family_history',
@@ -44,8 +39,6 @@ class Patient extends Model
             'date_of_birth' => 'date',
             'status' => 'string',
             'gender' => 'string',
-            'is_credit_eligible' => 'boolean',
-            'credit_authorized_at' => 'datetime',
         ];
     }
 
@@ -79,6 +72,21 @@ class Patient extends Model
         return $this->hasMany(PatientInsurance::class);
     }
 
+    public function account(): HasOne
+    {
+        return $this->hasOne(PatientAccount::class);
+    }
+
+    public function getAccountBalanceAttribute(): float
+    {
+        return (float) ($this->account?->balance ?? 0);
+    }
+
+    public function getAvailableBalanceAttribute(): float
+    {
+        return (float) ($this->account?->available_balance ?? 0);
+    }
+
     public function activeInsurance(): HasOne
     {
         return $this->hasOne(PatientInsurance::class)
@@ -103,10 +111,26 @@ class Patient extends Model
     public function scopeSearch($query, string $search): void
     {
         $query->where(function ($q) use ($search) {
-            $q->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('patient_number', 'like', "%{$search}%")
-                ->orWhere('phone_number', 'like', "%{$search}%");
+            // Check if search contains multiple words (likely first + last name)
+            $words = preg_split('/\s+/', trim($search));
+
+            if (count($words) >= 2) {
+                // Multi-word search: match first word against first_name AND second against last_name
+                $q->where(function ($subQ) use ($words) {
+                    $subQ->where('first_name', 'like', "%{$words[0]}%")
+                        ->where('last_name', 'like', "%{$words[1]}%");
+                })->orWhere(function ($subQ) use ($words) {
+                    // Also try reverse order (last_name first_name)
+                    $subQ->where('last_name', 'like', "%{$words[0]}%")
+                        ->where('first_name', 'like', "%{$words[1]}%");
+                });
+            } else {
+                // Single word: search across all fields
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            }
         });
     }
 
@@ -134,26 +158,68 @@ class Patient extends Model
     }
 
     /**
-     * Get the user who authorized the credit tag.
+     * Check if the patient has credit privilege (via PatientAccount).
      */
-    public function creditAuthorizedByUser(): BelongsTo
+    public function hasCreditPrivilege(): bool
     {
-        return $this->belongsTo(User::class, 'credit_authorized_by');
+        return $this->account && $this->account->hasCreditPrivilege();
     }
 
     /**
-     * Check if the patient is credit eligible.
+     * Get credit limit from PatientAccount.
      */
-    public function isCreditEligible(): bool
+    public function getCreditLimitAttribute(): float
     {
-        return $this->is_credit_eligible === true;
+        return (float) ($this->account?->credit_limit ?? 0);
     }
 
     /**
-     * Scope to get only credit-eligible patients.
+     * Get deposit balance from PatientAccount.
+     */
+    public function getDepositBalanceAttribute(): float
+    {
+        return (float) ($this->account?->deposit_balance ?? 0);
+    }
+
+    /**
+     * Get amount currently owed (negative balance in account).
+     */
+    public function getAmountOwedAttribute(): float
+    {
+        return (float) ($this->account?->amount_owed ?? 0);
+    }
+
+    /**
+     * Get remaining credit available.
+     */
+    public function getRemainingCreditAttribute(): float
+    {
+        return (float) ($this->account?->remaining_credit ?? 0);
+    }
+
+    /**
+     * Check if patient can receive services worth a given amount.
+     */
+    public function canReceiveServices(float $amount = 0): bool
+    {
+        // Has deposit balance
+        if ($this->deposit_balance > 0) {
+            return true;
+        }
+
+        // Has credit privilege and within limit
+        if ($this->hasCreditPrivilege() && $this->account) {
+            return $this->account->canReceiveServices($amount);
+        }
+
+        return false;
+    }
+
+    /**
+     * Scope to get only credit-eligible patients (via PatientAccount).
      */
     public function scopeCreditEligible($query)
     {
-        return $query->where('is_credit_eligible', true);
+        return $query->whereHas('account', fn ($aq) => $aq->where('credit_limit', '>', 0));
     }
 }

@@ -19,10 +19,6 @@ interface Patient {
     last_name: string;
     patient_number: string;
     phone_number: string;
-    is_credit_eligible?: boolean;
-    credit_reason?: string | null;
-    credit_authorized_by?: { name: string } | null;
-    credit_authorized_at?: string | null;
     total_owing?: number;
 }
 

@@ -29,12 +29,12 @@ AMLODITA2,"Amlodipine Tablet, 10 mg  Tablet",Amlodipine,tablet,10 mg,,piece,,car
 AMLODITA1,"Amlodipine Tablet, 5 mg  Tablet",Amlodipine,tablet,5 mg,,piece,,cardiovascular,,AMLODITA1
 AMOARTPO2,"Amodiaquine + Artesunate Granular Powder, 150",Amodiaquine,other,,,piece,,other,,AMOARTPO2
 AMOARTPO1,"Amodiaquine + Artesunate Granular Powder, 75 mg",Amodiaquine,other,75 mg,,piece,,other,,AMOARTPO1
-AMOARTTA2,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA2
-AMOARTTA4,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA4
-AMOARTTA5,"Amodiaquine + Artesunate Tablet, 270 mg + 100",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA5
-AMOARTTA6,"Amodiaquine + Artesunate Tablet, 270 mg + 100",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA6
-AMOARTTA3,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA3
-AMOARTTA1,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA1
+AMOARTTA2,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg (12 tabs)",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA2
+AMOARTTA4,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg (3's)",Amodiaquine,tablet,135 mg,,piece,,other,,AMOARTTA4
+AMOARTTA5,"Amodiaquine + Artesunate Tablet, 270 mg + 100 mg (3's)",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA5
+AMOARTTA6,"Amodiaquine + Artesunate Tablet, 270 mg + 100 mg (6's)",Amodiaquine,tablet,270 mg,,piece,,other,,AMOARTTA6
+AMOARTTA3,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25 mg (3's)",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA3
+AMOARTTA1,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25 mg (6 tabs)",Amodiaquine,tablet,67.5 mg,,piece,,other,,AMOARTTA1
 COAMOXIN2,"Amoxicillin + Clavulanic Acid Injection, 1.2g  Vial",Amoxicillin,injection,1.2g,,vial,,antibiotics,,COAMOXIN2
 COAMOXIN1,"Amoxicillin + Clavulanic Acid Injection, 500 mg +",Amoxicillin,injection,500 mg,,vial,,antibiotics,,COAMOXIN1
 COAMOXSU1,"Amoxicillin + Clavulanic Acid Suspension, 250 mg +",Amoxicillin,suspension,250 mg,,bottle,,antibiotics,,COAMOXSU1
@@ -50,10 +50,10 @@ ANIMGLIN1,"Anti RH Immunoglobulin Injection, 1500IU /5ml  Vial",Anti,injection,1
 ANTESEIN1,Anti Tetanus Serum Injection 1500 IU  Vial,Anti,injection,1500 IU,,vial,,vaccines,,ANTESEIN1
 AQUEOUCR1,Aqueous Cream BP  100 G,Aqueous,cream,100 G,,tube,,other,,AQUEOUCR1
 ARTLUMSU1,"Artemether + Lumefantrine Suspension, (Powder For",Artemether,suspension,,,bottle,,other,,ARTLUMSU1
-ARTLUMTA3,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA3
-ARTLUMTA4,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA4
-ARTLUMTA1,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA1
-ARTLUMTA2,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA2
+ARTLUMTA3,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (12's)",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA3
+ARTLUMTA4,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (18's)",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA4
+ARTLUMTA1,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (24's)",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA1
+ARTLUMTA2,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (6's)",Artemether,tablet,20 mg,,piece,,other,,ARTLUMTA2
 ARTEMEIN2,Artemether Injection 80mg/mL  Ampoule,Artemether,injection,80mg/mL,,vial,,other,,ARTEMEIN2
 ARTLUMDT1,"Artermether + Lumefantrine Dispersible, (20 mg +",Artermether,other,20 mg,,piece,,other,,ARTLUMDT1
 ARTESUIN3,Artesunate injection 120mg  Vial,Artesunate,injection,120mg,,vial,,other,,ARTESUIN3

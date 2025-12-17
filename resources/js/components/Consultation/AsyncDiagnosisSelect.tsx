@@ -14,13 +14,14 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Diagnosis {
     id: number;
     name: string;
-    icd_code: string;
+    icd_code: string | null;
+    is_custom?: boolean;
 }
 
 interface Props {
@@ -42,6 +43,7 @@ export default function AsyncDiagnosisSelect({
     const [search, setSearch] = useState('');
     const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
     const [loading, setLoading] = useState(false);
+    const [creating, setCreating] = useState(false);
     const [selectedDiagnosis, setSelectedDiagnosis] =
         useState<Diagnosis | null>(null);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +113,37 @@ export default function AsyncDiagnosisSelect({
         setOpen(false);
     };
 
+    const handleCreateCustom = async () => {
+        if (search.length < 2 || creating) return;
+
+        setCreating(true);
+        try {
+            const response = await fetch('/consultation/diagnoses/custom', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
+                        'meta[name="csrf-token"]'
+                    )?.content || '',
+                },
+                body: JSON.stringify({ diagnosis: search }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('Failed to create custom diagnosis:', error);
+                return;
+            }
+
+            const newDiagnosis: Diagnosis = await response.json();
+            handleSelect(newDiagnosis);
+        } catch (error) {
+            console.error('Failed to create custom diagnosis:', error);
+        } finally {
+            setCreating(false);
+        }
+    };
+
     const displayValue = selectedDiagnosis?.name || placeholder;
 
     return (
@@ -150,8 +183,24 @@ export default function AsyncDiagnosisSelect({
                         {!loading &&
                             search.length >= 2 &&
                             diagnoses.length === 0 && (
-                                <CommandEmpty>
-                                    No diagnosis found.
+                                <CommandEmpty className="py-2">
+                                    <div className="text-center text-sm text-muted-foreground mb-2">
+                                        No diagnosis found for "{search}"
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={handleCreateCustom}
+                                        disabled={creating}
+                                    >
+                                        {creating ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Plus className="mr-2 h-4 w-4" />
+                                        )}
+                                        Add "{search}" as custom diagnosis
+                                    </Button>
                                 </CommandEmpty>
                             )}
                         {!loading && diagnoses.length > 0 && (
@@ -175,12 +224,21 @@ export default function AsyncDiagnosisSelect({
                                                 <span className="font-medium">
                                                     {diagnosis.name}
                                                 </span>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs"
-                                                >
-                                                    {diagnosis.icd_code}
-                                                </Badge>
+                                                {diagnosis.is_custom ? (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                                    >
+                                                        Custom
+                                                    </Badge>
+                                                ) : diagnosis.icd_code ? (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="text-xs"
+                                                    >
+                                                        {diagnosis.icd_code}
+                                                    </Badge>
+                                                ) : null}
                                             </div>
                                         </div>
                                     </CommandItem>

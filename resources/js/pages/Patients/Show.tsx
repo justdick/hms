@@ -1,5 +1,4 @@
 import CheckinModal from '@/components/Checkin/CheckinModal';
-import { ManageCreditModal } from '@/components/Patient/ManageCreditModal';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
+import { CreditLimitModal } from '@/pages/Billing/PatientAccounts/components/CreditLimitModal';
+import { DepositModal } from '@/pages/Billing/PatientAccounts/components/DepositModal';
 import patients from '@/routes/patients';
 import { Head, Link, router } from '@inertiajs/react';
 import {
@@ -29,10 +30,11 @@ import {
     IdCard,
     MapPin,
     Phone,
+    Plus,
     Shield,
-    Star,
     User,
     Users,
+    Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
 import BillingSummary from './components/BillingSummary';
@@ -83,8 +85,6 @@ interface Patient {
     emergency_contact_phone: string | null;
     national_id: string | null;
     status: string;
-    is_credit_eligible: boolean;
-    credit_reason: string | null;
     past_medical_surgical_history: string | null;
     drug_history: string | null;
     family_history: string | null;
@@ -116,6 +116,17 @@ interface BillingSummaryData {
     has_active_overrides: boolean;
 }
 
+interface PaymentMethod {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface AccountSummary {
+    balance: number;
+    credit_limit: number;
+}
+
 interface Props {
     patient: Patient;
     can_edit: boolean;
@@ -125,6 +136,8 @@ interface Props {
     billing_summary?: BillingSummaryData | null;
     can_process_payment?: boolean;
     can_manage_credit?: boolean;
+    payment_methods?: PaymentMethod[];
+    account_summary?: AccountSummary | null;
 }
 
 export default function PatientsShow({
@@ -136,9 +149,19 @@ export default function PatientsShow({
     billing_summary = null,
     can_process_payment = false,
     can_manage_credit = false,
+    payment_methods = [],
+    account_summary = null,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
-    const [creditModalOpen, setCreditModalOpen] = useState(false);
+    const [depositModalOpen, setDepositModalOpen] = useState(false);
+    const [creditLimitModalOpen, setCreditLimitModalOpen] = useState(false);
+
+    const formatCurrency = (amount: number | string) => {
+        return new Intl.NumberFormat('en-GH', {
+            style: 'currency',
+            currency: 'GHS',
+        }).format(Number(amount));
+    };
 
     const formatGender = (gender: string) => {
         return gender.charAt(0).toUpperCase() + gender.slice(1);
@@ -298,16 +321,6 @@ export default function PatientsShow({
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                {can_manage_credit && (
-                                    <Button
-                                        variant="outline"
-                                        className={`gap-2 ${patient.is_credit_eligible ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-950' : ''}`}
-                                        onClick={() => setCreditModalOpen(true)}
-                                    >
-                                        <Star className={`h-4 w-4 ${patient.is_credit_eligible ? 'fill-amber-500' : ''}`} />
-                                        {patient.is_credit_eligible ? 'Credit Patient' : 'Add Credit'}
-                                    </Button>
-                                )}
                                 {can_edit && (
                                     <Button
                                         variant="outline"
@@ -576,6 +589,66 @@ export default function PatientsShow({
                     {/* Billing Tab */}
                     {billing_summary && (
                         <TabsContent value="billing" className="space-y-6">
+                            {/* Account Actions */}
+                            {(can_process_payment || can_manage_credit) && (
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    <Wallet className="h-5 w-5" />
+                                                    Patient Account
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Manage deposits and credit limits
+                                                </CardDescription>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {can_manage_credit && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setCreditLimitModalOpen(true)}
+                                                    >
+                                                        <Shield className="mr-2 h-4 w-4" />
+                                                        Set Credit Limit
+                                                    </Button>
+                                                )}
+                                                {can_process_payment && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => setDepositModalOpen(true)}
+                                                    >
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        Add Deposit
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    {account_summary && (account_summary.balance !== 0 || account_summary.credit_limit > 0) && (
+                                        <CardContent>
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                <div className="rounded-lg border p-4">
+                                                    <p className="text-sm text-muted-foreground">Account Balance</p>
+                                                    <p className={`text-2xl font-bold ${account_summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {formatCurrency(account_summary.balance)}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-lg border p-4">
+                                                    <p className="text-sm text-muted-foreground">Credit Limit</p>
+                                                    <p className="text-2xl font-bold text-blue-600">
+                                                        {account_summary.credit_limit >= 999999999
+                                                            ? 'Unlimited'
+                                                            : formatCurrency(account_summary.credit_limit)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    )}
+                                </Card>
+                            )}
+
                             <BillingSummary
                                 billingSummary={billing_summary}
                                 canProcessPayment={can_process_payment}
@@ -928,16 +1001,39 @@ export default function PatientsShow({
                 />
             )}
 
-            {/* Credit Tag Modal */}
-            {can_manage_credit && (
-                <ManageCreditModal
-                    isOpen={creditModalOpen}
-                    onClose={() => setCreditModalOpen(false)}
-                    patientId={patient.id}
-                    patientName={patient.full_name}
-                    isCreditEligible={patient.is_credit_eligible}
+            {/* Deposit Modal */}
+            {payment_methods.length > 0 && (
+                <DepositModal
+                    isOpen={depositModalOpen}
+                    onClose={() => setDepositModalOpen(false)}
+                    paymentMethods={payment_methods}
+                    formatCurrency={formatCurrency}
+                    preselectedPatient={{
+                        id: patient.id,
+                        full_name: patient.full_name,
+                        patient_number: patient.patient_number,
+                        phone_number: patient.phone_number || '',
+                        account_balance: account_summary?.balance || 0,
+                        credit_limit: account_summary?.credit_limit || 0,
+                        available_balance: (account_summary?.balance || 0) + (account_summary?.credit_limit || 0),
+                    }}
                 />
             )}
+
+            {/* Credit Limit Modal */}
+            <CreditLimitModal
+                isOpen={creditLimitModalOpen}
+                onClose={() => setCreditLimitModalOpen(false)}
+                patient={{
+                    id: patient.id,
+                    first_name: patient.first_name,
+                    last_name: patient.last_name,
+                    patient_number: patient.patient_number,
+                }}
+                currentLimit={account_summary?.credit_limit || 0}
+                formatCurrency={formatCurrency}
+            />
+
         </AppLayout>
     );
 }

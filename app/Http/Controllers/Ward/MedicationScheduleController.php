@@ -25,9 +25,18 @@ class MedicationScheduleController extends Controller
         // Parse duration string to extract number of days
         $durationDays = $this->parseDurationToDays($prescription->duration);
 
+        // Use ward round date if prescription is from a backdated ward round
+        $referenceTime = now();
+        if ($prescription->prescribable_type === 'App\Models\WardRound') {
+            $wardRound = $prescription->prescribable;
+            if ($wardRound && $wardRound->round_datetime) {
+                $referenceTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+            }
+        }
+
         $defaults = $this->scheduleService->generateSmartDefaults(
             $prescription->frequency,
-            now(),
+            $referenceTime,
             $durationDays
         );
 

@@ -18,6 +18,7 @@ class PatientCheckin extends Model
         'department_id',
         'checked_in_by',
         'checked_in_at',
+        'service_date',
         'vitals_taken_at',
         'consultation_started_at',
         'consultation_completed_at',
@@ -31,11 +32,24 @@ class PatientCheckin extends Model
     {
         return [
             'checked_in_at' => 'datetime',
+            'service_date' => 'date',
             'vitals_taken_at' => 'datetime',
             'consultation_started_at' => 'datetime',
             'consultation_completed_at' => 'datetime',
             'status' => 'string',
         ];
+    }
+
+    /**
+     * Check if this check-in was backdated (entered after the service date).
+     */
+    public function isBackdated(): bool
+    {
+        if (! $this->service_date || ! $this->created_at) {
+            return false;
+        }
+
+        return $this->service_date->toDateString() !== $this->created_at->toDateString();
     }
 
     public function patient(): BelongsTo

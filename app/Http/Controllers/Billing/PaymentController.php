@@ -8,7 +8,6 @@ use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Services\BillingService;
 use App\Services\CollectionService;
-use App\Services\CreditService;
 use App\Services\OverrideService;
 use App\Services\ReceiptService;
 use Carbon\Carbon;
@@ -23,8 +22,7 @@ class PaymentController extends Controller
         private BillingService $billingService,
         private CollectionService $collectionService,
         private ReceiptService $receiptService,
-        private OverrideService $overrideService,
-        private CreditService $creditService
+        private OverrideService $overrideService
     ) {}
 
     /**
@@ -79,13 +77,28 @@ class PaymentController extends Controller
                 $q->where('status', 'pending');
             },
             'checkins.department:id,name',
-            'creditAuthorizedByUser:id,name', // Load credit authorization info
         ])
             ->where(function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('phone_number', 'LIKE', "%{$search}%")
-                    ->orWhere('patient_number', 'LIKE', "%{$search}%");
+                // Check if search contains multiple words (likely first + last name)
+                $words = preg_split('/\s+/', trim($search));
+
+                if (count($words) >= 2) {
+                    // Multi-word search: match first word against first_name AND second against last_name
+                    $q->where(function ($subQ) use ($words) {
+                        $subQ->where('first_name', 'LIKE', "%{$words[0]}%")
+                            ->where('last_name', 'LIKE', "%{$words[1]}%");
+                    })->orWhere(function ($subQ) use ($words) {
+                        // Also try reverse order (last_name first_name)
+                        $subQ->where('last_name', 'LIKE', "%{$words[0]}%")
+                            ->where('first_name', 'LIKE', "%{$words[1]}%");
+                    });
+                } else {
+                    // Single word: search across all fields
+                    $q->where('first_name', 'LIKE', "%{$search}%")
+                        ->orWhere('last_name', 'LIKE', "%{$search}%")
+                        ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                        ->orWhere('patient_number', 'LIKE', "%{$search}%");
+                }
             })
             ->whereHas('checkins.charges', function ($q) {
                 $q->where('status', 'pending');
@@ -166,13 +179,6 @@ class PaymentController extends Controller
                         'last_name' => $patient->last_name,
                         'patient_number' => $patient->patient_number,
                         'phone_number' => $patient->phone_number,
-                        // Credit account information - Requirement 14.3
-                        'is_credit_eligible' => $patient->is_credit_eligible ?? false,
-                        'credit_reason' => $patient->credit_reason,
-                        'credit_authorized_by' => $patient->creditAuthorizedByUser ? [
-                            'name' => $patient->creditAuthorizedByUser->name,
-                        ] : null,
-                        'credit_authorized_at' => $patient->credit_authorized_at?->toISOString(),
                         'total_owing' => $totalOwing,
                     ],
                     'total_pending' => $totalPending,
@@ -685,117 +691,6 @@ class PaymentController extends Controller
             'processed_by' => auth()->user()->name ?? 'System',
             'notes' => $validated['notes'] ?? null,
             'timestamp' => now(),
-        ]);
-    }
-
-    /**
-     * Add credit tag to a patient.
-     */
-    public function addCreditTag(Request $request, Patient $patient)
-    {
-        $validated = $request->validate([
-            'reason' => 'required|string|min:10|max:500',
-        ]);
-
-        if ($patient->is_credit_eligible) {
-            return back()->withErrors([
-                'error' => 'Patient already has credit privileges',
-            ]);
-        }
-
-        try {
-            $this->creditService->addCreditTag(
-                $patient,
-                auth()->user(),
-                $validated['reason'],
-                $request->ip()
-            );
-
-            return back()->with('success', sprintf(
-                'Credit privileges granted to %s. They can now receive services without immediate payment.',
-                $patient->full_name
-            ));
-        } catch (\Exception $e) {
-            \Log::error('Failed to add credit tag', [
-                'patient_id' => $patient->id,
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()->withErrors([
-                'error' => 'Failed to add credit tag. Please try again.',
-            ]);
-        }
-    }
-
-    /**
-     * Remove credit tag from a patient.
-     */
-    public function removeCreditTag(Request $request, Patient $patient)
-    {
-        $validated = $request->validate([
-            'reason' => 'required|string|min:10|max:500',
-        ]);
-
-        if (! $patient->is_credit_eligible) {
-            return back()->withErrors([
-                'error' => 'Patient does not have credit privileges',
-            ]);
-        }
-
-        try {
-            $this->creditService->removeCreditTag(
-                $patient,
-                auth()->user(),
-                $validated['reason'],
-                $request->ip()
-            );
-
-            return back()->with('success', sprintf(
-                'Credit privileges removed from %s.',
-                $patient->full_name
-            ));
-        } catch (\Exception $e) {
-            \Log::error('Failed to remove credit tag', [
-                'patient_id' => $patient->id,
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()->withErrors([
-                'error' => 'Failed to remove credit tag. Please try again.',
-            ]);
-        }
-    }
-
-    /**
-     * Get all credit-eligible patients with their owing amounts.
-     */
-    public function getCreditPatients(): JsonResponse
-    {
-        $patients = Patient::creditEligible()
-            ->with(['creditAuthorizedByUser:id,name'])
-            ->get()
-            ->map(function ($patient) {
-                $totalOwing = $this->creditService->getPatientOwingAmount($patient);
-
-                return [
-                    'id' => $patient->id,
-                    'patient_number' => $patient->patient_number,
-                    'full_name' => $patient->full_name,
-                    'phone_number' => $patient->phone_number,
-                    'is_credit_eligible' => $patient->is_credit_eligible,
-                    'credit_reason' => $patient->credit_reason,
-                    'credit_authorized_by' => $patient->creditAuthorizedByUser?->name,
-                    'credit_authorized_at' => $patient->credit_authorized_at?->format('M j, Y g:i A'),
-                    'total_owing' => $totalOwing,
-                ];
-            });
-
-        return response()->json([
-            'patients' => $patients,
-            'total_count' => $patients->count(),
-            'total_owing' => $patients->sum('total_owing'),
         ]);
     }
 

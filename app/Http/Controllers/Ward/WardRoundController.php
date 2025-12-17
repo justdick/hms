@@ -116,7 +116,7 @@ class WardRoundController extends Controller
             'admission' => $admission,
             'wardRound' => $wardRound,
             'dayNumber' => $dayNumber,
-            'labServices' => \App\Models\LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
+            // Lab services loaded via async search - too many to load upfront
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
             'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
@@ -202,7 +202,7 @@ class WardRoundController extends Controller
             'admission' => $admission,
             'wardRound' => $wardRound,
             'dayNumber' => $wardRound->day_number,
-            'labServices' => \App\Models\LabService::active()->get(['id', 'name', 'code', 'category', 'price', 'sample_type']),
+            // Lab services loaded via async search - too many to load upfront
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
             'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
@@ -222,8 +222,9 @@ class WardRoundController extends Controller
 
         $validated = $request->validated();
 
-        // Update only the consultation notes fields
+        // Update consultation notes and round date
         $wardRound->update([
+            'round_datetime' => $validated['round_datetime'] ?? $wardRound->round_datetime,
             'presenting_complaint' => $validated['presenting_complaint'] ?? $wardRound->presenting_complaint,
             'history_presenting_complaint' => $validated['history_presenting_complaint'] ?? $wardRound->history_presenting_complaint,
             'on_direct_questioning' => $validated['on_direct_questioning'] ?? $wardRound->on_direct_questioning,
@@ -458,6 +459,7 @@ class WardRoundController extends Controller
         // Update ward round status to completed
         $wardRound->update([
             'status' => 'completed',
+            'round_datetime' => $validated['round_datetime'] ?? $wardRound->round_datetime,
             'presenting_complaint' => $validated['presenting_complaint'] ?? $wardRound->presenting_complaint,
             'history_presenting_complaint' => $validated['history_presenting_complaint'] ?? $wardRound->history_presenting_complaint,
             'on_direct_questioning' => $validated['on_direct_questioning'] ?? $wardRound->on_direct_questioning,

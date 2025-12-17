@@ -2,6 +2,7 @@ import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
 import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
+import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
 import WardRoundProceduresTab from '@/components/Ward/WardRoundProceduresTab';
 import {
     AlertDialog,
@@ -16,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import {
     Dialog,
     DialogContent,
@@ -24,6 +26,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+
 import {
     Select,
     SelectContent,
@@ -34,6 +37,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
@@ -119,8 +123,11 @@ interface Prescription {
     medication_name: string;
     frequency: string;
     duration: string;
+    dose_quantity?: string;
+    quantity_to_dispense?: number;
     instructions?: string;
     status: string;
+    drug_id?: number;
     drug?: Drug;
 }
 
@@ -196,6 +203,7 @@ interface WardRound {
     examination_findings?: string;
     assessment_notes?: string;
     plan_notes?: string;
+    round_datetime?: string;
     status: 'in_progress' | 'completed';
     created_at: string;
     doctor: Doctor;
@@ -209,7 +217,6 @@ interface Props {
     admission: PatientAdmission;
     wardRound: WardRound;
     dayNumber: number;
-    labServices: LabService[];
     availableDrugs: Drug[];
     availableProcedures?: ProcedureType[];
     patientHistories: {
@@ -229,7 +236,6 @@ export default function WardRoundCreate({
     admission,
     wardRound,
     dayNumber,
-    labServices,
     availableDrugs = [],
     availableProcedures = [],
     patientHistories,
@@ -243,6 +249,13 @@ export default function WardRoundCreate({
 
     // Lab order state
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
+    const [selectedLabService, setSelectedLabService] = useState<{
+        id: number;
+        name: string;
+        code: string;
+        category: string;
+        sample_type: string;
+    } | null>(null);
     const {
         data: labOrderData,
         setData: setLabOrderData,
@@ -262,6 +275,14 @@ export default function WardRoundCreate({
         id: number | null;
     }>({ open: false, type: 'diagnosis', id: null });
 
+    // Prescription editing state
+    const [editingPrescription, setEditingPrescription] = useState<Prescription | null>(null);
+
+    // Get admission date for validation (round date must be >= admission date)
+    const admissionDate = admission.admission_date 
+        ? new Date(admission.admission_date).toISOString().split('T')[0]
+        : '';
+
     // Main form data for ward round - matching consultation structure
     const { data, setData, patch, processing } = useForm({
         presenting_complaint: wardRound.presenting_complaint || '',
@@ -272,6 +293,9 @@ export default function WardRoundCreate({
         assessment_notes: wardRound.assessment_notes || '',
         plan_notes: wardRound.plan_notes || '',
         follow_up_date: '',
+        round_datetime: wardRound.round_datetime 
+            ? new Date(wardRound.round_datetime).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
         past_medical_surgical_history:
             patientHistories.past_medical_surgical_history,
         drug_history: patientHistories.drug_history,
@@ -404,6 +428,29 @@ export default function WardRoundCreate({
         );
     };
 
+    const handlePrescriptionEdit = (prescription: Prescription) => {
+        setEditingPrescription(prescription);
+        setPrescriptionData('drug_id', prescription.drug_id || null);
+        setPrescriptionData('medication_name', prescription.medication_name);
+        setPrescriptionData('dose_quantity', prescription.dose_quantity || '');
+        setPrescriptionData('frequency', prescription.frequency);
+        setPrescriptionData('duration', prescription.duration);
+        setPrescriptionData('quantity_to_dispense', prescription.quantity_to_dispense || '');
+        setPrescriptionData('instructions', prescription.instructions || '');
+    };
+
+    const handlePrescriptionCancelEdit = () => {
+        setEditingPrescription(null);
+        resetPrescription();
+    };
+
+    const handlePrescriptionUpdate = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Ward rounds don't support prescription updates - just cancel edit
+        // If update is needed, delete and re-add
+        handlePrescriptionCancelEdit();
+    };
+
     const handleDiagnosisAdd = (
         diagnosisId: number,
         type: 'provisional' | 'principal',
@@ -431,6 +478,7 @@ export default function WardRoundCreate({
             {
                 onSuccess: () => {
                     resetLabOrder();
+                    setSelectedLabService(null);
                     setShowLabOrderDialog(false);
                 },
             },
@@ -676,7 +724,7 @@ export default function WardRoundCreate({
                                         Temp:{' '}
                                     </span>
                                     <span className="font-medium text-green-900 dark:text-green-100">
-                                        {latestVitals.temperature}°F
+                                        {latestVitals.temperature}°C
                                     </span>
                                 </div>
                             </div>
@@ -686,19 +734,36 @@ export default function WardRoundCreate({
 
                 {/* Quick Actions */}
                 <div className="mb-6 flex items-center justify-between gap-4">
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-4">
                         <PatientHistorySidebar
                             previousConsultations={[]}
                             allergies={patientHistory?.allergies || []}
                         />
                         <Button
                             onClick={() => setShowCompleteDialog(true)}
-                            variant="default"
-                            className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+                            variant="outline"
+                            className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
                         >
                             <Stethoscope className="mr-2 h-4 w-4" />
                             Complete Ward Round
                         </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="round_date" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Round Date:
+                        </Label>
+                        <input
+                            type="date"
+                            id="round_date"
+                            value={data.round_datetime}
+                            onChange={(e) => {
+                                setData('round_datetime', e.target.value);
+                                setHasUnsavedChanges(true);
+                            }}
+                            min={admissionDate}
+                            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+                        />
+
                     </div>
                 </div>
 
@@ -707,45 +772,45 @@ export default function WardRoundCreate({
                     onValueChange={setActiveTab}
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-6">
+                    <TabsList className="grid w-full grid-cols-6 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                         <TabsTrigger
                             value="notes"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-blue-50 text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
                         >
                             <FileText className="h-4 w-4" />
                             Consultation Notes
                         </TabsTrigger>
                         <TabsTrigger
                             value="vitals"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-rose-50 text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
                         >
                             <Activity className="h-4 w-4" />
                             Vitals
                         </TabsTrigger>
                         <TabsTrigger
                             value="diagnosis"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-violet-50 text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
                         >
                             <FileText className="h-4 w-4" />
                             Diagnosis
                         </TabsTrigger>
                         <TabsTrigger
                             value="prescriptions"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-green-50 text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300"
                         >
                             <Pill className="h-4 w-4" />
                             Prescriptions
                         </TabsTrigger>
                         <TabsTrigger
                             value="orders"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-teal-50 text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
                         >
                             <TestTube className="h-4 w-4" />
                             Lab Orders
                         </TabsTrigger>
                         <TabsTrigger
                             value="theatre"
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-amber-50 text-amber-700 shadow-none transition-all hover:bg-amber-100 data-[state=active]:border-amber-600 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:shadow-none dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-900 dark:data-[state=active]:border-amber-400 dark:data-[state=active]:bg-amber-900 dark:data-[state=active]:text-amber-300"
                         >
                             <Stethoscope className="h-4 w-4" />
                             Theatre
@@ -817,10 +882,10 @@ export default function WardRoundCreate({
                                                     <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                                    {latestVitals.temperature}°F
+                                                    {latestVitals.temperature}°C
                                                 </p>
                                                 <p className="mt-2 text-xs text-blue-700 dark:text-blue-300">
-                                                    Normal: 97-99°F
+                                                    Normal: 36.1-37.2°C
                                                 </p>
                                             </div>
                                             <div className="rounded-lg border border-red-200 bg-red-50 p-6 transition-all hover:shadow-md dark:border-red-800 dark:bg-red-950">
@@ -933,7 +998,7 @@ export default function WardRoundCreate({
                                                                         {
                                                                             vitals.temperature
                                                                         }
-                                                                        °F
+                                                                        °C
                                                                     </p>
                                                                 </div>
                                                                 <div>
@@ -1028,7 +1093,12 @@ export default function WardRoundCreate({
                                             id: id,
                                         })
                                     }
+                                    onEdit={handlePrescriptionEdit}
+                                    onCancelEdit={handlePrescriptionCancelEdit}
+                                    onUpdate={handlePrescriptionUpdate}
+                                    editingPrescription={editingPrescription}
                                     processing={prescriptionProcessing}
+                                    consultationId={wardRound.id}
                                     consultationStatus={wardRound.status}
                                 />
                             </CardContent>
@@ -1062,50 +1132,34 @@ export default function WardRoundCreate({
                                                 className="space-y-4"
                                             >
                                                 <div>
-                                                    <Label htmlFor="lab_service">
-                                                        Select Lab Test
+                                                    <Label>
+                                                        Search Lab Test
                                                     </Label>
-                                                    <Select
-                                                        value={
-                                                            labOrderData.lab_service_id
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
+                                                    <AsyncLabServiceSelect
+                                                        onSelect={(service) => {
+                                                            setSelectedLabService(service);
                                                             setLabOrderData(
                                                                 'lab_service_id',
-                                                                value,
-                                                            )
+                                                                service.id.toString(),
+                                                            );
+                                                        }}
+                                                        excludeIds={wardRound.lab_orders?.map(
+                                                            (o) => o.lab_service.id,
+                                                        ) || []}
+                                                        placeholder={
+                                                            selectedLabService
+                                                                ? selectedLabService.name
+                                                                : 'Search by test name or code...'
                                                         }
-                                                        required
-                                                    >
-                                                        <SelectTrigger
-                                                            id="lab_service"
-                                                            className="dark:border-gray-700 dark:bg-gray-950"
-                                                        >
-                                                            <SelectValue placeholder="Choose a lab test" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {labServices.map(
-                                                                (service) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            service.id
-                                                                        }
-                                                                        value={service.id.toString()}
-                                                                    >
-                                                                        {
-                                                                            service.name
-                                                                        }{' '}
-                                                                        - $
-                                                                        {
-                                                                            service.price
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
+                                                    />
+                                                    {selectedLabService && (
+                                                        <div className="mt-2 rounded-md bg-muted p-2 text-sm">
+                                                            <p className="font-medium">{selectedLabService.name}</p>
+                                                            <p className="text-muted-foreground">
+                                                                {selectedLabService.code} • {selectedLabService.category} • {selectedLabService.sample_type}
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div>
