@@ -89,11 +89,18 @@ test('general rule fallback when no specific rule exists', function () {
         ->and($coverage['patient_pays'])->toBe(20.00);
 });
 
-test('no coverage when no rules exist', function () {
+test('no coverage when no rules exist and no category defaults', function () {
     $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
-    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    // Explicitly set category defaults to null to test "no coverage" scenario
+    $plan = InsurancePlan::factory()->create([
+        'insurance_provider_id' => $provider->id,
+        'consultation_default' => null,
+        'drugs_default' => null,
+        'labs_default' => null,
+        'procedures_default' => null,
+    ]);
 
     $coverage = $service->calculateCoverage(
         insurancePlanId: $plan->id,
@@ -113,7 +120,14 @@ test('effective date filtering works correctly', function () {
     $service = app(InsuranceCoverageService::class);
 
     $provider = InsuranceProvider::factory()->create();
-    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    // Explicitly set category defaults to null to test effective date filtering
+    $plan = InsurancePlan::factory()->create([
+        'insurance_provider_id' => $provider->id,
+        'consultation_default' => null,
+        'drugs_default' => null,
+        'labs_default' => null,
+        'procedures_default' => null,
+    ]);
 
     // Create rule that is not yet effective
     InsuranceCoverageRule::factory()->create([

@@ -5,9 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Medication Administration Record (MAR)
+ *
+ * This model represents a log of medication administrations for admitted patients.
+ * Instead of pre-scheduling doses, nurses record administrations as they happen.
+ *
+ * The prescription's frequency (TDS, BD, etc.) serves as guidance for how often
+ * medication should be given, but the actual recording is on-demand.
+ */
 class MedicationAdministration extends Model
 {
     /** @use HasFactory<\Database\Factories\MedicationAdministrationFactory> */
@@ -17,21 +24,17 @@ class MedicationAdministration extends Model
         'prescription_id',
         'patient_admission_id',
         'administered_by_id',
-        'scheduled_time',
         'administered_at',
         'status',
         'dosage_given',
         'route',
         'notes',
-        'is_adjusted',
     ];
 
     protected function casts(): array
     {
         return [
-            'scheduled_time' => 'datetime',
             'administered_at' => 'datetime',
-            'is_adjusted' => 'boolean',
         ];
     }
 
@@ -50,21 +53,7 @@ class MedicationAdministration extends Model
         return $this->belongsTo(User::class, 'administered_by_id');
     }
 
-    public function scheduleAdjustments(): HasMany
-    {
-        return $this->hasMany(MedicationScheduleAdjustment::class);
-    }
-
-    public function latestAdjustment(): HasOne
-    {
-        return $this->hasOne(MedicationScheduleAdjustment::class)->latestOfMany();
-    }
-
-    public function isScheduled(): bool
-    {
-        return $this->status === 'scheduled';
-    }
-
+    // Status check methods
     public function isGiven(): bool
     {
         return $this->status === 'given';
@@ -75,34 +64,29 @@ class MedicationAdministration extends Model
         return $this->status === 'held';
     }
 
-    public function isDue(): bool
+    public function isRefused(): bool
     {
-        return $this->isScheduled() && $this->scheduled_time <= now();
+        return $this->status === 'refused';
     }
 
-    public function scopeDue($query): void
+    public function isOmitted(): bool
     {
-        $query->where('status', 'scheduled')
-            ->where('scheduled_time', '<=', now());
+        return $this->status === 'omitted';
     }
 
-    public function scopeScheduled($query): void
-    {
-        $query->where('status', 'scheduled');
-    }
-
+    // Scopes
     public function scopeGiven($query): void
     {
         $query->where('status', 'given');
     }
 
-    public function isAdjusted(): bool
+    public function scopeToday($query): void
     {
-        return (bool) $this->is_adjusted;
+        $query->whereDate('administered_at', today());
     }
 
-    public function canBeAdjusted(): bool
+    public function scopeForPrescription($query, int $prescriptionId): void
     {
-        return $this->isScheduled();
+        $query->where('prescription_id', $prescriptionId);
     }
 }

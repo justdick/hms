@@ -19,6 +19,7 @@ class BulkUpdatePricingRequest extends FormRequest
             'items.*.type' => ['required', 'string', 'in:drug,lab,consultation,procedure'],
             'items.*.id' => ['required', 'integer', 'min:1'],
             'items.*.code' => ['required', 'string', 'max:191'],
+            'items.*.is_mapped' => ['sometimes', 'boolean'],
             'copay' => ['required', 'numeric', 'min:0', 'max:9999999.99'],
         ];
     }

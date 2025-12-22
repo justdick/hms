@@ -1,4 +1,5 @@
 import DrugController from '@/actions/App/Http/Controllers/Pharmacy/DrugController';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,8 +19,9 @@ import {
     AlertCircle,
     ArrowLeft,
     BarChart3,
-    DollarSign,
+    ExternalLink,
     Eye,
+    Info,
     Package,
     Save,
 } from 'lucide-react';
@@ -35,20 +37,22 @@ interface Drug {
     form: string;
     strength?: string;
     description?: string;
-    unit_price: number;
+    unit_price: number | null;
     unit_type: string;
     bottle_size?: number;
     minimum_stock_level: number;
     maximum_stock_level: number;
     is_active: boolean;
+    nhis_claim_qty_as_one: boolean;
 }
 
 interface Props {
     drug: Drug;
     categories: string[];
+    canManageNhisSettings: boolean;
 }
 
-export default function EditDrug({ drug, categories }: Props) {
+export default function EditDrug({ drug, categories, canManageNhisSettings }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: drug.name || '',
         generic_name: drug.generic_name || '',
@@ -58,12 +62,12 @@ export default function EditDrug({ drug, categories }: Props) {
         form: drug.form || '',
         strength: drug.strength || '',
         description: drug.description || '',
-        unit_price: drug.unit_price?.toString() || '',
         unit_type: drug.unit_type || '',
         bottle_size: drug.bottle_size?.toString() || '',
         minimum_stock_level: drug.minimum_stock_level?.toString() || '',
         maximum_stock_level: drug.maximum_stock_level?.toString() || '',
         is_active: drug.is_active,
+        nhis_claim_qty_as_one: drug.nhis_claim_qty_as_one ?? false,
     });
 
     const drugForms = [
@@ -386,45 +390,41 @@ export default function EditDrug({ drug, categories }: Props) {
                             </CardContent>
                         </Card>
 
-                        {/* Pricing & Stock Information */}
+                        {/* Stock Information */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <DollarSign className="h-5 w-5" />
-                                    Pricing & Stock Information
+                                    <Package className="h-5 w-5" />
+                                    Stock Information
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="unit_price">
-                                        Unit Price *
-                                    </Label>
-                                    <Input
-                                        id="unit_price"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={data.unit_price}
-                                        onChange={(e) =>
-                                            setData(
-                                                'unit_price',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className={
-                                            errors.unit_price
-                                                ? 'border-red-500'
-                                                : ''
-                                        }
-                                        placeholder="0.00"
-                                    />
-                                    {errors.unit_price && (
-                                        <p className="flex items-center gap-1 text-sm text-red-500">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.unit_price}
-                                        </p>
-                                    )}
-                                </div>
+                                <Alert>
+                                    <Info className="h-4 w-4" />
+                                    <AlertDescription className="flex items-center justify-between">
+                                        <span>
+                                            {drug.unit_price !== null
+                                                ? `Current price: GHS ${drug.unit_price.toFixed(2)}`
+                                                : 'Price not set'}
+                                            . Manage pricing in the Pricing
+                                            Dashboard.
+                                        </span>
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="ml-2 h-auto p-0"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={`/admin/pricing-dashboard?search=${encodeURIComponent(drug.drug_code)}`}
+                                                target="_blank"
+                                            >
+                                                Set Price
+                                                <ExternalLink className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                    </AlertDescription>
+                                </Alert>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="unit_type">
@@ -588,16 +588,41 @@ export default function EditDrug({ drug, categories }: Props) {
                                     </Label>
                                 </div>
 
+                                <div className="space-y-2">
+                                    {canManageNhisSettings && (
+                                        <>
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="nhis_claim_qty_as_one"
+                                                    checked={data.nhis_claim_qty_as_one}
+                                                    onCheckedChange={(checked) =>
+                                                        setData(
+                                                            'nhis_claim_qty_as_one',
+                                                            checked as boolean,
+                                                        )
+                                                    }
+                                                />
+                                                <Label htmlFor="nhis_claim_qty_as_one">
+                                                    NHIS Claim Qty as 1 (Pack)
+                                                </Label>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                For drugs like Arthemeter and Pessary where NHIS requires quantity = 1 regardless of actual tablets dispensed
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+
                                 <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-950">
                                     <h4 className="mb-1 font-medium text-amber-900 dark:text-amber-100">
                                         <BarChart3 className="mr-1 inline h-4 w-4" />
                                         Update Guidelines
                                     </h4>
                                     <p className="text-xs text-amber-700 dark:text-amber-300">
-                                        Changes to unit price and stock levels
-                                        will not affect existing batches. These
-                                        settings apply to new batches and
-                                        general drug information.
+                                        Changes to stock levels will not affect
+                                        existing batches. These settings apply
+                                        to new batches and general drug
+                                        information.
                                     </p>
                                 </div>
                             </CardContent>

@@ -221,16 +221,41 @@
             gender: null,
             coverageStart: null,
             coverageEnd: null,
+            error: null,
         };
 
         // Parse the result page
         const pageText = document.body.innerText;
 
-        // Extract CCC
+        // Check for error modal (INACTIVE membership)
+        // The error modal shows "An Error Occured!" with "INACTIVE" text
+        const hasErrorModal = pageText.includes('An Error Occured') || 
+                              pageText.includes('An Error Occurred') ||
+                              pageText.includes('INACTIVE');
+        
+        if (hasErrorModal) {
+            // Check for specific error messages
+            if (pageText.includes('INACTIVE')) {
+                data.error = 'INACTIVE';
+                data.status = 'INACTIVE';
+            } else {
+                // Try to extract error message
+                const errorMatch = pageText.match(/An Error Occur[r]?ed[!]?\s*([^\n]+)/i);
+                if (errorMatch) {
+                    data.error = errorMatch[1].trim();
+                } else {
+                    data.error = 'Unknown error';
+                }
+            }
+            console.log('HMS NHIS Extension: Detected error/inactive status', data.error);
+        }
+
+        // Extract CCC (may not exist if INACTIVE)
         const cccMatch = pageText.match(/CCC\s*:\s*["']?(\d+)["']?/i);
         if (cccMatch) data.ccc = cccMatch[1];
 
-        // Extract Status
+        // Extract Status from the page (STATUS : ACTIVE or similar)
+        // This is different from the error status
         const statusMatch = pageText.match(/STATUS\s*:\s*["']?(\w+)["']?/i);
         if (statusMatch) data.status = statusMatch[1];
 
@@ -250,7 +275,8 @@
         const genderMatch = pageText.match(/GENDER\s*:\s*["']?(\w+)["']?/i);
         if (genderMatch) data.gender = genderMatch[1];
 
-        // Extract Coverage dates
+        // Extract Coverage dates - these are visible even when INACTIVE
+        // Format on page: "START : 29-10-2022" and "END : 28-10-2023"
         const startMatch = pageText.match(/START\s*:\s*["']?([\d-]+)["']?/i);
         if (startMatch) data.coverageStart = startMatch[1];
 
@@ -259,22 +285,28 @@
 
         console.log('HMS NHIS Extension: Extracted data', data);
 
-        if (data.ccc) {
+        // Send data if we have CCC OR if we have dates (even for INACTIVE)
+        // This allows HMS to update dates even when membership is expired
+        if (data.ccc || data.coverageStart || data.coverageEnd || data.status) {
             // Send to background script (it will clear pending verification after sending to HMS)
             chrome.runtime.sendMessage({
                 type: 'CCC_CAPTURED',
                 data: data,
             });
 
-            // Show success indicator on page
-            showSuccessMessage(data.ccc);
+            // Show appropriate message
+            if (data.ccc) {
+                showSuccessMessage(data.ccc);
+            } else if (data.error || data.status === 'INACTIVE') {
+                showErrorMessage(data.status || data.error, data.coverageEnd);
+            }
 
             // Auto-close this tab after 3 seconds
             setTimeout(() => {
                 window.close();
             }, 3000);
         } else {
-            console.log('HMS NHIS Extension: CCC not found on page');
+            console.log('HMS NHIS Extension: No useful data found on page');
         }
     }
 
@@ -308,6 +340,33 @@
         banner.innerHTML = `
             ✓ CCC <strong>${ccc}</strong> sent to HMS<br>
             <small>You can close this tab</small>
+        `;
+        document.body.appendChild(banner);
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => banner.remove(), 10000);
+    }
+
+    // Helper: Show error message for INACTIVE membership
+    function showErrorMessage(status, endDate) {
+        const banner = document.createElement('div');
+        banner.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 99999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        banner.innerHTML = `
+            ⚠️ Membership <strong>${status}</strong><br>
+            <small>${endDate ? `Expired: ${endDate}` : 'Coverage expired'}</small><br>
+            <small>Data sent to HMS - you can close this tab</small>
         `;
         document.body.appendChild(banner);
 

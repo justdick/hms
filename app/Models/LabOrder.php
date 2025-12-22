@@ -68,6 +68,7 @@ class LabOrder extends Model
         'ordered_by',
         'ordered_at',
         'status',
+        'is_unpriced',
         'priority',
         'special_instructions',
         'sample_collected_at',
@@ -85,6 +86,7 @@ class LabOrder extends Model
             'result_entered_at' => 'datetime',
             'result_values' => 'array',
             'status' => 'string',
+            'is_unpriced' => 'boolean',
             'priority' => 'string',
         ];
     }
@@ -164,6 +166,26 @@ class LabOrder extends Model
             'result_values' => $resultValues,
             'result_notes' => $resultNotes,
         ]);
+    }
+
+    public function markExternalReferral(): void
+    {
+        $this->update(['status' => 'external_referral']);
+    }
+
+    public function isExternalReferral(): bool
+    {
+        return $this->status === 'external_referral';
+    }
+
+    public function scopeExternalReferral($query): void
+    {
+        $query->where('status', 'external_referral');
+    }
+
+    public function scopeExcludeExternalReferral($query): void
+    {
+        $query->where('status', '!=', 'external_referral');
     }
 
     /**

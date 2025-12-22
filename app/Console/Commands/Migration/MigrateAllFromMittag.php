@@ -94,6 +94,7 @@ class MigrateAllFromMittag extends Command
             '14_ward_rounds' => 'migrate:ward-rounds-from-mittag',
             '15_nursing_notes' => 'migrate:nursing-notes-from-mittag',
             '16_patient_insurance' => 'migrate:patient-insurance-from-mittag',
+            '17_pricing' => 'migrate:import-mittag-pricing',
         ];
 
         // Filter by --only option

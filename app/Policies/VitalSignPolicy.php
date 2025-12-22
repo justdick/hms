@@ -58,6 +58,20 @@ class VitalSignPolicy
     }
 
     /**
+     * Determine whether the user can edit the recorded timestamp.
+     */
+    public function editTimestamp(User $user, VitalSign $vitalSign): bool
+    {
+        // Admin can always edit timestamps
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // Must have specific timestamp edit permission
+        return $user->can('vitals.edit-timestamp');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, VitalSign $vitalSign): bool

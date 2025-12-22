@@ -46,6 +46,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('pricing-dashboard/cash-price', [PricingDashboardController::class, 'updateCashPrice'])->name('pricing-dashboard.update-cash-price');
     Route::put('pricing-dashboard/insurance-copay', [PricingDashboardController::class, 'updateInsuranceCopay'])->name('pricing-dashboard.update-insurance-copay');
     Route::put('pricing-dashboard/insurance-coverage', [PricingDashboardController::class, 'updateInsuranceCoverage'])->name('pricing-dashboard.update-insurance-coverage');
+    Route::put('pricing-dashboard/flexible-copay', [PricingDashboardController::class, 'updateFlexibleCopay'])->name('pricing-dashboard.update-flexible-copay');
     Route::post('pricing-dashboard/bulk-update', [PricingDashboardController::class, 'bulkUpdate'])->name('pricing-dashboard.bulk-update');
     Route::get('pricing-dashboard/export', [PricingDashboardController::class, 'export'])->name('pricing-dashboard.export');
     Route::post('pricing-dashboard/import', [PricingDashboardController::class, 'import'])->name('pricing-dashboard.import');

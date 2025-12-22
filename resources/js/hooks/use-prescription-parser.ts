@@ -122,8 +122,9 @@ export function usePrescriptionParser({
             clearTimeout(debounceTimerRef.current);
         }
 
-        // If input is empty or too short, clear result immediately
-        if (!input || input.trim().length < 2) {
+        // If input is empty, clear result immediately
+        // Allow single character inputs (e.g., "1" or "2" for topicals)
+        if (!input || input.trim().length < 1) {
             clearResult();
             return;
         }

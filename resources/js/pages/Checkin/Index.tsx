@@ -53,7 +53,32 @@ interface InsurancePlan {
         id: number;
         name: string;
         code: string;
+        is_nhis?: boolean;
     };
+}
+
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
+}
+
+interface VitalSigns {
+    id: number;
+    blood_pressure_systolic: number | null;
+    blood_pressure_diastolic: number | null;
+    temperature: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
+    oxygen_saturation: number | null;
+    weight: number | null;
+    height: number | null;
+    notes: string | null;
+    recorded_at: string;
 }
 
 interface Checkin {
@@ -63,16 +88,20 @@ interface Checkin {
     status: string;
     checked_in_at: string;
     vitals_taken_at: string | null;
+    vital_signs?: VitalSigns[];
 }
 
 interface Props {
     todayCheckins: Checkin[];
     departments: Department[];
     insurancePlans: InsurancePlan[];
+    nhisSettings?: NhisSettings;
     permissions: {
         canViewAnyDate: boolean;
         canViewAnyDepartment: boolean;
         canUpdateDate: boolean;
+        canCancelCheckin: boolean;
+        canEditVitals: boolean;
     };
 }
 
@@ -80,11 +109,13 @@ export default function CheckinIndex({
     todayCheckins,
     departments,
     insurancePlans,
+    nhisSettings,
     permissions,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
     const [checkinPromptOpen, setCheckinPromptOpen] = useState(false);
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
+    const [vitalsMode, setVitalsMode] = useState<'create' | 'edit'>('create');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
         null,
     );
@@ -130,12 +161,20 @@ export default function CheckinIndex({
 
     const handleRecordVitals = (checkin: Checkin) => {
         setSelectedCheckin(checkin);
+        setVitalsMode('create');
+        setVitalsModalOpen(true);
+    };
+
+    const handleEditVitals = (checkin: Checkin) => {
+        setSelectedCheckin(checkin);
+        setVitalsMode('edit');
         setVitalsModalOpen(true);
     };
 
     const handleVitalsSuccess = () => {
         setVitalsModalOpen(false);
         setSelectedCheckin(null);
+        setVitalsMode('create');
         // Refresh the page to show updated data
         router.reload({ only: ['todayCheckins'] });
     };
@@ -254,17 +293,11 @@ export default function CheckinIndex({
                         <CardContent>
                             <Tabs defaultValue="search" className="w-full">
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger
-                                        value="search"
-                                        className="gap-2"
-                                    >
+                                    <TabsTrigger value="search" className="gap-2">
                                         <Search className="h-4 w-4" />
                                         Search Patient
                                     </TabsTrigger>
-                                    <TabsTrigger
-                                        value="register"
-                                        className="gap-2"
-                                    >
+                                    <TabsTrigger value="register" className="gap-2">
                                         <UserPlus className="h-4 w-4" />
                                         Register New
                                     </TabsTrigger>
@@ -290,6 +323,7 @@ export default function CheckinIndex({
                                             handlePatientRegistered
                                         }
                                         insurancePlans={insurancePlans}
+                                        nhisSettings={nhisSettings}
                                     />
                                 </TabsContent>
                             </Tabs>
@@ -312,10 +346,7 @@ export default function CheckinIndex({
                                         Today's List
                                     </TabsTrigger>
                                     {permissions.canViewAnyDate && (
-                                        <TabsTrigger
-                                            value="search"
-                                            className="gap-2"
-                                        >
+                                        <TabsTrigger value="search" className="gap-2">
                                             <CalendarIcon className="h-4 w-4" />
                                             Search by Date
                                         </TabsTrigger>
@@ -341,6 +372,9 @@ export default function CheckinIndex({
                                         checkins={todayCheckins}
                                         departments={departments}
                                         onRecordVitals={handleRecordVitals}
+                                        onEditVitals={handleEditVitals}
+                                        canCancelCheckin={permissions.canCancelCheckin}
+                                        canEditVitals={permissions.canEditVitals}
                                     />
                                 </TabsContent>
 
@@ -462,8 +496,17 @@ export default function CheckinIndex({
                                                         onRecordVitals={
                                                             handleRecordVitals
                                                         }
+                                                        onEditVitals={
+                                                            handleEditVitals
+                                                        }
                                                         canUpdateDate={
                                                             permissions.canUpdateDate
+                                                        }
+                                                        canCancelCheckin={
+                                                            permissions.canCancelCheckin
+                                                        }
+                                                        canEditVitals={
+                                                            permissions.canEditVitals
                                                         }
                                                         isSearchResults={true}
                                                         onDateUpdated={
@@ -518,6 +561,7 @@ export default function CheckinIndex({
                 onClose={() => setVitalsModalOpen(false)}
                 checkin={selectedCheckin}
                 onSuccess={handleVitalsSuccess}
+                mode={vitalsMode}
             />
         </AppLayout>
     );

@@ -25,7 +25,7 @@ class CheckinController extends Controller
 
         // Show today's completed check-ins and all incomplete check-ins
         // FIFO ordering: oldest first (lower ID = checked in earlier)
-        $todayCheckins = PatientCheckin::with(['patient', 'department', 'insuranceClaim'])
+        $todayCheckins = PatientCheckin::with(['patient', 'department', 'insuranceClaim', 'vitalSigns'])
             ->where(function ($query) {
                 $query->whereDate('checked_in_at', today())
                     ->orWhereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation']);
@@ -55,17 +55,36 @@ class CheckinController extends Controller
                     'id' => $plan->provider->id,
                     'name' => $plan->provider->name,
                     'code' => $plan->provider->code,
+                    'is_nhis' => $plan->provider->is_nhis ?? false,
                 ],
             ]);
+
+        // Get NHIS settings for registration form
+        $nhisSettings = NhisSettings::getInstance();
+        $nhisCredentials = null;
+        if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
+            $nhisCredentials = [
+                'username' => $nhisSettings->nhia_username,
+                'password' => $nhisSettings->nhia_password,
+            ];
+        }
 
         return Inertia::render('Checkin/Index', [
             'todayCheckins' => $todayCheckins,
             'departments' => $departments,
             'insurancePlans' => $insurancePlans,
+            'nhisSettings' => [
+                'verification_mode' => $nhisSettings->verification_mode,
+                'nhia_portal_url' => $nhisSettings->nhia_portal_url,
+                'auto_open_portal' => $nhisSettings->auto_open_portal,
+                'credentials' => $nhisCredentials,
+            ],
             'permissions' => [
                 'canViewAnyDate' => $user->can('viewAnyDate', PatientCheckin::class),
                 'canViewAnyDepartment' => $user->can('viewAnyDepartment', PatientCheckin::class),
                 'canUpdateDate' => $user->can('checkins.update-date'),
+                'canCancelCheckin' => $user->can('checkins.cancel') || $user->can('checkins.update') || $user->hasRole('Admin'),
+                'canEditVitals' => $user->can('vitals.update') || $user->can('checkins.update') || $user->hasRole('Admin'),
             ],
         ]);
     }
@@ -95,16 +114,21 @@ class CheckinController extends Controller
             'service_date' => 'nullable|date|before_or_equal:today',
         ]);
 
-        // Check for duplicate CCC for same patient within 24 hours
+        // Check for duplicate CCC for same patient on the same calendar date (excluding cancelled check-ins)
         if (! empty($validated['claim_check_code'])) {
+            $serviceDate = ! empty($validated['service_date'])
+                ? $validated['service_date']
+                : now()->toDateString();
+
             $duplicateCcc = PatientCheckin::where('patient_id', $validated['patient_id'])
                 ->where('claim_check_code', $validated['claim_check_code'])
-                ->where('checked_in_at', '>=', now()->subHours(24))
+                ->whereDate('service_date', $serviceDate)
+                ->where('status', '!=', 'cancelled')
                 ->exists();
 
             if ($duplicateCcc) {
                 return back()->withErrors([
-                    'claim_check_code' => 'This CCC was already used for this patient within the last 24 hours.',
+                    'claim_check_code' => 'This CCC was already used for this patient on this date.',
                 ])->withInput();
             }
         }

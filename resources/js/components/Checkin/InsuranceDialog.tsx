@@ -8,15 +8,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNhisExtension } from '@/hooks/useNhisExtension';
+import { router } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Building2,
     CheckCircle2,
     CreditCard,
     ExternalLink,
     Loader2,
+    RefreshCw,
     Shield,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface InsuranceInfo {
     id: number;
@@ -57,6 +61,58 @@ interface InsuranceDialogProps {
     nhisSettings?: NhisSettings;
 }
 
+/**
+ * Parse NHIS date format (could be DD-MM-YYYY or YYYY-MM-DD)
+ */
+function parseNhisDate(dateStr: string | null | undefined): Date | null {
+    if (!dateStr) return null;
+    
+    // Try DD-MM-YYYY format first (common NHIS format)
+    const ddmmyyyy = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (ddmmyyyy) {
+        return new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`);
+    }
+    
+    // Try YYYY-MM-DD format
+    const yyyymmdd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (yyyymmdd) {
+        return new Date(dateStr);
+    }
+    
+    // Fallback to Date parsing
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Format date to YYYY-MM-DD for backend
+ */
+function formatDateForBackend(date: Date): string {
+    return date.toISOString().split('T')[0];
+}
+
+/**
+ * Check if a date is in the past (expired)
+ */
+function isDateExpired(date: Date | null): boolean {
+    if (!date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+}
+
+/**
+ * Check if two dates are different (ignoring time)
+ */
+function datesAreDifferent(date1: Date | null, date2: string | null): boolean {
+    if (!date1 && !date2) return false;
+    if (!date1 || !date2) return true;
+    
+    const d1 = formatDateForBackend(date1);
+    const d2 = date2.split('T')[0]; // Handle ISO format
+    return d1 !== d2;
+}
+
 export default function InsuranceDialog({
     open,
     onClose,
@@ -67,35 +123,90 @@ export default function InsuranceDialog({
 }: InsuranceDialogProps) {
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
+    const [isSyncingDates, setIsSyncingDates] = useState(false);
     
     // NHIS Extension hook
     const { isVerifying, cccData, startVerification, clearCccData } = useNhisExtension();
 
-    // Check if this is an NHIS provider and if coverage is valid (not expired)
+    // Check if this is an NHIS provider
     const isNhisProvider = insurance.plan.provider.is_nhis ?? false;
-    const isExpired = insurance.is_expired ?? false;
+    
+    // Parse dates from NHIS verification
+    const nhisStartDate = parseNhisDate(cccData?.coverageStart);
+    const nhisEndDate = parseNhisDate(cccData?.coverageEnd);
+    
+    // Check if NHIS says coverage is INACTIVE or expired
+    const isInactiveFromNhis = cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
+    const isExpiredFromNhis = nhisEndDate ? isDateExpired(nhisEndDate) : false;
+    
+    // Membership is unusable if INACTIVE or expired
+    const isNhisUnusable = isInactiveFromNhis || isExpiredFromNhis;
+    
+    // Use stored expiry status if no NHIS data, otherwise use NHIS data
+    const isExpired = cccData ? isNhisUnusable : (insurance.is_expired ?? false);
     const canUseInsurance = !isExpired;
+    
+    // Check if dates need syncing (even for INACTIVE, we want to update dates)
+    const startDateChanged = nhisStartDate && datesAreDifferent(nhisStartDate, insurance.coverage_start_date);
+    const endDateChanged = nhisEndDate && datesAreDifferent(nhisEndDate, insurance.coverage_end_date);
+    const needsDateSync = startDateChanged || endDateChanged;
     
     // Determine verification mode
     const verificationMode = nhisSettings?.verification_mode ?? 'manual';
     const isExtensionMode = verificationMode === 'extension' && isNhisProvider;
 
-    // Auto-fill CCC when received from extension
+    // Auto-fill CCC when received from extension (only if not INACTIVE)
     useEffect(() => {
-        if (cccData?.ccc) {
+        if (cccData?.ccc && !isInactiveFromNhis) {
             setClaimCheckCode(cccData.ccc);
             setError('');
         }
-    }, [cccData]);
+    }, [cccData, isInactiveFromNhis]);
+
+    // Auto-sync dates when they differ (even for INACTIVE memberships)
+    useEffect(() => {
+        if (cccData && needsDateSync && nhisStartDate && nhisEndDate && !isSyncingDates) {
+            syncInsuranceDates();
+        }
+    }, [cccData, needsDateSync]);
 
     // Clear state when dialog closes
     useEffect(() => {
         if (!open) {
             setClaimCheckCode('');
             setError('');
+            setIsSyncingDates(false);
             clearCccData();
         }
     }, [open, clearCccData]);
+
+    const syncInsuranceDates = () => {
+        if (!nhisStartDate || !nhisEndDate) return;
+        
+        setIsSyncingDates(true);
+        
+        router.patch(
+            `/patient-insurance/${insurance.id}/sync-dates`,
+            {
+                coverage_start_date: formatDateForBackend(nhisStartDate),
+                coverage_end_date: formatDateForBackend(nhisEndDate),
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    toast.success('Insurance dates updated from NHIS', {
+                        description: `Coverage: ${formatDateForBackend(nhisStartDate)} to ${formatDateForBackend(nhisEndDate)}`,
+                    });
+                    setIsSyncingDates(false);
+                },
+                onError: () => {
+                    toast.error('Failed to update insurance dates');
+                    setIsSyncingDates(false);
+                },
+            }
+        );
+    };
 
     const handleVerifyNhis = () => {
         if (!insurance.membership_id) {
@@ -181,8 +292,8 @@ export default function InsuranceDialog({
                         </div>
                     </div>
 
-                    {/* Expired Insurance Warning */}
-                    {isExpired && (
+                    {/* Expired Insurance Warning - from stored data */}
+                    {!cccData && isExpired && (
                         <div className="rounded-lg border border-amber-500/50 bg-amber-50 p-2 dark:bg-amber-950/20">
                             <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
                                 ⚠️ Coverage expired - please renew to use insurance
@@ -191,7 +302,7 @@ export default function InsuranceDialog({
                     )}
 
                     {/* CCC Verification Section */}
-                    <div className={`rounded-lg border p-3 space-y-3 ${!canUseInsurance ? 'bg-muted opacity-50' : 'bg-primary/5'}`}>
+                    <div className={`rounded-lg border p-3 space-y-3 ${!canUseInsurance ? 'bg-muted opacity-60' : 'bg-primary/5'}`}>
                         <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4 text-primary" />
                             <h4 className="text-sm font-medium">
@@ -205,7 +316,7 @@ export default function InsuranceDialog({
                         </p>
 
                         {/* Extension Mode: Verify Button */}
-                        {isExtensionMode && isNhisProvider && canUseInsurance && (
+                        {isExtensionMode && isNhisProvider && (
                             <>
                                 <Button
                                     type="button"
@@ -228,23 +339,68 @@ export default function InsuranceDialog({
                                     )}
                                 </Button>
                                 
+                                {/* Verification Result */}
                                 {cccData && (
-                                    <div className="rounded-md bg-green-50 p-2 dark:bg-green-950/20">
-                                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                                            <CheckCircle2 className="h-3 w-3" />
+                                    <div className={`rounded-md p-2 ${
+                                        isNhisUnusable 
+                                            ? 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800' 
+                                            : 'bg-green-50 dark:bg-green-950/20'
+                                    }`}>
+                                        <div className={`flex items-center gap-2 ${
+                                            isNhisUnusable 
+                                                ? 'text-red-700 dark:text-red-400' 
+                                                : 'text-green-700 dark:text-green-400'
+                                        }`}>
+                                            {isNhisUnusable ? (
+                                                <AlertTriangle className="h-3 w-3" />
+                                            ) : (
+                                                <CheckCircle2 className="h-3 w-3" />
+                                            )}
                                             <span className="text-xs font-medium">
-                                                Verified: {cccData.memberName}
+                                                {isInactiveFromNhis 
+                                                    ? 'INACTIVE' 
+                                                    : isExpiredFromNhis 
+                                                        ? 'EXPIRED' 
+                                                        : 'Verified'}: {cccData.memberName || 'Member'}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-green-600 dark:text-green-500">
-                                            {cccData.status} • {cccData.coverageStart} to {cccData.coverageEnd}
+                                        <p className={`text-xs ${
+                                            isNhisUnusable 
+                                                ? 'text-red-600 dark:text-red-500' 
+                                                : 'text-green-600 dark:text-green-500'
+                                        }`}>
+                                            {cccData.status}{cccData.coverageStart && cccData.coverageEnd ? ` • ${cccData.coverageStart} to ${cccData.coverageEnd}` : ''}
                                         </p>
+                                        
+                                        {/* Date sync indicator */}
+                                        {needsDateSync && (
+                                            <div className="flex items-center gap-1 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                {isSyncingDates ? (
+                                                    <>
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <span>Updating dates...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <RefreshCw className="h-3 w-3" />
+                                                        <span>Dates updated from NHIS</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                        
+                                        {/* INACTIVE or Expired warning message */}
+                                        {isNhisUnusable && (
+                                            <p className="text-xs font-medium text-red-700 dark:text-red-400 mt-2">
+                                                ⚠️ {isInactiveFromNhis 
+                                                    ? 'Membership is INACTIVE. Patient must renew NHIS membership to use insurance.' 
+                                                    : 'Coverage has expired. Patient must renew NHIS membership to use insurance.'}
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </>
                         )}
-
-
 
                         {/* CCC Input Field */}
                         <div className="space-y-1">
@@ -265,7 +421,7 @@ export default function InsuranceDialog({
                                 className={`h-9 ${
                                     error
                                         ? 'border-destructive'
-                                        : cccData?.ccc
+                                        : cccData?.ccc && !isExpiredFromNhis
                                           ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
                                           : ''
                                 }`}

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS Training Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 40px 20px; text-align: center; margin-bottom: 30px; border-radius: 12px; }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        header p { font-size: 1.1rem; opacity: 0.9; }
+        .toc { background: white; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .toc h2 { color: #1e40af; margin-bottom: 15px; font-size: 1.3rem; }
+        .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .toc a { display: block; padding: 10px 15px; background: #f0f7ff; color: #1e40af; text-decoration: none; border-radius: 8px; transition: all 0.2s; }
+        .toc a:hover { background: #1e40af; color: white; transform: translateX(5px); }
+        .section { background: white; margin-bottom: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+        .section-header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 20px 25px; }
+        .section-header h2 { font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .section-header .location { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+        .section-content { padding: 25px; }
+        .purpose { background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6; }
+        .purpose strong { color: #1e40af; }
+        .feature-group { margin-bottom: 25px; }
+        .feature-group h3 { color: #1e40af; font-size: 1.1rem; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+        .feature-list { list-style: none; }
+        .feature-list > li { margin-bottom: 12px; padding-left: 20px; position: relative; }
+        .feature-list > li::before { content: "→"; position: absolute; left: 0; color: #3b82f6; font-weight: bold; }
+        .feature-list strong { color: #1e40af; }
+        .sub-list { margin-top: 8px; margin-left: 20px; }
+        .sub-list li { margin-bottom: 5px; color: #666; font-size: 0.95rem; }
+        .workflow-box { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .workflow-box h4 { color: #b45309; margin-bottom: 10px; }
+        .workflow-steps { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .workflow-step { background: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; border: 1px solid #f59e0b; }
+        .workflow-arrow { color: #f59e0b; font-weight: bold; }
+        .tips-section { background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin-top: 30px; }
+        .tips-section h3 { color: #047857; margin-bottom: 15px; }
+        .tips-list { list-style: decimal; margin-left: 20px; }
+        .tips-list li { margin-bottom: 8px; color: #065f46; }
+        footer { text-align: center; padding: 30px; color: #666; font-size: 0.9rem; }
+        @media (max-width: 768px) { header h1 { font-size: 1.8rem; } .toc-grid { grid-template-columns: 1fr; } }
+        .icon { width: 24px; height: 24px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 HMS Training Guide</h1>
+            <p>Comprehensive guide to all features in the Hospital Management System</p>
+        </header>
+
+        <nav class="toc">
+            <h2>📋 Table of Contents</h2>
+            <div class="toc-grid">
+                <a href="#dashboard">1. Dashboard</a>
+                <a href="#checkin">2. Check-in</a>
+                <a href="#patients">3. Patients</a>
+                <a href="#consultation">4. Consultation</a>
+                <a href="#wards">5. Wards</a>
+                <a href="#laboratory">6. Laboratory</a>
+                <a href="#minor-procedures">7. Minor Procedures</a>
+                <a href="#pharmacy">8. Pharmacy</a>
+                <a href="#billing">9. Billing</a>
+                <a href="#insurance">10. Insurance</a>
+                <a href="#departments">11. Departments</a>
+                <a href="#backups">12. Backups</a>
+                <a href="#administration">13. Administration</a>
+                <a href="#settings">14. Settings</a>
+                <a href="#workflows">Common Workflows</a>
+            </div>
+        </nav>
+
+        <!-- Section 1: Dashboard -->
+        <section class="section" id="dashboard">
+            <div class="section-header">
+                <h2>📊 1. Dashboard</h2>
+                <div class="location">Location: Main landing page after login</div>
+            </div>
+            <div class="section-content">
+                <div class="feature-group">
+                    <h3>Overview Statistics</h3>
+                    <ul class="feature-list">
+                        <li><strong>Quick Metrics:</strong> View today's key numbers at a glance
+                            <ul class="sub-list">
+                                <li>Total patients checked in today</li>
+                                <li>Pending consultations</li>
+                                <li>Lab orders awaiting results</li>
+                                <li>Pending prescriptions to dispense</li>
+                                <li>Revenue collected today</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>Role-Based Widgets</h3>
+                    <ul class="feature-list">
+                        <li><strong>Receptionist:</strong> Check-in queue, patient search</li>
+                        <li><strong>Doctor:</strong> Consultation queue, pending patients</li>
+                        <li><strong>Nurse:</strong> Vitals queue, medication administration due</li>
+                        <li><strong>Pharmacist:</strong> Dispensing queue, low stock alerts</li>
+                        <li><strong>Lab Technician:</strong> Pending lab orders, samples to collect</li>
+                        <li><strong>Billing Officer:</strong> Pending payments, daily collections</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>Quick Actions</h3>
+                    <ul class="feature-list">
+                        <li><strong>New Patient Registration:</strong> Register a new patient quickly</li>
+                        <li><strong>Quick Check-in:</strong> Fast check-in for returning patients</li>
+                        <li><strong>Search Patient:</strong> Find any patient in the system</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Check-in -->
+        <section class="section" id="checkin">
+            <div class="section-header">
+                <h2>✅ 2. Check-in</h2>
+                <div class="location">Location: Sidebar → Check-in</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Manages the patient check-in process for outpatient visits.</div>
+                <div class="feature-group">
+                    <h3>2.1 Patient Check-in</h3>
+                    <ul class="feature-list">
+                        <li><strong>Search Patient:</strong> Find existing patients by name, phone, or patient number</li>
+                        <li><strong>Register New Patient:</strong> Quick registration for new patients</li>
+                        <li><strong>Select Department:</strong> Choose which department the patient is visiting</li>
+                        <li><strong>Insurance Selection:</strong> Select patient's active insurance (if applicable)</li>
+                        <li><strong>Generate Queue Number:</strong> Automatic queue assignment</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>2.2 Today's Queue</h3>
+                    <ul class="feature-list">
+                        <li><strong>View All Check-ins:</strong> List of all patients checked in today</li>
+                        <li><strong>Filter by Department:</strong> View queue for specific departments</li>
+                        <li><strong>Filter by Status:</strong>
+                            <ul class="sub-list">
+                                <li><em>Checked In</em> - Waiting for vitals</li>
+                                <li><em>Vitals Taken</em> - Ready for consultation</li>
+                                <li><em>Awaiting Consultation</em> - In queue for doctor</li>
+                                <li><em>In Consultation</em> - Currently with doctor</li>
+                                <li><em>Completed</em> - Visit finished</li>
+                                <li><em>Admitted</em> - Transferred to ward</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>2.3 Vitals Recording</h3>
+                    <ul class="feature-list">
+                        <li><strong>Record Vitals:</strong> Enter patient vital signs
+                            <ul class="sub-list">
+                                <li>Blood Pressure (Systolic/Diastolic)</li>
+                                <li>Pulse Rate</li>
+                                <li>Temperature</li>
+                                <li>Respiratory Rate</li>
+                                <li>Weight & Height</li>
+                                <li>BMI (auto-calculated)</li>
+                                <li>Oxygen Saturation (SpO2)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Vitals History:</strong> View previous vitals for comparison</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Patients -->
+        <section class="section" id="patients">
+            <div class="section-header">
+                <h2>👥 3. Patients</h2>
+                <div class="location">Location: Sidebar → Patients</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Central patient registry and medical records management.</div>
+                <div class="feature-group">
+                    <h3>3.1 Patient List</h3>
+                    <ul class="feature-list">
+                        <li><strong>Search & Filter:</strong> Find patients by patient number, name, phone, or National ID</li>
+                        <li><strong>Pagination:</strong> Navigate through large patient lists</li>
+                        <li><strong>Quick Actions:</strong> View, edit, or check-in patient</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>3.2 Patient Registration</h3>
+                    <ul class="feature-list">
+                        <li><strong>Demographics:</strong> First name, Last name, Other names, Date of birth, Gender, Phone, Email, National ID, Address</li>
+                        <li><strong>Emergency Contact:</strong> Name and phone number</li>
+                        <li><strong>Auto-Generated Patient Number:</strong> Format: PAT2025000001</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>3.3 Patient Profile</h3>
+                    <ul class="feature-list">
+                        <li><strong>Personal Information:</strong> View/edit demographics</li>
+                        <li><strong>Insurance Information:</strong> Active insurance policies</li>
+                        <li><strong>Visit History:</strong> All previous visits with dates</li>
+                        <li><strong>Medical History:</strong> Past diagnoses, allergies, chronic conditions</li>
+                        <li><strong>Billing Summary:</strong> Outstanding balances, payment history</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Consultation -->
+        <section class="section" id="consultation">
+            <div class="section-header">
+                <h2>🩺 4. Consultation</h2>
+                <div class="location">Location: Sidebar → Consultation</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Doctor's workspace for patient consultations and clinical documentation.</div>
+                <div class="feature-group">
+                    <h3>4.1 Consultation Queue</h3>
+                    <ul class="feature-list">
+                        <li><strong>Pending Patients:</strong> List of patients waiting for consultation</li>
+                        <li><strong>Filter by Department:</strong> View only your department's patients</li>
+                        <li><strong>Patient Details Preview:</strong> Quick view of patient info and vitals</li>
+                        <li><strong>Start Consultation:</strong> Begin documenting the visit</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>4.2 Consultation Interface</h3>
+                    <ul class="feature-list">
+                        <li><strong>Patient Summary:</strong> Demographics, vitals, insurance status</li>
+                        <li><strong>SOAP Notes:</strong>
+                            <ul class="sub-list">
+                                <li><em>Subjective:</em> Patient's complaints and history</li>
+                                <li><em>Objective:</em> Examination findings</li>
+                                <li><em>Assessment:</em> Clinical assessment and diagnosis</li>
+                                <li><em>Plan:</em> Treatment plan</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>4.3 Diagnosis Management</h3>
+                    <ul class="feature-list">
+                        <li><strong>Search Diagnoses:</strong> ICD-10 code search</li>
+                        <li><strong>Add Multiple Diagnoses:</strong> Primary and secondary diagnoses</li>
+                        <li><strong>Custom Diagnoses:</strong> Add diagnoses not in the system</li>
+                        <li><strong>Diagnosis History:</strong> View patient's previous diagnoses</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>4.4 Lab Orders</h3>
+                    <ul class="feature-list">
+                        <li><strong>Order Lab Tests:</strong> Search and select lab tests</li>
+                        <li><strong>Set Priority:</strong> Normal, Urgent, STAT</li>
+                        <li><strong>Add Clinical Notes:</strong> Instructions for lab technician</li>
+                        <li><strong>View Results:</strong> See completed lab results</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>4.5 Prescriptions</h3>
+                    <ul class="feature-list">
+                        <li><strong>Drug Search:</strong> Find drugs by name or code</li>
+                        <li><strong>Smart Prescription Input:</strong> Natural language parsing (e.g., "Paracetamol 500mg 1x3 for 5 days")</li>
+                        <li><strong>Prescription Details:</strong> Drug name, strength, dosage, frequency (OD, BD, TDS, QID), duration, quantity (auto-calculated)</li>
+                        <li><strong>Refill Prescriptions:</strong> Copy from previous visits</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>4.6 Procedures & Admission</h3>
+                    <ul class="feature-list">
+                        <li><strong>Order Minor Procedures:</strong> Request procedures during consultation</li>
+                        <li><strong>Admit Patient:</strong> Transfer to inpatient care, select ward, document reason</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Wards -->
+        <section class="section" id="wards">
+            <div class="section-header">
+                <h2>🏨 5. Wards</h2>
+                <div class="location">Location: Sidebar → Wards</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Inpatient ward management, bed allocation, and patient care.</div>
+                <div class="feature-group">
+                    <h3>5.1 Ward List & Management</h3>
+                    <ul class="feature-list">
+                        <li><strong>View All Wards:</strong> List of hospital wards with details</li>
+                        <li><strong>Ward Details:</strong> Name, type, total beds, available beds</li>
+                        <li><strong>Occupancy Status:</strong> Visual indicator of bed availability</li>
+                        <li><strong>Create/Edit Ward:</strong> Add new ward or modify existing</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>5.2 Ward View (Individual Ward)</h3>
+                    <ul class="feature-list">
+                        <li><strong>Bed Grid:</strong> Visual layout of all beds</li>
+                        <li><strong>Patient Assignment:</strong> See which patient is in each bed</li>
+                        <li><strong>Bed Status:</strong> Available, Occupied, Reserved, Maintenance</li>
+                        <li><strong>Assign Bed:</strong> Place admitted patient in specific bed</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>5.3 Ward Rounds</h3>
+                    <ul class="feature-list">
+                        <li><strong>Create Ward Round:</strong> Document daily rounds</li>
+                        <li><strong>SOAP Documentation:</strong> Same format as consultation</li>
+                        <li><strong>Add Diagnoses:</strong> Update patient diagnoses</li>
+                        <li><strong>Order Labs:</strong> Request lab tests</li>
+                        <li><strong>Prescriptions:</strong> Add or modify medications</li>
+                        <li><strong>Nursing Instructions:</strong> Notes for nursing staff</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>5.4 Patient Ward View</h3>
+                    <ul class="feature-list">
+                        <li><strong>Admission Summary:</strong> Reason, date, attending doctor</li>
+                        <li><strong>Vitals Chart:</strong> Graphical vitals trends</li>
+                        <li><strong>Medication Administration Record (MAR):</strong> Scheduled medications, administration times, Given/Missed/Held status</li>
+                        <li><strong>Nursing Notes:</strong> Shift-by-shift documentation</li>
+                        <li><strong>Ward Round History:</strong> All rounds documented</li>
+                        <li><strong>Discharge:</strong> Complete discharge process</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Laboratory -->
+        <section class="section" id="laboratory">
+            <div class="section-header">
+                <h2>🔬 6. Laboratory</h2>
+                <div class="location">Location: Sidebar → Laboratory</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Lab test management, sample collection, and result entry.</div>
+                <div class="feature-group">
+                    <h3>6.1 Lab Dashboard</h3>
+                    <ul class="feature-list">
+                        <li><strong>Pending Orders:</strong> Tests waiting to be processed</li>
+                        <li><strong>Filter by Priority:</strong> Normal, Urgent, STAT</li>
+                        <li><strong>Filter by Status:</strong> Pending, Sample Collected, In Progress, Completed</li>
+                        <li><strong>Search:</strong> Find orders by patient name or order number</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>6.2 Order Processing</h3>
+                    <ul class="feature-list">
+                        <li><strong>View Order Details:</strong> Patient info, tests ordered, clinical notes</li>
+                        <li><strong>Collect Sample:</strong> Mark sample as collected</li>
+                        <li><strong>Enter Results:</strong> Input test results with numeric values, units, and normal range indicators</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>6.3 Result Entry</h3>
+                    <ul class="feature-list">
+                        <li><strong>Dynamic Forms:</strong> Based on test parameters</li>
+                        <li><strong>Reference Ranges:</strong> Auto-display normal ranges</li>
+                        <li><strong>Abnormal Highlighting:</strong> Flag out-of-range values</li>
+                        <li><strong>Add Comments:</strong> Lab technician notes</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>6.4 Lab Configuration</h3>
+                    <ul class="feature-list">
+                        <li><strong>Test Catalog:</strong> Manage available lab tests</li>
+                        <li><strong>Create Test:</strong> Add new lab test with name, code, category, sample type, price, turn-around time</li>
+                        <li><strong>Test Parameters:</strong> Configure result fields (parameter name, type, unit, normal range)</li>
+                        <li><strong>Edit/Delete Tests:</strong> Modify existing tests</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Minor Procedures -->
+        <section class="section" id="minor-procedures">
+            <div class="section-header">
+                <h2>🩹 7. Minor Procedures</h2>
+                <div class="location">Location: Sidebar → Minor Procedures</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Manage minor medical procedures performed outside the operating theatre.</div>
+                <div class="feature-group">
+                    <h3>7.1 Procedure Queue</h3>
+                    <ul class="feature-list">
+                        <li><strong>Pending Procedures:</strong> Patients waiting for procedures</li>
+                        <li><strong>Filter by Type:</strong> Wound care, Suturing, Dressing, etc.</li>
+                        <li><strong>Start Procedure:</strong> Begin documentation</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>7.2 Procedure Documentation</h3>
+                    <ul class="feature-list">
+                        <li><strong>Patient Information:</strong> Demographics and vitals</li>
+                        <li><strong>Procedure Type:</strong> Select from configured types</li>
+                        <li><strong>Diagnosis:</strong> Associate diagnosis with procedure</li>
+                        <li><strong>Procedure Notes:</strong> Document what was done</li>
+                        <li><strong>Supplies Used:</strong> Record materials consumed</li>
+                        <li><strong>Outcome:</strong> Document procedure outcome</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>7.3 Procedure Configuration</h3>
+                    <ul class="feature-list">
+                        <li><strong>Procedure Types:</strong> Manage available procedure types</li>
+                        <li><strong>Create Type:</strong> Add new procedure type with name, description, base price, category</li>
+                        <li><strong>Edit/Delete Types:</strong> Modify existing types</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Pharmacy -->
+        <section class="section" id="pharmacy">
+            <div class="section-header">
+                <h2>💊 8. Pharmacy</h2>
+                <div class="location">Location: Sidebar → Pharmacy</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Drug inventory management and prescription dispensing.</div>
+                <div class="feature-group">
+                    <h3>8.1 Inventory Management</h3>
+                    <ul class="feature-list">
+                        <li><strong>Drug List:</strong> All drugs in the system</li>
+                        <li><strong>Search Drugs:</strong> Find by name, code, or category</li>
+                        <li><strong>Stock Levels:</strong> Current quantity available</li>
+                        <li><strong>Add Drug:</strong> Register new drug with name, code, generic name, strength, form, unit price, reorder level</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>8.2 Drug Batches</h3>
+                    <ul class="feature-list">
+                        <li><strong>View Batches:</strong> All batches for a drug</li>
+                        <li><strong>Add Batch:</strong> Record new stock receipt (batch number, quantity, expiry date, supplier, cost price)</li>
+                        <li><strong>Batch Tracking:</strong> FIFO dispensing by expiry</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>8.3 Stock Alerts</h3>
+                    <ul class="feature-list">
+                        <li><strong>Low Stock Alerts:</strong> Drugs below reorder level</li>
+                        <li><strong>Expiring Soon:</strong> Drugs expiring within 90 days</li>
+                        <li><strong>Expired:</strong> Already expired batches</li>
+                        <li><strong>Export List:</strong> Generate reorder report</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>8.4 Dispensing</h3>
+                    <ul class="feature-list">
+                        <li><strong>Prescription Queue:</strong> Pending prescriptions to dispense</li>
+                        <li><strong>Filter Options:</strong> By status, source (OPD/Ward), date</li>
+                        <li><strong>Search:</strong> Find by patient name or prescription ID</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>8.5 Dispense Prescription</h3>
+                    <ul class="feature-list">
+                        <li><strong>Prescription Details:</strong> Drug, dosage, quantity ordered</li>
+                        <li><strong>Available Stock:</strong> Batches with quantities</li>
+                        <li><strong>Select Batch:</strong> Choose which batch to dispense from</li>
+                        <li><strong>Quantity to Dispense:</strong> Enter amount (partial allowed)</li>
+                        <li><strong>Print Label:</strong> Generate medication label</li>
+                        <li><strong>Complete Dispensing:</strong> Mark as dispensed</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 9: Billing -->
+        <section class="section" id="billing">
+            <div class="section-header">
+                <h2>💳 9. Billing</h2>
+                <div class="location">Location: Sidebar → Billing</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Financial management, payment collection, and revenue tracking.</div>
+                <div class="feature-group">
+                    <h3>9.1 Payments</h3>
+                    <ul class="feature-list">
+                        <li><strong>Patient Search:</strong> Find patient to collect payment</li>
+                        <li><strong>Outstanding Charges:</strong> View unpaid items with service type, description, amount, insurance coverage</li>
+                        <li><strong>Collect Payment:</strong> Select charges, payment method (Cash, Card, Mobile Money), amount received, change calculation</li>
+                        <li><strong>Print Receipt:</strong> Generate payment receipt</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>9.2 Dashboard</h3>
+                    <ul class="feature-list">
+                        <li><strong>Daily Summary:</strong> Today's collections by category</li>
+                        <li><strong>Payment Methods:</strong> Breakdown by payment type</li>
+                        <li><strong>Outstanding Balances:</strong> Total unpaid amounts</li>
+                        <li><strong>Trends:</strong> Revenue charts</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>9.3 Reconciliation</h3>
+                    <ul class="feature-list">
+                        <li><strong>Daily Reconciliation:</strong> Match collections to deposits</li>
+                        <li><strong>Create Reconciliation:</strong> Record bank deposit</li>
+                        <li><strong>Variance Report:</strong> Identify discrepancies</li>
+                        <li><strong>Approval Workflow:</strong> Manager sign-off</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>9.4 History & Reports</h3>
+                    <ul class="feature-list">
+                        <li><strong>Payment History:</strong> All payments received with filters</li>
+                        <li><strong>Void Payment:</strong> Cancel erroneous payment</li>
+                        <li><strong>Refund:</strong> Process refunds</li>
+                        <li><strong>Outstanding Report:</strong> All unpaid charges</li>
+                        <li><strong>Revenue Report:</strong> Income by period</li>
+                        <li><strong>Export Options:</strong> PDF, Excel</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>9.5 Patient Accounts</h3>
+                    <ul class="feature-list">
+                        <li><strong>Account List:</strong> Patients with prepaid balances or credit</li>
+                        <li><strong>Account Details:</strong> Transaction history</li>
+                        <li><strong>Deposit:</strong> Add funds to patient account</li>
+                        <li><strong>Withdraw:</strong> Use account balance for payment</li>
+                        <li><strong>Credit Management:</strong> Manage credit limits</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>9.6 Configuration & Pricing</h3>
+                    <ul class="feature-list">
+                        <li><strong>Payment Methods:</strong> Configure accepted payment types</li>
+                        <li><strong>Service Prices:</strong> Set prices for services</li>
+                        <li><strong>Department Billing:</strong> Configure department-specific fees</li>
+                        <li><strong>Pricing Dashboard:</strong> Centralized pricing management with bulk edit</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 10: Insurance -->
+        <section class="section" id="insurance">
+            <div class="section-header">
+                <h2>🛡️ 10. Insurance</h2>
+                <div class="location">Location: Sidebar → Insurance</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Insurance provider management, coverage rules, and claims processing.</div>
+                <div class="feature-group">
+                    <h3>10.1 Providers</h3>
+                    <ul class="feature-list">
+                        <li><strong>Provider List:</strong> All insurance companies</li>
+                        <li><strong>Add Provider:</strong> Register new insurance company with name, code, contact info, NHIS status</li>
+                        <li><strong>Edit Provider:</strong> Update provider details</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.2 Plans</h3>
+                    <ul class="feature-list">
+                        <li><strong>Plan List:</strong> Insurance plans by provider</li>
+                        <li><strong>Add Plan:</strong> Create new plan with name, code, provider, coverage percentages</li>
+                        <li><strong>Category Defaults:</strong> Set default coverage for Consultations, Medications, Laboratory, Procedures, Diagnostics, Consumables</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.3 Coverage Rules</h3>
+                    <ul class="feature-list">
+                        <li><strong>View Coverage:</strong> See all coverage rules for a plan</li>
+                        <li><strong>Category Defaults:</strong> Base coverage percentages</li>
+                        <li><strong>Item Exceptions:</strong> Override coverage for specific items (custom tariff, copay amounts)</li>
+                        <li><strong>Add Exception:</strong> Create item-specific rule</li>
+                        <li><strong>Bulk Import:</strong> Upload coverage rules from Excel</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.4 Claims</h3>
+                    <ul class="feature-list">
+                        <li><strong>Claims List:</strong> All insurance claims</li>
+                        <li><strong>Filter by Status:</strong> Draft, Pending Vetting, Vetted, Submitted, Approved, Rejected, Paid</li>
+                        <li><strong>Create Claim:</strong> Generate claim from patient visit</li>
+                        <li><strong>Claim Details:</strong> View all claim items</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.5 Claim Vetting</h3>
+                    <ul class="feature-list">
+                        <li><strong>Review Items:</strong> Check each claim item</li>
+                        <li><strong>Verify Coverage:</strong> Confirm coverage rules applied correctly</li>
+                        <li><strong>Adjust Amounts:</strong> Modify if needed</li>
+                        <li><strong>Add Notes:</strong> Document vetting decisions</li>
+                        <li><strong>Approve/Reject Items:</strong> Individual item decisions</li>
+                        <li><strong>Submit Claim:</strong> Send to insurance</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.6 Batches</h3>
+                    <ul class="feature-list">
+                        <li><strong>Batch List:</strong> Grouped claims for submission</li>
+                        <li><strong>Create Batch:</strong> Group claims by provider/period</li>
+                        <li><strong>Batch Status:</strong> Track submission status</li>
+                        <li><strong>Export Batch:</strong> Generate submission file (XML for NHIS)</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.7 Analytics</h3>
+                    <ul class="feature-list">
+                        <li><strong>Claims Summary:</strong> Total claims by status</li>
+                        <li><strong>Provider Analysis:</strong> Claims by insurance company</li>
+                        <li><strong>Rejection Analysis:</strong> Common rejection reasons</li>
+                        <li><strong>Revenue Tracking:</strong> Expected vs received payments</li>
+                        <li><strong>Aging Report:</strong> Outstanding claims by age</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>10.8 NHIS & G-DRG Tariffs</h3>
+                    <ul class="feature-list">
+                        <li><strong>NHIS Tariffs:</strong> National Health Insurance tariffs, search, import</li>
+                        <li><strong>NHIS Mappings:</strong> Link local items to NHIS codes, bulk mapping</li>
+                        <li><strong>G-DRG Tariffs:</strong> Ghana Diagnosis Related Groups tariffs</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 11: Departments -->
+        <section class="section" id="departments">
+            <div class="section-header">
+                <h2>🏢 11. Departments</h2>
+                <div class="location">Location: Sidebar → Departments</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Hospital department configuration and management.</div>
+                <div class="feature-group">
+                    <h3>Department Management</h3>
+                    <ul class="feature-list">
+                        <li><strong>Department List:</strong> View all hospital departments with name, code, type, staff count</li>
+                        <li><strong>Create Department:</strong> Add new department (Name, Code, Type: OPD/Ward/Lab/Pharmacy, Description)</li>
+                        <li><strong>Edit Department:</strong> Modify details</li>
+                        <li><strong>Delete Department:</strong> Remove unused departments</li>
+                        <li><strong>Department Billing:</strong> Set consultation fee and service fees</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 12: Backups -->
+        <section class="section" id="backups">
+            <div class="section-header">
+                <h2>💾 12. Backups</h2>
+                <div class="location">Location: Sidebar → Backups (Admin only)</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Database backup and recovery management.</div>
+                <div class="feature-group">
+                    <h3>Backup Features</h3>
+                    <ul class="feature-list">
+                        <li><strong>Backup List:</strong> View all system backups with date, size, type, status</li>
+                        <li><strong>Download:</strong> Get backup file</li>
+                        <li><strong>Create Backup:</strong> Trigger immediate backup (Full or incremental)</li>
+                        <li><strong>Restore:</strong> Select backup to restore with confirmation</li>
+                        <li><strong>Settings:</strong> Configure schedule, retention, storage location, notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 13: Administration -->
+        <section class="section" id="administration">
+            <div class="section-header">
+                <h2>⚙️ 13. Administration</h2>
+                <div class="location">Location: Sidebar → Administration (Admin only)</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> System administration and user management.</div>
+                <div class="feature-group">
+                    <h3>13.1 Users</h3>
+                    <ul class="feature-list">
+                        <li><strong>User List:</strong> All system users</li>
+                        <li><strong>Search Users:</strong> Find by name or email</li>
+                        <li><strong>Create User:</strong> Add new user (Name, email, password, role, department, status)</li>
+                        <li><strong>Edit User:</strong> Modify user details</li>
+                        <li><strong>Reset Password:</strong> Force password change</li>
+                        <li><strong>Deactivate User:</strong> Disable account</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>13.2 Roles</h3>
+                    <ul class="feature-list">
+                        <li><strong>Role List:</strong> All system roles</li>
+                        <li><strong>Create Role:</strong> Define new role with name, description, permissions</li>
+                        <li><strong>Edit Role:</strong> Modify permissions</li>
+                        <li><strong>Delete Role:</strong> Remove unused roles</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>13.3 Permission Categories</h3>
+                    <ul class="feature-list">
+                        <li><strong>Patients:</strong> view, create, edit, delete</li>
+                        <li><strong>Check-in:</strong> view, create</li>
+                        <li><strong>Consultation:</strong> view own, view department, view all, create</li>
+                        <li><strong>Wards:</strong> view, manage</li>
+                        <li><strong>Laboratory:</strong> view, process, configure</li>
+                        <li><strong>Pharmacy:</strong> view, dispense, manage inventory</li>
+                        <li><strong>Billing:</strong> view, collect, reconcile, configure</li>
+                        <li><strong>Insurance:</strong> view, manage, vet claims</li>
+                        <li><strong>Administration:</strong> users, roles, settings</li>
+                    </ul>
+                </div>
+                <div class="feature-group">
+                    <h3>13.4 Theme & NHIS Settings</h3>
+                    <ul class="feature-list">
+                        <li><strong>Theme Settings:</strong> Color scheme, logo, facility name, dark mode</li>
+                        <li><strong>NHIS Settings:</strong> Facility code, API credentials, submission settings</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 14: Settings -->
+        <section class="section" id="settings">
+            <div class="section-header">
+                <h2>👤 14. Settings (User Profile)</h2>
+                <div class="location">Location: User menu → Settings</div>
+            </div>
+            <div class="section-content">
+                <div class="purpose"><strong>Purpose:</strong> Personal user settings and preferences.</div>
+                <div class="feature-group">
+                    <h3>User Settings</h3>
+                    <ul class="feature-list">
+                        <li><strong>Profile:</strong> Personal information, contact details, profile picture</li>
+                        <li><strong>Password:</strong> Change login password with requirements</li>
+                        <li><strong>Two-Factor Authentication:</strong> Enable 2FA, setup with authenticator app, recovery codes</li>
+                        <li><strong>Appearance:</strong> Light or dark mode, language</li>
+                        <li><strong>Vitals Alerts:</strong> Configure thresholds, sound notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Common Workflows -->
+        <section class="section" id="workflows">
+            <div class="section-header">
+                <h2>🔄 Common Workflows</h2>
+                <div class="location">Quick Reference Guide</div>
+            </div>
+            <div class="section-content">
+                <div class="workflow-box">
+                    <h4>New Patient Visit (OPD)</h4>
+                    <div class="workflow-steps">
+                        <span class="workflow-step">1. Check-in</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">2. Vitals</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">3. Consultation</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">4. Diagnosis</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">5. Lab Orders</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">6. Prescriptions</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">7. Billing</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">8. Pharmacy</span>
+                    </div>
+                </div>
+
+                <div class="workflow-box">
+                    <h4>Patient Admission</h4>
+                    <div class="workflow-steps">
+                        <span class="workflow-step">1. Consultation</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">2. Admit</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">3. Bed Assignment</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">4. Ward Rounds</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">5. MAR</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">6. Discharge</span>
+                    </div>
+                </div>
+
+                <div class="workflow-box">
+                    <h4>Insurance Claim Processing</h4>
+                    <div class="workflow-steps">
+                        <span class="workflow-step">1. Patient Visit</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">2. Charges Created</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">3. Claim Generated</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">4. Vetting</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">5. Submission</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">6. Follow-up</span>
+                    </div>
+                </div>
+
+                <div class="workflow-box">
+                    <h4>Lab Test Processing</h4>
+                    <div class="workflow-steps">
+                        <span class="workflow-step">1. Order Received</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">2. Sample Collection</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">3. Processing</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">4. Result Entry</span>
+                        <span class="workflow-arrow">→</span>
+                        <span class="workflow-step">5. Completion</span>
+                    </div>
+                </div>
+
+                <div class="tips-section">
+                    <h3>💡 Tips for Trainers</h3>
+                    <ol class="tips-list">
+                        <li><strong>Start with Check-in:</strong> It's the entry point for most workflows</li>
+                        <li><strong>Use Test Patients:</strong> Create dummy patients for training</li>
+                        <li><strong>Follow Complete Workflows:</strong> Don't skip steps</li>
+                        <li><strong>Highlight Keyboard Shortcuts:</strong> Many forms support quick entry</li>
+                        <li><strong>Explain Insurance Early:</strong> It affects many other modules</li>
+                        <li><strong>Practice Error Scenarios:</strong> Show what happens with invalid data</li>
+                        <li><strong>Demonstrate Reports:</strong> Show how data flows to reports</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p><strong>HMS Training Guide</strong> | Version 1.0 | December 2025</p>
+            <p>Hospital Management System - Comprehensive Training Documentation</p>
+        </footer>
+    </div>
+</body>
+</html>

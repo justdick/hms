@@ -8,6 +8,8 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Popover,
     PopoverContent,
@@ -44,6 +46,9 @@ export default function AsyncDiagnosisSelect({
     const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
     const [loading, setLoading] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [showCustomForm, setShowCustomForm] = useState(false);
+    const [customIcdCode, setCustomIcdCode] = useState('');
+    const [customError, setCustomError] = useState<string | null>(null);
     const [selectedDiagnosis, setSelectedDiagnosis] =
         useState<Diagnosis | null>(null);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,6 +109,9 @@ export default function AsyncDiagnosisSelect({
         if (!open) {
             setSearch('');
             setDiagnoses([]);
+            setShowCustomForm(false);
+            setCustomIcdCode('');
+            setCustomError(null);
         }
     }, [open]);
 
@@ -114,9 +122,15 @@ export default function AsyncDiagnosisSelect({
     };
 
     const handleCreateCustom = async () => {
-        if (search.length < 2 || creating) return;
+        if (search.length < 2 || creating || !customIcdCode.trim()) {
+            if (!customIcdCode.trim()) {
+                setCustomError('ICD-10 code is required');
+            }
+            return;
+        }
 
         setCreating(true);
+        setCustomError(null);
         try {
             const response = await fetch('/consultation/diagnoses/custom', {
                 method: 'POST',
@@ -126,22 +140,35 @@ export default function AsyncDiagnosisSelect({
                         'meta[name="csrf-token"]'
                     )?.content || '',
                 },
-                body: JSON.stringify({ diagnosis: search }),
+                body: JSON.stringify({ 
+                    diagnosis: search,
+                    icd_10: customIcdCode.trim(),
+                }),
             });
 
             if (!response.ok) {
                 const error = await response.json();
                 console.error('Failed to create custom diagnosis:', error);
+                setCustomError(error.message || 'Failed to create diagnosis');
                 return;
             }
 
             const newDiagnosis: Diagnosis = await response.json();
             handleSelect(newDiagnosis);
+            setShowCustomForm(false);
+            setCustomIcdCode('');
         } catch (error) {
             console.error('Failed to create custom diagnosis:', error);
+            setCustomError('Failed to create diagnosis');
         } finally {
             setCreating(false);
         }
+    };
+
+    const handleShowCustomForm = () => {
+        setShowCustomForm(true);
+        setCustomIcdCode('');
+        setCustomError(null);
     };
 
     const displayValue = selectedDiagnosis?.name || placeholder;
@@ -183,24 +210,88 @@ export default function AsyncDiagnosisSelect({
                         {!loading &&
                             search.length >= 2 &&
                             diagnoses.length === 0 && (
-                                <CommandEmpty className="py-2">
-                                    <div className="text-center text-sm text-muted-foreground mb-2">
-                                        No diagnosis found for "{search}"
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={handleCreateCustom}
-                                        disabled={creating}
-                                    >
-                                        {creating ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Plus className="mr-2 h-4 w-4" />
-                                        )}
-                                        Add "{search}" as custom diagnosis
-                                    </Button>
+                                <CommandEmpty className="py-2 px-2">
+                                    {!showCustomForm ? (
+                                        <>
+                                            <div className="text-center text-sm text-muted-foreground mb-2">
+                                                No diagnosis found for "{search}"
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={handleShowCustomForm}
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add as custom diagnosis
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div className="text-sm font-medium">
+                                                Add Custom Diagnosis
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div>
+                                                    <Label className="text-xs text-muted-foreground">
+                                                        Diagnosis Name
+                                                    </Label>
+                                                    <div className="text-sm font-medium mt-1">
+                                                        {search}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="icd-code" className="text-xs">
+                                                        ICD-10 Code <span className="text-destructive">*</span>
+                                                    </Label>
+                                                    <Input
+                                                        id="icd-code"
+                                                        placeholder="e.g., A00.0"
+                                                        value={customIcdCode}
+                                                        onChange={(e) => {
+                                                            setCustomIcdCode(e.target.value.toUpperCase());
+                                                            setCustomError(null);
+                                                        }}
+                                                        className="mt-1 h-8"
+                                                        autoFocus
+                                                    />
+                                                    {customError && (
+                                                        <p className="text-xs text-destructive mt-1">
+                                                            {customError}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() => {
+                                                        setShowCustomForm(false);
+                                                        setCustomIcdCode('');
+                                                        setCustomError(null);
+                                                    }}
+                                                    disabled={creating}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={handleCreateCustom}
+                                                    disabled={creating || !customIcdCode.trim()}
+                                                >
+                                                    {creating ? (
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                    )}
+                                                    Add
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </CommandEmpty>
                             )}
                         {!loading && diagnoses.length > 0 && (

@@ -50,12 +50,13 @@ class DiagnosisController extends Controller
     {
         $validated = $request->validate([
             'diagnosis' => 'required|string|max:255|unique:diagnoses,diagnosis',
+            'icd_10' => 'required|string|max:20',
         ]);
 
         $diagnosis = Diagnosis::create([
             'diagnosis' => $validated['diagnosis'],
             'code' => 'CUSTOM-'.strtoupper(Str::random(8)),
-            'icd_10' => null,
+            'icd_10' => strtoupper($validated['icd_10']),
             'is_custom' => true,
             'created_by' => auth()->id(),
         ]);
@@ -63,7 +64,7 @@ class DiagnosisController extends Controller
         return response()->json([
             'id' => $diagnosis->id,
             'name' => $diagnosis->diagnosis,
-            'icd_code' => null,
+            'icd_code' => $diagnosis->icd_10,
             'is_custom' => true,
         ]);
     }

@@ -27,6 +27,7 @@ class PrescriptionFactory extends Factory
             'dosage_form' => fake()->randomElement(['tablet', 'capsule', 'syrup', 'injection']),
             'instructions' => fake()->sentence(),
             'status' => 'prescribed',
+            'is_unpriced' => false,
         ];
     }
 
@@ -70,6 +71,16 @@ class PrescriptionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'cancelled',
+        ]);
+    }
+
+    /**
+     * Indicate that the prescription is for an unpriced drug.
+     */
+    public function unpriced(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_unpriced' => true,
         ]);
     }
 }

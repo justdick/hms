@@ -26,6 +26,10 @@ import {
     X,
 } from 'lucide-react';
 import * as React from 'react';
+import {
+    PricingStatusFilter,
+    type PricingStatusValue,
+} from './components/PricingStatusFilter';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -73,6 +77,7 @@ interface Filters {
     category?: string | null;
     search?: string | null;
     unmapped_only?: boolean;
+    pricing_status?: string | null;
 }
 
 interface DataTableProps<TData, TValue> {
@@ -123,6 +128,9 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [search, setSearch] = React.useState(filters.search || '');
     const [unmappedOnly, setUnmappedOnly] = React.useState(filters.unmapped_only || false);
+    const [pricingStatus, setPricingStatus] = React.useState<PricingStatusValue>(
+        (filters.pricing_status as PricingStatusValue) || 'all',
+    );
 
     const table = useReactTable({
         data,
@@ -177,6 +185,15 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
         );
     };
 
+    const handlePricingStatusChange = (status: PricingStatusValue) => {
+        setPricingStatus(status);
+        router.get(
+            '/admin/pricing-dashboard',
+            { ...filters, pricing_status: status === 'all' ? undefined : status },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
     const handlePageChange = (url: string | null) => {
         if (url) {
             router.get(url, {}, { preserveState: true, preserveScroll: true });
@@ -194,6 +211,7 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
     const handleClearFilters = () => {
         setSearch('');
         setUnmappedOnly(false);
+        setPricingStatus('all');
         router.get(
             '/admin/pricing-dashboard',
             { plan_id: filters.plan_id },
@@ -201,7 +219,8 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
         );
     };
 
-    const hasActiveFilters = filters.category || filters.search || filters.unmapped_only;
+    const hasActiveFilters =
+        filters.category || filters.search || filters.unmapped_only || filters.pricing_status;
 
     // Find prev/next links from pagination
     const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
@@ -292,6 +311,12 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                         })}
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* Pricing Status Filter */}
+                <PricingStatusFilter
+                    value={pricingStatus}
+                    onChange={handlePricingStatusChange}
+                />
 
                 {/* Unmapped Only Filter (NHIS only) */}
                 {isNhis && (

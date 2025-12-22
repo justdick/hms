@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CurrentPatientsTable } from '@/components/Ward/CurrentPatientsTable';
+import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { useVitalsAlerts } from '@/hooks/use-vitals-alerts';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
@@ -21,57 +21,14 @@ import {
     UserCheck,
     Users,
 } from 'lucide-react';
+import { useState } from 'react';
+import {
+    createWardPatientsColumns,
+    WardPatientData,
+} from './ward-patients-columns';
+import { WardPatientsDataTable } from './ward-patients-data-table';
 
-interface Patient {
-    id: number;
-    first_name: string;
-    last_name: string;
-    date_of_birth?: string;
-    gender?: string;
-}
-
-interface Doctor {
-    id: number;
-    name: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-}
-
-interface Drug {
-    id: number;
-    name: string;
-    strength?: string;
-    form?: string;
-}
-
-interface Prescription {
-    id: number;
-    drug: Drug;
-}
-
-interface VitalSign {
-    id: number;
-    temperature?: number;
-    blood_pressure_systolic?: number;
-    blood_pressure_diastolic?: number;
-    pulse_rate?: number;
-    respiratory_rate?: number;
-    oxygen_saturation?: number;
-    recorded_at: string;
-    recorded_by?: User;
-}
-
-interface MedicationAdministration {
-    id: number;
-    prescription: Prescription;
-    scheduled_time: string;
-    status: 'scheduled' | 'administered' | 'missed' | 'refused';
-}
-
-interface Bed {
+interface BedData {
     id: number;
     ward_id: number;
     bed_number: string;
@@ -80,34 +37,21 @@ interface Bed {
     is_active: boolean;
 }
 
-interface Consultation {
-    id: number;
-    doctor: Doctor;
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
 }
 
-interface VitalsSchedule {
-    id: number;
-    patient_admission_id: number;
-    interval_minutes: number;
-    next_due_at: string;
-    last_recorded_at?: string;
-    is_active: boolean;
-}
-
-interface PatientAdmission {
-    id: number;
-    admission_number: string;
-    patient: Patient;
-    status: string;
-    admitted_at: string;
-    bed_id?: number;
-    bed?: Bed;
-    consultation?: Consultation;
-    latest_vital_signs?: VitalSign[];
-    pending_medications?: MedicationAdministration[];
-    ward_rounds_count?: number;
-    nursing_notes_count?: number;
-    vitals_schedule?: VitalsSchedule;
+interface PaginatedAdmissions {
+    data: WardPatientData[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: PaginationLink[];
 }
 
 interface Ward {
@@ -118,8 +62,7 @@ interface Ward {
     total_beds: number;
     available_beds: number;
     is_active: boolean;
-    beds: Bed[];
-    admissions: PatientAdmission[];
+    beds: BedData[];
     created_at: string;
 }
 
@@ -133,15 +76,49 @@ interface WardStats {
 interface Props {
     ward: Ward;
     stats: WardStats;
+    admissions: PaginatedAdmissions;
+    filters?: {
+        search?: string;
+    };
 }
 
-export default function WardShow({ ward, stats }: Props) {
+export default function WardShow({ ward, stats, admissions, filters = {} }: Props) {
+    const [bedModalOpen, setBedModalOpen] = useState(false);
+    const [selectedAdmission, setSelectedAdmission] =
+        useState<WardPatientData | null>(null);
+    const [isChangingBed, setIsChangingBed] = useState(false);
+
     // Fetch vitals alerts for this ward (toasts are handled globally in AppLayout)
     const { alerts } = useVitalsAlerts({
         wardId: ward.id,
         pollingInterval: 30000,
         enabled: true,
     });
+
+    // Create columns with wardId
+    const columns = createWardPatientsColumns(ward.id);
+
+    // Get current admissions for bed display
+    const currentAdmissions = admissions.data;
+
+    // Get available beds for the modal
+    const availableBeds = ward.beds.filter((bed) => bed.status === 'available');
+
+    // Handle bed action from table
+    const handleBedAction = (
+        admission: WardPatientData,
+        action: 'assign' | 'change',
+    ) => {
+        setSelectedAdmission(admission);
+        setIsChangingBed(action === 'change');
+        setBedModalOpen(true);
+    };
+
+    const handleBedModalClose = () => {
+        setBedModalOpen(false);
+        setSelectedAdmission(null);
+        setIsChangingBed(false);
+    };
 
     const getBedStatusColor = (status: string) => {
         const colors = {
@@ -294,7 +271,7 @@ export default function WardShow({ ward, stats }: Props) {
                             className="flex items-center gap-2"
                         >
                             <Users className="h-4 w-4" />
-                            Current Patients ({ward.admissions.length})
+                            Current Patients ({admissions.total})
                         </TabsTrigger>
                         <TabsTrigger
                             value="beds"
@@ -322,7 +299,7 @@ export default function WardShow({ ward, stats }: Props) {
                                             )
                                             .map((bed) => {
                                                 const currentPatient =
-                                                    ward.admissions.find(
+                                                    currentAdmissions.find(
                                                         (admission) =>
                                                             admission.bed_id ===
                                                             bed.id,
@@ -414,15 +391,35 @@ export default function WardShow({ ward, stats }: Props) {
                                 <CardTitle>Current Patients</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <CurrentPatientsTable
-                                    admissions={ward.admissions}
+                                <WardPatientsDataTable
+                                    columns={columns}
+                                    data={admissions.data}
+                                    pagination={admissions}
+                                    searchValue={filters.search ?? ''}
                                     wardId={ward.id}
+                                    onBedAction={handleBedAction}
                                 />
                             </CardContent>
                         </Card>
                     </TabsContent>
                 </Tabs>
             </div>
+
+            {/* Bed Assignment Modal */}
+            {selectedAdmission && (
+                <BedAssignmentModal
+                    open={bedModalOpen}
+                    onClose={handleBedModalClose}
+                    admission={{
+                        id: selectedAdmission.id,
+                        bed_id: selectedAdmission.bed_id,
+                    }}
+                    availableBeds={availableBeds}
+                    allBeds={ward.beds}
+                    hasAvailableBeds={availableBeds.length > 0}
+                    isChangingBed={isChangingBed}
+                />
+            )}
         </AppLayout>
     );
 }

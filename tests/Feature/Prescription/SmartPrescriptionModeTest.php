@@ -254,9 +254,9 @@ describe('Smart Mode Prescription Creation', function () {
 
     /**
      * Validates: Requirements 10.2
-     * Schedule pattern is stored for custom schedules.
+     * Split dose prescriptions are parsed correctly.
      */
-    it('stores schedule_pattern for split dose prescriptions', function () {
+    it('parses split dose prescriptions correctly', function () {
         $response = $this->actingAs($this->user)
             ->post("/consultation/{$this->consultation->id}/prescriptions", [
                 'medication_name' => $this->drug->name,
@@ -269,20 +269,15 @@ describe('Smart Mode Prescription Creation', function () {
 
         $prescription = Prescription::where('consultation_id', $this->consultation->id)->first();
         expect($prescription)->not->toBeNull();
-        expect($prescription->schedule_pattern)->not->toBeNull();
-        expect($prescription->schedule_pattern['type'])->toBe('split_dose');
-        // JSON decoding converts floats to ints when they're whole numbers
-        expect($prescription->schedule_pattern['pattern']['morning'])->toBe(1);
-        expect($prescription->schedule_pattern['pattern']['noon'])->toBe(0);
-        expect($prescription->schedule_pattern['pattern']['evening'])->toBe(1);
         expect($prescription->quantity_to_dispense)->toBe(60);
+        expect($prescription->frequency)->toContain('1-0-1');
     });
 
     /**
      * Validates: Requirements 10.2
-     * Schedule pattern is stored for taper prescriptions.
+     * Taper prescriptions are parsed correctly.
      */
-    it('stores schedule_pattern for taper prescriptions', function () {
+    it('parses taper prescriptions correctly', function () {
         $response = $this->actingAs($this->user)
             ->post("/consultation/{$this->consultation->id}/prescriptions", [
                 'medication_name' => $this->drug->name,
@@ -295,10 +290,6 @@ describe('Smart Mode Prescription Creation', function () {
 
         $prescription = Prescription::where('consultation_id', $this->consultation->id)->first();
         expect($prescription)->not->toBeNull();
-        expect($prescription->schedule_pattern)->not->toBeNull();
-        expect($prescription->schedule_pattern['type'])->toBe('taper');
-        // JSON decoding converts floats to ints when they're whole numbers
-        expect($prescription->schedule_pattern['doses'])->toBe([4, 3, 2, 1]);
         expect($prescription->quantity_to_dispense)->toBe(10);
     });
 
@@ -404,8 +395,6 @@ describe('Smart Mode Prescription Creation', function () {
         expect($prescription->frequency)->toBe('Immediately (STAT)');
         expect($prescription->duration)->toBe('Single dose');
         expect($prescription->quantity_to_dispense)->toBe(2);
-        // STAT doesn't have a schedule_pattern (it's a single immediate dose)
-        expect($prescription->schedule_pattern)->toBeNull();
     });
 
     /**
@@ -428,7 +417,5 @@ describe('Smart Mode Prescription Creation', function () {
         expect($prescription->dose_quantity)->toBe('2');
         expect($prescription->frequency)->toBe('As needed (PRN)');
         expect($prescription->duration)->toBe('As needed');
-        // PRN doesn't have a schedule_pattern (it's as-needed)
-        expect($prescription->schedule_pattern)->toBeNull();
     });
 });

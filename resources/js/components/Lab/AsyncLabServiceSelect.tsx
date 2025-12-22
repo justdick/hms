@@ -24,6 +24,7 @@ interface LabService {
     category: string;
     sample_type: string;
     turnaround_time: string;
+    price?: number | null;
 }
 
 interface Props {

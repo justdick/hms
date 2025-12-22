@@ -9,6 +9,10 @@ use Carbon\Carbon;
 
 class InsuranceService
 {
+    public function __construct(
+        protected InsuranceCoverageService $coverageService
+    ) {}
+
     /**
      * Verify if a patient has active insurance coverage
      */
@@ -42,7 +46,9 @@ class InsuranceService
      *     requires_preauthorization: bool,
      *     coverage_rule: ?InsuranceCoverageRule,
      *     exceeded_limit: bool,
-     *     limit_message: ?string
+     *     limit_message: ?string,
+     *     is_unmapped?: bool,
+     *     has_flexible_copay?: bool
      * }
      */
     public function calculateCoverage(
@@ -51,10 +57,45 @@ class InsuranceService
         string $itemCode,
         float $standardPrice,
         int $quantity = 1,
-        ?Carbon $date = null
+        ?Carbon $date = null,
+        ?int $itemId = null
     ): array {
         $date = $date ?? now();
         $plan = $patientInsurance->plan;
+
+        // For NHIS plans, delegate to InsuranceCoverageService which handles
+        // NHIS tariff lookup and flexible copay for unmapped items
+        if ($this->coverageService->isNhisPlan($plan->id) && $itemId !== null) {
+            $nhisItemType = $this->mapItemTypeToNhisType($itemType);
+            $coverageCategory = $this->mapItemTypeToCoverageCategory($itemType);
+            $result = $this->coverageService->calculateNhisCoverage(
+                insurancePlanId: $plan->id,
+                category: $coverageCategory,
+                itemCode: $itemCode,
+                itemId: $itemId,
+                itemType: $nhisItemType,
+                amount: $standardPrice,
+                quantity: $quantity,
+                date: $date
+            );
+
+            // Map the result to the expected format
+            return [
+                'is_covered' => $result['is_covered'],
+                'coverage_type' => $result['coverage_type'],
+                'coverage_percentage' => $result['coverage_percentage'],
+                'insurance_tariff' => $result['insurance_tariff'],
+                'subtotal' => $result['subtotal'],
+                'insurance_pays' => $result['insurance_pays'],
+                'patient_pays' => $result['patient_pays'],
+                'requires_preauthorization' => $result['requires_preauthorization'],
+                'coverage_rule' => $result['rule_id'] ? InsuranceCoverageRule::find($result['rule_id']) : null,
+                'exceeded_limit' => $result['exceeded_limit'],
+                'limit_message' => $result['limit_message'],
+                'is_unmapped' => $result['is_unmapped'] ?? false,
+                'has_flexible_copay' => $result['has_flexible_copay'] ?? false,
+            ];
+        }
 
         // Get the applicable tariff (if any)
         $tariff = $this->getApplicableTariff($plan->id, $itemType, $itemCode, $date);
@@ -155,6 +196,34 @@ class InsuranceService
             'exceeded_limit' => $exceededLimit,
             'limit_message' => $limitMessage,
         ];
+    }
+
+    /**
+     * Map item type to NHIS item type for tariff lookup.
+     */
+    protected function mapItemTypeToNhisType(string $itemType): string
+    {
+        return match ($itemType) {
+            'drug', 'pharmacy', 'medication' => 'drug',
+            'lab', 'laboratory' => 'lab_service',
+            'consultation' => 'consultation',
+            'procedure', 'minor_procedure' => 'procedure',
+            default => $itemType,
+        };
+    }
+
+    /**
+     * Map item type to coverage category for coverage rule lookup.
+     */
+    protected function mapItemTypeToCoverageCategory(string $itemType): string
+    {
+        return match ($itemType) {
+            'drug', 'pharmacy', 'medication' => 'drug',
+            'lab', 'laboratory' => 'lab',
+            'consultation' => 'consultation',
+            'procedure', 'minor_procedure' => 'procedure',
+            default => $itemType,
+        };
     }
 
     /**

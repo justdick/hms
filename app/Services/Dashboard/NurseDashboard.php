@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 /**
  * Dashboard widget for nurse metrics and data.
  *
- * Provides vitals queue, medication schedule, and active admissions
+ * Provides vitals queue, medication activity, and active admissions
  * for users with vitals and medication administration permissions.
  */
 class NurseDashboard extends AbstractDashboardWidget
@@ -43,7 +43,7 @@ class NurseDashboard extends AbstractDashboardWidget
     {
         return $this->cacheForUser($user, 'metrics', fn () => [
             'awaitingVitals' => $this->getAwaitingVitalsCount($user),
-            'pendingMedications' => $this->getPendingMedicationsCount($user),
+            'medicationsGivenToday' => $this->getMedicationsGivenTodayCount($user),
             'activeAdmissions' => $this->getActiveAdmissionsCount($user),
             'vitalsRecordedToday' => $this->getVitalsRecordedTodayCount($user),
         ]);
@@ -58,7 +58,7 @@ class NurseDashboard extends AbstractDashboardWidget
     {
         return [
             'vitalsQueue' => $this->cacheForUser($user, 'vitals_queue', fn () => $this->getVitalsQueueSimplified($user)),
-            'medicationSchedule' => $this->cacheForUser($user, 'medication_schedule', fn () => $this->getMedicationScheduleSimplified($user)),
+            'recentMedications' => $this->cacheForUser($user, 'recent_medications', fn () => $this->getRecentMedicationsSimplified($user)),
         ];
     }
 
@@ -71,11 +71,17 @@ class NurseDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get count of pending medication administrations (due within 1 hour).
+     * Get count of medications given today.
      */
-    protected function getPendingMedicationsCount(User $user): int
+    protected function getMedicationsGivenTodayCount(User $user): int
     {
-        return $this->getMedicationScheduleQuery($user)->count();
+        return MedicationAdministration::query()
+            ->whereDate('administered_at', today())
+            ->where('status', 'given')
+            ->whereHas('patientAdmission', function ($q) {
+                $q->where('status', 'admitted');
+            })
+            ->count();
     }
 
     /**
@@ -132,7 +138,7 @@ class NurseDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get simplified medication schedule for dashboard display.
+     * Get recent medication administrations for dashboard display.
      *
      * @return Collection<int, array{
      *     id: int,
@@ -141,13 +147,17 @@ class NurseDashboard extends AbstractDashboardWidget
      *     bed: string|null,
      *     medication: string,
      *     dosage: string|null,
-     *     scheduled_time: string,
-     *     is_overdue: bool
+     *     administered_at: string,
+     *     status: string
      * }>
      */
-    protected function getMedicationScheduleSimplified(User $user): Collection
+    protected function getRecentMedicationsSimplified(User $user): Collection
     {
-        return $this->getMedicationScheduleQuery($user)
+        return MedicationAdministration::query()
+            ->whereDate('administered_at', today())
+            ->whereHas('patientAdmission', function ($q) {
+                $q->where('status', 'admitted');
+            })
             ->with([
                 'prescription:id,drug_id,medication_name,dose_quantity',
                 'prescription.drug:id,name,unit_type',
@@ -156,7 +166,7 @@ class NurseDashboard extends AbstractDashboardWidget
                 'patientAdmission.ward:id,name',
                 'patientAdmission.bed:id,bed_number',
             ])
-            ->orderBy('scheduled_time')
+            ->orderBy('administered_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function (MedicationAdministration $administration) {
@@ -170,8 +180,8 @@ class NurseDashboard extends AbstractDashboardWidget
                     'bed' => $admission?->bed?->bed_number ?? null,
                     'medication' => $prescription?->drug?->name ?? $prescription?->medication_name ?? 'Unknown',
                     'dosage' => $prescription?->dose_quantity ? "{$prescription->dose_quantity} {$prescription->drug?->unit_type}" : null,
-                    'scheduled_time' => $administration->scheduled_time?->format('H:i'),
-                    'is_overdue' => $administration->scheduled_time?->isPast() ?? false,
+                    'administered_at' => $administration->administered_at?->format('H:i'),
+                    'status' => $administration->status,
                 ];
             });
     }
@@ -188,28 +198,6 @@ class NurseDashboard extends AbstractDashboardWidget
         // Apply department filtering if user doesn't have full access
         if (! $this->canViewAll($user, 'vitals')) {
             $query->whereIn('department_id', $this->getUserDepartmentIds($user));
-        }
-
-        return $query;
-    }
-
-    /**
-     * Get the base query for medication schedule.
-     */
-    protected function getMedicationScheduleQuery(User $user): \Illuminate\Database\Eloquent\Builder
-    {
-        $query = MedicationAdministration::query()
-            ->where('status', 'scheduled')
-            ->where('scheduled_time', '<=', now()->addHours(2))
-            ->whereHas('patientAdmission', function ($q) {
-                $q->where('status', 'admitted');
-            });
-
-        // Filter by user access - for now, show all scheduled medications
-        // In a more complex setup, this could filter by assigned wards
-        if (! $this->hasFullAccess($user) && ! $user->can('view medication administrations')) {
-            // No access
-            $query->whereRaw('1 = 0');
         }
 
         return $query;

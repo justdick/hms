@@ -37,8 +37,8 @@ return new class extends Migration
 
         // Medication administrations: optimize nurse dashboard queries
         Schema::table('medication_administrations', function (Blueprint $table) {
-            // Index for scheduled medications by status and time
-            $table->index(['status', 'scheduled_time'], 'idx_med_admin_status_scheduled');
+            // Index for medication administrations by status and time
+            $table->index(['status', 'administered_at'], 'idx_med_admin_status_administered');
         });
 
         // Patient admissions: optimize active admissions count
@@ -82,7 +82,7 @@ return new class extends Migration
         });
 
         Schema::table('medication_administrations', function (Blueprint $table) {
-            $table->dropIndex('idx_med_admin_status_scheduled');
+            $table->dropIndex('idx_med_admin_status_administered');
         });
 
         Schema::table('patient_admissions', function (Blueprint $table) {

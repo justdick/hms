@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('medication_administrations', function (Blueprint $table) {
-            $table->boolean('is_adjusted')->default(false)->after('scheduled_time');
+        Schema::table('insurance_coverage_rules', function (Blueprint $table) {
+            $table->boolean('is_unmapped')->default(false)->after('patient_copay_amount');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('medication_administrations', function (Blueprint $table) {
-            $table->dropColumn('is_adjusted');
+        Schema::table('insurance_coverage_rules', function (Blueprint $table) {
+            $table->dropColumn('is_unmapped');
         });
     }
 };

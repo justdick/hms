@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkUpdatePricingRequest;
 use App\Http\Requests\Admin\ImportPricingRequest;
 use App\Http\Requests\Admin\UpdateCashPriceRequest;
+use App\Http\Requests\Admin\UpdateFlexibleCopayRequest;
 use App\Http\Requests\Admin\UpdateInsuranceCopayRequest;
 use App\Http\Requests\Admin\UpdateInsuranceCoverageRequest;
 use App\Models\InsurancePlan;
@@ -34,12 +35,20 @@ class PricingDashboardController extends Controller
         $category = $request->input('category');
         $search = $request->input('search');
         $unmappedOnly = $request->boolean('unmapped_only', false);
+        $pricingStatus = $request->input('pricing_status');
 
         $data = $this->pricingService->getPricingData(
             $planId ? (int) $planId : null,
             $category,
             $search,
-            $unmappedOnly
+            $unmappedOnly,
+            null,
+            $pricingStatus
+        );
+
+        // Get pricing status summary
+        $summary = $this->pricingService->getPricingStatusSummary(
+            $planId ? (int) $planId : null
         );
 
         $insurancePlans = InsurancePlan::with('provider')
@@ -69,7 +78,9 @@ class PricingDashboardController extends Controller
                 'category' => $category,
                 'search' => $search,
                 'unmapped_only' => $unmappedOnly,
+                'pricing_status' => $pricingStatus,
             ],
+            'summary' => $summary,
         ]);
     }
 
@@ -141,6 +152,34 @@ class PricingDashboardController extends Controller
             return redirect()->back()->with('success', 'Insurance coverage updated successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to update insurance coverage: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Update flexible copay for an unmapped NHIS item.
+     */
+    public function updateFlexibleCopay(UpdateFlexibleCopayRequest $request): RedirectResponse
+    {
+        $this->authorize('updateInsuranceCopay-pricing-dashboard');
+
+        try {
+            $copayAmount = $request->validated('copay_amount');
+
+            $this->pricingService->updateFlexibleCopay(
+                $request->validated('plan_id'),
+                $request->validated('item_type'),
+                $request->validated('item_id'),
+                $request->validated('item_code'),
+                $copayAmount !== null ? (float) $copayAmount : null
+            );
+
+            $message = $copayAmount !== null
+                ? 'Flexible copay set successfully.'
+                : 'Flexible copay cleared successfully.';
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update flexible copay: '.$e->getMessage());
         }
     }
 

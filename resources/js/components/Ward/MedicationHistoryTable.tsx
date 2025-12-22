@@ -23,17 +23,11 @@ import {
 
 interface MedicationHistoryTableProps {
     prescriptions: MedicationHistoryRow[];
-    onConfigureTimes: (prescriptionId: number) => void;
-    onReconfigureTimes: (prescriptionId: number) => void;
-    onViewSchedule: (prescriptionId: number) => void;
-    onDiscontinue: (prescriptionId: number, reason: string) => void;
+    onDiscontinue: (prescriptionId: number) => void;
 }
 
 export function MedicationHistoryTable({
     prescriptions,
-    onConfigureTimes,
-    onReconfigureTimes,
-    onViewSchedule,
     onDiscontinue,
 }: MedicationHistoryTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
@@ -42,12 +36,7 @@ export function MedicationHistoryTable({
 
     const table = useReactTable({
         data: prescriptions,
-        columns: medicationHistoryColumns({
-            onConfigureTimes,
-            onReconfigureTimes,
-            onViewSchedule,
-            onDiscontinue,
-        }),
+        columns: medicationHistoryColumns({ onDiscontinue }),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -103,14 +92,7 @@ export function MedicationHistoryTable({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={
-                                        medicationHistoryColumns({
-                                            onConfigureTimes,
-                                            onReconfigureTimes,
-                                            onViewSchedule,
-                                            onDiscontinue,
-                                        }).length
-                                    }
+                                    colSpan={medicationHistoryColumns({ onDiscontinue }).length}
                                     className="h-24 text-center"
                                 >
                                     <div className="flex flex-col items-center gap-2">

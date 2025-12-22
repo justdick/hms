@@ -5,50 +5,113 @@ namespace App\Http\Controllers\Ward;
 use App\Http\Controllers\Controller;
 use App\Models\MedicationAdministration;
 use App\Models\PatientAdmission;
+use App\Models\Prescription;
 use Illuminate\Http\Request;
 
+/**
+ * Medication Administration Controller
+ *
+ * Handles on-demand recording of medication administrations for admitted patients.
+ * Instead of pre-scheduling doses, nurses record administrations as they happen.
+ */
 class MedicationAdministrationController extends Controller
 {
     /**
-     * Get all medication administrations for an admitted patient.
+     * Get active prescriptions and recent administrations for an admitted patient.
      */
     public function index(PatientAdmission $admission)
     {
         $this->authorize('viewAny', MedicationAdministration::class);
 
-        $medications = MedicationAdministration::where('patient_admission_id', $admission->id)
-            ->with([
-                'prescription.drug:id,name,strength',
-                'administeredBy:id,name',
-            ])
-            ->orderBy('scheduled_time', 'asc')
-            ->get()
-            ->groupBy(function ($med) {
-                return $med->scheduled_time->format('Y-m-d');
-            });
+        // Get active prescriptions for this admission (from ward rounds and consultations)
+        $prescriptions = $this->getActivePrescriptions($admission);
 
-        return response()->json($medications);
+        // Get recent administrations (last 7 days + future dates)
+        $recentAdministrations = MedicationAdministration::where('patient_admission_id', $admission->id)
+            ->where('administered_at', '>=', now()->subDays(7)->startOfDay())
+            ->with(['prescription.drug:id,name,strength', 'administeredBy:id,name'])
+            ->orderBy('administered_at', 'desc')
+            ->get();
+
+        // Calculate today's count for each prescription
+        $todayAdministrations = $recentAdministrations->filter(function ($admin) {
+            return $admin->administered_at->isToday();
+        });
+
+        // Build response with prescription status
+        $prescriptionsWithStatus = $prescriptions->map(function ($prescription) use ($todayAdministrations) {
+            $todayCount = $todayAdministrations
+                ->where('prescription_id', $prescription->id)
+                ->where('status', 'given')
+                ->count();
+
+            $expectedDoses = $prescription->getExpectedDosesPerDay();
+
+            return [
+                'prescription' => $prescription,
+                'today_given' => $todayCount,
+                'expected_doses' => $expectedDoses,
+                'is_prn' => $prescription->isPrn(),
+                'last_administration' => $todayAdministrations
+                    ->where('prescription_id', $prescription->id)
+                    ->first(),
+            ];
+        });
+
+        return response()->json([
+            'prescriptions' => $prescriptionsWithStatus,
+            'today_administrations' => $recentAdministrations,
+        ]);
     }
 
     /**
-     * Administer a medication to a patient.
+     * Record a new medication administration.
      */
-    public function administer(Request $request, MedicationAdministration $administration)
+    public function store(Request $request, PatientAdmission $admission)
     {
-        $this->authorize('administer', $administration);
+        $this->authorize('create', MedicationAdministration::class);
 
-        $validated = $request->validate([
+        $rules = [
+            'prescription_id' => 'required|exists:prescriptions,id',
             'dosage_given' => 'required|string|max:100',
             'route' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:500',
-        ]);
+        ];
 
-        $administration->update([
-            'status' => 'given',
-            'administered_at' => now(),
+        // Only allow administered_at if user has permission
+        if (auth()->user()->can('medications.edit-timestamp')) {
+            $rules['administered_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Verify prescription belongs to this admission
+        $prescription = Prescription::findOrFail($validated['prescription_id']);
+        $prescriptionAdmission = $prescription->getPatientAdmission();
+
+        if (! $prescriptionAdmission || $prescriptionAdmission->id !== $admission->id) {
+            return back()->withErrors(['prescription_id' => 'This prescription does not belong to this admission.']);
+        }
+
+        // Check prescription is not discontinued
+        if ($prescription->isDiscontinued()) {
+            return back()->withErrors(['prescription_id' => 'Cannot administer discontinued medication.']);
+        }
+
+        // Determine administered_at: use provided value if permitted, otherwise now()
+        $administeredAt = now();
+        if (auth()->user()->can('medications.edit-timestamp') && ! empty($validated['administered_at'])) {
+            $administeredAt = $validated['administered_at'];
+        }
+
+        MedicationAdministration::create([
+            'prescription_id' => $validated['prescription_id'],
+            'patient_admission_id' => $admission->id,
             'administered_by_id' => auth()->id(),
+            'administered_at' => $administeredAt,
+            'status' => 'given',
             'dosage_given' => $validated['dosage_given'],
-            'route' => $validated['route'] ?? $administration->route,
+            'route' => $validated['route'] ?? 'oral',
             'notes' => $validated['notes'] ?? null,
         ]);
 
@@ -56,19 +119,44 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
-     * Hold a scheduled medication (e.g., patient NPO, clinical contraindication).
+     * Record medication as held (e.g., patient NPO, clinical contraindication).
      */
-    public function hold(Request $request, MedicationAdministration $administration)
+    public function hold(Request $request, PatientAdmission $admission)
     {
-        $this->authorize('hold', $administration);
+        $this->authorize('create', MedicationAdministration::class);
 
-        $validated = $request->validate([
+        $rules = [
+            'prescription_id' => 'required|exists:prescriptions,id',
             'notes' => 'required|string|max:500|min:10',
-        ]);
+        ];
 
-        $administration->update([
-            'status' => 'held',
+        // Only allow administered_at if user has permission
+        if (auth()->user()->can('medications.edit-timestamp')) {
+            $rules['administered_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Verify prescription belongs to this admission
+        $prescription = Prescription::findOrFail($validated['prescription_id']);
+        $prescriptionAdmission = $prescription->getPatientAdmission();
+
+        if (! $prescriptionAdmission || $prescriptionAdmission->id !== $admission->id) {
+            return back()->withErrors(['prescription_id' => 'This prescription does not belong to this admission.']);
+        }
+
+        // Determine administered_at: use provided value if permitted, otherwise now()
+        $administeredAt = now();
+        if (auth()->user()->can('medications.edit-timestamp') && ! empty($validated['administered_at'])) {
+            $administeredAt = $validated['administered_at'];
+        }
+
+        MedicationAdministration::create([
+            'prescription_id' => $validated['prescription_id'],
+            'patient_admission_id' => $admission->id,
             'administered_by_id' => auth()->id(),
+            'administered_at' => $administeredAt,
+            'status' => 'held',
             'notes' => $validated['notes'],
         ]);
 
@@ -76,19 +164,44 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
-     * Mark a medication as refused by patient.
+     * Record medication as refused by patient.
      */
-    public function refuse(Request $request, MedicationAdministration $administration)
+    public function refuse(Request $request, PatientAdmission $admission)
     {
-        $this->authorize('refuse', $administration);
+        $this->authorize('create', MedicationAdministration::class);
 
-        $validated = $request->validate([
+        $rules = [
+            'prescription_id' => 'required|exists:prescriptions,id',
             'notes' => 'nullable|string|max:500',
-        ]);
+        ];
 
-        $administration->update([
-            'status' => 'refused',
+        // Only allow administered_at if user has permission
+        if (auth()->user()->can('medications.edit-timestamp')) {
+            $rules['administered_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Verify prescription belongs to this admission
+        $prescription = Prescription::findOrFail($validated['prescription_id']);
+        $prescriptionAdmission = $prescription->getPatientAdmission();
+
+        if (! $prescriptionAdmission || $prescriptionAdmission->id !== $admission->id) {
+            return back()->withErrors(['prescription_id' => 'This prescription does not belong to this admission.']);
+        }
+
+        // Determine administered_at: use provided value if permitted, otherwise now()
+        $administeredAt = now();
+        if (auth()->user()->can('medications.edit-timestamp') && ! empty($validated['administered_at'])) {
+            $administeredAt = $validated['administered_at'];
+        }
+
+        MedicationAdministration::create([
+            'prescription_id' => $validated['prescription_id'],
+            'patient_admission_id' => $admission->id,
             'administered_by_id' => auth()->id(),
+            'administered_at' => $administeredAt,
+            'status' => 'refused',
             'notes' => $validated['notes'] ?? 'Patient refused medication',
         ]);
 
@@ -96,22 +209,76 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
-     * Mark a medication as omitted (missed for other reasons).
+     * Record medication as omitted (missed for other reasons).
      */
-    public function omit(Request $request, MedicationAdministration $administration)
+    public function omit(Request $request, PatientAdmission $admission)
     {
-        $this->authorize('hold', $administration); // Same permission as hold
+        $this->authorize('create', MedicationAdministration::class);
 
-        $validated = $request->validate([
+        $rules = [
+            'prescription_id' => 'required|exists:prescriptions,id',
             'notes' => 'required|string|max:500|min:10',
-        ]);
+        ];
 
-        $administration->update([
-            'status' => 'omitted',
+        // Only allow administered_at if user has permission
+        if (auth()->user()->can('medications.edit-timestamp')) {
+            $rules['administered_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Verify prescription belongs to this admission
+        $prescription = Prescription::findOrFail($validated['prescription_id']);
+        $prescriptionAdmission = $prescription->getPatientAdmission();
+
+        if (! $prescriptionAdmission || $prescriptionAdmission->id !== $admission->id) {
+            return back()->withErrors(['prescription_id' => 'This prescription does not belong to this admission.']);
+        }
+
+        // Determine administered_at: use provided value if permitted, otherwise now()
+        $administeredAt = now();
+        if (auth()->user()->can('medications.edit-timestamp') && ! empty($validated['administered_at'])) {
+            $administeredAt = $validated['administered_at'];
+        }
+
+        MedicationAdministration::create([
+            'prescription_id' => $validated['prescription_id'],
+            'patient_admission_id' => $admission->id,
             'administered_by_id' => auth()->id(),
+            'administered_at' => $administeredAt,
+            'status' => 'omitted',
             'notes' => $validated['notes'],
         ]);
 
         return back()->with('success', 'Medication marked as omitted.');
+    }
+
+    /**
+     * Get active prescriptions for an admission.
+     */
+    private function getActivePrescriptions(PatientAdmission $admission)
+    {
+        // Get prescriptions from ward rounds
+        $wardRoundPrescriptions = Prescription::whereHasMorph(
+            'prescribable',
+            ['App\Models\WardRound'],
+            function ($query) use ($admission) {
+                $query->where('patient_admission_id', $admission->id);
+            }
+        )
+            ->whereNull('discontinued_at')
+            ->with(['drug:id,name,strength,drug_code'])
+            ->get();
+
+        // Get prescriptions from consultation (if admission came from consultation)
+        $consultationPrescriptions = collect();
+        if ($admission->consultation_id) {
+            $consultationPrescriptions = Prescription::where('consultation_id', $admission->consultation_id)
+                ->whereNull('discontinued_at')
+                ->with(['drug:id,name,strength,drug_code'])
+                ->get();
+        }
+
+        return $wardRoundPrescriptions->merge($consultationPrescriptions)->unique('id');
     }
 }

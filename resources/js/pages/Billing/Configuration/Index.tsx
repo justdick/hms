@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,12 +31,14 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
     Building2,
     CheckCircle,
     Edit3,
+    ExternalLink,
+    Info,
     Loader2,
     Plus,
     Settings,
@@ -518,7 +521,6 @@ function DepartmentBillingModal({
     
     const form = useForm({
         department_id: department?.id?.toString() || '',
-        consultation_fee: department?.billing?.consultation_fee?.toString() || '',
         equipment_fee: department?.billing?.equipment_fee?.toString() || '0',
         emergency_surcharge: department?.billing?.emergency_surcharge?.toString() || '0',
         payment_required_before_consultation: department?.billing?.payment_required_before_consultation || false,
@@ -546,7 +548,6 @@ function DepartmentBillingModal({
     if (department && form.data.department_id !== department.id.toString()) {
         form.setData({
             department_id: department.id.toString(),
-            consultation_fee: department.billing?.consultation_fee?.toString() || '',
             equipment_fee: department.billing?.equipment_fee?.toString() || '0',
             emergency_surcharge: department.billing?.emergency_surcharge?.toString() || '0',
             payment_required_before_consultation: department.billing?.payment_required_before_consultation || false,
@@ -578,25 +579,32 @@ function DepartmentBillingModal({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="consultation_fee" className="text-right">
-                                Consultation Fee
-                            </Label>
-                            <div className="col-span-3">
-                                <Input
-                                    id="consultation_fee"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="50.00"
-                                    value={form.data.consultation_fee}
-                                    onChange={(e) => form.setData('consultation_fee', e.target.value)}
-                                />
-                                {form.errors.consultation_fee && (
-                                    <p className="mt-1 text-sm text-red-600">{form.errors.consultation_fee}</p>
-                                )}
-                            </div>
-                        </div>
+                        <Alert className="col-span-full">
+                            <Info className="h-4 w-4" />
+                            <AlertDescription className="flex items-center justify-between">
+                                <span>
+                                    {department?.billing?.consultation_fee
+                                        ? `Current consultation fee: GHS ${Number(department.billing.consultation_fee).toFixed(2)}`
+                                        : 'Consultation fee not set'}
+                                    . Manage pricing in the Pricing Dashboard.
+                                </span>
+                                <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="ml-2 h-auto p-0"
+                                    type="button"
+                                    asChild
+                                >
+                                    <Link
+                                        href={`/admin/pricing-dashboard?search=${encodeURIComponent(department?.code || '')}`}
+                                        target="_blank"
+                                    >
+                                        Set Price
+                                        <ExternalLink className="ml-1 h-3 w-3" />
+                                    </Link>
+                                </Button>
+                            </AlertDescription>
+                        </Alert>
 
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="equipment_fee" className="text-right">
@@ -1042,7 +1050,6 @@ function BulkConfigModal({
 }) {
     const form = useForm({
         department_ids: selectedDepartments.map((d) => d.id),
-        consultation_fee: '',
         equipment_fee: '0',
         emergency_surcharge: '0',
         payment_required_before_consultation: false,
@@ -1088,25 +1095,26 @@ function BulkConfigModal({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="bulk_consultation_fee" className="text-right">
-                                Consultation Fee
-                            </Label>
-                            <div className="col-span-3">
-                                <Input
-                                    id="bulk_consultation_fee"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="50.00"
-                                    value={form.data.consultation_fee}
-                                    onChange={(e) => form.setData('consultation_fee', e.target.value)}
-                                />
-                                {form.errors.consultation_fee && (
-                                    <p className="mt-1 text-sm text-red-600">{form.errors.consultation_fee}</p>
-                                )}
-                            </div>
-                        </div>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertDescription className="flex items-center justify-between">
+                                <span>
+                                    Consultation fees are managed in the Pricing Dashboard.
+                                </span>
+                                <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="ml-2 h-auto p-0"
+                                    type="button"
+                                    asChild
+                                >
+                                    <Link href="/admin/pricing-dashboard" target="_blank">
+                                        Open Pricing Dashboard
+                                        <ExternalLink className="ml-1 h-3 w-3" />
+                                    </Link>
+                                </Button>
+                            </AlertDescription>
+                        </Alert>
 
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="bulk_equipment_fee" className="text-right">
@@ -1184,7 +1192,7 @@ function BulkConfigModal({
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={form.processing || !form.data.consultation_fee}>
+                        <Button type="submit" disabled={form.processing}>
                             {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Configure {selectedDepartments.length} Departments
                         </Button>

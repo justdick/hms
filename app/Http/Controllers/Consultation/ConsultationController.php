@@ -14,7 +14,6 @@ use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\User;
 use App\Models\Ward;
-use App\Services\MedicationScheduleService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -176,6 +175,8 @@ class ConsultationController extends Controller
 
         // OPD consultations only - no admission context
 
+        $user = auth()->user();
+
         return Inertia::render('Consultation/Show', [
             'consultation' => $consultation,
             // Lab services loaded via async search - too many to load upfront
@@ -186,6 +187,9 @@ class ConsultationController extends Controller
             'availableDepartments' => Department::active()->opd()->get(['id', 'name', 'code']),
             // Diagnoses loaded via async search - too many to load upfront
             'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
+            'can' => [
+                'editVitals' => $user->can('vitals.update') || $user->can('update', $consultation) || $user->hasRole('Admin'),
+            ],
         ]);
     }
 
@@ -292,7 +296,7 @@ class ConsultationController extends Controller
         return redirect()->back()->with('success', 'Consultation updated successfully.');
     }
 
-    public function storePrescription(StorePrescriptionRequest $request, Consultation $consultation, MedicationScheduleService $scheduleService)
+    public function storePrescription(StorePrescriptionRequest $request, Consultation $consultation)
     {
         $this->authorize('update', $consultation);
 
@@ -308,16 +312,9 @@ class ConsultationController extends Controller
             'duration' => $prescriptionData['duration'],
             'quantity' => $prescriptionData['quantity_to_dispense'], // Set for billing
             'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
-            'schedule_pattern' => $prescriptionData['schedule_pattern'], // Store for MAR reference
             'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
         ]);
-
-        // Generate medication administration schedule for admitted patients
-        $consultation->load('patientAdmission');
-        if ($consultation->patientAdmission) {
-            $scheduleService->generateSchedule($prescription);
-        }
 
         return redirect()->back()->with('success', 'Prescription added successfully.');
     }
@@ -369,7 +366,7 @@ class ConsultationController extends Controller
         return redirect()->back()->with('success', 'Prescription updated successfully.');
     }
 
-    public function refillPrescriptions(RefillPrescriptionsRequest $request, Consultation $consultation, MedicationScheduleService $scheduleService)
+    public function refillPrescriptions(RefillPrescriptionsRequest $request, Consultation $consultation)
     {
         $this->authorize('update', $consultation);
 
@@ -410,16 +407,9 @@ class ConsultationController extends Controller
                 'duration' => $original->duration,
                 'quantity' => $original->quantity_to_dispense ?? $original->quantity,
                 'quantity_to_dispense' => $original->quantity_to_dispense ?? $original->quantity,
-                'schedule_pattern' => $original->schedule_pattern,
                 'instructions' => $original->instructions,
                 'status' => 'prescribed',
             ]);
-
-            // Generate medication administration schedule for admitted patients
-            $consultation->load('patientAdmission');
-            if ($consultation->patientAdmission) {
-                $scheduleService->generateSchedule($newPrescription);
-            }
 
             $refillCount++;
         }

@@ -107,19 +107,10 @@ class InsurancePlanController extends Controller
     {
         $this->authorize('view', $plan);
 
-        $plan->load([
-            'provider',
-            'coverageRules' => function ($query) {
-                $query->orderBy('coverage_category')->orderBy('item_code');
-            },
-            'tariffs' => function ($query) {
-                $query->orderBy('item_type')->orderBy('item_code');
-            },
-        ]);
+        $plan->load('provider');
 
         return Inertia::render('Admin/Insurance/Plans/Show', [
             'plan' => new InsurancePlanResource($plan),
-            'simplifiedUiEnabled' => config('features.simplified_insurance_ui'),
         ]);
     }
 

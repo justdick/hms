@@ -9,6 +9,7 @@ import { BulkEditModal } from './components/BulkEditModal';
 import { ItemHistoryModal } from './components/ItemHistoryModal';
 import { PlanSelector } from './components/PlanSelector';
 import { PricingImportModal } from './components/PricingImportModal';
+import { PricingSummaryCards, type PricingSummary } from './components/PricingSummaryCards';
 import { createPricingColumns } from './pricing-columns';
 import { PricingDataTable } from './pricing-data-table';
 
@@ -18,14 +19,16 @@ export interface PricingItem {
     code: string | null;
     name: string;
     category: string;
-    cash_price: number;
+    cash_price: number | null;
     insurance_tariff: number | null;
     copay_amount: number | null;
     coverage_value: number | null;
     coverage_type: string | null;
     is_mapped: boolean;
+    is_unmapped: boolean;
     nhis_code: string | null;
     coverage_rule_id: number | null;
+    pricing_status: 'priced' | 'unpriced' | 'nhis_mapped' | 'flexible_copay' | 'not_mapped';
 }
 
 export interface InsurancePlan {
@@ -51,6 +54,7 @@ interface Filters {
     category?: string | null;
     search?: string | null;
     unmapped_only?: boolean;
+    pricing_status?: string | null;
 }
 
 interface Props {
@@ -60,6 +64,7 @@ interface Props {
     isNhis: boolean;
     insurancePlans: InsurancePlan[];
     filters: Filters;
+    summary: PricingSummary;
 }
 
 export default function PricingDashboardIndex({
@@ -69,6 +74,7 @@ export default function PricingDashboardIndex({
     isNhis,
     insurancePlans,
     filters,
+    summary,
 }: Props) {
     const [selectedItems, setSelectedItems] = useState<PricingItem[]>([]);
     const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -85,6 +91,16 @@ export default function PricingDashboardIndex({
         }
         // Clear selection when plan changes
         setSelectedItems([]);
+        window.location.href = `/admin/pricing-dashboard?${params.toString()}`;
+    };
+
+    const handleSummaryFilterClick = (filter: string) => {
+        const params = new URLSearchParams(window.location.search);
+        if (filter === 'all' || filter === filters.pricing_status) {
+            params.delete('pricing_status');
+        } else {
+            params.set('pricing_status', filter);
+        }
         window.location.href = `/admin/pricing-dashboard?${params.toString()}`;
     };
 
@@ -177,6 +193,14 @@ export default function PricingDashboardIndex({
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Pricing Summary Cards */}
+                <PricingSummaryCards
+                    summary={summary}
+                    isNhis={isNhis}
+                    onFilterClick={handleSummaryFilterClick}
+                    activeFilter={filters.pricing_status}
+                />
 
                 {/* Data Table */}
                 <Card>

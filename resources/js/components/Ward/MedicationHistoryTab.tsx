@@ -6,7 +6,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, Filter, LayoutGrid, Table } from 'lucide-react';
+import { Filter, LayoutGrid, Table } from 'lucide-react';
 import { useState } from 'react';
 import { MedicationHistoryCard } from './MedicationHistoryCard';
 import { MedicationHistoryTable } from './MedicationHistoryTable';
@@ -38,32 +38,20 @@ interface Prescription {
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
-    schedule_pattern?: {
-        day_1?: string[];
-        day_2?: string[];
-        subsequent?: string[];
-        [key: string]: string[] | undefined;
-    };
 }
 
 interface MedicationHistoryTabProps {
     patientAdmissionId: number;
     prescriptions: Prescription[];
-    onConfigureTimes: (prescriptionId: number) => void;
-    onReconfigureTimes: (prescriptionId: number) => void;
-    onViewSchedule: (prescriptionId: number) => void;
-    onDiscontinue: (prescriptionId: number, reason: string) => void;
+    onDiscontinue: (prescriptionId: number) => void;
 }
 
-type FilterType = 'all' | 'active' | 'discontinued' | 'pending_schedule';
+type FilterType = 'all' | 'active' | 'discontinued';
 type ViewType = 'table' | 'cards';
 
 export function MedicationHistoryTab({
     patientAdmissionId,
     prescriptions,
-    onConfigureTimes,
-    onReconfigureTimes,
-    onViewSchedule,
     onDiscontinue,
 }: MedicationHistoryTabProps) {
     const [filter, setFilter] = useState<FilterType>('all');
@@ -78,17 +66,8 @@ export function MedicationHistoryTab({
                 !prescription.discontinued_at
             );
         if (filter === 'discontinued') return !!prescription.discontinued_at;
-        if (filter === 'pending_schedule')
-            return (
-                !prescription.schedule_pattern && !prescription.discontinued_at
-            );
         return true;
     });
-
-    // Count prescriptions needing schedule configuration
-    const pendingScheduleCount = prescriptions.filter(
-        (p) => !p.schedule_pattern && !p.discontinued_at,
-    ).length;
 
     return (
         <div className="space-y-4">
@@ -111,51 +90,27 @@ export function MedicationHistoryTab({
                             <SelectItem value="discontinued">
                                 Discontinued
                             </SelectItem>
-                            <SelectItem value="pending_schedule">
-                                Pending Schedule
-                                {pendingScheduleCount > 0 && (
-                                    <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                        {pendingScheduleCount}
-                                    </span>
-                                )}
-                            </SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {pendingScheduleCount > 0 &&
-                        filter !== 'pending_schedule' && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setFilter('pending_schedule')}
-                                className="border-orange-500 text-orange-700 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-950/20"
-                            >
-                                <AlertTriangle className="mr-2 h-4 w-4" />
-                                {pendingScheduleCount} Pending Schedule
-                            </Button>
-                        )}
-
-                    {/* View Toggle */}
-                    <div className="flex items-center gap-1 rounded-md border p-1">
-                        <Button
-                            variant={viewType === 'table' ? 'default' : 'ghost'}
-                            size="sm"
-                            onClick={() => setViewType('table')}
-                            className="h-8 px-3"
-                        >
-                            <Table className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant={viewType === 'cards' ? 'default' : 'ghost'}
-                            size="sm"
-                            onClick={() => setViewType('cards')}
-                            className="h-8 px-3"
-                        >
-                            <LayoutGrid className="h-4 w-4" />
-                        </Button>
-                    </div>
+                <div className="flex items-center gap-1 rounded-md border p-1">
+                    <Button
+                        variant={viewType === 'table' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewType('table')}
+                        className="h-8 px-3"
+                    >
+                        <Table className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant={viewType === 'cards' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewType('cards')}
+                        className="h-8 px-3"
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
@@ -167,17 +122,12 @@ export function MedicationHistoryTab({
                             ? 'No prescriptions found'
                             : filter === 'active'
                               ? 'No active prescriptions'
-                              : filter === 'discontinued'
-                                ? 'No discontinued prescriptions'
-                                : 'No prescriptions pending schedule configuration'}
+                              : 'No discontinued prescriptions'}
                     </p>
                 </div>
             ) : viewType === 'table' ? (
                 <MedicationHistoryTable
                     prescriptions={filteredPrescriptions}
-                    onConfigureTimes={onConfigureTimes}
-                    onReconfigureTimes={onReconfigureTimes}
-                    onViewSchedule={onViewSchedule}
                     onDiscontinue={onDiscontinue}
                 />
             ) : (
@@ -186,9 +136,6 @@ export function MedicationHistoryTab({
                         <MedicationHistoryCard
                             key={prescription.id}
                             prescription={prescription}
-                            onConfigureTimes={onConfigureTimes}
-                            onReconfigureTimes={onReconfigureTimes}
-                            onViewSchedule={onViewSchedule}
                             onDiscontinue={onDiscontinue}
                         />
                     ))}

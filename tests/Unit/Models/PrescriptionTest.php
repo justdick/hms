@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\MedicationAdministration;
+use App\Models\PatientAdmission;
 use App\Models\Prescription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,74 +111,88 @@ it('filters active prescriptions using scope', function () {
         ->and($activePrescriptions->first()->id)->toBe($activePrescription->id);
 });
 
-it('checks if prescription has schedule', function () {
-    $prescriptionWithSchedule = Prescription::withoutEvents(function () {
-        return Prescription::factory()->create([
-            'schedule_pattern' => [
-                'day_1' => ['10:30', '18:00'],
-                'subsequent' => ['06:00', '18:00'],
-            ],
-        ]);
-    });
+it('calculates expected doses per day based on frequency', function () {
+    $frequencies = [
+        'OD' => 1,
+        'BD' => 2,
+        'BID' => 2,
+        'TDS' => 3,
+        'TID' => 3,
+        'QDS' => 4,
+        'QID' => 4,
+        'Q6H' => 4,
+        'Q8H' => 3,
+        'Q12H' => 2,
+        'Q4H' => 6,
+        'Q2H' => 12,
+        'PRN' => 0,
+    ];
 
-    $prescriptionWithoutSchedule = Prescription::withoutEvents(function () {
-        return Prescription::factory()->create([
-            'schedule_pattern' => null,
-        ]);
-    });
+    foreach ($frequencies as $frequency => $expected) {
+        $prescription = Prescription::withoutEvents(function () use ($frequency) {
+            return Prescription::factory()->create([
+                'frequency' => $frequency,
+            ]);
+        });
 
-    expect($prescriptionWithSchedule->hasSchedule())->toBeTrue()
-        ->and($prescriptionWithoutSchedule->hasSchedule())->toBeFalse();
+        expect($prescription->getExpectedDosesPerDay())->toBe($expected, "Failed for frequency: {$frequency}");
+    }
 });
 
-it('checks if prescription is pending schedule', function () {
-    $prescriptionPendingSchedule = Prescription::withoutEvents(function () {
-        return Prescription::factory()->create([
-            'schedule_pattern' => null,
-            'frequency' => 'BID',
-        ]);
-    });
-
-    $prescriptionWithSchedule = Prescription::withoutEvents(function () {
-        return Prescription::factory()->create([
-            'schedule_pattern' => [
-                'day_1' => ['10:30', '18:00'],
-                'subsequent' => ['06:00', '18:00'],
-            ],
-            'frequency' => 'BID',
-        ]);
-    });
-
+it('identifies PRN prescriptions', function () {
     $prnPrescription = Prescription::withoutEvents(function () {
         return Prescription::factory()->create([
-            'schedule_pattern' => null,
             'frequency' => 'PRN',
         ]);
     });
 
-    expect($prescriptionPendingSchedule->isPendingSchedule())->toBeTrue()
-        ->and($prescriptionWithSchedule->isPendingSchedule())->toBeFalse()
-        ->and($prnPrescription->isPendingSchedule())->toBeFalse();
-});
-
-it('casts schedule_pattern as json', function () {
-    $schedulePattern = [
-        'day_1' => ['10:30', '18:00'],
-        'day_2' => ['10:00', '22:00'],
-        'subsequent' => ['06:00', '18:00'],
-    ];
-
-    $prescription = Prescription::withoutEvents(function () use ($schedulePattern) {
+    $prnDescriptive = Prescription::withoutEvents(function () {
         return Prescription::factory()->create([
-            'schedule_pattern' => $schedulePattern,
+            'frequency' => 'As needed (PRN)',
         ]);
     });
 
-    expect($prescription->schedule_pattern)->toBeArray()
-        ->and($prescription->schedule_pattern)->toBe($schedulePattern);
+    $regularPrescription = Prescription::withoutEvents(function () {
+        return Prescription::factory()->create([
+            'frequency' => 'TDS',
+        ]);
+    });
 
-    $loadedPrescription = Prescription::find($prescription->id);
+    expect($prnPrescription->isPrn())->toBeTrue()
+        ->and($prnDescriptive->isPrn())->toBeTrue()
+        ->and($regularPrescription->isPrn())->toBeFalse();
+});
 
-    expect($loadedPrescription->schedule_pattern)->toBeArray()
-        ->and($loadedPrescription->schedule_pattern)->toBe($schedulePattern);
+it('counts today medication administrations', function () {
+    $prescription = Prescription::withoutEvents(function () {
+        return Prescription::factory()->create();
+    });
+
+    $admission = PatientAdmission::factory()->create();
+
+    // Create 2 administrations today
+    MedicationAdministration::factory()->count(2)->create([
+        'prescription_id' => $prescription->id,
+        'patient_admission_id' => $admission->id,
+        'administered_at' => now(),
+        'status' => 'given',
+    ]);
+
+    // Create 1 administration yesterday (should not count)
+    MedicationAdministration::factory()->create([
+        'prescription_id' => $prescription->id,
+        'patient_admission_id' => $admission->id,
+        'administered_at' => now()->subDay(),
+        'status' => 'given',
+    ]);
+
+    // Create 1 held administration today (should not count as given)
+    MedicationAdministration::factory()->create([
+        'prescription_id' => $prescription->id,
+        'patient_admission_id' => $admission->id,
+        'administered_at' => now(),
+        'status' => 'held',
+    ]);
+
+    expect($prescription->getTodayAdministrationCount())->toBe(2);
 });

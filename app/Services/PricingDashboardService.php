@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Department;
 use App\Models\DepartmentBilling;
 use App\Models\Drug;
 use App\Models\InsuranceCoverageRule;
@@ -17,6 +18,21 @@ use Illuminate\Support\Facades\DB;
 
 class PricingDashboardService
 {
+    /**
+     * Cached NHIS mappings keyed by "item_type:item_id".
+     */
+    protected ?Collection $nhisMappingsCache = null;
+
+    /**
+     * Cached coverage rules keyed by "category:item_code" or "category:" for defaults.
+     */
+    protected ?Collection $coverageRulesCache = null;
+
+    /**
+     * Cached category default rules keyed by category.
+     */
+    protected ?Collection $categoryDefaultsCache = null;
+
     public function __construct(
         protected InsuranceCoverageService $coverageService
     ) {}
@@ -24,6 +40,7 @@ class PricingDashboardService
     /**
      * Get all pricing data for a specific insurance plan.
      *
+     * @param  string|null  $pricingStatus  Filter by pricing status: 'unpriced', 'priced', or null for all
      * @return array{
      *     items: LengthAwarePaginator,
      *     categories: array,
@@ -36,12 +53,18 @@ class PricingDashboardService
         ?string $category = null,
         ?string $search = null,
         bool $unmappedOnly = false,
-        ?int $perPage = null
+        ?int $perPage = null,
+        ?string $pricingStatus = null
     ): array {
         // Default to 5 items per page, allow override via request
         $perPage = $perPage ?? (int) request()->get('per_page', 5);
         $plan = $insurancePlanId ? InsurancePlan::with('provider')->find($insurancePlanId) : null;
         $isNhis = $plan && $plan->provider && $plan->provider->is_nhis;
+
+        // Pre-load all insurance data in bulk to avoid N+1 queries
+        if ($insurancePlanId) {
+            $this->preloadInsuranceData($insurancePlanId, $isNhis);
+        }
 
         // Collect all pricing items
         $items = collect();
@@ -70,9 +93,21 @@ class PricingDashboardService
             $items = $items->merge($procedures);
         }
 
+        // Clear caches after use
+        $this->clearCaches();
+
         // Filter unmapped items for NHIS
         if ($unmappedOnly && $isNhis) {
             $items = $items->filter(fn ($item) => ! $item['is_mapped']);
+        }
+
+        // Filter by pricing status
+        if ($pricingStatus === 'unpriced') {
+            // Unpriced items have null or zero cash price
+            $items = $items->filter(fn ($item) => $item['cash_price'] === null || $item['cash_price'] <= 0);
+        } elseif ($pricingStatus === 'priced') {
+            // Priced items have a positive cash price
+            $items = $items->filter(fn ($item) => $item['cash_price'] !== null && $item['cash_price'] > 0);
         }
 
         // Sort by category then name
@@ -101,6 +136,45 @@ class PricingDashboardService
     }
 
     /**
+     * Pre-load all insurance data (NHIS mappings and coverage rules) in bulk.
+     * This eliminates N+1 queries by loading everything upfront.
+     */
+    protected function preloadInsuranceData(int $insurancePlanId, bool $isNhis): void
+    {
+        // Load all NHIS mappings with tariffs in one query
+        if ($isNhis) {
+            $this->nhisMappingsCache = NhisItemMapping::with('nhisTariff')
+                ->whereNotNull('nhis_tariff_id')
+                ->get()
+                ->keyBy(fn ($mapping) => $mapping->item_type.':'.$mapping->item_id);
+        }
+
+        // Load all coverage rules for this plan in one query
+        $allRules = InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+            ->where('is_active', true)
+            ->get();
+
+        // Separate item-specific rules and category defaults
+        $this->coverageRulesCache = $allRules
+            ->whereNotNull('item_code')
+            ->keyBy(fn ($rule) => $rule->coverage_category.':'.$rule->item_code);
+
+        $this->categoryDefaultsCache = $allRules
+            ->whereNull('item_code')
+            ->keyBy('coverage_category');
+    }
+
+    /**
+     * Clear the caches after use.
+     */
+    protected function clearCaches(): void
+    {
+        $this->nhisMappingsCache = null;
+        $this->coverageRulesCache = null;
+        $this->categoryDefaultsCache = null;
+    }
+
+    /**
      * Get drug pricing items.
      */
     protected function getDrugPricingItems(?int $insurancePlanId, bool $isNhis, ?string $search): Collection
@@ -118,7 +192,7 @@ class PricingDashboardService
         $drugs = $query->get();
 
         return $drugs->map(function ($drug) use ($insurancePlanId, $isNhis) {
-            return $this->buildPricingItem(
+            return $this->buildPricingItemOptimized(
                 $drug->id,
                 'drug',
                 $drug->drug_code,
@@ -150,7 +224,7 @@ class PricingDashboardService
         $labServices = $query->get();
 
         return $labServices->map(function ($labService) use ($insurancePlanId, $isNhis) {
-            return $this->buildPricingItem(
+            return $this->buildPricingItemOptimized(
                 $labService->id,
                 'lab',
                 $labService->code,
@@ -166,32 +240,38 @@ class PricingDashboardService
     }
 
     /**
-     * Get consultation pricing items (from department billing).
+     * Get consultation pricing items (from departments with optional billing).
+     * Shows ALL departments, not just those with billing configured.
      */
     protected function getConsultationPricingItems(?int $insurancePlanId, bool $isNhis, ?string $search): Collection
     {
-        $query = DepartmentBilling::query()->active();
+        $query = Department::query()
+            ->active()
+            ->with('billing');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('department_name', 'LIKE', "%{$search}%")
-                    ->orWhere('department_code', 'LIKE', "%{$search}%");
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('code', 'LIKE', "%{$search}%");
             });
         }
 
-        $billings = $query->get();
+        $departments = $query->get();
 
-        return $billings->map(function ($billing) use ($insurancePlanId, $isNhis) {
-            return $this->buildPricingItem(
-                $billing->id,
+        return $departments->map(function ($department) use ($insurancePlanId, $isNhis) {
+            $billing = $department->billing;
+
+            // Always use department ID as the identifier - we'll look up/create billing in updateCashPrice
+            return $this->buildPricingItemOptimized(
+                $department->id,
                 'consultation',
-                $billing->department_code,
-                $billing->department_name.' Consultation',
+                $department->code,
+                $department->name.' Consultation',
                 'consultation',
-                (float) $billing->consultation_fee,
+                $billing ? (float) $billing->consultation_fee : null,
                 $insurancePlanId,
                 $isNhis,
-                $billing->id,
+                $department->id,
                 'consultation'
             );
         });
@@ -214,7 +294,7 @@ class PricingDashboardService
         $procedures = $query->get();
 
         return $procedures->map(function ($procedure) use ($insurancePlanId, $isNhis) {
-            return $this->buildPricingItem(
+            return $this->buildPricingItemOptimized(
                 $procedure->id,
                 'procedure',
                 $procedure->code,
@@ -230,15 +310,16 @@ class PricingDashboardService
     }
 
     /**
-     * Build a pricing item array with insurance data.
+     * Build a pricing item array with insurance data using cached lookups.
+     * This is the optimized version that uses pre-loaded data instead of per-item queries.
      */
-    protected function buildPricingItem(
+    protected function buildPricingItemOptimized(
         int $id,
         string $type,
         ?string $code,
         string $name,
         string $category,
-        float $cashPrice,
+        ?float $cashPrice,
         ?int $insurancePlanId,
         bool $isNhis,
         int $itemId,
@@ -249,6 +330,102 @@ class PricingDashboardService
         $coverageValue = null;
         $coverageType = null;
         $isMapped = true;
+        $isUnmapped = false;
+        $nhisCode = null;
+        $coverageRuleId = null;
+
+        if ($insurancePlanId) {
+            // Get NHIS mapping from cache (no query)
+            if ($isNhis && $this->nhisMappingsCache !== null) {
+                $cacheKey = $itemType.':'.$itemId;
+                $mapping = $this->nhisMappingsCache->get($cacheKey);
+                $isMapped = $mapping && $mapping->nhisTariff;
+
+                if ($isMapped) {
+                    $insuranceTariff = (float) $mapping->nhisTariff->price;
+                    $nhisCode = $mapping->nhisTariff->nhis_code;
+                }
+            }
+
+            // Get coverage rule from cache (no query)
+            $coverageCategory = $this->mapTypeToCoverageCategory($type);
+            $rule = $this->getCoverageRuleFromCache($coverageCategory, $code);
+
+            if ($rule) {
+                $coverageRuleId = $rule->id;
+                $copayAmount = $rule->patient_copay_amount ? (float) $rule->patient_copay_amount : null;
+                $isUnmapped = (bool) $rule->is_unmapped;
+
+                if (! $isNhis) {
+                    $insuranceTariff = $rule->tariff_amount ? (float) $rule->tariff_amount : null;
+                    $coverageValue = $rule->coverage_value ? (float) $rule->coverage_value : null;
+                    $coverageType = $rule->coverage_type;
+                }
+            }
+        }
+
+        return [
+            'id' => $id,
+            'type' => $type,
+            'code' => $code,
+            'name' => $name,
+            'category' => $category,
+            'cash_price' => $cashPrice,
+            'insurance_tariff' => $insuranceTariff,
+            'copay_amount' => $copayAmount,
+            'coverage_value' => $coverageValue,
+            'coverage_type' => $coverageType,
+            'is_mapped' => $isMapped,
+            'is_unmapped' => $isUnmapped,
+            'nhis_code' => $nhisCode,
+            'coverage_rule_id' => $coverageRuleId,
+        ];
+    }
+
+    /**
+     * Get coverage rule from cache - first tries item-specific, then category default.
+     */
+    protected function getCoverageRuleFromCache(string $category, ?string $itemCode): ?InsuranceCoverageRule
+    {
+        // First try item-specific rule from cache
+        if ($itemCode && $this->coverageRulesCache !== null) {
+            $cacheKey = $category.':'.$itemCode;
+            $rule = $this->coverageRulesCache->get($cacheKey);
+            if ($rule) {
+                return $rule;
+            }
+        }
+
+        // Fall back to category default from cache
+        if ($this->categoryDefaultsCache !== null) {
+            return $this->categoryDefaultsCache->get($category);
+        }
+
+        return null;
+    }
+
+    /**
+     * Build a pricing item array with insurance data.
+     * Legacy method kept for backward compatibility with other methods.
+     */
+    protected function buildPricingItem(
+        int $id,
+        string $type,
+        ?string $code,
+        string $name,
+        string $category,
+        ?float $cashPrice,
+        ?int $insurancePlanId,
+        bool $isNhis,
+        int $itemId,
+        string $itemType
+    ): array {
+        $insuranceTariff = null;
+        $copayAmount = null;
+        $coverageValue = null;
+        $coverageType = null;
+        $isMapped = true;
+        $isUnmapped = false;
         $nhisCode = null;
         $coverageRuleId = null;
 
@@ -271,6 +448,7 @@ class PricingDashboardService
             if ($rule) {
                 $coverageRuleId = $rule->id;
                 $copayAmount = $rule->patient_copay_amount ? (float) $rule->patient_copay_amount : null;
+                $isUnmapped = (bool) $rule->is_unmapped;
 
                 if (! $isNhis) {
                     $insuranceTariff = $rule->tariff_amount ? (float) $rule->tariff_amount : null;
@@ -292,6 +470,7 @@ class PricingDashboardService
             'coverage_value' => $coverageValue,
             'coverage_type' => $coverageType,
             'is_mapped' => $isMapped,
+            'is_unmapped' => $isUnmapped,
             'nhis_code' => $nhisCode,
             'coverage_rule_id' => $coverageRuleId,
         ];
@@ -369,10 +548,24 @@ class PricingDashboardService
                     break;
 
                 case 'consultation':
-                    $billing = DepartmentBilling::findOrFail($itemId);
-                    $oldValue = (float) $billing->consultation_fee;
-                    $itemCode = $billing->department_code;
-                    $billing->update(['consultation_fee' => $price]);
+                    // itemId is now department_id, find or create billing record
+                    $department = Department::findOrFail($itemId);
+                    $billing = $department->billing;
+
+                    if ($billing) {
+                        $oldValue = (float) $billing->consultation_fee;
+                        $billing->update(['consultation_fee' => $price]);
+                    } else {
+                        $oldValue = null;
+                        $billing = DepartmentBilling::create([
+                            'department_id' => $department->id,
+                            'department_code' => $department->code,
+                            'department_name' => $department->name,
+                            'consultation_fee' => $price,
+                            'is_active' => true,
+                        ]);
+                    }
+                    $itemCode = $department->code;
                     break;
 
                 case 'procedure':
@@ -479,7 +672,7 @@ class PricingDashboardService
         return match ($itemType) {
             'drug' => Drug::find($itemId)?->name ?? 'Unknown Drug',
             'lab' => LabService::find($itemId)?->name ?? 'Unknown Lab Service',
-            'consultation' => DepartmentBilling::find($itemId)?->department_name ?? 'Unknown Department',
+            'consultation' => Department::find($itemId)?->name ?? 'Unknown Department',
             'procedure' => MinorProcedureType::find($itemId)?->name ?? 'Unknown Procedure',
             default => 'Unknown Item',
         };
@@ -581,8 +774,9 @@ class PricingDashboardService
 
     /**
      * Bulk update copay for multiple items.
+     * Handles both mapped and unmapped items for NHIS plans.
      *
-     * @param  array<array{type: string, id: int, code: string}>  $items
+     * @param  array<array{type: string, id: int, code: string, is_mapped?: bool}>  $items
      * @return array{updated: int, errors: array}
      */
     public function bulkUpdateCopay(
@@ -593,15 +787,45 @@ class PricingDashboardService
         $updated = 0;
         $errors = [];
 
+        // Check if this is an NHIS plan
+        $plan = InsurancePlan::with('provider')->find($insurancePlanId);
+        $isNhis = $plan && $plan->provider && $plan->provider->is_nhis;
+
         foreach ($items as $item) {
             try {
-                $this->updateInsuranceCopay(
-                    $insurancePlanId,
-                    $item['type'],
-                    $item['id'],
-                    $item['code'],
-                    $copayAmount
-                );
+                // For NHIS plans, check if item is mapped
+                if ($isNhis) {
+                    $isMapped = $item['is_mapped'] ?? $this->isItemMappedToNhis($item['type'], $item['id']);
+
+                    if ($isMapped) {
+                        // Use regular copay update for mapped items
+                        $this->updateInsuranceCopay(
+                            $insurancePlanId,
+                            $item['type'],
+                            $item['id'],
+                            $item['code'],
+                            $copayAmount
+                        );
+                    } else {
+                        // Use flexible copay for unmapped items
+                        $this->updateFlexibleCopay(
+                            $insurancePlanId,
+                            $item['type'],
+                            $item['id'],
+                            $item['code'],
+                            $copayAmount
+                        );
+                    }
+                } else {
+                    // For non-NHIS plans, use regular copay update
+                    $this->updateInsuranceCopay(
+                        $insurancePlanId,
+                        $item['type'],
+                        $item['id'],
+                        $item['code'],
+                        $copayAmount
+                    );
+                }
                 $updated++;
             } catch (\Exception $e) {
                 $errors[] = [
@@ -618,14 +842,26 @@ class PricingDashboardService
     }
 
     /**
+     * Check if an item is mapped to NHIS tariff.
+     */
+    protected function isItemMappedToNhis(string $itemType, int $itemId): bool
+    {
+        $nhisItemType = $this->mapTypeToNhisItemType($itemType);
+        $mapping = NhisItemMapping::forItem($nhisItemType, $itemId)->with('nhisTariff')->first();
+
+        return $mapping && $mapping->nhisTariff;
+    }
+
+    /**
      * Export pricing data to CSV.
      */
     public function exportToCsv(
         ?int $insurancePlanId,
         ?string $category = null,
-        ?string $search = null
+        ?string $search = null,
+        ?string $pricingStatus = null
     ): string {
-        $data = $this->getPricingData($insurancePlanId, $category, $search, false, 10000);
+        $data = $this->getPricingData($insurancePlanId, $category, $search, false, 10000, $pricingStatus);
         $items = $data['items']->items();
         $isNhis = $data['is_nhis'];
 
@@ -799,10 +1035,10 @@ class PricingDashboardService
             return ['type' => 'lab', 'id' => $labService->id];
         }
 
-        // Check department billing
-        $billing = DepartmentBilling::where('department_code', $code)->first();
-        if ($billing) {
-            return ['type' => 'consultation', 'id' => $billing->id];
+        // Check departments (for consultation pricing)
+        $department = Department::where('code', $code)->first();
+        if ($department) {
+            return ['type' => 'consultation', 'id' => $department->id];
         }
 
         // Check procedures
@@ -815,13 +1051,215 @@ class PricingDashboardService
     }
 
     /**
+     * Update flexible copay for an unmapped NHIS item.
+     * Creates InsuranceCoverageRule with is_unmapped = true.
+     *
+     * @param  int  $nhisplanId  The NHIS insurance plan ID
+     * @param  string  $itemType  The type of item (drug, lab, consultation, procedure)
+     * @param  int  $itemId  The ID of the item
+     * @param  string  $itemCode  The code of the item
+     * @param  float|null  $copayAmount  The copay amount (null to clear)
+     * @return InsuranceCoverageRule|null The created/updated rule, or null if cleared
+     */
+    public function updateFlexibleCopay(
+        int $nhisplanId,
+        string $itemType,
+        int $itemId,
+        string $itemCode,
+        ?float $copayAmount
+    ): ?InsuranceCoverageRule {
+        $coverageCategory = $this->mapTypeToCoverageCategory($itemType);
+
+        DB::beginTransaction();
+
+        try {
+            // Find existing unmapped coverage rule for this item
+            $rule = InsuranceCoverageRule::where('insurance_plan_id', $nhisplanId)
+                ->where('coverage_category', $coverageCategory)
+                ->where('item_code', $itemCode)
+                ->where('is_unmapped', true)
+                ->first();
+
+            $oldValue = $rule ? (float) $rule->patient_copay_amount : null;
+
+            // If copay is null or clearing, delete or nullify the rule
+            if ($copayAmount === null) {
+                if ($rule) {
+                    // Log the change before deleting (use 0 to indicate cleared since DB doesn't allow null)
+                    PricingChangeLog::logChange(
+                        $itemType,
+                        $itemId,
+                        $itemCode,
+                        PricingChangeLog::FIELD_COPAY,
+                        $nhisplanId,
+                        $oldValue,
+                        0, // 0 indicates copay was cleared/removed
+                        auth()->id() ?? 0
+                    );
+
+                    $rule->delete();
+                }
+
+                DB::commit();
+
+                return null;
+            }
+
+            // Create or update the rule with is_unmapped = true
+            if ($rule) {
+                $rule->update(['patient_copay_amount' => $copayAmount]);
+            } else {
+                // Get item description
+                $itemDescription = $this->getItemDescription($itemType, $itemId);
+
+                $rule = InsuranceCoverageRule::create([
+                    'insurance_plan_id' => $nhisplanId,
+                    'coverage_category' => $coverageCategory,
+                    'item_code' => $itemCode,
+                    'item_description' => $itemDescription,
+                    'is_covered' => true,
+                    'coverage_type' => 'full',
+                    'coverage_value' => 0, // No insurance coverage for unmapped items
+                    'patient_copay_amount' => $copayAmount,
+                    'is_unmapped' => true,
+                    'is_active' => true,
+                ]);
+            }
+
+            // Log the change
+            PricingChangeLog::logChange(
+                $itemType,
+                $itemId,
+                $itemCode,
+                PricingChangeLog::FIELD_COPAY,
+                $nhisplanId,
+                $oldValue,
+                $copayAmount,
+                auth()->id() ?? 0
+            );
+
+            DB::commit();
+
+            return $rule;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Determine pricing status for an item.
+     *
+     * @param  string  $itemType  The type of item (drug, lab, consultation, procedure)
+     * @param  int  $itemId  The ID of the item
+     * @param  int|null  $insurancePlanId  The insurance plan ID (optional)
+     * @return string 'priced'|'unpriced'|'nhis_mapped'|'flexible_copay'|'not_mapped'
+     */
+    public function getPricingStatus(
+        string $itemType,
+        int $itemId,
+        ?int $insurancePlanId = null
+    ): string {
+        // Get the item and its cash price
+        $cashPrice = $this->getItemCashPrice($itemType, $itemId);
+        $itemCode = $this->getItemCode($itemType, $itemId);
+
+        // If no cash price, it's unpriced
+        if ($cashPrice === null || $cashPrice <= 0) {
+            return 'unpriced';
+        }
+
+        // If no insurance plan selected, just check if priced
+        if (! $insurancePlanId) {
+            return 'priced';
+        }
+
+        // Check if this is an NHIS plan
+        $plan = InsurancePlan::with('provider')->find($insurancePlanId);
+        $isNhis = $plan && $plan->provider && $plan->provider->is_nhis;
+
+        if ($isNhis) {
+            // Check if item is mapped to NHIS tariff
+            $nhisItemType = $this->mapTypeToNhisItemType($itemType);
+            $mapping = NhisItemMapping::forItem($nhisItemType, $itemId)->with('nhisTariff')->first();
+            $isMapped = $mapping && $mapping->nhisTariff;
+
+            if ($isMapped) {
+                return 'nhis_mapped';
+            }
+
+            // Check for flexible copay rule (unmapped with copay)
+            $coverageCategory = $this->mapTypeToCoverageCategory($itemType);
+            $flexibleCopayRule = InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+                ->where('coverage_category', $coverageCategory)
+                ->where('item_code', $itemCode)
+                ->where('is_unmapped', true)
+                ->where('is_active', true)
+                ->whereNotNull('patient_copay_amount')
+                ->first();
+
+            if ($flexibleCopayRule) {
+                return 'flexible_copay';
+            }
+
+            return 'not_mapped';
+        }
+
+        // For non-NHIS plans, just return priced
+        return 'priced';
+    }
+
+    /**
+     * Get cash price for an item.
+     */
+    protected function getItemCashPrice(string $itemType, int $itemId): ?float
+    {
+        return match ($itemType) {
+            'drug' => Drug::find($itemId)?->unit_price,
+            'lab' => LabService::find($itemId)?->price,
+            'consultation' => Department::find($itemId)?->billing?->consultation_fee,
+            'procedure' => MinorProcedureType::find($itemId)?->price,
+            default => null,
+        };
+    }
+
+    /**
+     * Get item code for an item.
+     */
+    protected function getItemCode(string $itemType, int $itemId): ?string
+    {
+        return match ($itemType) {
+            'drug' => Drug::find($itemId)?->drug_code,
+            'lab' => LabService::find($itemId)?->code,
+            'consultation' => Department::find($itemId)?->code,
+            'procedure' => MinorProcedureType::find($itemId)?->code,
+            default => null,
+        };
+    }
+
+    /**
+     * Map item type to NHIS item type for mapping lookup.
+     */
+    protected function mapTypeToNhisItemType(string $itemType): string
+    {
+        return match ($itemType) {
+            'drug' => 'drug',
+            'lab' => 'lab_service',
+            'consultation' => 'consultation',
+            'procedure' => 'procedure',
+            default => $itemType,
+        };
+    }
+
+    /**
      * Generate import template CSV.
      */
     public function generateImportTemplate(
         ?int $insurancePlanId = null,
-        ?string $category = null
+        ?string $category = null,
+        ?string $pricingStatus = null
     ): string {
-        $data = $this->getPricingData($insurancePlanId, $category, null, false, 10000);
+        $data = $this->getPricingData($insurancePlanId, $category, null, false, 10000, $pricingStatus);
         $items = $data['items']->items();
 
         $csv = fopen('php://temp', 'r+');
@@ -854,5 +1292,66 @@ class PricingDashboardService
         fclose($csv);
 
         return $content;
+    }
+
+    /**
+     * Get pricing status summary counts.
+     *
+     * Returns counts of items in each pricing status category:
+     * - unpriced: Items with null or zero cash price
+     * - priced: Items with positive cash price
+     * - nhis_mapped: Items mapped to NHIS tariffs (when NHIS plan selected)
+     * - nhis_unmapped: Items not mapped to NHIS tariffs (when NHIS plan selected)
+     * - flexible_copay: Unmapped items with flexible copay configured (when NHIS plan selected)
+     *
+     * @param  int|null  $insurancePlanId  The insurance plan ID (optional)
+     * @return array{
+     *     unpriced: int,
+     *     priced: int,
+     *     nhis_mapped: int,
+     *     nhis_unmapped: int,
+     *     flexible_copay: int
+     * }
+     */
+    public function getPricingStatusSummary(?int $insurancePlanId = null): array
+    {
+        // Get all items without pagination
+        $data = $this->getPricingData($insurancePlanId, null, null, false, 100000);
+        $items = collect($data['items']->items());
+        $isNhis = $data['is_nhis'];
+
+        // Count unpriced items (null or zero cash price)
+        $unpriced = $items->filter(fn ($item) => $item['cash_price'] === null || $item['cash_price'] <= 0)->count();
+
+        // Count priced items (positive cash price)
+        $priced = $items->filter(fn ($item) => $item['cash_price'] !== null && $item['cash_price'] > 0)->count();
+
+        // Initialize NHIS-specific counts
+        $nhisMapped = 0;
+        $nhisUnmapped = 0;
+        $flexibleCopay = 0;
+
+        if ($isNhis && $insurancePlanId) {
+            // For NHIS plans, calculate mapping status
+            foreach ($items as $item) {
+                $status = $this->getPricingStatus($item['type'], $item['id'], $insurancePlanId);
+
+                if ($status === 'nhis_mapped') {
+                    $nhisMapped++;
+                } elseif ($status === 'flexible_copay') {
+                    $flexibleCopay++;
+                } elseif ($status === 'not_mapped') {
+                    $nhisUnmapped++;
+                }
+            }
+        }
+
+        return [
+            'unpriced' => $unpriced,
+            'priced' => $priced,
+            'nhis_mapped' => $nhisMapped,
+            'nhis_unmapped' => $nhisUnmapped,
+            'flexible_copay' => $flexibleCopay,
+        ];
     }
 }

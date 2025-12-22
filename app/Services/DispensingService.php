@@ -65,11 +65,13 @@ class DispensingService
                         'external_reason' => $data['reason'] ?? 'Patient to purchase externally',
                     ]);
 
-                    // Void the charge
-                    $this->billingService->voidChargeForExternal(
-                        $prescription,
-                        $data['reason'] ?? 'External dispensing'
-                    );
+                    // Void the charge if it exists (unpriced drugs don't have charges)
+                    if ($prescription->charge) {
+                        $this->billingService->voidChargeForExternal(
+                            $prescription,
+                            $data['reason'] ?? 'External dispensing'
+                        );
+                    }
                     break;
 
                 case 'cancel':
@@ -264,6 +266,7 @@ class DispensingService
                 'stock_status' => $stockStatus,
                 'can_dispense_full' => $stockStatus['available'],
                 'max_dispensable' => $stockStatus['in_stock'],
+                'is_unpriced' => (bool) $prescription->is_unpriced,
             ];
         })->toArray();
     }

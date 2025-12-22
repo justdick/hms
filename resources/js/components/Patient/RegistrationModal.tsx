@@ -25,7 +25,18 @@ interface InsurancePlan {
         id: number;
         name: string;
         code: string;
+        is_nhis?: boolean;
     };
+}
+
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
 }
 
 interface PatientRegistrationModalProps {
@@ -33,6 +44,7 @@ interface PatientRegistrationModalProps {
     onClose: () => void;
     onPatientRegistered: (patient: Patient) => void;
     insurancePlans?: InsurancePlan[];
+    nhisSettings?: NhisSettings;
     registrationEndpoint?: string;
 }
 
@@ -41,6 +53,7 @@ export default function PatientRegistrationModal({
     onClose,
     onPatientRegistered,
     insurancePlans = [],
+    nhisSettings,
     registrationEndpoint = '/checkin/patients',
 }: PatientRegistrationModalProps) {
     const handlePatientRegistered = (patient: Patient) => {
@@ -65,6 +78,7 @@ export default function PatientRegistrationModal({
                     registrationEndpoint={registrationEndpoint}
                     showCancelButton={true}
                     insurancePlans={insurancePlans}
+                    nhisSettings={nhisSettings}
                 />
             </DialogContent>
         </Dialog>

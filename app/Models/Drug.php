@@ -27,6 +27,7 @@ class Drug extends Model
         'minimum_stock_level',
         'maximum_stock_level',
         'is_active',
+        'nhis_claim_qty_as_one',
         'migrated_from_mittag',
     ];
 
@@ -35,6 +36,7 @@ class Drug extends Model
         return [
             'unit_price' => 'decimal:2',
             'is_active' => 'boolean',
+            'nhis_claim_qty_as_one' => 'boolean',
         ];
     }
 

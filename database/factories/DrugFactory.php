@@ -30,6 +30,7 @@ class DrugFactory extends Factory
             'minimum_stock_level' => fake()->numberBetween(10, 50),
             'maximum_stock_level' => fake()->numberBetween(100, 500),
             'is_active' => true,
+            'nhis_claim_qty_as_one' => false,
         ];
     }
 
@@ -37,6 +38,17 @@ class DrugFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_active' => false,
+        ]);
+    }
+
+    /**
+     * For drugs like Arthemeter and Pessary where NHIS requires quantity = 1
+     * regardless of actual tablets dispensed (counted as 1 pack).
+     */
+    public function nhisClaimQtyAsOne(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nhis_claim_qty_as_one' => true,
         ]);
     }
 

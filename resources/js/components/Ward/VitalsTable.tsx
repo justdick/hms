@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -6,7 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Activity, Heart, Thermometer } from 'lucide-react';
+import { Activity, Edit2, Heart, Thermometer } from 'lucide-react';
 
 interface User {
     id: number;
@@ -23,15 +24,17 @@ interface VitalSign {
     oxygen_saturation?: number;
     weight?: number;
     height?: number;
+    notes?: string | null;
     recorded_at: string;
     recorded_by?: User;
 }
 
 interface Props {
     vitals: VitalSign[];
+    onEdit?: (vital: VitalSign) => void;
 }
 
-export function VitalsTable({ vitals }: Props) {
+export function VitalsTable({ vitals, onEdit }: Props) {
     const formatDateTime = (dateString: string) => {
         return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
@@ -80,6 +83,7 @@ export function VitalsTable({ vitals }: Props) {
                         <TableHead>RR (/min)</TableHead>
                         <TableHead>SpO₂ (%)</TableHead>
                         <TableHead>Recorded By</TableHead>
+                        {onEdit && <TableHead className="w-16">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -148,6 +152,18 @@ export function VitalsTable({ vitals }: Props) {
                             <TableCell className="text-sm text-gray-600 dark:text-gray-400">
                                 {vital.recorded_by?.name || 'N/A'}
                             </TableCell>
+                            {onEdit && (
+                                <TableCell>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onEdit(vital)}
+                                        title="Edit vital signs"
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                            )}
                         </TableRow>
                     ))}
                 </TableBody>

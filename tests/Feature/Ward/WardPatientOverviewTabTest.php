@@ -421,12 +421,12 @@ it('shows pending medication count badge', function () {
         'drug_id' => $drug->id,
     ]);
 
-    // Create scheduled medication administrations
+    // Create medication administrations
     \App\Models\MedicationAdministration::factory()->count(3)->create([
         'patient_admission_id' => $admission->id,
         'prescription_id' => $prescription->id,
-        'status' => 'scheduled',
-        'scheduled_time' => now(),
+        'status' => 'given',
+        'administered_at' => now(),
     ]);
 
     $response = $this->get(route('wards.patients.show', [$ward, $admission]));

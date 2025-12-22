@@ -323,7 +323,6 @@ class WardRoundController extends Controller
             'duration' => $prescriptionData['duration'],
             'quantity' => $prescriptionData['quantity_to_dispense'], // Set for billing
             'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
-            'schedule_pattern' => $prescriptionData['schedule_pattern'], // Store for MAR reference
             'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
         ]);

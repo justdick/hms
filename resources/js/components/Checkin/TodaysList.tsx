@@ -8,7 +8,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -29,6 +28,20 @@ interface Department {
     description: string;
 }
 
+interface VitalSigns {
+    id: number;
+    blood_pressure_systolic: number | null;
+    blood_pressure_diastolic: number | null;
+    temperature: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
+    oxygen_saturation: number | null;
+    weight: number | null;
+    height: number | null;
+    notes: string | null;
+    recorded_at: string;
+}
+
 interface Checkin {
     id: number;
     patient: Patient;
@@ -36,15 +49,19 @@ interface Checkin {
     status: string;
     checked_in_at: string;
     vitals_taken_at: string | null;
+    vital_signs?: VitalSigns[];
 }
 
 interface TodaysListProps {
     checkins: Checkin[];
     departments?: Department[];
     onRecordVitals: (checkin: Checkin) => void;
+    onEditVitals?: (checkin: Checkin) => void;
     onCancel?: (checkin: Checkin) => void;
     emptyMessage?: string;
     canUpdateDate?: boolean;
+    canCancelCheckin?: boolean;
+    canEditVitals?: boolean;
     isSearchResults?: boolean;
     onDateUpdated?: (checkinId: number, newDate: string) => void;
     onDepartmentUpdated?: (checkinId: number, departmentId: number) => void;
@@ -54,9 +71,12 @@ export default function TodaysList({
     checkins,
     departments = [],
     onRecordVitals,
+    onEditVitals,
     onCancel,
     emptyMessage = 'No active check-ins.',
     canUpdateDate = false,
+    canCancelCheckin = false,
+    canEditVitals = false,
     isSearchResults = false,
     onDateUpdated,
     onDepartmentUpdated,
@@ -189,28 +209,39 @@ export default function TodaysList({
     };
 
     const getStatusBadge = (status: string) => {
-        const statusConfig = {
-            checked_in: { label: 'Checked In', variant: 'default' as const },
+        const statusConfig: Record<string, { label: string; className: string }> = {
+            checked_in: { 
+                label: 'Checked In', 
+                className: 'bg-blue-100 text-blue-700 border-blue-200' 
+            },
             vitals_taken: {
                 label: 'Vitals Taken',
-                variant: 'secondary' as const,
+                className: 'bg-green-100 text-green-700 border-green-200',
             },
             awaiting_consultation: {
                 label: 'Awaiting Doctor',
-                variant: 'outline' as const,
+                className: 'bg-amber-100 text-amber-700 border-amber-200',
             },
             in_consultation: {
                 label: 'In Consultation',
-                variant: 'destructive' as const,
+                className: 'bg-purple-100 text-purple-700 border-purple-200',
             },
-            completed: { label: 'Completed', variant: 'default' as const },
-            cancelled: { label: 'Cancelled', variant: 'secondary' as const },
+            completed: { 
+                label: 'Completed', 
+                className: 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+            },
+            cancelled: { 
+                label: 'Cancelled', 
+                className: 'bg-gray-100 text-gray-500 border-gray-200' 
+            },
         };
 
-        const config =
-            statusConfig[status as keyof typeof statusConfig] ||
-            statusConfig.checked_in;
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        const config = statusConfig[status] || statusConfig.checked_in;
+        return (
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${config.className}`}>
+                {config.label}
+            </span>
+        );
     };
 
     const canCancel = (status: string) => {
@@ -526,7 +557,6 @@ export default function TodaysList({
                                     {checkin.status === 'checked_in' && (
                                         <Button
                                             size="sm"
-                                            variant="outline"
                                             onClick={() =>
                                                 onRecordVitals(checkin)
                                             }
@@ -534,13 +564,25 @@ export default function TodaysList({
                                             Record Vitals
                                         </Button>
                                     )}
-                                    {canCancel(checkin.status) && (
+                                    {canEditVitals && checkin.vital_signs && checkin.vital_signs.length > 0 && onEditVitals && (
                                         <Button
                                             size="sm"
-                                            variant="ghost"
+                                            variant="secondary"
+                                            onClick={() =>
+                                                onEditVitals(checkin)
+                                            }
+                                        >
+                                            Edit Vitals
+                                        </Button>
+                                    )}
+                                    {canCancelCheckin && canCancel(checkin.status) && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
                                             onClick={() =>
                                                 handleCancelClick(checkin)
                                             }
+                                            className="text-destructive hover:bg-destructive/10"
                                         >
                                             Cancel
                                         </Button>

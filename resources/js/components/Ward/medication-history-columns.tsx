@@ -9,12 +9,9 @@ import {
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
-    AlertTriangle,
     ArrowUpDown,
-    Eye,
     MoreVertical,
     Pill,
-    Settings,
     XCircle,
 } from 'lucide-react';
 
@@ -45,19 +42,10 @@ export interface MedicationHistoryRow {
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
-    schedule_pattern?: {
-        day_1?: string[];
-        day_2?: string[];
-        subsequent?: string[];
-        [key: string]: string[] | undefined;
-    };
 }
 
 interface ColumnActions {
-    onConfigureTimes: (prescriptionId: number) => void;
-    onReconfigureTimes: (prescriptionId: number) => void;
-    onViewSchedule: (prescriptionId: number) => void;
-    onDiscontinue: (prescriptionId: number, reason: string) => void;
+    onDiscontinue: (prescriptionId: number) => void;
 }
 
 export const medicationHistoryColumns = (
@@ -147,8 +135,6 @@ export const medicationHistoryColumns = (
         cell: ({ row }) => {
             const prescription = row.original;
             const isDiscontinued = !!prescription.discontinued_at;
-            const hasPendingSchedule =
-                !prescription.schedule_pattern && !isDiscontinued;
 
             if (isDiscontinued) {
                 return (
@@ -158,18 +144,6 @@ export const medicationHistoryColumns = (
                     >
                         <XCircle className="mr-1 h-3 w-3" />
                         Discontinued
-                    </Badge>
-                );
-            }
-
-            if (hasPendingSchedule) {
-                return (
-                    <Badge
-                        variant="outline"
-                        className="border-orange-500 text-orange-700 dark:border-orange-600 dark:text-orange-400"
-                    >
-                        <AlertTriangle className="mr-1 h-3 w-3" />
-                        Pending Schedule
                     </Badge>
                 );
             }
@@ -191,25 +165,9 @@ export const medicationHistoryColumns = (
         cell: ({ row }) => {
             const prescription = row.original;
             const isDiscontinued = !!prescription.discontinued_at;
-            const hasPendingSchedule =
-                !prescription.schedule_pattern && !isDiscontinued;
-            const hasSchedule = !!prescription.schedule_pattern;
 
-            if (hasPendingSchedule) {
-                return (
-                    <div className="flex items-center gap-2">
-                        <Button
-                            size="sm"
-                            onClick={() =>
-                                actions.onConfigureTimes(prescription.id)
-                            }
-                            className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800"
-                        >
-                            <Settings className="mr-2 h-4 w-4" />
-                            Configure Times
-                        </Button>
-                    </div>
-                );
+            if (isDiscontinued) {
+                return null;
             }
 
             return (
@@ -220,47 +178,13 @@ export const medicationHistoryColumns = (
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        {hasSchedule && (
-                            <>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        actions.onViewSchedule(prescription.id)
-                                    }
-                                >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View Full Schedule
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        actions.onReconfigureTimes(
-                                            prescription.id,
-                                        )
-                                    }
-                                >
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    Reconfigure Times
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                        {!isDiscontinued && (
-                            <DropdownMenuItem
-                                onClick={() => {
-                                    const reason = prompt(
-                                        'Please provide a reason for discontinuing this medication:',
-                                    );
-                                    if (reason) {
-                                        actions.onDiscontinue(
-                                            prescription.id,
-                                            reason,
-                                        );
-                                    }
-                                }}
-                                className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                            >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Discontinue
-                            </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem
+                            onClick={() => actions.onDiscontinue(prescription.id)}
+                            className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                        >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Discontinue
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );

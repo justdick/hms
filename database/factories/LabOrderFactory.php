@@ -25,6 +25,7 @@ class LabOrderFactory extends Factory
             'ordered_by' => User::factory(),
             'ordered_at' => $this->faker->dateTimeBetween('-7 days', 'now'),
             'status' => $this->faker->randomElement(['ordered', 'sample_collected', 'in_progress', 'completed', 'cancelled']),
+            'is_unpriced' => false,
             'priority' => $this->faker->randomElement(['routine', 'urgent', 'stat']),
             'special_instructions' => $this->faker->optional(0.3)->sentence(),
             'sample_collected_at' => null,
@@ -128,6 +129,31 @@ class LabOrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'priority' => 'stat',
+        ]);
+    }
+
+    /**
+     * Indicate that the test is an external referral (unpriced).
+     */
+    public function externalReferral(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'external_referral',
+            'is_unpriced' => true,
+            'sample_collected_at' => null,
+            'result_entered_at' => null,
+            'result_values' => null,
+            'result_notes' => 'External referral - unpriced service',
+        ]);
+    }
+
+    /**
+     * Indicate that the test is unpriced.
+     */
+    public function unpriced(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_unpriced' => true,
         ]);
     }
 }

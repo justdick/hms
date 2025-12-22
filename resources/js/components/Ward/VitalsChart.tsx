@@ -36,7 +36,7 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
-import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts';
+import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from 'recharts';
 
 interface VitalSign {
     id: number;
@@ -92,6 +92,14 @@ function IndividualVitalChart({
     const validData = data.filter(
         (d) => d.value !== undefined && d.value !== null,
     );
+
+    // Calculate min/max for Y-axis domain with padding
+    const values = validData.map((d) => d.value!);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const padding = (maxValue - minValue) * 0.1 || 5; // 10% padding or 5 if all values are the same
+    const yMin = Math.floor(minValue - padding);
+    const yMax = Math.ceil(maxValue + padding);
 
     // Calculate trend
     const calculateTrend = () => {
@@ -155,6 +163,7 @@ function IndividualVitalChart({
                             top: 20,
                             left: 12,
                             right: 12,
+                            bottom: 5,
                         }}
                     >
                         <CartesianGrid vertical={false} />
@@ -168,6 +177,14 @@ function IndividualVitalChart({
                                 const parts = value.split(',');
                                 return parts[0];
                             }}
+                        />
+                        <YAxis
+                            domain={[yMin, yMax]}
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            width={40}
+                            tickFormatter={(value) => value.toFixed(0)}
                         />
                         <ChartTooltip
                             cursor={false}
@@ -460,7 +477,7 @@ export function VitalsChart({ vitals }: Props) {
                 </div>
             </div>
 
-            {/* Charts */}
+            {/* Charts - 2 column grid */}
             {filteredVitals.length === 0 ? (
                 <div className="flex h-full items-center justify-center py-12">
                     <div className="text-center">
@@ -471,7 +488,7 @@ export function VitalsChart({ vitals }: Props) {
                     </div>
                 </div>
             ) : (
-                <>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {vitalTypeFilter.temperature && (
                         <IndividualVitalChart
                             data={temperatureData}
@@ -543,7 +560,7 @@ export function VitalsChart({ vitals }: Props) {
                             icon={<Activity className="h-4 w-4 text-chart-1" />}
                         />
                     )}
-                </>
+                </div>
             )}
         </div>
     );

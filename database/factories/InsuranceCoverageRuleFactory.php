@@ -27,6 +27,7 @@ class InsuranceCoverageRuleFactory extends Factory
             'tariff_amount' => null,
             'patient_copay_percentage' => 0,
             'patient_copay_amount' => 0,
+            'is_unmapped' => false,
             'max_quantity_per_visit' => null,
             'max_amount_per_visit' => null,
             'requires_preauthorization' => fake()->boolean(20),
@@ -35,5 +36,18 @@ class InsuranceCoverageRuleFactory extends Factory
             'effective_to' => null,
             'notes' => fake()->optional()->sentence(),
         ];
+    }
+
+    /**
+     * Indicate that this is a flexible copay rule for an unmapped item.
+     */
+    public function unmapped(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_unmapped' => true,
+            'coverage_type' => 'fixed',
+            'coverage_value' => 0,
+            'patient_copay_amount' => fake()->randomFloat(2, 5, 50),
+        ]);
     }
 }

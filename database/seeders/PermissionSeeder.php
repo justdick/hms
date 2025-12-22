@@ -37,6 +37,7 @@ class PermissionSeeder extends Seeder
             'vitals.view-dept' => 'View vitals in assigned departments',
             'vitals.create' => 'Record patient vitals',
             'vitals.update' => 'Edit patient vitals',
+            'vitals.edit-timestamp' => 'Edit vital signs recorded date and time',
             'vitals.delete' => 'Delete vital records',
 
             // Consultation Management
@@ -133,6 +134,7 @@ class PermissionSeeder extends Seeder
             'drugs.update' => 'Update drug information',
             'drugs.delete' => 'Delete drugs',
             'drugs.manage-batches' => 'Manage drug batches',
+            'drugs.manage-nhis-settings' => 'Manage NHIS claim settings for drugs (e.g., claim qty as 1)',
 
             // Dispensing Management
             'dispensing.view' => 'View dispensing records',
@@ -188,6 +190,7 @@ class PermissionSeeder extends Seeder
             'medications.hold' => 'Hold medication administration',
             'medications.refuse' => 'Mark medication as refused',
             'medications.omit' => 'Omit medication administration',
+            'medications.edit-timestamp' => 'Edit medication administration date and time',
 
             // Minor Procedures Management
             'minor-procedures.view-dept' => 'View minor procedures queue in assigned departments',
@@ -453,6 +456,8 @@ class PermissionSeeder extends Seeder
             'nhis-settings.manage',
             'pricing.view',
             'pricing.edit',
+            'drugs.view',
+            'drugs.manage-nhis-settings',
         ]);
 
         // Admin gets ALL permissions automatically

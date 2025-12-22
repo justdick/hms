@@ -22,6 +22,7 @@ class InsuranceCoverageRule extends Model
         'tariff_amount',
         'patient_copay_percentage',
         'patient_copay_amount',
+        'is_unmapped',
         'max_quantity_per_visit',
         'max_amount_per_visit',
         'requires_preauthorization',
@@ -39,6 +40,7 @@ class InsuranceCoverageRule extends Model
             'tariff_amount' => 'decimal:2',
             'patient_copay_percentage' => 'decimal:2',
             'patient_copay_amount' => 'decimal:2',
+            'is_unmapped' => 'boolean',
             'max_quantity_per_visit' => 'integer',
             'max_amount_per_visit' => 'decimal:2',
             'requires_preauthorization' => 'boolean',
@@ -98,6 +100,16 @@ class InsuranceCoverageRule extends Model
     public function scopeForCategory($query, string $category): void
     {
         $query->where('coverage_category', $category);
+    }
+
+    public function scopeUnmapped($query): void
+    {
+        $query->where('is_unmapped', true);
+    }
+
+    public function scopeMapped($query): void
+    {
+        $query->where('is_unmapped', false);
     }
 
     public function getIsGeneralAttribute(): bool

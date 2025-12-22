@@ -50,7 +50,9 @@ class InsuranceCoverageService
      *     exceeded_limit: bool,
      *     limit_message: ?string,
      *     nhis_code: ?string,
-     *     is_nhis: bool
+     *     is_nhis: bool,
+     *     is_unmapped: bool,
+     *     has_flexible_copay: bool
      * }
      */
     public function calculateNhisCoverage(
@@ -68,10 +70,38 @@ class InsuranceCoverageService
         // Look up NHIS tariff from Master via mapping
         $nhisTariff = $this->nhisTariffService->getTariffForItem($itemType, $itemId);
 
-        // If item is not mapped to NHIS, it's not covered
+        // If item is not mapped to NHIS, check for flexible copay
         if (! $nhisTariff) {
             $subtotal = $amount * $quantity;
 
+            // Check for flexible copay rule (unmapped item with copay configured)
+            $flexibleCopayRule = $this->getFlexibleCopayRule($insurancePlanId, $category, $itemCode, $date);
+
+            if ($flexibleCopayRule && $flexibleCopayRule->patient_copay_amount !== null) {
+                // Unmapped item with flexible copay: patient pays copay, insurance pays 0
+                $copayAmount = (float) $flexibleCopayRule->patient_copay_amount * $quantity;
+
+                return [
+                    'is_covered' => true, // Covered in the sense that it's configured
+                    'insurance_pays' => 0.00,
+                    'patient_pays' => $copayAmount,
+                    'coverage_percentage' => 0.00,
+                    'rule_type' => 'flexible_copay',
+                    'rule_id' => $flexibleCopayRule->id,
+                    'coverage_type' => 'nhis_unmapped_with_copay',
+                    'insurance_tariff' => $amount,
+                    'subtotal' => $subtotal,
+                    'requires_preauthorization' => $flexibleCopayRule->requires_preauthorization ?? false,
+                    'exceeded_limit' => false,
+                    'limit_message' => null,
+                    'nhis_code' => null,
+                    'is_nhis' => true,
+                    'is_unmapped' => true,
+                    'has_flexible_copay' => true,
+                ];
+            }
+
+            // Unmapped item without flexible copay: patient pays full cash price, insurance pays 0
             return [
                 'is_covered' => false,
                 'insurance_pays' => 0.00,
@@ -87,6 +117,8 @@ class InsuranceCoverageService
                 'limit_message' => null,
                 'nhis_code' => null,
                 'is_nhis' => true,
+                'is_unmapped' => true,
+                'has_flexible_copay' => false,
             ];
         }
 
@@ -151,7 +183,68 @@ class InsuranceCoverageService
             'limit_message' => $limitMessage,
             'nhis_code' => $nhisTariff->nhis_code,
             'is_nhis' => true,
+            'is_unmapped' => false,
+            'has_flexible_copay' => false,
         ];
+    }
+
+    /**
+     * Get flexible copay rule for an unmapped NHIS item.
+     */
+    protected function getFlexibleCopayRule(
+        int $insurancePlanId,
+        string $category,
+        string $itemCode,
+        Carbon $date
+    ): ?InsuranceCoverageRule {
+        $cacheKey = "flexible_copay_rule_{$insurancePlanId}_{$category}_{$itemCode}";
+
+        $rules = Cache::remember($cacheKey, 3600, function () use ($insurancePlanId, $category, $itemCode) {
+            return InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+                ->where('coverage_category', $category)
+                ->where('item_code', $itemCode)
+                ->where('is_unmapped', true)
+                ->where('is_active', true)
+                ->orderBy('effective_from', 'desc')
+                ->get();
+        });
+
+        // Filter by date in memory
+        return $rules->filter(function ($rule) use ($date) {
+            $effectiveFrom = $rule->effective_from ? $rule->effective_from->startOfDay() : null;
+            $effectiveTo = $rule->effective_to ? $rule->effective_to->endOfDay() : null;
+
+            $afterStart = ! $effectiveFrom || $effectiveFrom->lte($date);
+            $beforeEnd = ! $effectiveTo || $effectiveTo->gte($date);
+
+            return $afterStart && $beforeEnd;
+        })->first();
+    }
+
+    /**
+     * Check if item has flexible copay configured.
+     */
+    public function hasFlexibleCopay(
+        int $insurancePlanId,
+        string $category,
+        string $itemCode
+    ): bool {
+        $rule = $this->getFlexibleCopayRule($insurancePlanId, $category, $itemCode, now());
+
+        return $rule !== null && $rule->patient_copay_amount !== null;
+    }
+
+    /**
+     * Get flexible copay amount for unmapped item.
+     */
+    public function getFlexibleCopayAmount(
+        int $insurancePlanId,
+        string $category,
+        string $itemCode
+    ): ?float {
+        $rule = $this->getFlexibleCopayRule($insurancePlanId, $category, $itemCode, now());
+
+        return $rule?->patient_copay_amount ? (float) $rule->patient_copay_amount : null;
     }
 
     /**
@@ -233,7 +326,7 @@ class InsuranceCoverageService
         });
 
         // Filter by date in memory to avoid cache issues with different dates
-        return $rules->filter(function ($rule) use ($date) {
+        $rule = $rules->filter(function ($rule) use ($date) {
             $effectiveFrom = $rule->effective_from ? $rule->effective_from->startOfDay() : null;
             $effectiveTo = $rule->effective_to ? $rule->effective_to->endOfDay() : null;
 
@@ -242,6 +335,70 @@ class InsuranceCoverageService
 
             return $afterStart && $beforeEnd;
         })->first();
+
+        // If no explicit rule found, check for category defaults on the plan
+        if (! $rule) {
+            $rule = $this->createRuleFromCategoryDefault($insurancePlanId, $category);
+        }
+
+        return $rule;
+    }
+
+    /**
+     * Create a virtual coverage rule from the plan's category default.
+     * This returns a non-persisted InsuranceCoverageRule object for calculation purposes.
+     */
+    protected function createRuleFromCategoryDefault(
+        int $insurancePlanId,
+        string $category
+    ): ?InsuranceCoverageRule {
+        $cacheKey = "plan_category_defaults_{$insurancePlanId}";
+
+        $plan = Cache::remember($cacheKey, 3600, function () use ($insurancePlanId) {
+            return InsurancePlan::find($insurancePlanId);
+        });
+
+        if (! $plan) {
+            return null;
+        }
+
+        // Map category to plan's default field
+        $defaultValue = $this->getCategoryDefaultFromPlan($plan, $category);
+
+        if ($defaultValue === null) {
+            return null;
+        }
+
+        // Create a virtual (non-persisted) coverage rule
+        $rule = new InsuranceCoverageRule;
+        $rule->insurance_plan_id = $insurancePlanId;
+        $rule->coverage_category = $category;
+        $rule->item_code = null;
+        $rule->coverage_type = 'percentage';
+        $rule->coverage_value = $defaultValue;
+        $rule->patient_copay_percentage = 100 - $defaultValue;
+        $rule->is_covered = $defaultValue > 0;
+        $rule->is_active = true;
+        // Mark this as a virtual rule (not from database)
+        $rule->id = null;
+
+        return $rule;
+    }
+
+    /**
+     * Get the category default percentage from the plan.
+     */
+    protected function getCategoryDefaultFromPlan(InsurancePlan $plan, string $category): ?float
+    {
+        return match ($category) {
+            'consultation' => $plan->consultation_default !== null ? (float) $plan->consultation_default : null,
+            'drug' => $plan->drugs_default !== null ? (float) $plan->drugs_default : null,
+            'lab' => $plan->labs_default !== null ? (float) $plan->labs_default : null,
+            'procedure' => $plan->procedures_default !== null ? (float) $plan->procedures_default : null,
+            // Ward and nursing don't have category defaults on the plan, fall back to null
+            'ward', 'nursing' => null,
+            default => null,
+        };
     }
 
     /**
@@ -432,6 +589,10 @@ class InsuranceCoverageService
         if ($itemCode) {
             $cacheKey = "coverage_rule_specific_{$insurancePlanId}_{$category}_{$itemCode}";
             Cache::forget($cacheKey);
+
+            // Also clear flexible copay cache
+            $flexibleCopayKey = "flexible_copay_rule_{$insurancePlanId}_{$category}_{$itemCode}";
+            Cache::forget($flexibleCopayKey);
         }
 
         $cacheKey = "coverage_rule_general_{$insurancePlanId}_{$category}";
@@ -450,8 +611,9 @@ class InsuranceCoverageService
             Cache::forget($cacheKey);
         }
 
-        // Also clear NHIS plan cache
+        // Also clear NHIS plan cache and category defaults cache
         Cache::forget("is_nhis_plan_{$insurancePlanId}");
+        Cache::forget("plan_category_defaults_{$insurancePlanId}");
     }
 
     /**

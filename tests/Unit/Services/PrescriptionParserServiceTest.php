@@ -282,6 +282,21 @@ it('calculates bottles correctly for liquid drugs', function () {
         ->and($result->quantityToDispense)->toBe(2); // ceil(105/100) = 2 bottles
 });
 
+it('returns null quantity for liquid drugs without bottle_size', function () {
+    // Create a mock Drug object for syrup without bottle_size
+    $drug = new Drug;
+    $drug->form = 'syrup';
+    $drug->unit_type = 'bottle';
+    $drug->bottle_size = null; // No bottle size configured
+
+    // 5ml TDS x 7 days - should return 0 quantity since bottle_size is not set
+    // This indicates manual entry is needed
+    $result = $this->parser->parse('5ml TDS x 7 days', $drug);
+
+    expect($result->isValid)->toBeTrue()
+        ->and($result->quantityToDispense)->toBe(0); // 0 indicates manual entry needed
+});
+
 /**
  * Feature: smart-prescription-input, Property 11: STAT and PRN don't require duration
  * Validates: Requirements 6.4

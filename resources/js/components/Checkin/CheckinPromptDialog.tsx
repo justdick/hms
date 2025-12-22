@@ -7,7 +7,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Copy, Check, User, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface Patient {
     id: number;
@@ -31,13 +34,26 @@ export default function CheckinPromptDialog({
     patient,
     onCheckinNow,
 }: CheckinPromptDialogProps) {
+    const [copied, setCopied] = useState(false);
+
     if (!patient) {
         return null;
     }
 
+    const handleCopyFolderNumber = async () => {
+        try {
+            await navigator.clipboard.writeText(patient.patient_number);
+            setCopied(true);
+            toast.success('Folder number copied to clipboard');
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            toast.error('Failed to copy');
+        }
+    };
+
     return (
         <AlertDialog open={open} onOpenChange={onClose}>
-            <AlertDialogContent>
+            <AlertDialogContent className="sm:max-w-md">
                 <AlertDialogHeader>
                     <AlertDialogTitle className="flex items-center gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -46,12 +62,45 @@ export default function CheckinPromptDialog({
                 </AlertDialogHeader>
 
                 <div className="space-y-4">
+                    {/* Prominent Folder Number Display */}
+                    <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 dark:bg-primary/10">
+                        <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            <FileText className="h-3.5 w-3.5" />
+                            Folder Number
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-2xl font-bold tracking-wide text-primary">
+                                {patient.patient_number}
+                            </span>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCopyFolderNumber}
+                                className="shrink-0 gap-1.5"
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="h-3.5 w-3.5 text-green-600" />
+                                        Copied
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="h-3.5 w-3.5" />
+                                        Copy
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Patient Details */}
                     <div className="rounded-lg border bg-muted/50 p-4">
                         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
                             <User className="h-4 w-4" />
-                            Patient Information
+                            Patient Details
                         </div>
-                        <div className="space-y-1 text-sm">
+                        <div className="space-y-1.5 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
                                     Name:
@@ -62,31 +111,33 @@ export default function CheckinPromptDialog({
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
-                                    Patient Number:
-                                </span>
-                                <span className="font-medium text-foreground">
-                                    {patient.patient_number}
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">
                                     Age & Gender:
                                 </span>
                                 <span className="font-medium text-foreground">
                                     {patient.age} years, {patient.gender}
                                 </span>
                             </div>
+                            {patient.phone_number && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                        Phone:
+                                    </span>
+                                    <span className="font-medium text-foreground">
+                                        {patient.phone_number}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <p className="text-center text-foreground">
-                        Would you like to check in this patient for consultation
-                        now?
+                    <p className="text-center text-sm text-muted-foreground">
+                        Would you like to check in this patient now?
                     </p>
                 </div>
-                <AlertDialogFooter>
+
+                <AlertDialogFooter className="gap-2 sm:gap-0">
                     <AlertDialogCancel onClick={onClose}>
-                        Later
+                        Close
                     </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={(e) => {

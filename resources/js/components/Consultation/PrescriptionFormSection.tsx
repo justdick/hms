@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,9 +25,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
+    AlertTriangle,
     Calculator,
     Check,
     ChevronsUpDown,
+    ExternalLink,
     Pencil,
     Pill,
     Plus,
@@ -49,6 +52,7 @@ interface Drug {
     brand_name?: string;
     unit_type: string;
     bottle_size?: number;
+    unit_price?: number | null;
 }
 
 // Helper to extract pack size from drug name (e.g., "(24's)", "(6 tabs)", "(12`s)")
@@ -169,6 +173,14 @@ function estimateBottlesNeeded(
     return Math.ceil(totalMlNeeded / bottleSize);
 }
 
+// Topical preparations - no frequency/duration calculation needed
+const TOPICAL_FORMS = ['cream', 'ointment', 'gel', 'lotion'];
+
+function isTopicalPreparation(drug: Drug | undefined): boolean {
+    if (!drug) return false;
+    return TOPICAL_FORMS.includes(drug.form.toLowerCase());
+}
+
 export default function PrescriptionFormSection({
     drugs,
     prescriptions,
@@ -187,7 +199,7 @@ export default function PrescriptionFormSection({
 }: Props) {
     const [drugComboOpen, setDrugComboOpen] = useState(false);
     const [manuallyEdited, setManuallyEdited] = useState(false);
-    const [mode, setMode] = useState<PrescriptionMode>('smart');
+    const [mode, setMode] = useState<PrescriptionMode>('classic');
     const [smartInput, setSmartInput] = useState('');
     const [parsedResult, setParsedResult] = useState<ParsedPrescription | null>(null);
     const [showRefillModal, setShowRefillModal] = useState(false);
@@ -196,8 +208,7 @@ export default function PrescriptionFormSection({
 
     const selectedDrug = drugs.find((d) => d.id === prescriptionData.drug_id);
 
-    // Force classic mode when editing (existing prescriptions have structured data)
-    // Start in smart mode when editing, with values converted to smart format
+    // When editing, convert to smart mode with values converted to smart format
     useEffect(() => {
         if (isEditing && prescriptionData.frequency) {
             setMode('smart');
@@ -360,10 +371,11 @@ export default function PrescriptionFormSection({
                 setPrescriptionData('quantity_to_dispense', calculatedQuantity);
             }
         }
-        // Auto-calculate for bottles/vials (no manual editing)
+        // Auto-calculate for bottles/vials only if bottle_size is set
         else if (
-            selectedDrug.unit_type === 'bottle' ||
-            selectedDrug.unit_type === 'vial'
+            (selectedDrug.unit_type === 'bottle' ||
+            selectedDrug.unit_type === 'vial') &&
+            selectedDrug.bottle_size
         ) {
             const estimated = estimateBottlesNeeded(
                 prescriptionData.frequency,
@@ -374,7 +386,7 @@ export default function PrescriptionFormSection({
             );
             setPrescriptionData('quantity_to_dispense', estimated);
         }
-        // For tubes and other types - default to 1
+        // For bottles/vials without bottle_size, tubes and other types - default to 1 if not manually edited
         else if (!manuallyEdited) {
             if (!prescriptionData.quantity_to_dispense) {
                 setPrescriptionData('quantity_to_dispense', 1);
@@ -531,6 +543,26 @@ export default function PrescriptionFormSection({
         </div>
     );
 
+    // Helper to check if selected drug is unpriced
+    const isSelectedDrugUnpriced = selectedDrug && (selectedDrug.unit_price === null || selectedDrug.unit_price === 0);
+
+    // Unpriced drug warning component (shared between modes)
+    const UnpricedDrugWarning = isSelectedDrugUnpriced ? (
+        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle className="text-amber-800 dark:text-amber-200">
+                Unpriced Drug - External Dispensing
+            </AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300">
+                <p>This drug has no price configured in the system.</p>
+                <p className="mt-1 flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    Patient will need to purchase this medication externally.
+                </p>
+            </AlertDescription>
+        </Alert>
+    ) : null;
+
     return (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left Column: Add New Prescription Form */}
@@ -586,6 +618,9 @@ export default function PrescriptionFormSection({
                                 {DrugSelector}
                             </div>
 
+                            {/* Unpriced Drug Warning */}
+                            {UnpricedDrugWarning}
+
                             {/* Smart Prescription Input */}
                             <SmartPrescriptionInput
                                 drug={selectedDrug || null}
@@ -595,6 +630,48 @@ export default function PrescriptionFormSection({
                                 onSwitchToClassic={handleSwitchToClassic}
                                 disabled={processing}
                             />
+
+                            {/* Manual Quantity Input for liquids without bottle_size in Smart mode */}
+                            {parsedResult?.isValid &&
+                                (parsedResult.quantityToDispense === null || parsedResult.quantityToDispense === 0) &&
+                                selectedDrug &&
+                                (selectedDrug.unit_type === 'bottle' || selectedDrug.unit_type === 'vial') && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantity_bottles_smart">
+                                            Number of {selectedDrug.unit_type === 'bottle' ? 'Bottles' : 'Vials'} *
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                id="quantity_bottles_smart"
+                                                min="1"
+                                                placeholder="1"
+                                                value={prescriptionData.quantity_to_dispense || ''}
+                                                onChange={(e) => {
+                                                    setPrescriptionData(
+                                                        'quantity_to_dispense',
+                                                        e.target.value ? parseInt(e.target.value) : '',
+                                                    );
+                                                }}
+                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.unit_type === 'bottle'
+                                                    ? (prescriptionData.quantity_to_dispense || 1) === 1
+                                                        ? 'bottle'
+                                                        : 'bottles'
+                                                    : (prescriptionData.quantity_to_dispense || 1) === 1
+                                                      ? 'vial'
+                                                      : 'vials'}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                            Bottle size not configured. Enter the number of{' '}
+                                            {selectedDrug.unit_type === 'bottle' ? 'bottles' : 'vials'} to dispense.
+                                        </p>
+                                    </div>
+                                )}
 
                             {/* Instructions */}
                             <div className="space-y-2">
@@ -614,7 +691,7 @@ export default function PrescriptionFormSection({
 
                             <Button
                                 type="submit"
-                                disabled={processing || !prescriptionData.drug_id || !parsedResult?.isValid}
+                                disabled={processing || !prescriptionData.drug_id || !parsedResult?.isValid || ((parsedResult.quantityToDispense === null || parsedResult.quantityToDispense === 0) && !prescriptionData.quantity_to_dispense)}
                                 className="w-full"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
@@ -629,8 +706,68 @@ export default function PrescriptionFormSection({
                                 {DrugSelector}
                             </div>
 
-                            {/* Dose, Frequency, Duration in same row */}
-                            {selectedDrug && (
+                            {/* Unpriced Drug Warning */}
+                            {UnpricedDrugWarning}
+
+                            {/* Topical Preparations - Simplified form */}
+                            {selectedDrug && isTopicalPreparation(selectedDrug) && (
+                                <div className="space-y-4">
+                                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+                                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                                            <strong>Topical preparation</strong> - Enter quantity and application instructions below.
+                                        </p>
+                                    </div>
+                                    
+                                    {/* Quantity Input */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantity_topical">Quantity *</Label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                id="quantity_topical"
+                                                min="1"
+                                                placeholder="1"
+                                                value={prescriptionData.quantity_to_dispense || ''}
+                                                onChange={(e) => {
+                                                    setPrescriptionData('quantity_to_dispense', e.target.value ? parseInt(e.target.value) : '');
+                                                }}
+                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.unit_type === 'tube' 
+                                                    ? (prescriptionData.quantity_to_dispense || 1) === 1 ? 'tube' : 'tubes'
+                                                    : selectedDrug.unit_type === 'piece'
+                                                        ? (prescriptionData.quantity_to_dispense || 1) === 1 ? 'unit' : 'units'
+                                                        : selectedDrug.unit_type}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Instructions - Required for topicals */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="instructions_topical">
+                                            Application Instructions *
+                                        </Label>
+                                        <Textarea
+                                            id="instructions_topical"
+                                            placeholder="e.g., Apply to affected area twice daily"
+                                            value={prescriptionData.instructions}
+                                            onChange={(e) =>
+                                                setPrescriptionData('instructions', e.target.value)
+                                            }
+                                            rows={3}
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Include application site, frequency, and any special instructions
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Non-topical drugs - Dose, Frequency, Duration in same row */}
+                            {selectedDrug && !isTopicalPreparation(selectedDrug) && (
                                 <div className="grid grid-cols-3 gap-4">
                                     {/* Dose Quantity */}
                                     <div className="space-y-2">
@@ -728,9 +865,10 @@ export default function PrescriptionFormSection({
                                 </div>
                             )}
 
-                            {/* Quantity Display - Auto-calculated for tablets */}
+                            {/* Quantity Display - Auto-calculated for tablets (non-topical only) */}
                             {prescriptionData.quantity_to_dispense &&
                                 selectedDrug &&
+                                !isTopicalPreparation(selectedDrug) &&
                                 selectedDrug.unit_type === 'piece' && (
                                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
                                         <div className="flex items-center gap-2">
@@ -755,11 +893,13 @@ export default function PrescriptionFormSection({
                                     </div>
                                 )}
 
-                            {/* Calculated Quantity Display for bottles/vials */}
+                            {/* Calculated Quantity Display for bottles/vials WITH bottle_size configured */}
                             {prescriptionData.quantity_to_dispense &&
                                 selectedDrug &&
+                                !isTopicalPreparation(selectedDrug) &&
                                 (selectedDrug.unit_type === 'bottle' ||
-                                    selectedDrug.unit_type === 'vial') && (
+                                    selectedDrug.unit_type === 'vial') &&
+                                selectedDrug.bottle_size && (
                                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
                                         <div className="flex items-center gap-2">
                                             <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -779,17 +919,62 @@ export default function PrescriptionFormSection({
                                                 </p>
                                                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                                                     Based on {prescriptionData.dose_quantity || '5'}ml per dose,{' '}
-                                                    {selectedDrug.bottle_size ||
-                                                        (selectedDrug.unit_type === 'bottle' ? 100 : 10)}
-                                                    ml per {selectedDrug.unit_type}
+                                                    {selectedDrug.bottle_size}ml per {selectedDrug.unit_type}
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-                            {/* Manual Quantity Input for tubes and other types */}
+                            {/* Manual Quantity Input for bottles/vials WITHOUT bottle_size configured */}
                             {selectedDrug &&
+                                !isTopicalPreparation(selectedDrug) &&
+                                (selectedDrug.unit_type === 'bottle' ||
+                                    selectedDrug.unit_type === 'vial') &&
+                                !selectedDrug.bottle_size &&
+                                prescriptionData.frequency &&
+                                prescriptionData.duration && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantity_bottles">
+                                            Number of {selectedDrug.unit_type === 'bottle' ? 'Bottles' : 'Vials'} *
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                id="quantity_bottles"
+                                                min="1"
+                                                placeholder="1"
+                                                value={prescriptionData.quantity_to_dispense || ''}
+                                                onChange={(e) => {
+                                                    setManuallyEdited(true);
+                                                    setPrescriptionData(
+                                                        'quantity_to_dispense',
+                                                        e.target.value ? parseInt(e.target.value) : '',
+                                                    );
+                                                }}
+                                                className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                {selectedDrug.unit_type === 'bottle'
+                                                    ? (prescriptionData.quantity_to_dispense || 1) === 1
+                                                        ? 'bottle'
+                                                        : 'bottles'
+                                                    : (prescriptionData.quantity_to_dispense || 1) === 1
+                                                      ? 'vial'
+                                                      : 'vials'}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                            Bottle size not configured for this drug. Enter the number of{' '}
+                                            {selectedDrug.unit_type === 'bottle' ? 'bottles' : 'vials'} to dispense.
+                                        </p>
+                                    </div>
+                                )}
+
+                            {/* Manual Quantity Input for tubes and other types (non-topical) */}
+                            {selectedDrug &&
+                                !isTopicalPreparation(selectedDrug) &&
                                 selectedDrug.unit_type !== 'piece' &&
                                 selectedDrug.unit_type !== 'bottle' &&
                                 selectedDrug.unit_type !== 'vial' &&
@@ -804,12 +989,13 @@ export default function PrescriptionFormSection({
                                                 type="number"
                                                 id="quantity_to_dispense"
                                                 min="1"
-                                                value={prescriptionData.quantity_to_dispense || 1}
+                                                placeholder="1"
+                                                value={prescriptionData.quantity_to_dispense || ''}
                                                 onChange={(e) => {
                                                     setManuallyEdited(true);
                                                     setPrescriptionData(
                                                         'quantity_to_dispense',
-                                                        parseInt(e.target.value) || 1,
+                                                        e.target.value ? parseInt(e.target.value) : '',
                                                     );
                                                 }}
                                                 className="flex h-10 w-24 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -831,21 +1017,23 @@ export default function PrescriptionFormSection({
                                     </div>
                                 )}
 
-                            {/* Instructions */}
-                            <div className="space-y-2">
-                                <Label htmlFor="instructions">
-                                    Instructions (Optional)
-                                </Label>
-                                <Textarea
-                                    id="instructions"
-                                    placeholder="Special instructions for the patient..."
-                                    value={prescriptionData.instructions}
-                                    onChange={(e) =>
-                                        setPrescriptionData('instructions', e.target.value)
-                                    }
-                                    rows={3}
-                                />
-                            </div>
+                            {/* Instructions (for non-topical drugs - topicals have their own instructions field) */}
+                            {(!selectedDrug || !isTopicalPreparation(selectedDrug)) && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="instructions">
+                                        Instructions (Optional)
+                                    </Label>
+                                    <Textarea
+                                        id="instructions"
+                                        placeholder="Special instructions for the patient..."
+                                        value={prescriptionData.instructions}
+                                        onChange={(e) =>
+                                            setPrescriptionData('instructions', e.target.value)
+                                        }
+                                        rows={3}
+                                    />
+                                </div>
+                            )}
 
                             <Button
                                 type="submit"

@@ -18,7 +18,7 @@ class ReviewPrescriptionRequest extends FormRequest
             'reviews' => ['sometimes', 'array', 'min:1'],
             'reviews.*.prescription_id' => ['required', 'exists:prescriptions,id'],
             'reviews.*.action' => ['required', 'in:keep,partial,external,cancel'],
-            'reviews.*.quantity_to_dispense' => ['required_if:reviews.*.action,partial', 'integer', 'min:1'],
+            'reviews.*.quantity_to_dispense' => ['nullable', 'required_if:reviews.*.action,keep', 'required_if:reviews.*.action,partial', 'integer', 'min:1'],
             'reviews.*.notes' => ['nullable', 'string', 'max:500'],
             'reviews.*.reason' => ['required_if:reviews.*.action,cancel', 'string', 'max:255'],
 
@@ -26,7 +26,7 @@ class ReviewPrescriptionRequest extends FormRequest
             'supply_reviews' => ['sometimes', 'array', 'min:1'],
             'supply_reviews.*.supply_id' => ['required', 'exists:minor_procedure_supplies,id'],
             'supply_reviews.*.action' => ['required', 'in:keep,partial,external,cancel'],
-            'supply_reviews.*.quantity_to_dispense' => ['required_if:supply_reviews.*.action,partial', 'numeric', 'min:0.01'],
+            'supply_reviews.*.quantity_to_dispense' => ['nullable', 'required_if:supply_reviews.*.action,keep', 'required_if:supply_reviews.*.action,partial', 'numeric', 'min:0.01'],
             'supply_reviews.*.notes' => ['nullable', 'string', 'max:500'],
             'supply_reviews.*.reason' => ['required_if:supply_reviews.*.action,cancel', 'string', 'max:255'],
         ];

@@ -126,6 +126,15 @@ function buildBillingNavItems(billingPermissions?: {
         });
     }
 
+    // Pricing Dashboard - requires configure permission (centralized pricing management)
+    if (billingPermissions?.configure) {
+        items.push({
+            title: 'Pricing Dashboard',
+            href: '/admin/pricing-dashboard',
+            icon: DollarSign,
+        });
+    }
+
     return items.length > 0 ? items : undefined;
 }
 
@@ -294,14 +303,6 @@ export function AppSidebar() {
             title: 'NHIS Settings',
             href: '/admin/nhis-settings',
             icon: Shield,
-        });
-    }
-
-    if (auth.permissions?.pricing?.view || auth.permissions?.pricing?.edit) {
-        adminItems.push({
-            title: 'Pricing Dashboard',
-            href: '/admin/pricing-dashboard',
-            icon: DollarSign,
         });
     }
 

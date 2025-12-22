@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\VitalSign;
 use App\Observers\ChargeObserver;
 use App\Observers\DrugObserver;
+use App\Observers\LabOrderObserver;
 use App\Observers\LabServiceObserver;
 use App\Observers\PrescriptionObserver;
 use App\Observers\VitalSignObserver;
@@ -81,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         // Register observers
         Charge::observe(ChargeObserver::class);
         Drug::observe(DrugObserver::class);
+        \App\Models\LabOrder::observe(LabOrderObserver::class);
         LabService::observe(LabServiceObserver::class);
         Prescription::observe(PrescriptionObserver::class);
         VitalSign::observe(VitalSignObserver::class);

@@ -26,6 +26,8 @@ class InsuranceClaimItem extends Model
         'insurance_pays',
         'patient_pays',
         'is_approved',
+        'is_unmapped',
+        'has_flexible_copay',
         'rejection_reason',
         'notes',
         'nhis_tariff_id',
@@ -45,6 +47,8 @@ class InsuranceClaimItem extends Model
             'insurance_pays' => 'decimal:2',
             'patient_pays' => 'decimal:2',
             'is_approved' => 'boolean',
+            'is_unmapped' => 'boolean',
+            'has_flexible_copay' => 'boolean',
             'nhis_price' => 'decimal:2',
         ];
     }

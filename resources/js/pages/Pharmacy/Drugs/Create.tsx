@@ -1,4 +1,5 @@
 import DrugController from '@/actions/App/Http/Controllers/Pharmacy/DrugController';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,7 +19,8 @@ import {
     AlertCircle,
     ArrowLeft,
     BarChart3,
-    DollarSign,
+    ExternalLink,
+    Info,
     Package,
     Plus,
 } from 'lucide-react';
@@ -32,9 +34,10 @@ interface Supplier {
 interface Props {
     categories: string[];
     suppliers: Supplier[];
+    canManageNhisSettings: boolean;
 }
 
-export default function CreateDrug({ categories, suppliers }: Props) {
+export default function CreateDrug({ categories, suppliers, canManageNhisSettings }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         generic_name: '',
@@ -44,12 +47,12 @@ export default function CreateDrug({ categories, suppliers }: Props) {
         form: '',
         strength: '',
         description: '',
-        unit_price: '',
         unit_type: '',
         bottle_size: '',
         minimum_stock_level: '',
         maximum_stock_level: '',
         is_active: true,
+        nhis_claim_qty_as_one: false,
     });
 
     const drugForms = [
@@ -82,7 +85,7 @@ export default function CreateDrug({ categories, suppliers }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(DrugController.store());
+        post(DrugController.store.url());
     };
 
     return (
@@ -365,45 +368,39 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                             </CardContent>
                         </Card>
 
-                        {/* Pricing & Stock Information */}
+                        {/* Stock Information */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <DollarSign className="h-5 w-5" />
-                                    Pricing & Stock Information
+                                    <Package className="h-5 w-5" />
+                                    Stock Information
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="unit_price">
-                                        Unit Price *
-                                    </Label>
-                                    <Input
-                                        id="unit_price"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={data.unit_price}
-                                        onChange={(e) =>
-                                            setData(
-                                                'unit_price',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className={
-                                            errors.unit_price
-                                                ? 'border-red-500'
-                                                : ''
-                                        }
-                                        placeholder="0.00"
-                                    />
-                                    {errors.unit_price && (
-                                        <p className="flex items-center gap-1 text-sm text-red-500">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.unit_price}
-                                        </p>
-                                    )}
-                                </div>
+                                <Alert>
+                                    <Info className="h-4 w-4" />
+                                    <AlertDescription className="flex items-center justify-between">
+                                        <span>
+                                            Pricing is managed through the
+                                            Pricing Dashboard. After creating
+                                            this drug, set its price there.
+                                        </span>
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="ml-2 h-auto p-0"
+                                            asChild
+                                        >
+                                            <Link
+                                                href="/admin/pricing-dashboard"
+                                                target="_blank"
+                                            >
+                                                Open Pricing Dashboard
+                                                <ExternalLink className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                    </AlertDescription>
+                                </Alert>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="unit_type">
@@ -565,6 +562,31 @@ export default function CreateDrug({ categories, suppliers }: Props) {
                                     <Label htmlFor="is_active">
                                         Active Drug
                                     </Label>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {canManageNhisSettings && (
+                                        <>
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="nhis_claim_qty_as_one"
+                                                    checked={data.nhis_claim_qty_as_one}
+                                                    onCheckedChange={(checked) =>
+                                                        setData(
+                                                            'nhis_claim_qty_as_one',
+                                                            checked as boolean,
+                                                        )
+                                                    }
+                                                />
+                                                <Label htmlFor="nhis_claim_qty_as_one">
+                                                    NHIS Claim Qty as 1 (Pack)
+                                                </Label>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                For drugs like Arthemeter and Pessary where NHIS requires quantity = 1 regardless of actual tablets dispensed
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">

@@ -127,9 +127,17 @@ const INTERVAL_BASED_FORMS = [
     'patch',
 ];
 
+// Fixed-unit forms always dispense 1 unit regardless of frequency/duration
 const FIXED_UNIT_FORMS = [
-    'cream',
     'drops',
     'inhaler',
     'combination_pack',
+];
+
+// Topical forms - quantity is specified directly by user (e.g., "2" = 2 tubes)
+const TOPICAL_FORMS = [
+    'cream',
+    'ointment',
+    'gel',
+    'lotion',
 ];

@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, Loader2, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface Drug {
@@ -19,19 +19,12 @@ interface Drug {
     strength?: string;
 }
 
-interface MedicationAdministration {
-    id: number;
-    scheduled_time: string;
-    status: string;
-}
-
 interface Prescription {
     id: number;
     drug?: Drug;
     medication_name: string;
     frequency?: string;
     duration?: string;
-    medication_administrations?: MedicationAdministration[];
 }
 
 interface DiscontinueMedicationModalProps {
@@ -47,21 +40,6 @@ export function DiscontinueMedicationModal({
 }: DiscontinueMedicationModalProps) {
     const [reason, setReason] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [futureDoses, setFutureDoses] = useState<MedicationAdministration[]>(
-        [],
-    );
-
-    useEffect(() => {
-        if (isOpen && prescription?.medication_administrations) {
-            const now = new Date();
-            const future = prescription.medication_administrations.filter(
-                (admin) =>
-                    admin.status === 'scheduled' &&
-                    new Date(admin.scheduled_time) > now,
-            );
-            setFutureDoses(future);
-        }
-    }, [isOpen, prescription]);
 
     const handleSubmit = () => {
         if (!prescription) return;
@@ -94,16 +72,6 @@ export function DiscontinueMedicationModal({
         );
     };
 
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        });
-    };
-
     if (!prescription) return null;
 
     return (
@@ -128,39 +96,14 @@ export function DiscontinueMedicationModal({
                         <AlertTriangle className="h-5 w-5 shrink-0 text-orange-600 dark:text-orange-500" />
                         <div className="space-y-1 text-sm">
                             <p className="font-medium text-orange-900 dark:text-orange-200">
-                                This action will cancel all future scheduled
-                                doses
+                                This medication will be marked as discontinued
                             </p>
                             <p className="text-orange-700 dark:text-orange-300">
-                                Doses that have already been given will be
-                                preserved in the patient's record.
+                                Past administrations will be preserved in the patient's record.
+                                No further doses should be given.
                             </p>
                         </div>
                     </div>
-
-                    {/* Future Doses to be Cancelled */}
-                    {futureDoses.length > 0 && (
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium">
-                                Doses to be Cancelled ({futureDoses.length})
-                            </Label>
-                            <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border bg-muted/50 p-3 dark:bg-muted/20">
-                                {futureDoses.slice(0, 5).map((dose) => (
-                                    <p
-                                        key={dose.id}
-                                        className="text-sm text-muted-foreground"
-                                    >
-                                        • {formatDateTime(dose.scheduled_time)}
-                                    </p>
-                                ))}
-                                {futureDoses.length > 5 && (
-                                    <p className="text-sm text-muted-foreground italic">
-                                        ... and {futureDoses.length - 5} more
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
                     {/* Reason (Required) */}
                     <div className="space-y-2">

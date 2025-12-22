@@ -17,13 +17,31 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
 
     // Insurance Plans
     Route::resource('plans', InsurancePlanController::class);
-    Route::get('plans/{plan}/coverage', [InsurancePlanController::class, 'showCoverage'])->name('plans.coverage');
+
+    // Redirect old coverage management pages to Pricing Dashboard
+    Route::get('plans/{plan}/coverage', function ($plan) {
+        return redirect("/admin/pricing-dashboard?plan={$plan}");
+    })->name('plans.coverage');
+    Route::get('plans/{plan}/coverage-rules', function ($plan) {
+        return redirect("/admin/pricing-dashboard?plan={$plan}");
+    })->name('plans.coverage-rules');
+
+    // Keep API endpoints for backward compatibility
     Route::get('plans/{plan}/coverage/{category}/exceptions', [InsurancePlanController::class, 'getCategoryExceptions'])->name('plans.coverage.exceptions');
-    Route::get('plans/{plan}/coverage-rules', [InsurancePlanController::class, 'manageCoverageRules'])->name('plans.coverage-rules');
     Route::get('plans/{plan}/recent-items', [InsurancePlanController::class, 'getRecentItems'])->name('plans.recent-items');
     Route::get('coverage-presets', [InsurancePlanController::class, 'getCoveragePresets'])->name('coverage-presets');
 
-    // Coverage Rules (API endpoints only - UI is in Coverage Management)
+    // Redirect old coverage rule UI pages to Pricing Dashboard
+    Route::get('coverage-rules/create', function () {
+        $planId = request()->query('plan');
+
+        return redirect('/admin/pricing-dashboard'.($planId ? "?plan={$planId}" : ''));
+    })->name('coverage-rules.create');
+    Route::get('coverage-rules/{coverageRule}/edit', function () {
+        return redirect('/admin/pricing-dashboard');
+    })->name('coverage-rules.edit');
+
+    // Coverage Rules (API endpoints only - UI is in Pricing Dashboard)
     Route::post('coverage-rules', [InsuranceCoverageRuleController::class, 'store'])->name('coverage-rules.store');
     Route::patch('coverage-rules/{coverageRule}', [InsuranceCoverageRuleController::class, 'update'])->name('coverage-rules.update');
     Route::delete('coverage-rules/{coverageRule}', [InsuranceCoverageRuleController::class, 'destroy'])->name('coverage-rules.destroy');

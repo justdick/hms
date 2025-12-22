@@ -101,11 +101,11 @@ class PatientAdmission extends Model
         return $this->hasMany(MedicationAdministration::class);
     }
 
-    public function pendingMedications(): HasMany
+    public function todayMedicationAdministrations(): HasMany
     {
         return $this->medicationAdministrations()
-            ->where('status', 'scheduled')
-            ->where('scheduled_time', '<=', now()->addHours(2));
+            ->whereDate('administered_at', today())
+            ->orderBy('administered_at', 'desc');
     }
 
     public function wardRounds(): HasMany

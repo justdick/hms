@@ -20,6 +20,7 @@ import {
     X,
 } from 'lucide-react';
 import { KeyboardEvent, useRef, useState } from 'react';
+import { PricingStatusBadge } from './components/PricingStatusBadge';
 import type { InsurancePlan, PricingItem } from './Index';
 
 interface EditingCell {
@@ -51,12 +52,16 @@ function EditableCell({
     value,
     disabled = false,
     selectedPlan,
+    isNhis = false,
+    isUnmappedCopay = false,
 }: {
     item: PricingItem;
     field: EditingCell['field'];
     value: number | null;
     disabled?: boolean;
     selectedPlan: InsurancePlan | null;
+    isNhis?: boolean;
+    isUnmappedCopay?: boolean;
 }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState('');
@@ -96,14 +101,26 @@ function EditableCell({
                 price: numValue,
             };
         } else if (field === 'copay_amount' && selectedPlan) {
-            endpoint = '/admin/pricing-dashboard/insurance-copay';
-            data = {
-                plan_id: selectedPlan.id,
-                item_type: item.type,
-                item_id: item.id,
-                item_code: item.code,
-                copay: numValue,
-            };
+            // Use flexible copay endpoint for unmapped NHIS items
+            if (isUnmappedCopay) {
+                endpoint = '/admin/pricing-dashboard/flexible-copay';
+                data = {
+                    plan_id: selectedPlan.id,
+                    item_type: item.type,
+                    item_id: item.id,
+                    item_code: item.code,
+                    copay_amount: numValue,
+                };
+            } else {
+                endpoint = '/admin/pricing-dashboard/insurance-copay';
+                data = {
+                    plan_id: selectedPlan.id,
+                    item_type: item.type,
+                    item_id: item.id,
+                    item_code: item.code,
+                    copay: numValue,
+                };
+            }
         } else if ((field === 'insurance_tariff' || field === 'coverage_value') && selectedPlan) {
             endpoint = '/admin/pricing-dashboard/insurance-coverage';
             data = {
@@ -204,7 +221,7 @@ export function createPricingColumns(
     const calculatePatientPays = (item: PricingItem): number | null => {
         if (!selectedPlan || isNhis) return null;
         
-        const tariff = item.insurance_tariff ?? item.cash_price;
+        const tariff = item.insurance_tariff ?? item.cash_price ?? 0;
         const coverageValue = item.coverage_value ?? 0;
         const coverageType = item.coverage_type ?? 'percentage';
         const copay = item.copay_amount ?? 0;
@@ -219,6 +236,7 @@ export function createPricingColumns(
     const columns: ColumnDef<PricingItem>[] = [];
 
     // Selection column (only when plan is selected)
+    // Allow selection of ALL items including unmapped ones for bulk operations
     if (selectedPlan) {
         columns.push({
             id: 'select',
@@ -227,16 +245,11 @@ export function createPricingColumns(
                     checked={
                         table.getFilteredSelectedRowModel().rows.length > 0 &&
                         table.getFilteredSelectedRowModel().rows.length ===
-                            table.getFilteredRowModel().rows.filter(row => 
-                                !isNhis || row.original.is_mapped
-                            ).length
+                            table.getFilteredRowModel().rows.length
                     }
                     onCheckedChange={(value) => {
-                        const selectableRows = table.getFilteredRowModel().rows.filter(row =>
-                            !isNhis || row.original.is_mapped
-                        );
                         if (value) {
-                            onSelectionChange(selectableRows.map(row => row.original));
+                            onSelectionChange(table.getFilteredRowModel().rows.map(row => row.original));
                         } else {
                             onSelectionChange([]);
                         }
@@ -250,7 +263,6 @@ export function createPricingColumns(
                     onCheckedChange={(checked) =>
                         handleSelectItem(row.original, checked === true)
                     }
-                    disabled={isNhis && !row.original.is_mapped}
                     aria-label="Select row"
                 />
             ),
@@ -302,6 +314,33 @@ export function createPricingColumns(
         ),
         filterFn: (row, id, value) => {
             return value.includes(row.getValue(id));
+        },
+    });
+
+    // Pricing Status column
+    columns.push({
+        id: 'pricing_status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const item = row.original;
+            // Determine status based on item properties
+            let status: 'priced' | 'unpriced' | 'nhis_mapped' | 'flexible_copay' | 'not_mapped';
+            
+            if (item.cash_price === null || item.cash_price <= 0) {
+                status = 'unpriced';
+            } else if (selectedPlan && isNhis) {
+                if (item.is_mapped) {
+                    status = 'nhis_mapped';
+                } else if (item.is_unmapped && item.copay_amount !== null) {
+                    status = 'flexible_copay';
+                } else {
+                    status = 'not_mapped';
+                }
+            } else {
+                status = 'priced';
+            }
+            
+            return <PricingStatusBadge status={status} />;
         },
     });
 
@@ -407,17 +446,26 @@ export function createPricingColumns(
         columns.push({
             id: 'copay_amount',
             header: () => <div className="text-right">Patient Copay</div>,
-            cell: ({ row }) => (
-                <div className="text-right">
-                    <EditableCell
-                        item={row.original}
-                        field="copay_amount"
-                        value={row.original.copay_amount}
-                        disabled={isNhis && !row.original.is_mapped}
-                        selectedPlan={selectedPlan}
-                    />
-                </div>
-            ),
+            cell: ({ row }) => {
+                const item = row.original;
+                // For NHIS: allow editing copay for both mapped items AND unmapped items (flexible copay)
+                // Unmapped items use the flexible copay endpoint
+                const isUnmappedNhisItem = isNhis && !item.is_mapped;
+                
+                return (
+                    <div className="text-right">
+                        <EditableCell
+                            item={item}
+                            field="copay_amount"
+                            value={item.copay_amount}
+                            disabled={false} // Always allow copay editing now
+                            selectedPlan={selectedPlan}
+                            isNhis={isNhis}
+                            isUnmappedCopay={isUnmappedNhisItem}
+                        />
+                    </div>
+                );
+            },
         });
 
         // Patient Pays column (calculated, only for private insurance)

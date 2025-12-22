@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('prescriptions', function (Blueprint $table) {
-            $table->json('schedule_pattern')->nullable()->after('frequency');
+            $table->boolean('is_unpriced')->default(false)->after('status');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('prescriptions', function (Blueprint $table) {
-            $table->dropColumn('schedule_pattern');
+            $table->dropColumn('is_unpriced');
         });
     }
 };

@@ -45,6 +45,13 @@ class PrescriptionParserService
             return ParsedPrescriptionResult::invalid(['Please enter a prescription']);
         }
 
+        // For topical drugs (cream, ointment, gel, lotion), try simple quantity parsing first
+        if ($drug && in_array(strtolower($drug->form ?? ''), self::TOPICAL_FORMS)) {
+            if ($result = $this->parseTopical($input)) {
+                return $result;
+            }
+        }
+
         // Try STAT first
         if ($result = $this->parseStat($input)) {
             if ($drug) {
@@ -498,6 +505,50 @@ class PrescriptionParserService
     }
 
     /**
+     * Parse topical prescription (cream, ointment, gel, lotion).
+     *
+     * For topicals, we accept simple quantity inputs:
+     * - "1" or "2" - number of tubes
+     * - "1 tube" or "2 tubes" - explicit tube count
+     *
+     * The frequency/duration are set to "As directed" since topicals
+     * are typically applied based on instructions rather than fixed schedules.
+     */
+    private function parseTopical(string $input): ?ParsedPrescriptionResult
+    {
+        // Pattern: just a number, or number with "tube(s)"
+        // Examples: "1", "2", "1 tube", "2 tubes"
+        $pattern = '/^(\d+)\s*(tubes?)?$/i';
+
+        if (! preg_match($pattern, $input, $matches)) {
+            return null;
+        }
+
+        $quantity = (int) $matches[1];
+        if ($quantity < 1) {
+            return null;
+        }
+
+        $unitLabel = $quantity === 1 ? 'tube' : 'tubes';
+        $displayText = "{$quantity} {$unitLabel}";
+
+        return ParsedPrescriptionResult::valid(
+            doseQuantity: (string) $quantity,
+            frequency: 'As directed',
+            frequencyCode: 'TOPICAL',
+            duration: 'As directed',
+            durationDays: null,
+            quantityToDispense: $quantity,
+            scheduleType: 'topical',
+            schedulePattern: [
+                'type' => 'topical',
+                'quantity' => $quantity,
+            ],
+            displayText: $displayText,
+        );
+    }
+
+    /**
      * Parse patch/interval-based prescription (e.g., "change every 3 days x 30 days").
      *
      * For patches, quantity is calculated as ceil(duration / change_interval).
@@ -670,18 +721,26 @@ class PrescriptionParserService
      * Fixed-unit drug forms that default to 1 unit regardless of frequency/duration.
      *
      * These are medications typically dispensed as single units:
-     * - Creams, ointments, gels: 1 tube
      * - Drops (eye/ear): 1 bottle (standard bottles contain sufficient drops)
      * - Inhalers: 1 device
      * - Combination packs: 1 pack
+     *
+     * Note: Creams, ointments, gels are handled separately as topicals
      */
     private const FIXED_UNIT_FORMS = [
-        'cream',
-        'ointment',
-        'gel',
         'drops',
         'inhaler',
         'combination_pack',
+    ];
+
+    /**
+     * Topical drug forms - quantity is specified directly (e.g., "2 tubes")
+     */
+    private const TOPICAL_FORMS = [
+        'cream',
+        'ointment',
+        'gel',
+        'lotion',
     ];
 
     /**
@@ -700,22 +759,42 @@ class PrescriptionParserService
 
         $drugForm = strtolower($drug->form ?? '');
 
-        // Check if it's a fixed-unit drug (cream, drops, inhaler, combination pack)
+        // Check if it's a fixed-unit drug (drops, inhaler, combination pack)
         // These default to 1 unit regardless of frequency and duration
-        // For drops: the dose number represents drops per application, not bottles
         if (in_array($drugForm, self::FIXED_UNIT_FORMS)) {
             return 1;
+        }
+
+        // Check if it's a topical (cream, ointment, gel, lotion)
+        // For topicals, use the dose quantity directly as the number of tubes/units
+        // e.g., "2" means 2 tubes, "1" means 1 tube
+        // If parsed via standard parser (e.g., "2 BD x 5 days"), just use the dose number
+        if (in_array($drugForm, self::TOPICAL_FORMS)) {
+            // For topical schedule type, use the parsed quantity
+            if ($result->scheduleType === 'topical') {
+                return $result->quantityToDispense ?? 1;
+            }
+            // For other schedule types (standard, etc.), extract dose and use as quantity
+            $doseValue = (float) preg_replace('/[^0-9.]/', '', $result->doseQuantity ?? '1');
+
+            return max(1, (int) ceil($doseValue));
         }
 
         // Extract numeric dose value
         $doseValue = (float) preg_replace('/[^0-9.]/', '', $result->doseQuantity ?? '1');
 
-        // Check if it's a liquid drug (syrup, suspension) with ml dose
+        // Check if it's a liquid drug (syrup, suspension) - calculate bottles needed
+        // For liquids, the dose is assumed to be in ml (e.g., "2" means 2ml, "5ml" means 5ml)
         $isLiquid = in_array($drugForm, ['syrup', 'suspension', 'solution', 'liquid']);
-        $hasMlDose = str_contains(strtolower($result->doseQuantity ?? ''), 'ml');
 
-        if ($isLiquid && $hasMlDose && $drug->bottle_size) {
-            // Calculate bottles needed
+        if ($isLiquid) {
+            // If bottle_size is not configured, return 0 to indicate manual entry is needed
+            // The frontend will show a manual input field when quantity is 0 for liquids
+            if (! $drug->bottle_size) {
+                return 0;
+            }
+
+            // Calculate bottles needed using the configured bottle size
             $timesPerDay = $result->getTimesPerDay() ?? 1;
             $totalMl = $doseValue * $timesPerDay * ($result->durationDays ?? 1);
 

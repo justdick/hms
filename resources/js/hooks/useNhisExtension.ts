@@ -8,7 +8,7 @@ declare const chrome: {
 } | undefined;
 
 interface CccData {
-    ccc: string;
+    ccc: string | null;
     status: string;
     memberName: string;
     membershipNumber: string;
@@ -16,6 +16,7 @@ interface CccData {
     gender: string;
     coverageStart: string;
     coverageEnd: string;
+    error?: string | null;
 }
 
 interface UseNhisExtensionReturn {

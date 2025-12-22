@@ -19,21 +19,13 @@ class MedicationAdministrationFactory extends Factory
         return [
             'prescription_id' => \App\Models\Prescription::factory(),
             'patient_admission_id' => \App\Models\PatientAdmission::factory(),
-            'scheduled_time' => fake()->dateTimeBetween('now', '+7 days'),
-            'status' => 'scheduled',
-            'dosage_given' => fake()->randomElement(['5mg', '10mg', '25mg', '50mg']),
-            'route' => fake()->randomElement(['oral', 'IV', 'IM', 'SC']),
-            'is_adjusted' => false,
+            'administered_by_id' => \App\Models\User::factory(),
+            'administered_at' => fake()->dateTimeBetween('-7 days', 'now'),
+            'status' => 'given',
+            'dosage_given' => fake()->randomElement(['5mg', '10mg', '25mg', '50mg', '100mg', '1 tablet', '2 tablets']),
+            'route' => fake()->randomElement(['oral', 'IV', 'IM', 'SC', 'topical']),
+            'notes' => null,
         ];
-    }
-
-    public function scheduled(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'scheduled',
-            'administered_by_id' => null,
-            'administered_at' => null,
-        ]);
     }
 
     public function given(): static
@@ -49,7 +41,7 @@ class MedicationAdministrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'held',
-            'notes' => 'Held by nurse',
+            'notes' => 'Held - patient NPO for procedure',
         ]);
     }
 
@@ -57,14 +49,22 @@ class MedicationAdministrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'refused',
-            'notes' => 'Refused by patient',
+            'notes' => 'Patient refused medication',
         ]);
     }
 
-    public function adjusted(): static
+    public function omitted(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_adjusted' => true,
+            'status' => 'omitted',
+            'notes' => 'Medication not available',
+        ]);
+    }
+
+    public function today(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'administered_at' => now(),
         ]);
     }
 }

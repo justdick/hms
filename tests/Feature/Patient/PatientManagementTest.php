@@ -13,11 +13,11 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Create permissions
-    Permission::create(['name' => 'patients.view-all']);
-    Permission::create(['name' => 'patients.view']);
-    Permission::create(['name' => 'patients.create']);
-    Permission::create(['name' => 'patients.update']);
+    // Create permissions (use firstOrCreate to avoid duplicates)
+    Permission::firstOrCreate(['name' => 'patients.view-all']);
+    Permission::firstOrCreate(['name' => 'patients.view']);
+    Permission::firstOrCreate(['name' => 'patients.create']);
+    Permission::firstOrCreate(['name' => 'patients.update']);
 
     $this->user = User::factory()->create();
     $this->user->givePermissionTo(['patients.view-all', 'patients.create', 'patients.update']);
@@ -152,6 +152,39 @@ describe('Patient List Viewing', function () {
         $response->assertSuccessful();
         $response->assertInertia(fn ($page) => $page
             ->where('patients.data.0.phone_number', '+255123456789')
+        );
+    });
+
+    it('searches patients by insurance membership ID', function () {
+        $patientWithInsurance = Patient::factory()->create([
+            'first_name' => 'John',
+            'last_name' => 'Insured',
+            'status' => 'active',
+        ]);
+
+        $insurancePlan = InsurancePlan::factory()->create();
+        PatientInsurance::factory()->create([
+            'patient_id' => $patientWithInsurance->id,
+            'insurance_plan_id' => $insurancePlan->id,
+            'membership_id' => 'NHIS-2025-12345',
+            'status' => 'active',
+            'coverage_start_date' => now()->subMonth(),
+            'coverage_end_date' => now()->addYear(),
+        ]);
+
+        Patient::factory()->create([
+            'first_name' => 'Jane',
+            'last_name' => 'NoInsurance',
+            'status' => 'active',
+        ]);
+
+        $response = $this->get(route('patients.index', ['search' => 'NHIS-2025-12345']));
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->has('patients.data', 1)
+            ->where('patients.data.0.first_name', 'John')
+            ->where('patients.data.0.last_name', 'Insured')
         );
     });
 

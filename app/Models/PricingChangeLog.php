@@ -141,7 +141,7 @@ class PricingChangeLog extends Model
         string $fieldChanged,
         ?int $insurancePlanId,
         ?float $oldValue,
-        float $newValue,
+        ?float $newValue,
         int $changedBy
     ): self {
         return self::create([

@@ -61,21 +61,13 @@ interface Prescription {
 
 interface MedicationAdministration {
     id: number;
-    prescription: Prescription;
-    scheduled_time: string;
-    administered_at?: string;
-    status:
-        | 'scheduled'
-        | 'given'
-        | 'held'
-        | 'refused'
-        | 'omitted'
-        | 'cancelled';
+    prescription_id: number;
+    administered_at: string;
+    status: 'given' | 'held' | 'refused' | 'omitted';
     administered_by?: User;
     notes?: string;
     dosage_given?: string;
     route?: string;
-    is_adjusted?: boolean;
 }
 
 interface WardRoundDiagnosis {
@@ -225,13 +217,11 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
 
     const latestVital = allVitals[0];
 
-    // Calculate today's pending medications
-    const todayPendingMeds = useMemo(() => {
+    // Calculate today's medication administrations
+    const todayMedications = useMemo(() => {
         return (
             admission.medication_administrations?.filter(
-                (med) =>
-                    med.status === 'scheduled' &&
-                    isToday(new Date(med.scheduled_time)),
+                (med) => isToday(new Date(med.administered_at)),
             ) || []
         );
     }, [admission]);

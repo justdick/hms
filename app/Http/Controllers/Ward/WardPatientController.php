@@ -40,7 +40,7 @@ class WardPatientController extends Controller
             },
             'medicationAdministrations' => function ($query) {
                 $query->with(['prescription.drug', 'administeredBy:id,name'])
-                    ->orderBy('scheduled_time', 'asc');
+                    ->orderBy('administered_at', 'desc');
             },
             'nursingNotes' => function ($query) {
                 $query->with('nurse:id,name')->latest();
@@ -104,6 +104,8 @@ class WardPatientController extends Controller
             'hasAvailableBeds' => $availableBeds->isNotEmpty(),
             'vitalsScheduleStatus' => $vitalsScheduleStatus,
             'scheduleHistory' => $scheduleHistory,
+            'can_edit_vitals_timestamp' => $request->user()->can('vitals.edit-timestamp'),
+            'can_edit_medication_timestamp' => $request->user()->can('medications.edit-timestamp'),
         ]);
     }
 

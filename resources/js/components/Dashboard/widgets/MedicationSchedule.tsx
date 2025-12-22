@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { AlertCircle, ArrowRight, CheckCircle2, Clock, Pill } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Pill } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,31 +12,38 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-export interface UpcomingMedication {
+export interface RecentMedication {
     id: number;
     patient_name: string;
     ward: string;
     bed: string | null;
     medication: string;
     dosage: string | null;
-    scheduled_time: string;
-    is_overdue: boolean;
+    administered_at: string;
+    status: 'given' | 'held' | 'refused' | 'omitted';
 }
 
 export interface MedicationScheduleProps {
-    schedule: UpcomingMedication[];
+    schedule: RecentMedication[];
     viewAllHref?: string;
     className?: string;
 }
+
+const statusConfig = {
+    given: { label: 'Given', variant: 'default' as const, className: 'bg-green-600' },
+    held: { label: 'Held', variant: 'secondary' as const, className: '' },
+    refused: { label: 'Refused', variant: 'destructive' as const, className: '' },
+    omitted: { label: 'Omitted', variant: 'outline' as const, className: '' },
+};
 
 export function MedicationSchedule({
     schedule,
     viewAllHref,
     className,
 }: MedicationScheduleProps) {
-    // Show only next 5 medications
-    const upcoming = schedule.slice(0, 5);
-    const overdueCount = schedule.filter(m => m.is_overdue).length;
+    // Show only last 5 medications
+    const recent = schedule.slice(0, 5);
+    const givenCount = schedule.filter(m => m.status === 'given').length;
 
     return (
         <Card className={cn('', className)}>
@@ -45,13 +52,13 @@ export function MedicationSchedule({
                     <Pill className="h-5 w-5 text-primary" />
                     <div>
                         <CardTitle className="text-base font-semibold">
-                            Medication Schedule
+                            Recent Medications
                         </CardTitle>
                         <CardDescription>
-                            {overdueCount > 0 ? (
-                                <span className="text-red-600">{overdueCount} overdue</span>
+                            {givenCount > 0 ? (
+                                <span className="text-green-600">{givenCount} given today</span>
                             ) : (
-                                'Next 2 hours'
+                                'Today\'s activity'
                             )}
                         </CardDescription>
                     </div>
@@ -66,46 +73,46 @@ export function MedicationSchedule({
                 )}
             </CardHeader>
             <CardContent>
-                {upcoming.length === 0 ? (
+                {recent.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                         <CheckCircle2 className="mb-2 h-8 w-8 opacity-50" />
-                        <span>No medications scheduled</span>
+                        <span>No medications recorded today</span>
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {upcoming.map((med) => (
-                            <div
-                                key={med.id}
-                                className={cn(
-                                    'flex items-center justify-between rounded-lg border p-3',
-                                    med.is_overdue && 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950'
-                                )}
-                            >
-                                <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        {med.is_overdue && (
-                                            <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-                                        )}
+                        {recent.map((med) => {
+                            const config = statusConfig[med.status] || statusConfig.given;
+                            return (
+                                <div
+                                    key={med.id}
+                                    className="flex items-center justify-between rounded-lg border p-3"
+                                >
+                                    <div className="flex flex-col min-w-0">
                                         <span className="font-medium text-sm truncate">
                                             {med.patient_name}
                                         </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {med.ward}{med.bed ? ` • Bed ${med.bed}` : ''}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground truncate">
+                                            {med.medication} {med.dosage && `(${med.dosage})`}
+                                        </span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">
-                                        {med.ward}{med.bed ? ` • Bed ${med.bed}` : ''}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground truncate">
-                                        {med.medication} {med.dosage && `(${med.dosage})`}
-                                    </span>
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                        <Badge 
+                                            variant={config.variant}
+                                            className={config.className}
+                                        >
+                                            {config.label}
+                                        </Badge>
+                                        <span className="text-xs text-muted-foreground flex items-center">
+                                            <Clock className="mr-1 h-3 w-3" />
+                                            {med.administered_at}
+                                        </span>
+                                    </div>
                                 </div>
-                                <Badge 
-                                    variant={med.is_overdue ? 'destructive' : 'outline'} 
-                                    className="font-mono shrink-0"
-                                >
-                                    <Clock className="mr-1 h-3 w-3" />
-                                    {med.scheduled_time}
-                                </Badge>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </CardContent>

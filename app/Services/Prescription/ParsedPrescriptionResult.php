@@ -30,7 +30,7 @@ class ParsedPrescriptionResult
         string $frequency,
         string $frequencyCode,
         string $duration,
-        int $durationDays,
+        ?int $durationDays,
         int $quantityToDispense,
         string $scheduleType = 'standard',
         ?array $schedulePattern = null,

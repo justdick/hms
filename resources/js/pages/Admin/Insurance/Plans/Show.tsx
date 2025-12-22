@@ -1,22 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     CheckCircle2,
     Edit,
+    ExternalLink,
     FileText,
-    Plus,
     XCircle,
 } from 'lucide-react';
 
@@ -24,27 +16,6 @@ interface InsuranceProvider {
     id: number;
     name: string;
     code: string;
-}
-
-interface CoverageRule {
-    id: number;
-    coverage_category: string;
-    item_code?: string;
-    item_description?: string;
-    coverage_type: string;
-    coverage_percentage?: number;
-    max_allowed_amount?: string;
-}
-
-interface Tariff {
-    id: number;
-    item_type: string;
-    item_code: string;
-    item_description: string;
-    standard_price: string;
-    insurance_tariff: string;
-    effective_from: string;
-    effective_to?: string;
 }
 
 interface InsurancePlan {
@@ -56,27 +27,25 @@ interface InsurancePlan {
     annual_limit?: string;
     visit_limit?: number;
     default_copay_percentage?: string;
+    consultation_default?: string;
+    drugs_default?: string;
+    labs_default?: string;
+    procedures_default?: string;
     requires_referral: boolean;
     is_active: boolean;
     effective_from?: string;
     effective_to?: string;
     description?: string;
     provider?: InsuranceProvider;
-    coverage_rules?: CoverageRule[];
-    tariffs?: Tariff[];
 }
 
 interface Props {
     plan: {
         data: InsurancePlan;
     };
-    simplifiedUiEnabled?: boolean;
 }
 
-export default function InsurancePlanShow({
-    plan: planWrapper,
-    simplifiedUiEnabled = false,
-}: Props) {
+export default function InsurancePlanShow({ plan: planWrapper }: Props) {
     const plan = planWrapper.data;
     return (
         <AppLayout
@@ -272,163 +241,83 @@ export default function InsurancePlanShow({
                     </Card>
                 </div>
 
-                {/* Coverage Rules */}
+                {/* Category Defaults */}
+                {(plan.consultation_default ||
+                    plan.drugs_default ||
+                    plan.labs_default ||
+                    plan.procedures_default) && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Category Default Coverage</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                                <div className="rounded-lg border p-4 text-center dark:border-gray-700">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Consultations
+                                    </p>
+                                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {plan.consultation_default
+                                            ? `${plan.consultation_default}%`
+                                            : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center dark:border-gray-700">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Drugs
+                                    </p>
+                                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {plan.drugs_default
+                                            ? `${plan.drugs_default}%`
+                                            : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center dark:border-gray-700">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Labs
+                                    </p>
+                                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {plan.labs_default
+                                            ? `${plan.labs_default}%`
+                                            : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center dark:border-gray-700">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Procedures
+                                    </p>
+                                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {plan.procedures_default
+                                            ? `${plan.procedures_default}%`
+                                            : 'N/A'}
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Manage Pricing Link */}
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Coverage Rules</CardTitle>
-                        <div className="flex gap-2">
-                            <Link
-                                href={
-                                    simplifiedUiEnabled
-                                        ? `/admin/insurance/plans/${plan.id}/coverage`
-                                        : `/admin/insurance/plans/${plan.id}/coverage-rules`
-                                }
-                            >
-                                <Button size="sm" variant="outline">
-                                    Manage Coverage
-                                </Button>
-                            </Link>
-                            <Link
-                                href={`/admin/insurance/coverage-rules/create?plan=${plan.id}`}
-                            >
-                                <Button size="sm">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Rule
-                                </Button>
-                            </Link>
-                        </div>
+                    <CardHeader>
+                        <CardTitle>Pricing & Coverage Management</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {plan.coverage_rules &&
-                        plan.coverage_rules.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Item Code</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead>Coverage Type</TableHead>
-                                        <TableHead>Coverage %</TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {plan.coverage_rules.map((rule) => (
-                                        <TableRow key={rule.id}>
-                                            <TableCell className="capitalize">
-                                                {rule.coverage_category}
-                                            </TableCell>
-                                            <TableCell>
-                                                {rule.item_code}
-                                            </TableCell>
-                                            <TableCell>
-                                                {rule.item_description}
-                                            </TableCell>
-                                            <TableCell className="capitalize">
-                                                {rule.coverage_type}
-                                            </TableCell>
-                                            <TableCell>
-                                                {rule.coverage_percentage}%
-                                            </TableCell>
-                                            <TableCell>
-                                                <Link
-                                                    href={`/admin/insurance/coverage-rules/${rule.id}/edit`}
-                                                >
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                    >
-                                                        Edit
-                                                    </Button>
-                                                </Link>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        ) : (
-                            <p className="py-8 text-center text-gray-600 dark:text-gray-400">
-                                No coverage rules defined
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Tariffs */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Tariffs</CardTitle>
+                        <p className="mb-4 text-gray-600 dark:text-gray-400">
+                            All pricing, coverage rules, and tariffs for this
+                            plan are managed through the centralized Pricing
+                            Dashboard. This provides a unified view of all
+                            service pricing and insurance coverage
+                            configuration.
+                        </p>
                         <Link
-                            href={`/admin/insurance/tariffs/create?plan=${plan.id}`}
+                            href={`/admin/pricing-dashboard?plan=${plan.id}`}
                         >
-                            <Button size="sm">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Tariff
+                            <Button>
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Manage Pricing
                             </Button>
                         </Link>
-                    </CardHeader>
-                    <CardContent>
-                        {plan.tariffs && plan.tariffs.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Item Type</TableHead>
-                                        <TableHead>Code</TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead>Standard Price</TableHead>
-                                        <TableHead>Insurance Tariff</TableHead>
-                                        <TableHead>Effective</TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {plan.tariffs.map((tariff) => (
-                                        <TableRow key={tariff.id}>
-                                            <TableCell className="capitalize">
-                                                {tariff.item_type}
-                                            </TableCell>
-                                            <TableCell>
-                                                {tariff.item_code}
-                                            </TableCell>
-                                            <TableCell>
-                                                {tariff.item_description}
-                                            </TableCell>
-                                            <TableCell>
-                                                $
-                                                {parseFloat(
-                                                    tariff.standard_price,
-                                                ).toFixed(2)}
-                                            </TableCell>
-                                            <TableCell>
-                                                $
-                                                {parseFloat(
-                                                    tariff.insurance_tariff,
-                                                ).toFixed(2)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {tariff.effective_from}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Link
-                                                    href={`/admin/insurance/tariffs/${tariff.id}/edit`}
-                                                >
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                    >
-                                                        Edit
-                                                    </Button>
-                                                </Link>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        ) : (
-                            <p className="py-8 text-center text-gray-600 dark:text-gray-400">
-                                No tariffs defined
-                            </p>
-                        )}
                     </CardContent>
                 </Card>
             </div>

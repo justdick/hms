@@ -49,6 +49,7 @@ interface PrescriptionData {
     stock_status: StockStatus;
     can_dispense_full: boolean;
     max_dispensable: number;
+    is_unpriced?: boolean;
 }
 
 interface ReviewForm {
@@ -132,6 +133,12 @@ export function PrescriptionReviewTable({
                                         <div className="mt-1 text-xs text-muted-foreground">
                                             {pd.prescription.drug.form}
                                         </div>
+                                        {pd.is_unpriced && (
+                                            <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                                                <AlertCircle className="h-3 w-3" />
+                                                Unpriced
+                                            </div>
+                                        )}
                                     </div>
                                 </TableCell>
 
@@ -339,14 +346,22 @@ export function MobileReviewCards({
                     >
                         {/* Drug Header */}
                         <div>
-                            <h3 className="font-semibold">
-                                {pd.prescription.drug.name}
-                                {pd.prescription.drug.strength && (
-                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                        {pd.prescription.drug.strength}
+                            <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-semibold">
+                                    {pd.prescription.drug.name}
+                                    {pd.prescription.drug.strength && (
+                                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                            {pd.prescription.drug.strength}
+                                        </span>
+                                    )}
+                                </h3>
+                                {pd.is_unpriced && (
+                                    <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                                        <AlertCircle className="h-3 w-3" />
+                                        Unpriced
                                     </span>
                                 )}
-                            </h3>
+                            </div>
                             <p className="text-sm text-muted-foreground">
                                 {pd.prescription.dose_quantity && (
                                     <>

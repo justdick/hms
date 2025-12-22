@@ -1,5 +1,13 @@
 # Requirements Document
 
+## Dependencies
+
+> **⚠️ NOTE**: This spec depends on the **centralized-pricing-management** spec.
+> - New imaging services will be created with `price = null` (unpriced)
+> - Prices must be set via the Unified Pricing Dashboard
+> - Unpriced imaging orders will auto-set to `external_referral` status
+> - Implement centralized-pricing-management first, or at minimum complete tasks 1.x and 5.x (unpriced item handling)
+
 ## Introduction
 
 This feature integrates imaging/radiology services (X-ray, CT scan, MRI, Ultrasound, etc.) into the Hospital Management System. Currently, imaging services exist in the lab_services table under the "Imaging" category but lack support for image file uploads and a dedicated radiology workflow. This integration will:

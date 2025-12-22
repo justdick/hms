@@ -1,5 +1,13 @@
 # Implementation Plan
 
+## Dependencies
+
+> **⚠️ IMPORTANT**: This spec depends on **centralized-pricing-management** spec.
+> - New imaging services start with `price = null` (unpriced)
+> - Unpriced imaging orders auto-set to `external_referral` status
+> - Prices are set via Pricing Dashboard, not in service configuration
+> - Complete centralized-pricing-management tasks 1.x-5.x before starting Phase 5+ of this spec
+
 ## Phase 1: Database & Backend Foundation
 
 - [x] 1. Database migrations and model updates
@@ -14,6 +22,7 @@
     - Add `is_imaging` boolean column with default false
     - Add `modality` varchar(50) nullable column
     - Update existing imaging services to set `is_imaging = true`
+    - **NOTE**: Do NOT set prices here - prices are managed via Pricing Dashboard (see centralized-pricing-management spec)
     - _Requirements: 1.1, 1.2_
 
   - [x] 1.2 Create migration for imaging_attachments table
@@ -66,8 +75,13 @@
 
 ## Phase 2: File Storage Service
 
-- [ ] 3. Imaging storage service
+- [-] 3. Imaging storage service
+
+
+
+
   - [ ] 3.1 Create ImagingStorageService
+
     - Implement `store()` method for file upload
     - Implement `getStoragePath()` for path generation (year/month/patient/order)
     - Implement `delete()` method for file removal
@@ -152,10 +166,14 @@
 
 ## Phase 5: Consultation Backend Enhancement
 
+> **NOTE**: Ensure centralized-pricing-management tasks 1.x-5.x are complete before this phase.
+> Unpriced imaging services will auto-set orders to `external_referral` status.
+
 - [ ] 9. Consultation imaging support
   - [ ] 9.1 Update ConsultationLabOrderController
     - Modify lab services query to separate imaging and laboratory
     - Add endpoint for external image upload
+    - **NOTE**: Unpriced imaging services will trigger `external_referral` status via LabOrderObserver (from centralized-pricing-management spec)
     - _Requirements: 3.1, 4.1_
   - [ ] 9.2 Create ExternalImageUploadRequest
     - Validate imaging study type, facility name, study date

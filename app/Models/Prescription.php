@@ -36,7 +36,6 @@ class Prescription extends Model
         'drug_id',
         'medication_name',
         'frequency',
-        'schedule_pattern',
         'duration',
         'dose_quantity',
         'quantity',
@@ -45,6 +44,7 @@ class Prescription extends Model
         'dosage_form',
         'instructions',
         'status',
+        'is_unpriced',
         'reviewed_by',
         'reviewed_at',
         'dispensing_notes',
@@ -59,9 +59,9 @@ class Prescription extends Model
     {
         return [
             'status' => 'string',
+            'is_unpriced' => 'boolean',
             'reviewed_at' => 'datetime',
             'discontinued_at' => 'datetime',
-            'schedule_pattern' => 'json',
         ];
     }
 
@@ -243,13 +243,95 @@ class Prescription extends Model
         return ! $this->isDiscontinued();
     }
 
-    public function hasSchedule(): bool
+    /**
+     * Check if this prescription is for an admitted patient (IPD).
+     */
+    public function isForAdmittedPatient(): bool
     {
-        return $this->schedule_pattern !== null;
+        // If prescribable is WardRound, it's for an admitted patient
+        if ($this->prescribable_type === 'App\Models\WardRound') {
+            return true;
+        }
+
+        // If prescribable is Consultation, check if it has an admission
+        if ($this->prescribable_type === 'App\Models\Consultation') {
+            return $this->prescribable?->patientAdmission !== null;
+        }
+
+        // If prescription has direct consultation_id, check for admission
+        if ($this->consultation_id) {
+            return $this->consultation?->patientAdmission !== null;
+        }
+
+        return false;
     }
 
-    public function isPendingSchedule(): bool
+    /**
+     * Get the patient admission for this prescription (if any).
+     */
+    public function getPatientAdmission(): ?PatientAdmission
     {
-        return $this->schedule_pattern === null && $this->frequency !== 'PRN';
+        if ($this->prescribable_type === 'App\Models\WardRound') {
+            return $this->prescribable?->patientAdmission;
+        }
+
+        if ($this->prescribable_type === 'App\Models\Consultation') {
+            return $this->prescribable?->patientAdmission;
+        }
+
+        if ($this->consultation_id) {
+            return $this->consultation?->patientAdmission;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get expected doses per day based on frequency.
+     */
+    public function getExpectedDosesPerDay(): int
+    {
+        $frequency = strtoupper(trim($this->frequency ?? ''));
+
+        // Extract frequency code from descriptive text if needed
+        if (preg_match('/\((BID|BD|TID|TDS|QID|QDS|Q12H|Q8H|Q6H|Q4H|Q2H|OD|PRN)\)/i', $this->frequency, $matches)) {
+            $frequency = strtoupper($matches[1]);
+        } elseif (preg_match('/\b(BID|BD|TID|TDS|QID|QDS|Q12H|Q8H|Q6H|Q4H|Q2H|OD|PRN)\b/i', $this->frequency, $matches)) {
+            $frequency = strtoupper($matches[1]);
+        }
+
+        return match ($frequency) {
+            'OD' => 1,
+            'BD', 'BID', 'Q12H' => 2,
+            'TDS', 'TID', 'Q8H' => 3,
+            'QDS', 'QID', 'Q6H' => 4,
+            'Q4H' => 6,
+            'Q2H' => 12,
+            'PRN' => 0, // As needed - no fixed count
+            default => 1,
+        };
+    }
+
+    /**
+     * Get today's administration count for this prescription.
+     */
+    public function getTodayAdministrationCount(): int
+    {
+        return $this->medicationAdministrations()
+            ->whereDate('administered_at', today())
+            ->where('status', 'given')
+            ->count();
+    }
+
+    /**
+     * Check if this is a PRN (as needed) prescription.
+     */
+    public function isPrn(): bool
+    {
+        $frequency = strtoupper(trim($this->frequency ?? ''));
+
+        return $frequency === 'PRN'
+            || str_contains(strtoupper($this->frequency ?? ''), 'PRN')
+            || str_contains(strtolower($this->frequency ?? ''), 'as needed');
     }
 }

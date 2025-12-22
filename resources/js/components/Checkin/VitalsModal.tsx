@@ -2,22 +2,16 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Form } from '@inertiajs/react';
-import {
-    Activity,
-    Gauge,
-    Heart,
-    Loader2,
-    Thermometer,
-    User,
-} from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Activity, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Patient {
@@ -33,12 +27,27 @@ interface Department {
     name: string;
 }
 
+interface VitalSigns {
+    id: number;
+    blood_pressure_systolic: number | null;
+    blood_pressure_diastolic: number | null;
+    temperature: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
+    oxygen_saturation: number | null;
+    weight: number | null;
+    height: number | null;
+    notes: string | null;
+    recorded_at: string;
+}
+
 interface Checkin {
     id: number;
     patient: Patient;
     department: Department;
     status: string;
     checked_in_at: string;
+    vital_signs?: VitalSigns[];
 }
 
 interface VitalsModalProps {
@@ -46,6 +55,7 @@ interface VitalsModalProps {
     onClose: () => void;
     checkin: Checkin | null;
     onSuccess: () => void;
+    mode?: 'create' | 'edit';
 }
 
 export default function VitalsModal({
@@ -53,9 +63,122 @@ export default function VitalsModal({
     onClose,
     checkin,
     onSuccess,
+    mode = 'create',
 }: VitalsModalProps) {
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const [formData, setFormData] = useState({
+        blood_pressure_systolic: '',
+        blood_pressure_diastolic: '',
+        temperature: '',
+        pulse_rate: '',
+        respiratory_rate: '',
+        oxygen_saturation: '',
+        weight: '',
+        height: '',
+        notes: '',
+    });
+
+    const existingVitals = checkin?.vital_signs?.[0];
+    const isEditMode = mode === 'edit' && existingVitals;
+
+    useEffect(() => {
+        if (open && checkin) {
+            if (isEditMode && existingVitals) {
+                setFormData({
+                    blood_pressure_systolic: existingVitals.blood_pressure_systolic?.toString() || '',
+                    blood_pressure_diastolic: existingVitals.blood_pressure_diastolic?.toString() || '',
+                    temperature: existingVitals.temperature?.toString() || '',
+                    pulse_rate: existingVitals.pulse_rate?.toString() || '',
+                    respiratory_rate: existingVitals.respiratory_rate?.toString() || '',
+                    oxygen_saturation: existingVitals.oxygen_saturation?.toString() || '',
+                    weight: existingVitals.weight?.toString() || '',
+                    height: existingVitals.height?.toString() || '',
+                    notes: existingVitals.notes || '',
+                });
+            } else {
+                setFormData({
+                    blood_pressure_systolic: '',
+                    blood_pressure_diastolic: '',
+                    temperature: '',
+                    pulse_rate: '',
+                    respiratory_rate: '',
+                    oxygen_saturation: '',
+                    weight: '',
+                    height: '',
+                    notes: '',
+                });
+            }
+            setErrors({});
+        }
+    }, [open, checkin, isEditMode, existingVitals]);
+
     const handleModalClose = () => {
+        setErrors({});
         onClose();
+    };
+
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setProcessing(true);
+        setErrors({});
+
+        const submitData: Record<string, string | number | null> = {};
+
+        if (formData.blood_pressure_systolic) submitData.blood_pressure_systolic = parseFloat(formData.blood_pressure_systolic);
+        if (formData.blood_pressure_diastolic) submitData.blood_pressure_diastolic = parseFloat(formData.blood_pressure_diastolic);
+        if (formData.temperature) submitData.temperature = parseFloat(formData.temperature);
+        if (formData.pulse_rate) submitData.pulse_rate = parseInt(formData.pulse_rate);
+        if (formData.respiratory_rate) submitData.respiratory_rate = parseInt(formData.respiratory_rate);
+        if (formData.oxygen_saturation) submitData.oxygen_saturation = parseInt(formData.oxygen_saturation);
+        if (formData.weight) submitData.weight = parseFloat(formData.weight);
+        if (formData.height) submitData.height = parseFloat(formData.height);
+        if (formData.notes) submitData.notes = formData.notes;
+
+        if (isEditMode && existingVitals) {
+            router.patch(`/checkin/vitals/${existingVitals.id}`, submitData, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Vital signs updated successfully');
+                    setProcessing(false);
+                    onSuccess();
+                },
+                onError: (errs) => {
+                    setErrors(errs as Record<string, string>);
+                    toast.error('Failed to update vital signs');
+                    setProcessing(false);
+                },
+            });
+        } else {
+            router.post('/checkin/vitals', {
+                patient_checkin_id: checkin?.id,
+                ...submitData,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Vital signs recorded successfully');
+                    setProcessing(false);
+                    onSuccess();
+                },
+                onError: (errs) => {
+                    setErrors(errs as Record<string, string>);
+                    toast.error('Failed to record vital signs');
+                    setProcessing(false);
+                },
+            });
+        }
     };
 
     if (!checkin) {
@@ -64,285 +187,137 @@ export default function VitalsModal({
 
     return (
         <Dialog open={open} onOpenChange={handleModalClose}>
-            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogContent className="max-w-xl">
                 <DialogHeader>
-                    <DialogTitle>Record Vital Signs</DialogTitle>
-                    <DialogDescription>
-                        Record vital signs for {checkin.patient.full_name} in{' '}
-                        {checkin.department.name}.
-                    </DialogDescription>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-primary" />
+                        {isEditMode ? 'Edit Vital Signs' : 'Record Vital Signs'}
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground">
+                        {checkin.patient.full_name} • {checkin.patient.age} yrs, {checkin.patient.gender} • {checkin.department.name}
+                    </p>
                 </DialogHeader>
 
-                <Form
-                    action="/checkin/vitals"
-                    method="post"
-                    onSuccess={() => {
-                        toast.success('Vital signs recorded successfully');
-                        onSuccess();
-                    }}
-                    onError={() => {
-                        toast.error('Failed to record vital signs');
-                    }}
-                    className="space-y-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            {/* Hidden patient_checkin_id field */}
-                            <input
-                                type="hidden"
-                                name="patient_checkin_id"
-                                defaultValue={checkin.id}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Blood Pressure - prominent */}
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                        <Label className="text-sm font-medium mb-2 block">Blood Pressure (mmHg)</Label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                value={formData.blood_pressure_systolic}
+                                onChange={(e) => handleInputChange('blood_pressure_systolic', e.target.value)}
+                                placeholder="Systolic"
+                                type="number"
+                                className="text-center text-lg font-semibold h-11"
                             />
+                            <span className="text-xl font-bold text-muted-foreground">/</span>
+                            <Input
+                                value={formData.blood_pressure_diastolic}
+                                onChange={(e) => handleInputChange('blood_pressure_diastolic', e.target.value)}
+                                placeholder="Diastolic"
+                                type="number"
+                                className="text-center text-lg font-semibold h-11"
+                            />
+                        </div>
+                        {(errors.blood_pressure_systolic || errors.blood_pressure_diastolic) && (
+                            <p className="text-xs text-destructive mt-1">
+                                {errors.blood_pressure_systolic || errors.blood_pressure_diastolic}
+                            </p>
+                        )}
+                    </div>
 
-                            {/* Patient Information */}
-                            <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                                <h3 className="flex items-center gap-2 font-medium">
-                                    <User className="h-4 w-4" />
-                                    Patient Information
-                                </h3>
-                                <div className="grid grid-cols-3 gap-4 text-sm">
-                                    <div>
-                                        <p className="text-muted-foreground">
-                                            Name
-                                        </p>
-                                        <p className="font-medium">
-                                            {checkin.patient.full_name}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-muted-foreground">
-                                            Age & Gender
-                                        </p>
-                                        <p className="font-medium">
-                                            {checkin.patient.age} years,{' '}
-                                            {checkin.patient.gender}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-muted-foreground">
-                                            Department
-                                        </p>
-                                        <p className="font-medium">
-                                            {checkin.department.name}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    {/* Row 1: Temp, Pulse, Resp */}
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Temp (°C)</Label>
+                            <Input
+                                value={formData.temperature}
+                                onChange={(e) => handleInputChange('temperature', e.target.value)}
+                                type="number"
+                                step="0.1"
+                                placeholder="37.0"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Pulse (BPM)</Label>
+                            <Input
+                                value={formData.pulse_rate}
+                                onChange={(e) => handleInputChange('pulse_rate', e.target.value)}
+                                type="number"
+                                placeholder="72"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Resp (/min)</Label>
+                            <Input
+                                value={formData.respiratory_rate}
+                                onChange={(e) => handleInputChange('respiratory_rate', e.target.value)}
+                                type="number"
+                                placeholder="16"
+                                className="text-center"
+                            />
+                        </div>
+                    </div>
 
-                            {/* Vital Signs */}
-                            <div className="space-y-4">
-                                <h3 className="flex items-center gap-2 font-medium">
-                                    <Activity className="h-4 w-4" />
-                                    Vital Signs
-                                </h3>
+                    {/* Row 2: SpO2, Weight, Height */}
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <Label className="text-xs text-muted-foreground">SpO₂ (%)</Label>
+                            <Input
+                                value={formData.oxygen_saturation}
+                                onChange={(e) => handleInputChange('oxygen_saturation', e.target.value)}
+                                type="number"
+                                placeholder="98"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Weight (kg)</Label>
+                            <Input
+                                value={formData.weight}
+                                onChange={(e) => handleInputChange('weight', e.target.value)}
+                                type="number"
+                                step="0.1"
+                                placeholder="70.0"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Height (cm)</Label>
+                            <Input
+                                value={formData.height}
+                                onChange={(e) => handleInputChange('height', e.target.value)}
+                                type="number"
+                                step="0.1"
+                                placeholder="170"
+                                className="text-center"
+                            />
+                        </div>
+                    </div>
 
-                                {/* Blood Pressure & Temperature */}
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                    <div className="space-y-2">
-                                        <Label className="flex items-center gap-2">
-                                            <Gauge className="h-4 w-4" />
-                                            Blood Pressure (mmHg)
-                                        </Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                name="blood_pressure_systolic"
-                                                placeholder="Systolic"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                max="300"
-                                            />
-                                            <span className="flex items-center px-2">
-                                                /
-                                            </span>
-                                            <Input
-                                                name="blood_pressure_diastolic"
-                                                placeholder="Diastolic"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                max="200"
-                                            />
-                                        </div>
-                                        {(errors.blood_pressure_systolic ||
-                                            errors.blood_pressure_diastolic) && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.blood_pressure_systolic ||
-                                                    errors.blood_pressure_diastolic}
-                                            </p>
-                                        )}
-                                    </div>
+                    {/* Notes - compact */}
+                    <div>
+                        <Label className="text-xs text-muted-foreground">Notes (Optional)</Label>
+                        <Textarea
+                            value={formData.notes}
+                            onChange={(e) => handleInputChange('notes', e.target.value)}
+                            placeholder="Any additional observations..."
+                            rows={2}
+                        />
+                    </div>
 
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="temperature"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Thermometer className="h-4 w-4" />
-                                            Temperature (°C)
-                                        </Label>
-                                        <Input
-                                            name="temperature"
-                                            id="temperature"
-                                            type="number"
-                                            step="0.1"
-                                            min="30"
-                                            max="45"
-                                            placeholder="37.0"
-                                        />
-                                        {errors.temperature && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.temperature}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="pulse_rate"
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Heart className="h-4 w-4" />
-                                            Pulse Rate (BPM)
-                                        </Label>
-                                        <Input
-                                            name="pulse_rate"
-                                            id="pulse_rate"
-                                            type="number"
-                                            min="30"
-                                            max="200"
-                                            placeholder="72"
-                                        />
-                                        {errors.pulse_rate && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.pulse_rate}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Respiratory Rate & Oxygen Saturation */}
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="respiratory_rate">
-                                            Respiratory Rate (per min)
-                                        </Label>
-                                        <Input
-                                            name="respiratory_rate"
-                                            id="respiratory_rate"
-                                            type="number"
-                                            min="5"
-                                            max="60"
-                                            placeholder="16"
-                                        />
-                                        {errors.respiratory_rate && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.respiratory_rate}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="oxygen_saturation">
-                                            Oxygen Saturation (%)
-                                        </Label>
-                                        <Input
-                                            name="oxygen_saturation"
-                                            id="oxygen_saturation"
-                                            type="number"
-                                            min="50"
-                                            max="100"
-                                            placeholder="98"
-                                        />
-                                        {errors.oxygen_saturation && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.oxygen_saturation}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Weight & Height */}
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="weight">
-                                            Weight (kg)
-                                        </Label>
-                                        <Input
-                                            name="weight"
-                                            id="weight"
-                                            type="number"
-                                            step="0.1"
-                                            min="0"
-                                            max="500"
-                                            placeholder="70.0"
-                                        />
-                                        {errors.weight && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.weight}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="height">
-                                            Height (cm)
-                                        </Label>
-                                        <Input
-                                            name="height"
-                                            id="height"
-                                            type="number"
-                                            step="0.1"
-                                            min="20"
-                                            max="300"
-                                            placeholder="170.0"
-                                        />
-                                        {errors.height && (
-                                            <p className="text-sm text-destructive">
-                                                {errors.height}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Notes */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="notes">
-                                        Clinical Notes (Optional)
-                                    </Label>
-                                    <Textarea
-                                        name="notes"
-                                        id="notes"
-                                        placeholder="Any additional observations or notes..."
-                                        rows={3}
-                                    />
-                                    {errors.notes && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.notes}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex justify-end gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={handleModalClose}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={processing}>
-                                    {processing && (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    )}
-                                    Record Vitals
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={handleModalClose}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isEditMode ? 'Update Vitals' : 'Save Vitals'}
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     );

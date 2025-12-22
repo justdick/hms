@@ -34,7 +34,18 @@ interface InsurancePlan {
         id: number;
         name: string;
         code: string;
+        is_nhis?: boolean;
     };
+}
+
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
 }
 
 interface PaginationLink {
@@ -58,6 +69,7 @@ interface Props {
     patients: PaginatedPatients;
     departments?: Department[];
     insurancePlans?: InsurancePlan[];
+    nhisSettings?: NhisSettings;
     patient?: Patient;
     filters?: {
         search?: string;
@@ -68,6 +80,7 @@ export default function PatientsIndex({
     patients,
     departments = [],
     insurancePlans = [],
+    nhisSettings,
     filters = {},
 }: Props) {
     const page = usePage<Props>();
@@ -164,6 +177,7 @@ export default function PatientsIndex({
                 onClose={() => setRegistrationModalOpen(false)}
                 onPatientRegistered={handlePatientRegistered}
                 insurancePlans={insurancePlans}
+                nhisSettings={nhisSettings}
                 registrationEndpoint="/checkin/patients"
             />
 

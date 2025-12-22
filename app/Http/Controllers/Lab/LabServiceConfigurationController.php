@@ -117,28 +117,26 @@ class LabServiceConfigurationController extends Controller
                 ->route('lab.services.configuration.index')
                 ->with('success', 'Test parameters updated successfully.');
         } else {
-            // Service details update
+            // Service details update (price is managed via Pricing Dashboard)
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'category' => 'required|string|max:100',
                 'description' => 'nullable|string',
                 'preparation_instructions' => 'nullable|string',
-                'price' => 'required|numeric|min:0',
                 'sample_type' => 'required|string|max:100',
                 'turnaround_time' => 'required|string|max:100',
                 'normal_range' => 'nullable|string|max:255',
                 'clinical_significance' => 'nullable|string',
             ]);
 
-            // Update lab service
+            // Update lab service (price is not updated here - managed via Pricing Dashboard)
             $labService->update($validated);
 
-            // Update corresponding billing service
+            // Update corresponding billing service name only
             $billingService = BillingService::where('service_code', 'LAB_'.$labService->code)->first();
             if ($billingService) {
                 $billingService->update([
                     'service_name' => $validated['name'],
-                    'base_price' => $validated['price'],
                 ]);
             }
 
@@ -158,28 +156,30 @@ class LabServiceConfigurationController extends Controller
             'category' => 'required|string|max:100',
             'description' => 'nullable|string',
             'preparation_instructions' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
             'sample_type' => 'required|string|max:100',
             'turnaround_time' => 'required|string|max:100',
             'normal_range' => 'nullable|string|max:255',
             'clinical_significance' => 'nullable|string',
         ]);
 
+        // New lab services default to unpriced (null) - price is set via Pricing Dashboard
+        $validated['price'] = null;
+
         // Create lab service
         $labService = LabService::create($validated);
 
-        // Create corresponding billing service
+        // Create corresponding billing service with null price
         BillingService::create([
             'service_name' => $validated['name'],
             'service_code' => 'LAB_'.$validated['code'],
             'service_type' => 'laboratory',
-            'base_price' => $validated['price'],
+            'base_price' => null,
             'is_active' => true,
         ]);
 
         return redirect()
             ->route('lab.services.configuration.show', $labService)
-            ->with('success', 'Lab service created successfully! Now configure test parameters.');
+            ->with('success', 'Lab service created successfully! Set the price in the Pricing Dashboard, then configure test parameters.');
     }
 
     public function suggestCode(Request $request): JsonResponse

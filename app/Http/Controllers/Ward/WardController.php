@@ -62,36 +62,53 @@ class WardController extends Controller
             ->with('success', 'Ward created successfully with '.$request->bed_count.' beds.');
     }
 
-    public function show(Ward $ward)
+    public function show(Request $request, Ward $ward)
     {
-        $ward->load([
-            'beds:id,ward_id,bed_number,status,type,is_active',
-            'admissions' => function ($query) {
-                $query->where('status', 'admitted')
-                    ->with([
-                        'patient:id,first_name,last_name,date_of_birth,gender',
-                        'patient.activeInsurance.plan.provider',
-                        'bed:id,bed_number',
-                        'consultation.doctor:id,name',
-                        'latestVitalSigns' => function ($q) {
-                            $q->latest('recorded_at')
-                                ->limit(1)
-                                ->with('recordedBy:id,name');
-                        },
-                        'pendingMedications' => function ($q) {
-                            $q->where('status', 'scheduled')
-                                ->where('scheduled_time', '<=', now()->addHours(2))
-                                ->with('prescription.drug');
-                        },
-                        'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
-                    ])
-                    ->withCount(['wardRounds', 'nursingNotes'])
-                    ->orderBy('admitted_at', 'desc');
-            },
-        ]);
+        $ward->load(['beds:id,ward_id,bed_number,status,type,is_active']);
 
-        // Map admissions to include schedule status
-        $admissionsWithScheduleStatus = $ward->admissions->map(function ($admission) {
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        // Build admissions query with pagination
+        $admissionsQuery = $ward->admissions()
+            ->where('status', 'admitted')
+            ->with([
+                'patient:id,first_name,last_name,date_of_birth,gender,patient_number',
+                'patient.activeInsurance.plan.provider',
+                'bed:id,bed_number',
+                'consultation.doctor:id,name',
+                'latestVitalSigns' => function ($q) {
+                    $q->latest('recorded_at')
+                        ->limit(1)
+                        ->with('recordedBy:id,name');
+                },
+                'todayMedicationAdministrations' => function ($q) {
+                    $q->whereDate('administered_at', today())
+                        ->with('prescription.drug');
+                },
+                'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
+            ])
+            ->withCount(['wardRounds', 'nursingNotes']);
+
+        // Apply search filter
+        if ($search) {
+            $admissionsQuery->where(function ($query) use ($search) {
+                $query->where('admission_number', 'like', "%{$search}%")
+                    ->orWhereHas('patient', function ($q) use ($search) {
+                        $q->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('patient_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $admissionsQuery->orderBy('admitted_at', 'desc');
+
+        // Paginate admissions
+        $paginatedAdmissions = $admissionsQuery->paginate($perPage)->withQueryString();
+
+        // Transform paginated data to include schedule status
+        $transformedData = collect($paginatedAdmissions->items())->map(function ($admission) {
             $admissionArray = $admission->toArray();
 
             if ($admission->activeVitalsSchedule) {
@@ -110,32 +127,52 @@ class WardController extends Controller
             return $admissionArray;
         });
 
-        // Calculate ward statistics
+        // Get all admissions for stats calculation (without pagination)
+        $allAdmissions = $ward->admissions()
+            ->where('status', 'admitted')
+            ->with([
+                'todayMedicationAdministrations' => function ($q) {
+                    $q->whereDate('administered_at', today());
+                },
+                'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
+            ])
+            ->get();
+
+        // Calculate ward statistics from all admissions
         $stats = [
-            'total_patients' => $ward->admissions->count(),
-            'pending_meds_count' => $ward->admissions->sum(function ($admission) {
-                return $admission->pendingMedications->count();
+            'total_patients' => $allAdmissions->count(),
+            'meds_given_today' => $allAdmissions->sum(function ($admission) {
+                return $admission->todayMedicationAdministrations->where('status', 'given')->count();
             }),
-            'vitals_due_count' => $admissionsWithScheduleStatus->filter(function ($admission) {
-                return isset($admission['vitals_schedule_status'])
-                    && $admission['vitals_schedule_status']['status'] === 'due';
+            'vitals_due_count' => $allAdmissions->filter(function ($admission) {
+                return $admission->activeVitalsSchedule
+                    && $admission->activeVitalsSchedule->getCurrentStatus() === 'due';
             })->count(),
-            'vitals_overdue_count' => $admissionsWithScheduleStatus->filter(function ($admission) {
-                return isset($admission['vitals_schedule_status'])
-                    && $admission['vitals_schedule_status']['status'] === 'overdue';
+            'vitals_overdue_count' => $allAdmissions->filter(function ($admission) {
+                return $admission->activeVitalsSchedule
+                    && $admission->activeVitalsSchedule->getCurrentStatus() === 'overdue';
             })->count(),
-            'scheduled_vitals_count' => $ward->admissions->filter(function ($admission) {
+            'scheduled_vitals_count' => $allAdmissions->filter(function ($admission) {
                 return $admission->activeVitalsSchedule !== null;
             })->count(),
         ];
 
-        // Prepare ward data with transformed admissions
-        $wardData = $ward->toArray();
-        $wardData['admissions'] = $admissionsWithScheduleStatus->values()->all();
-
         return Inertia::render('Ward/Show', [
-            'ward' => $wardData,
+            'ward' => $ward,
             'stats' => $stats,
+            'admissions' => [
+                'data' => $transformedData->values()->all(),
+                'current_page' => $paginatedAdmissions->currentPage(),
+                'from' => $paginatedAdmissions->firstItem(),
+                'last_page' => $paginatedAdmissions->lastPage(),
+                'per_page' => $paginatedAdmissions->perPage(),
+                'to' => $paginatedAdmissions->lastItem(),
+                'total' => $paginatedAdmissions->total(),
+                'links' => $paginatedAdmissions->linkCollection()->toArray(),
+            ],
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

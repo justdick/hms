@@ -241,7 +241,7 @@ export default function WardRoundCreate({
     patientHistories,
     patientHistory,
 }: Props) {
-    const [activeTab, setActiveTab] = useState('notes');
+    const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -774,18 +774,18 @@ export default function WardRoundCreate({
                 >
                     <TabsList className="grid w-full grid-cols-6 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                         <TabsTrigger
-                            value="notes"
-                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-blue-50 text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
-                        >
-                            <FileText className="h-4 w-4" />
-                            Consultation Notes
-                        </TabsTrigger>
-                        <TabsTrigger
                             value="vitals"
                             className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-rose-50 text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
                         >
                             <Activity className="h-4 w-4" />
                             Vitals
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="notes"
+                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-blue-50 text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Consultation Notes
                         </TabsTrigger>
                         <TabsTrigger
                             value="diagnosis"
@@ -816,45 +816,6 @@ export default function WardRoundCreate({
                             Theatre
                         </TabsTrigger>
                     </TabsList>
-
-                    {/* Medical History & Consultation Notes Tab */}
-                    <TabsContent value="notes">
-                        <div className="space-y-6">
-                            <MedicalHistoryNotes
-                                initialData={{
-                                    presenting_complaint:
-                                        data.presenting_complaint,
-                                    history_presenting_complaint:
-                                        data.history_presenting_complaint,
-                                    on_direct_questioning:
-                                        data.on_direct_questioning,
-                                    examination_findings:
-                                        data.examination_findings,
-                                    assessment_notes: data.assessment_notes,
-                                    plan_notes: data.plan_notes,
-                                    follow_up_date: data.follow_up_date,
-                                }}
-                                patientHistories={{
-                                    past_medical_surgical_history:
-                                        data.past_medical_surgical_history,
-                                    drug_history: data.drug_history,
-                                    family_history: data.family_history,
-                                    social_history: data.social_history,
-                                }}
-                                onDataChange={(newData) => {
-                                    Object.keys(newData).forEach((key) => {
-                                        handleDataChange(key, newData[key]);
-                                    });
-                                }}
-                                onPatientHistoryUpdate={
-                                    handlePatientHistoryUpdate
-                                }
-                                onSubmit={handleSubmit}
-                                processing={processing || isSaving}
-                                status={wardRound.status}
-                            />
-                        </div>
-                    </TabsContent>
 
                     {/* Vitals Tab */}
                     <TabsContent value="vitals">
@@ -1046,6 +1007,45 @@ export default function WardRoundCreate({
                                         </CardContent>
                                     </Card>
                                 )}
+                        </div>
+                    </TabsContent>
+
+                    {/* Medical History & Consultation Notes Tab */}
+                    <TabsContent value="notes">
+                        <div className="space-y-6">
+                            <MedicalHistoryNotes
+                                initialData={{
+                                    presenting_complaint:
+                                        data.presenting_complaint,
+                                    history_presenting_complaint:
+                                        data.history_presenting_complaint,
+                                    on_direct_questioning:
+                                        data.on_direct_questioning,
+                                    examination_findings:
+                                        data.examination_findings,
+                                    assessment_notes: data.assessment_notes,
+                                    plan_notes: data.plan_notes,
+                                    follow_up_date: data.follow_up_date,
+                                }}
+                                patientHistories={{
+                                    past_medical_surgical_history:
+                                        data.past_medical_surgical_history,
+                                    drug_history: data.drug_history,
+                                    family_history: data.family_history,
+                                    social_history: data.social_history,
+                                }}
+                                onDataChange={(newData) => {
+                                    Object.keys(newData).forEach((key) => {
+                                        handleDataChange(key, newData[key]);
+                                    });
+                                }}
+                                onPatientHistoryUpdate={
+                                    handlePatientHistoryUpdate
+                                }
+                                onSubmit={handleSubmit}
+                                processing={processing || isSaving}
+                                status={wardRound.status}
+                            />
                         </div>
                     </TabsContent>
 

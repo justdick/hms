@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -17,8 +18,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { router } from '@inertiajs/react';
-import { Loader2, Plus } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { ExternalLink, Info, Loader2, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { LabService } from './columns';
 
@@ -35,7 +36,6 @@ interface FormData {
     category: string;
     description: string;
     preparation_instructions: string;
-    price: string;
     sample_type: string;
     turnaround_time: string;
     normal_range: string;
@@ -82,7 +82,6 @@ export default function CreateTestModal({
         description: editingService?.description || '',
         preparation_instructions:
             editingService?.preparation_instructions || '',
-        price: editingService?.price?.toString() || '',
         sample_type: editingService?.sample_type || '',
         turnaround_time: editingService?.turnaround_time || '',
         normal_range: editingService?.normal_range || '',
@@ -99,7 +98,6 @@ export default function CreateTestModal({
                 description: editingService.description || '',
                 preparation_instructions:
                     editingService.preparation_instructions || '',
-                price: editingService.price?.toString() || '',
                 sample_type: editingService.sample_type || '',
                 turnaround_time: editingService.turnaround_time || '',
                 normal_range: editingService.normal_range || '',
@@ -114,7 +112,6 @@ export default function CreateTestModal({
                 category: '',
                 description: '',
                 preparation_instructions: '',
-                price: '',
                 sample_type: '',
                 turnaround_time: '',
                 normal_range: '',
@@ -360,19 +357,34 @@ export default function CreateTestModal({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="price">Price ($) *</Label>
-                            <Input
-                                id="price"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="0.00"
-                                value={formData.price}
-                                onChange={(e) =>
-                                    updateFormData('price', e.target.value)
-                                }
-                                required
-                            />
+                            <Label>Pricing</Label>
+                            <Alert className="py-2">
+                                <Info className="h-4 w-4" />
+                                <AlertDescription className="flex items-center justify-between text-sm">
+                                    <span>
+                                        {isEditing && editingService?.price
+                                            ? `Current: GHS ${editingService.price.toFixed(2)}`
+                                            : 'Set price after creation'}
+                                    </span>
+                                    {isEditing && editingService && (
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="h-auto p-0"
+                                            type="button"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={`/admin/pricing-dashboard?search=${encodeURIComponent(editingService.code)}`}
+                                                target="_blank"
+                                            >
+                                                Set Price
+                                                <ExternalLink className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     </div>
 

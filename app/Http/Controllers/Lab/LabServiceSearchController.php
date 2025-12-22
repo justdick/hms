@@ -21,7 +21,7 @@ class LabServiceSearchController extends Controller
             ->search($query)
             ->orderBy('name')
             ->limit(20)
-            ->get(['id', 'name', 'code', 'category', 'sample_type', 'turnaround_time']);
+            ->get(['id', 'name', 'code', 'category', 'sample_type', 'turnaround_time', 'price']);
 
         return response()->json($labServices);
     }

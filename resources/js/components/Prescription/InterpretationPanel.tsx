@@ -18,7 +18,7 @@ export interface ParsedPrescription {
     duration: string | null;
     durationDays: number | null;
     quantityToDispense: number | null;
-    scheduleType: 'standard' | 'split_dose' | 'custom_interval' | 'taper' | 'stat' | 'prn';
+    scheduleType: 'standard' | 'split_dose' | 'custom_interval' | 'taper' | 'stat' | 'prn' | 'topical' | 'interval';
     schedulePattern?: {
         type?: string;
         pattern?: { morning: number; noon: number; evening: number };

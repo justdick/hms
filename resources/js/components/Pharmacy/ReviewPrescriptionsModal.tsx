@@ -48,6 +48,7 @@ interface PrescriptionData {
     stock_status: StockStatus;
     can_dispense_full: boolean;
     max_dispensable: number;
+    is_unpriced?: boolean;
 }
 
 interface MinorProcedureSupply {
@@ -107,6 +108,7 @@ export function ReviewPrescriptionsModal({
             // Determine action based on current state and stock availability
             let action: 'keep' | 'partial' | 'external' | 'cancel' = 'keep';
             let quantityToDispense: number | null = pd.prescription.quantity;
+            let reason = '';
 
             if (isReviewed) {
                 // Already reviewed - use existing values
@@ -117,8 +119,14 @@ export function ReviewPrescriptionsModal({
                     action = 'partial';
                 }
             } else {
-                // Not yet reviewed - apply smart defaults based on stock
-                if (pd.stock_status.in_stock === 0) {
+                // Not yet reviewed - apply smart defaults
+                // Priority: unpriced > out of stock > partial stock > keep
+                if (pd.is_unpriced) {
+                    // Unpriced drug - default to external
+                    action = 'external';
+                    quantityToDispense = null;
+                    reason = 'Drug is unpriced - patient to purchase externally';
+                } else if (pd.stock_status.in_stock === 0) {
                     // Out of stock - default to external
                     action = 'external';
                     quantityToDispense = null;
@@ -137,7 +145,7 @@ export function ReviewPrescriptionsModal({
                 action,
                 quantity_to_dispense: quantityToDispense,
                 notes: isReviewed ? pd.prescription.dispensing_notes || '' : '',
-                reason: '',
+                reason,
             };
         }),
     );

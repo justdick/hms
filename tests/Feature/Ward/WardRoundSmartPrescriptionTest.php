@@ -105,9 +105,9 @@ it('creates ward round prescription with smart input', function () {
 
 /**
  * Validates: Requirements 10.2
- * Schedule pattern is stored for split dose prescriptions in Ward Round.
+ * Split dose prescriptions are parsed correctly in Ward Round.
  */
-it('stores schedule_pattern for ward round split dose prescriptions', function () {
+it('parses split dose prescriptions correctly in ward round', function () {
     $response = $this->actingAs($this->user)
         ->post("/admissions/{$this->admission->id}/ward-rounds/{$this->wardRound->id}/prescriptions", [
             'medication_name' => $this->drug->name,
@@ -122,19 +122,15 @@ it('stores schedule_pattern for ward round split dose prescriptions', function (
         ->where('prescribable_id', $this->wardRound->id)
         ->first();
     expect($prescription)->not->toBeNull();
-    expect($prescription->schedule_pattern)->not->toBeNull();
-    expect($prescription->schedule_pattern['type'])->toBe('split_dose');
-    expect($prescription->schedule_pattern['pattern']['morning'])->toBe(1);
-    expect($prescription->schedule_pattern['pattern']['noon'])->toBe(0);
-    expect($prescription->schedule_pattern['pattern']['evening'])->toBe(1);
     expect($prescription->quantity_to_dispense)->toBe(60);
+    expect($prescription->frequency)->toContain('1-0-1');
 });
 
 /**
  * Validates: Requirements 10.2
- * Schedule pattern is stored for taper prescriptions in Ward Round.
+ * Taper prescriptions are parsed correctly in Ward Round.
  */
-it('stores schedule_pattern for ward round taper prescriptions', function () {
+it('parses taper prescriptions correctly in ward round', function () {
     $response = $this->actingAs($this->user)
         ->post("/admissions/{$this->admission->id}/ward-rounds/{$this->wardRound->id}/prescriptions", [
             'medication_name' => $this->drug->name,
@@ -149,9 +145,6 @@ it('stores schedule_pattern for ward round taper prescriptions', function () {
         ->where('prescribable_id', $this->wardRound->id)
         ->first();
     expect($prescription)->not->toBeNull();
-    expect($prescription->schedule_pattern)->not->toBeNull();
-    expect($prescription->schedule_pattern['type'])->toBe('taper');
-    expect($prescription->schedule_pattern['doses'])->toBe([4, 3, 2, 1]);
     expect($prescription->quantity_to_dispense)->toBe(10);
 });
 
@@ -227,7 +220,6 @@ it('creates STAT prescription with smart mode in ward round', function () {
     expect($prescription->frequency)->toBe('Immediately (STAT)');
     expect($prescription->duration)->toBe('Single dose');
     expect($prescription->quantity_to_dispense)->toBe(2);
-    expect($prescription->schedule_pattern)->toBeNull();
 });
 
 /**
@@ -252,5 +244,4 @@ it('creates PRN prescription with smart mode in ward round', function () {
     expect($prescription->dose_quantity)->toBe('2');
     expect($prescription->frequency)->toBe('As needed (PRN)');
     expect($prescription->duration)->toBe('As needed');
-    expect($prescription->schedule_pattern)->toBeNull();
 });

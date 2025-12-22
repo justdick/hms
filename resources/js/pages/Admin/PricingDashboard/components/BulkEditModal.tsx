@@ -51,10 +51,12 @@ export function BulkEditModal({
         setProcessing(true);
         setResult(null);
 
+        // Include is_mapped status for NHIS plans so backend knows which method to use
         const items = selectedItems.map((item) => ({
             type: item.type,
             id: item.id,
             code: item.code,
+            is_mapped: item.is_mapped,
         }));
 
         router.post(
@@ -111,6 +113,10 @@ export function BulkEditModal({
         {} as Record<string, PricingItem[]>,
     );
 
+    // Count mapped vs unmapped for NHIS
+    const mappedCount = selectedItems.filter((item) => item.is_mapped).length;
+    const unmappedCount = selectedItems.length - mappedCount;
+
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="max-w-lg">
@@ -123,6 +129,20 @@ export function BulkEditModal({
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
+                    {/* NHIS Info about mapped/unmapped items */}
+                    {isNhis && unmappedCount > 0 && (
+                        <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <div className="text-sm">
+                                <strong>{unmappedCount}</strong> item(s) are not mapped to NHIS tariffs.
+                                {mappedCount > 0 && (
+                                    <> <strong>{mappedCount}</strong> item(s) are mapped.</>
+                                )}
+                                {' '}Unmapped items will use flexible copay (patient pays full amount).
+                            </div>
+                        </div>
+                    )}
+
                     {/* Selected Items Summary */}
                     <div className="space-y-2">
                         <Label>Selected Items ({selectedItems.length})</Label>

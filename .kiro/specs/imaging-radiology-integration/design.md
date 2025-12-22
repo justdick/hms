@@ -1,5 +1,13 @@
 # Design Document: Imaging/Radiology Integration
 
+## Dependencies
+
+> **⚠️ NOTE**: This spec depends on the **centralized-pricing-management** spec.
+> - New imaging services are created with `price = null` (unpriced by default)
+> - Prices must be configured via the Unified Pricing Dashboard
+> - Unpriced imaging orders will auto-set to `external_referral` status (handled by LabOrderObserver)
+> - Imaging services will appear in Pricing Dashboard under "imaging" category
+
 ## Overview
 
 This feature enhances the HMS to support imaging/radiology services by:

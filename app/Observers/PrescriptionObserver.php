@@ -12,10 +12,40 @@ class PrescriptionObserver
     ) {}
 
     /**
+     * Handle the Prescription "creating" event.
+     * Flag unpriced drugs but keep status as 'prescribed' so they appear in dispensing queue.
+     * Pharmacist will see the flag and can choose to mark as external during review.
+     */
+    public function creating(Prescription $prescription): void
+    {
+        // Check if drug is unpriced (null or zero price)
+        if ($prescription->drug_id) {
+            $drug = $prescription->drug ?? \App\Models\Drug::find($prescription->drug_id);
+
+            if ($drug && ($drug->unit_price === null || (float) $drug->unit_price === 0.0)) {
+                // Flag as unpriced but keep status as 'prescribed'
+                // Pharmacist will see this flag during review and can mark as external
+                $prescription->is_unpriced = true;
+            } else {
+                // Explicitly set to false for priced drugs
+                $prescription->is_unpriced = false;
+            }
+        } else {
+            // No drug_id means it's a custom medication, not unpriced
+            $prescription->is_unpriced = false;
+        }
+    }
+
+    /**
      * Handle the Prescription "created" event.
      */
     public function created(Prescription $prescription): void
     {
+        // Skip charge creation for unpriced drugs (they are marked external)
+        if ($prescription->is_unpriced) {
+            return;
+        }
+
         // Auto-create charge when prescription with drug and quantity is created
         // Skip if no quantity (ward rounds don't set quantity initially, it's set during pharmacy review)
         if ($prescription->drug_id && $prescription->quantity && $prescription->isPrescribed()) {

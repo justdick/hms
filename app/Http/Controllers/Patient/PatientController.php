@@ -7,6 +7,7 @@ use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
+use App\Services\InsuranceApplicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -148,7 +149,7 @@ class PatientController extends Controller
                 'date_of_birth' => $patient->date_of_birth->format('Y-m-d'),
                 'address' => $patient->address,
                 'status' => $patient->status,
-                'active_insurance' => $patient->activeInsurance ? [
+                'active_insurance' => $patient->activeInsurance && $patient->activeInsurance->plan ? [
                     'id' => $patient->activeInsurance->id,
                     'insurance_plan' => [
                         'id' => $patient->activeInsurance->plan->id,
@@ -193,14 +194,31 @@ class PatientController extends Controller
                         'id' => $plan->provider->id,
                         'name' => $plan->provider->name,
                         'code' => $plan->provider->code,
+                        'is_nhis' => $plan->provider->is_nhis ?? false,
                     ],
                 ];
             });
+
+        // Get NHIS settings for registration modal
+        $nhisSettings = \App\Models\NhisSettings::getInstance();
+        $nhisCredentials = null;
+        if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
+            $nhisCredentials = [
+                'username' => $nhisSettings->nhia_username,
+                'password' => $nhisSettings->nhia_password,
+            ];
+        }
 
         return inertia('Patients/Index', [
             'patients' => $patients,
             'departments' => $departments,
             'insurancePlans' => $insurancePlans,
+            'nhisSettings' => [
+                'verification_mode' => $nhisSettings->verification_mode,
+                'nhia_portal_url' => $nhisSettings->nhia_portal_url,
+                'auto_open_portal' => $nhisSettings->auto_open_portal,
+                'credentials' => $nhisCredentials,
+            ],
             'filters' => [
                 'search' => $request->get('search', ''),
             ],
@@ -261,7 +279,7 @@ class PatientController extends Controller
                 'drug_history' => $canViewMedicalHistory ? $patient->drug_history : null,
                 'family_history' => $canViewMedicalHistory ? $patient->family_history : null,
                 'social_history' => $canViewMedicalHistory ? $patient->social_history : null,
-                'active_insurance' => $patient->activeInsurance ? [
+                'active_insurance' => $patient->activeInsurance && $patient->activeInsurance->plan ? [
                     'id' => $patient->activeInsurance->id,
                     'insurance_plan' => [
                         'id' => $patient->activeInsurance->plan->id,
@@ -277,7 +295,7 @@ class PatientController extends Controller
                     'coverage_end_date' => $patient->activeInsurance->coverage_end_date?->format('Y-m-d'),
                     'status' => $patient->activeInsurance->status,
                 ] : null,
-                'insurance_plans' => $patient->insurancePlans->map(function ($insurance) {
+                'insurance_plans' => $patient->insurancePlans->filter(fn ($insurance) => $insurance->plan !== null)->map(function ($insurance) {
                     return [
                         'id' => $insurance->id,
                         'insurance_plan' => [
@@ -289,7 +307,7 @@ class PatientController extends Controller
                         'coverage_end_date' => $insurance->coverage_end_date?->format('Y-m-d'),
                         'status' => $insurance->status,
                     ];
-                }),
+                })->values(),
                 'checkin_history' => $patient->checkins->map(function ($checkin) {
                     return [
                         'id' => $checkin->id,
@@ -380,6 +398,9 @@ class PatientController extends Controller
         $validated = $request->validated();
 
         return DB::transaction(function () use ($request, $patient, $validated) {
+            // Check if patient had insurance before this update
+            $hadInsuranceBefore = $patient->activeInsurance !== null;
+
             // Update patient data
             $patient->update([
                 'first_name' => $validated['first_name'],
@@ -398,6 +419,7 @@ class PatientController extends Controller
             ]);
 
             // Update or create insurance record if patient has insurance
+            $newInsurance = null;
             if ($request->boolean('has_insurance')) {
                 $insuranceData = [
                     'insurance_plan_id' => $validated['insurance_plan_id'],
@@ -416,8 +438,15 @@ class PatientController extends Controller
                 $activeInsurance = $patient->activeInsurance;
                 if ($activeInsurance) {
                     $activeInsurance->update($insuranceData);
+                    $newInsurance = $activeInsurance->fresh();
                 } else {
-                    $patient->insurancePlans()->create($insuranceData);
+                    $newInsurance = $patient->insurancePlans()->create($insuranceData);
+                }
+
+                // If patient didn't have insurance before but now does,
+                // check for active checkins and apply insurance retroactively
+                if (! $hadInsuranceBefore && $newInsurance) {
+                    $this->applyInsuranceToActiveCheckin($patient, $newInsurance);
                 }
             }
 
@@ -425,6 +454,28 @@ class PatientController extends Controller
                 ->route('patients.show', $patient)
                 ->with('success', 'Patient information updated successfully.');
         });
+    }
+
+    /**
+     * Apply insurance to any active checkin for the patient.
+     * This handles the emergency scenario where insurance is added mid-visit.
+     */
+    protected function applyInsuranceToActiveCheckin(Patient $patient, PatientInsurance $insurance): void
+    {
+        $insuranceApplicationService = app(InsuranceApplicationService::class);
+
+        // Check for active checkin without insurance
+        $activeCheckin = $insuranceApplicationService->getActiveCheckinWithoutInsurance($patient);
+
+        if ($activeCheckin) {
+            // Generate a claim check code and apply insurance
+            $claimCheckCode = $insuranceApplicationService->generateClaimCheckCode();
+            $insuranceApplicationService->applyInsuranceToActiveCheckin(
+                $activeCheckin,
+                $insurance,
+                $claimCheckCode
+            );
+        }
     }
 
     /**
@@ -548,20 +599,21 @@ class PatientController extends Controller
                 $suffixPattern = $separator.date('m').$separator.$year;
             }
 
-            // Find the last patient number with this year suffix
-            $lastPatient = Patient::where('patient_number', 'like', "%{$suffixPattern}")
-                ->orderBy('id', 'desc')
-                ->first();
+            // Find ALL patient numbers with this year suffix and get the highest number
+            $patientsWithPattern = Patient::where('patient_number', 'like', "%{$suffixPattern}")
+                ->pluck('patient_number');
 
-            if ($lastPatient) {
-                // Extract the numeric part from the beginning
-                $numericPart = preg_replace('/[^0-9].*/', '', $lastPatient->patient_number);
-                $lastNumber = (int) $numericPart;
-                $newNumber = $lastNumber + 1;
-            } else {
-                $newNumber = 1;
+            $highestNumber = 0;
+            foreach ($patientsWithPattern as $patientNumber) {
+                // Extract the numeric part from the beginning (before the separator)
+                $numericPart = preg_replace('/[^0-9].*/', '', $patientNumber);
+                $number = (int) $numericPart;
+                if ($number > $highestNumber) {
+                    $highestNumber = $number;
+                }
             }
 
+            $newNumber = $highestNumber + 1;
             $paddedNumber = str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
 
             if ($resetPolicy === 'monthly') {
@@ -579,18 +631,21 @@ class PatientController extends Controller
             $basePattern .= date('m').$separator;
         }
 
-        // Find the last patient number with this pattern
-        $lastPatient = Patient::where('patient_number', 'like', "{$basePattern}%")
-            ->orderBy('id', 'desc')
-            ->first();
+        // Find ALL patient numbers with this pattern and get the highest number
+        $patientsWithPattern = Patient::where('patient_number', 'like', "{$basePattern}%")
+            ->pluck('patient_number');
 
-        if ($lastPatient) {
+        $highestNumber = 0;
+        foreach ($patientsWithPattern as $patientNumber) {
             // Extract the numeric part from the end
-            $lastNumber = (int) substr($lastPatient->patient_number, -$padding);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+            $numericPart = substr($patientNumber, -$padding);
+            $number = (int) $numericPart;
+            if ($number > $highestNumber) {
+                $highestNumber = $number;
+            }
         }
+
+        $newNumber = $highestNumber + 1;
 
         return $basePattern.str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
     }

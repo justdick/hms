@@ -158,6 +158,7 @@ class DrugController extends Controller
         return Inertia::render('Pharmacy/Drugs/Create', [
             'categories' => $categories,
             'suppliers' => $suppliers,
+            'canManageNhisSettings' => auth()->user()->can('drugs.manage-nhis-settings'),
         ]);
     }
 
@@ -174,15 +175,25 @@ class DrugController extends Controller
             'form' => 'required|string',
             'strength' => 'nullable|string|max:100',
             'description' => 'nullable|string',
-            'unit_price' => 'required|numeric|min:0',
             'unit_type' => 'required|string',
             'bottle_size' => 'nullable|integer|min:1',
             'minimum_stock_level' => 'required|integer|min:0',
             'maximum_stock_level' => 'required|integer|min:0',
             'is_active' => 'boolean',
+            'nhis_claim_qty_as_one' => 'boolean',
         ]);
 
         $validated['is_active'] = $validated['is_active'] ?? true;
+
+        // Only allow nhis_claim_qty_as_one if user has permission
+        if (isset($validated['nhis_claim_qty_as_one']) && $validated['nhis_claim_qty_as_one']) {
+            if (! auth()->user()->can('drugs.manage-nhis-settings')) {
+                unset($validated['nhis_claim_qty_as_one']);
+            }
+        }
+        $validated['nhis_claim_qty_as_one'] = $validated['nhis_claim_qty_as_one'] ?? false;
+        // New drugs default to unpriced (null) - price is set via Pricing Dashboard
+        $validated['unit_price'] = null;
 
         $drug = Drug::create($validated);
 
@@ -210,6 +221,7 @@ class DrugController extends Controller
         return Inertia::render('Pharmacy/Drugs/Edit', [
             'drug' => $drug,
             'categories' => $categories,
+            'canManageNhisSettings' => auth()->user()->can('drugs.manage-nhis-settings'),
         ]);
     }
 
@@ -226,13 +238,23 @@ class DrugController extends Controller
             'form' => 'required|string',
             'strength' => 'nullable|string|max:100',
             'description' => 'nullable|string',
-            'unit_price' => 'required|numeric|min:0',
             'unit_type' => 'required|string',
             'bottle_size' => 'nullable|integer|min:1',
             'minimum_stock_level' => 'required|integer|min:0',
             'maximum_stock_level' => 'required|integer|min:0',
             'is_active' => 'boolean',
+            'nhis_claim_qty_as_one' => 'boolean',
         ]);
+
+        // Only allow nhis_claim_qty_as_one changes if user has permission
+        if (isset($validated['nhis_claim_qty_as_one'])) {
+            if (! auth()->user()->can('drugs.manage-nhis-settings')) {
+                // Keep the existing value if user doesn't have permission
+                $validated['nhis_claim_qty_as_one'] = $drug->nhis_claim_qty_as_one;
+            }
+        }
+
+        // Note: unit_price is managed via Pricing Dashboard, not this form
 
         $drug->update($validated);
 

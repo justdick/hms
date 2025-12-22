@@ -161,21 +161,30 @@ class InsuranceClaimService
         $patientInsurance = $claim->patientInsurance;
 
         foreach ($chargeIds as $chargeId) {
-            $charge = Charge::with(['prescription.drug', 'labOrder.labService', 'minorProcedure.procedureType'])->findOrFail($chargeId);
+            $charge = Charge::with(['prescription.drug'])->findOrFail($chargeId);
 
-            // Get the proper item code from the related entity
+            // Get the proper item code and ID from the related entity
             $itemCode = $this->getItemCodeFromCharge($charge);
+            $itemId = $this->getItemIdFromCharge($charge);
+
+            // Determine quantity for claim
+            // For certain drugs (Arthemeter, Pessary), NHIS requires qty = 1 regardless of actual dispensed qty
+            $claimQuantity = $this->getClaimQuantity($charge);
 
             // Calculate coverage for this charge
+            // Pass itemId to enable NHIS unmapped item handling with flexible copay
             $coverage = $this->insuranceService->calculateCoverage(
                 $patientInsurance,
                 $charge->service_type,
                 $itemCode,
                 (float) $charge->amount,
-                $charge->metadata['quantity'] ?? 1
+                $claimQuantity,
+                null, // date
+                $itemId
             );
 
-            // Create claim item
+            // Create claim item - unmapped items are included with insurance_pays = 0
+            // This is required for NHIS auditing purposes (Requirement 4.5)
             InsuranceClaimItem::create([
                 'insurance_claim_id' => $claim->id,
                 'charge_id' => $chargeId,
@@ -183,7 +192,7 @@ class InsuranceClaimService
                 'item_type' => $this->mapServiceTypeToItemType($charge->service_type),
                 'code' => $itemCode,
                 'description' => $charge->description,
-                'quantity' => $charge->metadata['quantity'] ?? 1,
+                'quantity' => $claimQuantity,
                 'unit_tariff' => $coverage['insurance_tariff'],
                 'subtotal' => $coverage['subtotal'],
                 'is_covered' => $coverage['is_covered'],
@@ -191,11 +200,61 @@ class InsuranceClaimService
                 'insurance_pays' => $coverage['insurance_pays'],
                 'patient_pays' => $coverage['patient_pays'],
                 'is_approved' => null,
+                'is_unmapped' => $coverage['is_unmapped'] ?? false,
+                'has_flexible_copay' => $coverage['has_flexible_copay'] ?? false,
             ]);
         }
 
         // Recalculate claim totals
         $this->recalculateClaimTotals($claim);
+    }
+
+    /**
+     * Get the quantity to use for NHIS claims.
+     * Some drugs (e.g., Arthemeter, Pessary) are counted as 1 pack regardless of actual dispensed qty.
+     */
+    protected function getClaimQuantity(Charge $charge): int
+    {
+        $actualQuantity = $charge->metadata['quantity'] ?? 1;
+
+        // Check if this is a pharmacy charge with a drug that requires qty = 1 for NHIS
+        if ($charge->service_type === 'pharmacy' && $charge->prescription?->drug) {
+            $drug = $charge->prescription->drug;
+
+            if ($drug->nhis_claim_qty_as_one) {
+                return 1;
+            }
+        }
+
+        return $actualQuantity;
+    }
+
+    /**
+     * Get the item ID from a charge by looking at related entities.
+     */
+    protected function getItemIdFromCharge(Charge $charge): ?int
+    {
+        // For pharmacy charges, get drug ID from prescription
+        if ($charge->service_type === 'pharmacy' && $charge->prescription?->drug) {
+            return $charge->prescription->drug->id;
+        }
+
+        // For lab charges, get service ID from metadata
+        if (in_array($charge->service_type, ['lab', 'laboratory'])) {
+            return $charge->metadata['lab_service_id'] ?? null;
+        }
+
+        // For procedure charges, get procedure type ID from metadata
+        if ($charge->service_type === 'procedure') {
+            return $charge->metadata['procedure_type_id'] ?? null;
+        }
+
+        // For consultation charges, get department billing ID
+        if ($charge->service_type === 'consultation') {
+            return $charge->metadata['department_billing_id'] ?? null;
+        }
+
+        return null;
     }
 
     /**
@@ -213,14 +272,14 @@ class InsuranceClaimService
             return $charge->prescription->drug->drug_code ?? $charge->charge_type;
         }
 
-        // For lab charges, get service code from lab order
-        if (in_array($charge->service_type, ['lab', 'laboratory']) && $charge->labOrder?->labService) {
-            return $charge->labOrder->labService->service_code ?? $charge->charge_type;
+        // For lab charges, get service code from metadata or service_code
+        if (in_array($charge->service_type, ['lab', 'laboratory'])) {
+            return $charge->metadata['service_code'] ?? $charge->charge_type;
         }
 
-        // For procedure charges, get procedure code
-        if ($charge->service_type === 'procedure' && $charge->minorProcedure?->procedureType) {
-            return $charge->minorProcedure->procedureType->code ?? $charge->charge_type;
+        // For procedure charges, get procedure code from metadata
+        if ($charge->service_type === 'procedure') {
+            return $charge->metadata['procedure_code'] ?? $charge->charge_type;
         }
 
         // Fallback to charge_type

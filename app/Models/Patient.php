@@ -125,11 +125,14 @@ class Patient extends Model
                         ->where('first_name', 'like', "%{$words[1]}%");
                 });
             } else {
-                // Single word: search across all fields
+                // Single word: search across all fields including insurance membership ID
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('patient_number', 'like', "%{$search}%")
-                    ->orWhere('phone_number', 'like', "%{$search}%");
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhereHas('insurancePlans', function ($insuranceQuery) use ($search) {
+                        $insuranceQuery->where('membership_id', 'like', "%{$search}%");
+                    });
             }
         });
     }

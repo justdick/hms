@@ -25,7 +25,7 @@ class ChargeFactory extends Factory
             'service_code' => fake()->regexify('[A-Z]{3}[0-9]{3}'),
             'description' => fake()->sentence(),
             'amount' => $amount,
-            'charge_type' => fake()->randomElement(['consultation', 'procedure', 'medication', 'test', 'room']),
+            'charge_type' => fake()->randomElement(['consultation_fee', 'equipment_fee', 'emergency_surcharge', 'lab_test', 'medication', 'ward_bed', 'nursing_care', 'procedure', 'minor_procedure', 'other']),
             'status' => 'pending',
             'paid_amount' => 0,
             'charged_at' => now(),

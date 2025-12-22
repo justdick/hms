@@ -3,7 +3,6 @@
 use App\Http\Controllers\Vitals\VitalSignController;
 use App\Http\Controllers\Ward\BedAssignmentController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
-use App\Http\Controllers\Ward\MedicationScheduleController;
 use App\Http\Controllers\Ward\NursingNoteController;
 use App\Http\Controllers\Ward\VitalsAlertController;
 use App\Http\Controllers\Ward\VitalsScheduleController;
@@ -43,6 +42,7 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::delete('/{admission}/bed-assignment', [BedAssignmentController::class, 'destroy'])->name('bed-assignment.destroy');
 
     Route::post('/{admission}/vitals', [VitalSignController::class, 'storeForAdmission'])->name('vitals.store');
+    Route::patch('/{admission}/vitals/{vitalSign}', [VitalSignController::class, 'updateForAdmission'])->name('vitals.update');
 
     // Nursing Notes
     Route::get('/{admission}/nursing-notes', [NursingNoteController::class, 'index'])->name('nursing-notes.index');
@@ -50,35 +50,21 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::put('/{admission}/nursing-notes/{nursingNote}', [NursingNoteController::class, 'update'])->name('nursing-notes.update');
     Route::delete('/{admission}/nursing-notes/{nursingNote}', [NursingNoteController::class, 'destroy'])->name('nursing-notes.destroy');
 
-    // Medication Administration
+    // Medication Administration (on-demand recording)
     Route::get('/{admission}/medications', [MedicationAdministrationController::class, 'index'])->name('medications.index');
-    Route::post('/{administration}/administer', [MedicationAdministrationController::class, 'administer'])->name('medications.administer');
-    Route::post('/{administration}/hold', [MedicationAdministrationController::class, 'hold'])->name('medications.hold');
-    Route::post('/{administration}/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
-    Route::post('/{administration}/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
+    Route::post('/{admission}/medications', [MedicationAdministrationController::class, 'store'])->name('medications.store');
+    Route::post('/{admission}/medications/hold', [MedicationAdministrationController::class, 'hold'])->name('medications.hold');
+    Route::post('/{admission}/medications/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
+    Route::post('/{admission}/medications/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
 });
 
-// Medication Schedule API Routes (JSON responses for AJAX calls)
+// Vitals Alert API Routes (JSON responses for AJAX calls)
 Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
     // Vitals Alert API endpoints
     Route::prefix('vitals-alerts')->name('vitals-alerts.')->group(function () {
         Route::get('/active', [VitalsAlertController::class, 'active'])->name('active');
         Route::post('/{alert}/acknowledge', [VitalsAlertController::class, 'acknowledge'])->name('acknowledge');
         Route::post('/{alert}/dismiss', [VitalsAlertController::class, 'dismiss'])->name('dismiss');
-    });
-
-    // Medication Schedule API endpoints
-    Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
-        Route::get('/{prescription}/schedule', [MedicationScheduleController::class, 'index'])->name('schedule');
-        Route::get('/{prescription}/smart-defaults', [MedicationScheduleController::class, 'smartDefaults'])->name('smart-defaults');
-        Route::post('/{prescription}/configure-schedule', [MedicationScheduleController::class, 'configureSchedule'])->name('configure-schedule');
-        Route::post('/{prescription}/reconfigure-schedule', [MedicationScheduleController::class, 'reconfigureSchedule'])->name('reconfigure-schedule');
-        Route::post('/{prescription}/discontinue', [MedicationScheduleController::class, 'discontinue'])->name('discontinue');
-    });
-
-    Route::prefix('medication-administrations')->name('medication-administrations.')->group(function () {
-        Route::patch('/{administration}/adjust-time', [MedicationScheduleController::class, 'adjustTime'])->name('adjust-time');
-        Route::get('/{administration}/adjustment-history', [MedicationScheduleController::class, 'adjustmentHistory'])->name('adjustment-history');
     });
 });
 

@@ -18,11 +18,11 @@ class VitalSignController extends Controller
             'patient_checkin_id' => 'required|exists:patient_checkins,id',
             'blood_pressure_systolic' => 'nullable|numeric|min:0|max:300',
             'blood_pressure_diastolic' => 'nullable|numeric|min:0|max:200',
-            'temperature' => 'nullable|numeric|min:30|max:45',
-            'pulse_rate' => 'nullable|integer|min:30|max:200',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'weight' => 'nullable|numeric|min:0|max:500',
-            'height' => 'nullable|numeric|min:20|max:300',
+            'temperature' => 'nullable|numeric|min:25|max:50',
+            'pulse_rate' => 'nullable|integer|min:20|max:300',
+            'respiratory_rate' => 'nullable|integer|min:4|max:80',
+            'weight' => 'nullable|numeric|min:0|max:700',
+            'height' => 'nullable|numeric|min:10|max:300',
             'oxygen_saturation' => 'nullable|integer|min:50|max:100',
             'notes' => 'nullable|string',
         ]);
@@ -69,11 +69,11 @@ class VitalSignController extends Controller
         $validated = $request->validate([
             'blood_pressure_systolic' => 'nullable|numeric|min:0|max:300',
             'blood_pressure_diastolic' => 'nullable|numeric|min:0|max:200',
-            'temperature' => 'nullable|numeric|min:30|max:45',
-            'pulse_rate' => 'nullable|integer|min:30|max:200',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'weight' => 'nullable|numeric|min:0|max:500',
-            'height' => 'nullable|numeric|min:20|max:300',
+            'temperature' => 'nullable|numeric|min:25|max:50',
+            'pulse_rate' => 'nullable|integer|min:20|max:300',
+            'respiratory_rate' => 'nullable|integer|min:4|max:80',
+            'weight' => 'nullable|numeric|min:0|max:700',
+            'height' => 'nullable|numeric|min:10|max:300',
             'oxygen_saturation' => 'nullable|integer|min:50|max:100',
             'notes' => 'nullable|string',
         ]);
@@ -100,17 +100,30 @@ class VitalSignController extends Controller
     {
         $this->authorize('create', VitalSign::class);
 
-        $validated = $request->validate([
-            'temperature' => 'required|numeric|min:35|max:45',
-            'blood_pressure_systolic' => 'required|integer|min:60|max:250',
-            'blood_pressure_diastolic' => 'required|integer|min:40|max:150',
-            'pulse_rate' => 'required|integer|min:40|max:200',
-            'respiratory_rate' => 'required|integer|min:8|max:60',
-            'oxygen_saturation' => 'nullable|integer|min:70|max:100',
-            'weight' => 'nullable|numeric|min:0|max:500',
-            'height' => 'nullable|numeric|min:20|max:300',
+        $rules = [
+            'temperature' => 'required|numeric|min:25|max:50',
+            'blood_pressure_systolic' => 'required|integer|min:30|max:300',
+            'blood_pressure_diastolic' => 'required|integer|min:20|max:200',
+            'pulse_rate' => 'required|integer|min:20|max:300',
+            'respiratory_rate' => 'required|integer|min:4|max:80',
+            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
+            'weight' => 'nullable|numeric|min:0|max:700',
+            'height' => 'nullable|numeric|min:10|max:300',
             'notes' => 'nullable|string|max:500',
-        ]);
+        ];
+
+        // Only allow recorded_at if user has permission
+        if (auth()->user()->can('vitals.edit-timestamp')) {
+            $rules['recorded_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Determine recorded_at: use provided value if permitted, otherwise now()
+        $recordedAt = now();
+        if (auth()->user()->can('vitals.edit-timestamp') && ! empty($validated['recorded_at'])) {
+            $recordedAt = $validated['recorded_at'];
+        }
 
         $vitalSign = VitalSign::create([
             'patient_id' => $admission->patient_id,
@@ -126,9 +139,47 @@ class VitalSignController extends Controller
             'height' => $validated['height'] ?? null,
             'oxygen_saturation' => $validated['oxygen_saturation'] ?? null,
             'notes' => $validated['notes'] ?? null,
-            'recorded_at' => now(),
+            'recorded_at' => $recordedAt,
         ]);
 
         return redirect()->back()->with('success', 'Vital signs recorded successfully.');
+    }
+
+    public function updateForAdmission(Request $request, PatientAdmission $admission, VitalSign $vitalSign)
+    {
+        $this->authorize('update', $vitalSign);
+
+        // Ensure the vital sign belongs to this admission
+        if ($vitalSign->patient_admission_id !== $admission->id) {
+            abort(404);
+        }
+
+        $rules = [
+            'temperature' => 'nullable|numeric|min:25|max:50',
+            'blood_pressure_systolic' => 'nullable|integer|min:30|max:300',
+            'blood_pressure_diastolic' => 'nullable|integer|min:20|max:200',
+            'pulse_rate' => 'nullable|integer|min:20|max:300',
+            'respiratory_rate' => 'nullable|integer|min:4|max:80',
+            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
+            'weight' => 'nullable|numeric|min:0|max:700',
+            'height' => 'nullable|numeric|min:10|max:300',
+            'notes' => 'nullable|string|max:500',
+        ];
+
+        // Only allow recorded_at if user has permission
+        if (auth()->user()->can('editTimestamp', $vitalSign)) {
+            $rules['recorded_at'] = 'nullable|date';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Remove recorded_at from update if user doesn't have permission
+        if (! auth()->user()->can('editTimestamp', $vitalSign)) {
+            unset($validated['recorded_at']);
+        }
+
+        $vitalSign->update($validated);
+
+        return redirect()->back()->with('success', 'Vital signs updated successfully.');
     }
 }
