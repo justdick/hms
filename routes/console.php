@@ -17,6 +17,9 @@ Schedule::command('checkins:cancel-old')->dailyAt('00:30');
 // Schedule auto-completion of consultations older than 24 hours
 Schedule::command('consultations:auto-complete')->hourly();
 
+// Generate daily ward charges at midnight
+Schedule::command('admissions:generate-daily-charges')->dailyAt('00:01');
+
 // Check for due and overdue vitals every minute
 Schedule::command('vitals:check-due')->everyMinute();
 
