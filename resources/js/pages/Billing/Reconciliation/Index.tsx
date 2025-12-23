@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -127,7 +127,11 @@ export default function ReconciliationIndex({
         setEndDate(filters.end_date);
         setCashierId('');
         setStatus('');
-        router.get('/billing/accounts/reconciliation', {}, { preserveState: true });
+        router.get(
+            '/billing/accounts/reconciliation',
+            {},
+            { preserveState: true },
+        );
     };
 
     const getStatusBadge = (status: string, variance: number) => {
@@ -142,10 +146,13 @@ export default function ReconciliationIndex({
         if (status === 'variance') {
             const isOverage = variance > 0;
             return (
-                <Badge className={isOverage 
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                }>
+                <Badge
+                    className={
+                        isOverage
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }
+                >
                     <AlertTriangle className="mr-1 h-3 w-3" />
                     {isOverage ? 'Overage' : 'Shortage'}
                 </Badge>
@@ -164,7 +171,10 @@ export default function ReconciliationIndex({
             breadcrumbs={[
                 { title: 'Billing', href: '/billing' },
                 { title: 'Accounts', href: '/billing/accounts' },
-                { title: 'Reconciliation', href: '/billing/accounts/reconciliation' },
+                {
+                    title: 'Reconciliation',
+                    href: '/billing/accounts/reconciliation',
+                },
             ]}
         >
             <Head title="Cash Reconciliation" />
@@ -177,7 +187,8 @@ export default function ReconciliationIndex({
                             Cash Reconciliation
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Reconcile cashier collections against physical cash counts
+                            Reconcile cashier collections against physical cash
+                            counts
                         </p>
                     </div>
                     <Button onClick={() => setShowCreateModal(true)}>
@@ -197,17 +208,23 @@ export default function ReconciliationIndex({
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-wrap gap-3">
-                                {cashiersAwaitingReconciliation.map((cashier) => (
-                                    <div
-                                        key={cashier.id}
-                                        className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-gray-800"
-                                    >
-                                        <span className="font-medium">{cashier.name}</span>
-                                        <span className="text-sm text-gray-500">
-                                            {formatCurrency(cashier.system_total)}
-                                        </span>
-                                    </div>
-                                ))}
+                                {cashiersAwaitingReconciliation.map(
+                                    (cashier) => (
+                                        <div
+                                            key={cashier.id}
+                                            className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-gray-800"
+                                        >
+                                            <span className="font-medium">
+                                                {cashier.name}
+                                            </span>
+                                            <span className="text-sm text-gray-500">
+                                                {formatCurrency(
+                                                    cashier.system_total,
+                                                )}
+                                            </span>
+                                        </div>
+                                    ),
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -258,7 +275,9 @@ export default function ReconciliationIndex({
                                 <Input
                                     type="date"
                                     value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                                    onChange={(e) =>
+                                        setStartDate(e.target.value)
+                                    }
                                     className="mt-1"
                                 />
                             </div>
@@ -277,14 +296,24 @@ export default function ReconciliationIndex({
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Cashier
                                 </label>
-                                <Select value={cashierId || 'all'} onValueChange={(v) => setCashierId(v === 'all' ? '' : v)}>
+                                <Select
+                                    value={cashierId || 'all'}
+                                    onValueChange={(v) =>
+                                        setCashierId(v === 'all' ? '' : v)
+                                    }
+                                >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Cashiers" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Cashiers</SelectItem>
+                                        <SelectItem value="all">
+                                            All Cashiers
+                                        </SelectItem>
                                         {cashiers.map((c) => (
-                                            <SelectItem key={c.id} value={c.id.toString()}>
+                                            <SelectItem
+                                                key={c.id}
+                                                value={c.id.toString()}
+                                            >
                                                 {c.name}
                                             </SelectItem>
                                         ))}
@@ -295,21 +324,39 @@ export default function ReconciliationIndex({
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Status
                                 </label>
-                                <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
+                                <Select
+                                    value={status || 'all'}
+                                    onValueChange={(v) =>
+                                        setStatus(v === 'all' ? '' : v)
+                                    }
+                                >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Statuses</SelectItem>
-                                        <SelectItem value="balanced">Balanced</SelectItem>
-                                        <SelectItem value="variance">With Variance</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="all">
+                                            All Statuses
+                                        </SelectItem>
+                                        <SelectItem value="balanced">
+                                            Balanced
+                                        </SelectItem>
+                                        <SelectItem value="variance">
+                                            With Variance
+                                        </SelectItem>
+                                        <SelectItem value="pending">
+                                            Pending
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="flex gap-2">
-                                <Button onClick={handleFilterApply}>Apply</Button>
-                                <Button variant="outline" onClick={handleClearFilters}>
+                                <Button onClick={handleFilterApply}>
+                                    Apply
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleClearFilters}
+                                >
                                     Clear
                                 </Button>
                             </div>
@@ -329,9 +376,15 @@ export default function ReconciliationIndex({
                                     <TableRow>
                                         <TableHead>Date</TableHead>
                                         <TableHead>Cashier</TableHead>
-                                        <TableHead className="text-right">System Total</TableHead>
-                                        <TableHead className="text-right">Physical Count</TableHead>
-                                        <TableHead className="text-right">Variance</TableHead>
+                                        <TableHead className="text-right">
+                                            System Total
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Physical Count
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Variance
+                                        </TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Reconciled By</TableHead>
                                         <TableHead>Reason</TableHead>
@@ -341,35 +394,55 @@ export default function ReconciliationIndex({
                                     {reconciliations.map((reconciliation) => (
                                         <TableRow key={reconciliation.id}>
                                             <TableCell className="font-medium">
-                                                {formatDate(reconciliation.reconciliation_date)}
+                                                {formatDate(
+                                                    reconciliation.reconciliation_date,
+                                                )}
                                             </TableCell>
                                             <TableCell>
-                                                {reconciliation.cashier?.name || 'Unknown'}
+                                                {reconciliation.cashier?.name ||
+                                                    'Unknown'}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(reconciliation.system_total)}
+                                                {formatCurrency(
+                                                    reconciliation.system_total,
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(reconciliation.physical_count)}
+                                                {formatCurrency(
+                                                    reconciliation.physical_count,
+                                                )}
                                             </TableCell>
-                                            <TableCell className={`text-right font-medium ${
-                                                reconciliation.variance === 0
-                                                    ? 'text-green-600'
-                                                    : reconciliation.variance > 0
-                                                      ? 'text-blue-600'
-                                                      : 'text-red-600'
-                                            }`}>
-                                                {reconciliation.variance >= 0 ? '+' : ''}
-                                                {formatCurrency(reconciliation.variance)}
+                                            <TableCell
+                                                className={`text-right font-medium ${
+                                                    reconciliation.variance ===
+                                                    0
+                                                        ? 'text-green-600'
+                                                        : reconciliation.variance >
+                                                            0
+                                                          ? 'text-blue-600'
+                                                          : 'text-red-600'
+                                                }`}
+                                            >
+                                                {reconciliation.variance >= 0
+                                                    ? '+'
+                                                    : ''}
+                                                {formatCurrency(
+                                                    reconciliation.variance,
+                                                )}
                                             </TableCell>
                                             <TableCell>
-                                                {getStatusBadge(reconciliation.status, reconciliation.variance)}
+                                                {getStatusBadge(
+                                                    reconciliation.status,
+                                                    reconciliation.variance,
+                                                )}
                                             </TableCell>
                                             <TableCell>
-                                                {reconciliation.finance_officer?.name || 'Unknown'}
+                                                {reconciliation.finance_officer
+                                                    ?.name || 'Unknown'}
                                             </TableCell>
                                             <TableCell className="max-w-[200px] truncate">
-                                                {reconciliation.variance_reason || '-'}
+                                                {reconciliation.variance_reason ||
+                                                    '-'}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -377,7 +450,8 @@ export default function ReconciliationIndex({
                             </Table>
                         ) : (
                             <div className="py-8 text-center text-muted-foreground">
-                                No reconciliations found for the selected filters
+                                No reconciliations found for the selected
+                                filters
                             </div>
                         )}
                     </CardContent>

@@ -81,18 +81,12 @@ export function ImagingOrderDialog({
     const [search, setSearch] = useState('');
     const [services, setServices] = useState<ImagingService[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedService, setSelectedService] = useState<ImagingService | null>(null);
+    const [selectedService, setSelectedService] =
+        useState<ImagingService | null>(null);
     const [modalityFilter, setModalityFilter] = useState('all');
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-    const {
-        data,
-        setData,
-        post,
-        processing,
-        reset,
-        errors,
-    } = useForm({
+    const { data, setData, post, processing, reset, errors } = useForm({
         lab_service_id: '',
         priority: 'routine',
         special_instructions: '',
@@ -115,7 +109,7 @@ export function ImagingOrderDialog({
                 const response = await fetch(url);
                 const data = await response.json();
                 const filtered = data.filter(
-                    (s: ImagingService) => !excludeIds.includes(s.id)
+                    (s: ImagingService) => !excludeIds.includes(s.id),
                 );
                 setServices(filtered);
             } catch (error) {
@@ -125,7 +119,7 @@ export function ImagingOrderDialog({
                 setLoading(false);
             }
         },
-        [excludeIds]
+        [excludeIds],
     );
 
     const handleSearchChange = useCallback(
@@ -143,7 +137,7 @@ export function ImagingOrderDialog({
                 searchServices(value, modalityFilter);
             }, 300);
         },
-        [searchServices, modalityFilter]
+        [searchServices, modalityFilter],
     );
 
     const handleModalityChange = (modality: string) => {
@@ -192,7 +186,9 @@ export function ImagingOrderDialog({
         }
     }, [open]);
 
-    const isUnpriced = selectedService && (selectedService.price === null || selectedService.price === 0);
+    const isUnpriced =
+        selectedService &&
+        (selectedService.price === null || selectedService.price === 0);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -203,21 +199,30 @@ export function ImagingOrderDialog({
                         Order Imaging Study
                     </DialogTitle>
                     <DialogDescription>
-                        Select an imaging study type and provide clinical indication.
+                        Select an imaging study type and provide clinical
+                        indication.
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Modality Filter */}
                     <div>
-                        <Label htmlFor="modality-filter">Filter by Modality</Label>
-                        <Select value={modalityFilter} onValueChange={handleModalityChange}>
+                        <Label htmlFor="modality-filter">
+                            Filter by Modality
+                        </Label>
+                        <Select
+                            value={modalityFilter}
+                            onValueChange={handleModalityChange}
+                        >
                             <SelectTrigger id="modality-filter">
                                 <SelectValue placeholder="Select modality" />
                             </SelectTrigger>
                             <SelectContent>
                                 {MODALITIES.map((modality) => (
-                                    <SelectItem key={modality.value} value={modality.value}>
+                                    <SelectItem
+                                        key={modality.value}
+                                        value={modality.value}
+                                    >
                                         {modality.label}
                                     </SelectItem>
                                 ))}
@@ -228,7 +233,10 @@ export function ImagingOrderDialog({
                     {/* Imaging Study Selection */}
                     <div>
                         <Label>Imaging Study</Label>
-                        <Popover open={serviceSelectOpen} onOpenChange={setServiceSelectOpen}>
+                        <Popover
+                            open={serviceSelectOpen}
+                            onOpenChange={setServiceSelectOpen}
+                        >
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="outline"
@@ -244,7 +252,10 @@ export function ImagingOrderDialog({
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[450px] p-0" align="start">
+                            <PopoverContent
+                                className="w-[450px] p-0"
+                                align="start"
+                            >
                                 <Command shouldFilter={false}>
                                     <CommandInput
                                         placeholder="Type at least 2 characters to search..."
@@ -259,26 +270,35 @@ export function ImagingOrderDialog({
                                         )}
                                         {!loading && search.length < 2 && (
                                             <div className="py-6 text-center text-sm text-muted-foreground">
-                                                Type at least 2 characters to search
+                                                Type at least 2 characters to
+                                                search
                                             </div>
                                         )}
-                                        {!loading && search.length >= 2 && services.length === 0 && (
-                                            <CommandEmpty>
-                                                No imaging study found for "{search}"
-                                            </CommandEmpty>
-                                        )}
+                                        {!loading &&
+                                            search.length >= 2 &&
+                                            services.length === 0 && (
+                                                <CommandEmpty>
+                                                    No imaging study found for "
+                                                    {search}"
+                                                </CommandEmpty>
+                                            )}
                                         {!loading && services.length > 0 && (
                                             <CommandGroup>
                                                 {services.map((service) => (
                                                     <CommandItem
                                                         key={service.id}
                                                         value={service.id.toString()}
-                                                        onSelect={() => handleSelect(service)}
+                                                        onSelect={() =>
+                                                            handleSelect(
+                                                                service,
+                                                            )
+                                                        }
                                                         className="cursor-pointer"
                                                     >
                                                         <Check
                                                             className={`mr-2 h-4 w-4 ${
-                                                                selectedService?.id === service.id
+                                                                selectedService?.id ===
+                                                                service.id
                                                                     ? 'opacity-100'
                                                                     : 'opacity-0'
                                                             }`}
@@ -286,24 +306,40 @@ export function ImagingOrderDialog({
                                                         <div className="flex flex-1 flex-col gap-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-medium">
-                                                                    {service.name}
+                                                                    {
+                                                                        service.name
+                                                                    }
                                                                 </span>
-                                                                <Badge variant="outline" className="text-xs">
-                                                                    {service.code}
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-xs"
+                                                                >
+                                                                    {
+                                                                        service.code
+                                                                    }
                                                                 </Badge>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                                 <span>
-                                                                    {service.modality || service.category}
+                                                                    {service.modality ||
+                                                                        service.category}
                                                                 </span>
-                                                                {service.price !== null && service.price > 0 && (
-                                                                    <>
-                                                                        <span>•</span>
-                                                                        <span>
-                                                                            GH₵{service.price.toFixed(2)}
-                                                                        </span>
-                                                                    </>
-                                                                )}
+                                                                {service.price !==
+                                                                    null &&
+                                                                    service.price >
+                                                                        0 && (
+                                                                        <>
+                                                                            <span>
+                                                                                •
+                                                                            </span>
+                                                                            <span>
+                                                                                GH₵
+                                                                                {service.price.toFixed(
+                                                                                    2,
+                                                                                )}
+                                                                            </span>
+                                                                        </>
+                                                                    )}
                                                             </div>
                                                         </div>
                                                     </CommandItem>
@@ -320,11 +356,14 @@ export function ImagingOrderDialog({
                             <div className="mt-2 rounded-md bg-muted p-3 text-sm">
                                 <div className="flex items-center gap-2">
                                     <Scan className="h-4 w-4 text-purple-600" />
-                                    <span className="font-medium">{selectedService.name}</span>
+                                    <span className="font-medium">
+                                        {selectedService.name}
+                                    </span>
                                 </div>
                                 <p className="mt-1 text-muted-foreground">
                                     {selectedService.code} •{' '}
-                                    {selectedService.modality || selectedService.category}
+                                    {selectedService.modality ||
+                                        selectedService.category}
                                 </p>
                             </div>
                         )}
@@ -337,17 +376,23 @@ export function ImagingOrderDialog({
                                     Unpriced Study - External Referral
                                 </AlertTitle>
                                 <AlertDescription className="text-amber-700 dark:text-amber-300">
-                                    <p>This imaging study has no price configured in the system.</p>
+                                    <p>
+                                        This imaging study has no price
+                                        configured in the system.
+                                    </p>
                                     <p className="mt-1 flex items-center gap-1">
                                         <ExternalLink className="h-3 w-3" />
-                                        Patient will need to do this study at an external facility.
+                                        Patient will need to do this study at an
+                                        external facility.
                                     </p>
                                 </AlertDescription>
                             </Alert>
                         )}
 
                         {errors.lab_service_id && (
-                            <p className="mt-1 text-sm text-red-500">{errors.lab_service_id}</p>
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.lab_service_id}
+                            </p>
                         )}
                     </div>
 
@@ -356,7 +401,9 @@ export function ImagingOrderDialog({
                         <Label htmlFor="priority">Priority</Label>
                         <Select
                             value={data.priority}
-                            onValueChange={(value) => setData('priority', value)}
+                            onValueChange={(value) =>
+                                setData('priority', value)
+                            }
                         >
                             <SelectTrigger id="priority">
                                 <SelectValue />
@@ -364,23 +411,30 @@ export function ImagingOrderDialog({
                             <SelectContent>
                                 <SelectItem value="routine">Routine</SelectItem>
                                 <SelectItem value="urgent">Urgent</SelectItem>
-                                <SelectItem value="stat">STAT (Immediate)</SelectItem>
+                                <SelectItem value="stat">
+                                    STAT (Immediate)
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     {/* Clinical Indication */}
                     <div>
-                        <Label htmlFor="clinical-indication">Clinical Indication</Label>
+                        <Label htmlFor="clinical-indication">
+                            Clinical Indication
+                        </Label>
                         <Textarea
                             id="clinical-indication"
                             placeholder="Describe the clinical indication for this imaging study..."
                             value={data.special_instructions}
-                            onChange={(e) => setData('special_instructions', e.target.value)}
+                            onChange={(e) =>
+                                setData('special_instructions', e.target.value)
+                            }
                             rows={4}
                         />
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Provide relevant clinical history and reason for the study.
+                            Provide relevant clinical history and reason for the
+                            study.
                         </p>
                     </div>
 

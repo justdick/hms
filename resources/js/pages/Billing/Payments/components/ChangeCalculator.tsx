@@ -2,7 +2,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, ArrowRight, Calculator, CheckCircle2, Minus } from 'lucide-react';
+import {
+    AlertTriangle,
+    ArrowRight,
+    Calculator,
+    CheckCircle2,
+    Minus,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export interface ChangeCalculationResult {
@@ -23,12 +29,12 @@ interface ChangeCalculatorProps {
 
 /**
  * ChangeCalculator Component
- * 
+ *
  * Displays an amount tendered input field for cash payments.
  * Calculates and displays change to return when tendered exceeds due.
  * Shows warning when tendered is less than due.
  * Shows calculation breakdown (Tendered - Due = Change).
- * 
+ *
  * Requirements: 4.1, 4.2, 4.3, 4.4
  */
 export function ChangeCalculator({
@@ -39,7 +45,7 @@ export function ChangeCalculator({
     showCard = true,
 }: ChangeCalculatorProps) {
     const [amountTendered, setAmountTendered] = useState<number>(
-        initialAmountTendered ?? amountDue
+        initialAmountTendered ?? amountDue,
     );
 
     // Update amount tendered when amountDue changes
@@ -61,7 +67,10 @@ export function ChangeCalculator({
         <div className="space-y-4">
             {/* Amount Tendered Input - Requirement 4.1 */}
             <div className="space-y-2">
-                <Label htmlFor="amount-tendered" className="flex items-center gap-2">
+                <Label
+                    htmlFor="amount-tendered"
+                    className="flex items-center gap-2"
+                >
                     <Calculator className="h-4 w-4" />
                     Amount Tendered by Patient
                 </Label>
@@ -76,7 +85,10 @@ export function ChangeCalculator({
                     className="text-lg font-semibold"
                     aria-describedby="amount-tendered-help"
                 />
-                <p id="amount-tendered-help" className="text-xs text-muted-foreground">
+                <p
+                    id="amount-tendered-help"
+                    className="text-xs text-muted-foreground"
+                >
                     Enter the cash amount received from the patient
                 </p>
             </div>
@@ -87,27 +99,35 @@ export function ChangeCalculator({
                     <div className="space-y-2">
                         {/* Tendered */}
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Amount Tendered:</span>
-                            <span className="font-medium">{formatCurrency(amountTendered)}</span>
+                            <span className="text-muted-foreground">
+                                Amount Tendered:
+                            </span>
+                            <span className="font-medium">
+                                {formatCurrency(amountTendered)}
+                            </span>
                         </div>
-                        
+
                         {/* Due */}
                         <div className="flex items-center justify-between text-sm">
                             <span className="flex items-center gap-1 text-muted-foreground">
                                 <Minus className="h-3 w-3" />
                                 Amount Due:
                             </span>
-                            <span className="font-medium">{formatCurrency(amountDue)}</span>
+                            <span className="font-medium">
+                                {formatCurrency(amountDue)}
+                            </span>
                         </div>
-                        
+
                         {/* Divider */}
-                        <div className="border-t border-border/50 my-2" />
-                        
+                        <div className="my-2 border-t border-border/50" />
+
                         {/* Change Result */}
                         <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1 font-medium">
                                 <ArrowRight className="h-4 w-4" />
-                                {calculation.isSufficient ? 'Change to Return:' : 'Amount Short:'}
+                                {calculation.isSufficient
+                                    ? 'Change to Return:'
+                                    : 'Amount Short:'}
                             </span>
                             <span
                                 className={`text-lg font-bold ${
@@ -118,7 +138,9 @@ export function ChangeCalculator({
                             >
                                 {calculation.isSufficient
                                     ? formatCurrency(calculation.change)
-                                    : formatCurrency(Math.abs(calculation.change))}
+                                    : formatCurrency(
+                                          Math.abs(calculation.change),
+                                      )}
                             </span>
                         </div>
                     </div>
@@ -133,7 +155,11 @@ export function ChangeCalculator({
                         <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
                             <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                             <AlertDescription className="text-green-700 dark:text-green-300">
-                                Return <span className="font-bold">{formatCurrency(calculation.change)}</span> change to the patient
+                                Return{' '}
+                                <span className="font-bold">
+                                    {formatCurrency(calculation.change)}
+                                </span>{' '}
+                                change to the patient
                             </AlertDescription>
                         </Alert>
                     )}
@@ -150,11 +176,19 @@ export function ChangeCalculator({
 
                     {/* Insufficient Payment - Requirement 4.3 */}
                     {!calculation.isSufficient && (
-                        <Alert variant="destructive" className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                        <Alert
+                            variant="destructive"
+                            className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+                        >
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription>
                                 Insufficient payment! Patient needs to provide{' '}
-                                <span className="font-bold">{formatCurrency(Math.abs(calculation.change))}</span> more
+                                <span className="font-bold">
+                                    {formatCurrency(
+                                        Math.abs(calculation.change),
+                                    )}
+                                </span>{' '}
+                                more
                             </AlertDescription>
                         </Alert>
                     )}
@@ -174,19 +208,33 @@ export function ChangeCalculator({
                         <QuickAmountButton
                             label="Round Up"
                             amount={Math.ceil(amountDue / 10) * 10}
-                            onClick={() => handleAmountChange((Math.ceil(amountDue / 10) * 10).toString())}
+                            onClick={() =>
+                                handleAmountChange(
+                                    (Math.ceil(amountDue / 10) * 10).toString(),
+                                )
+                            }
                             formatCurrency={formatCurrency}
                         />
                         <QuickAmountButton
                             label="Round Up 50"
                             amount={Math.ceil(amountDue / 50) * 50}
-                            onClick={() => handleAmountChange((Math.ceil(amountDue / 50) * 50).toString())}
+                            onClick={() =>
+                                handleAmountChange(
+                                    (Math.ceil(amountDue / 50) * 50).toString(),
+                                )
+                            }
                             formatCurrency={formatCurrency}
                         />
                         <QuickAmountButton
                             label="Round Up 100"
                             amount={Math.ceil(amountDue / 100) * 100}
-                            onClick={() => handleAmountChange((Math.ceil(amountDue / 100) * 100).toString())}
+                            onClick={() =>
+                                handleAmountChange(
+                                    (
+                                        Math.ceil(amountDue / 100) * 100
+                                    ).toString(),
+                                )
+                            }
                             formatCurrency={formatCurrency}
                         />
                     </>
@@ -240,7 +288,7 @@ function QuickAmountButton({
 /**
  * Utility function to calculate change
  * Can be used independently for testing or other components
- * 
+ *
  * Property 7: Change calculation accuracy
  * For any cash payment where tendered amount exceeds due amount,
  * the calculated change SHALL equal tendered minus due.
@@ -248,7 +296,7 @@ function QuickAmountButton({
  */
 export function calculateChange(
     amountTendered: number,
-    amountDue: number
+    amountDue: number,
 ): ChangeCalculationResult {
     const change = amountTendered - amountDue;
     const isSufficient = amountTendered >= amountDue;

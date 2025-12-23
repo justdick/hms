@@ -1,8 +1,12 @@
 import { InsuranceCoverageBadge } from '@/components/Insurance/InsuranceCoverageBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Dialog,
     DialogContent,
@@ -20,11 +24,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { router } from '@inertiajs/react';
 import {
     Banknote,
@@ -115,7 +114,7 @@ type ModalStep = 'charges' | 'payment' | 'success';
 
 /**
  * PatientBillingModal Component
- * 
+ *
  * Consolidated billing modal with:
  * - Patient info header
  * - Accordion-style visits with charges
@@ -136,8 +135,12 @@ export function PatientBillingModal({
     onViewReceipt,
 }: PatientBillingModalProps) {
     const [step, setStep] = useState<ModalStep>('charges');
-    const [expandedVisits, setExpandedVisits] = useState<Set<number>>(new Set());
-    const [selectedCharges, setSelectedCharges] = useState<Set<number>>(new Set());
+    const [expandedVisits, setExpandedVisits] = useState<Set<number>>(
+        new Set(),
+    );
+    const [selectedCharges, setSelectedCharges] = useState<Set<number>>(
+        new Set(),
+    );
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [amountTendered, setAmountTendered] = useState(0);
     const [notes, setNotes] = useState('');
@@ -146,18 +149,26 @@ export function PatientBillingModal({
 
     // Get all charges from all visits
     const allCharges = patient?.visits.flatMap((v) => v.charges) ?? [];
-    
+
     // Get selected charges
-    const selectedChargesList = allCharges.filter((c) => selectedCharges.has(c.id));
-    
+    const selectedChargesList = allCharges.filter((c) =>
+        selectedCharges.has(c.id),
+    );
+
     // Calculate totals for selected charges (parse strings to numbers)
-    const totalAmount = selectedChargesList.reduce((sum, c) => sum + Number(c.amount), 0);
+    const totalAmount = selectedChargesList.reduce(
+        (sum, c) => sum + Number(c.amount),
+        0,
+    );
     const totalPatientOwes = selectedChargesList.reduce(
-        (sum, c) => sum + Number(c.is_insurance_claim ? c.patient_copay_amount : c.amount),
+        (sum, c) =>
+            sum +
+            Number(c.is_insurance_claim ? c.patient_copay_amount : c.amount),
         0,
     );
     const totalInsuranceCovered = selectedChargesList.reduce(
-        (sum, c) => sum + Number(c.is_insurance_claim ? c.insurance_covered_amount : 0),
+        (sum, c) =>
+            sum + Number(c.is_insurance_claim ? c.insurance_covered_amount : 0),
         0,
     );
 
@@ -170,7 +181,9 @@ export function PatientBillingModal({
                 setExpandedVisits(new Set([patient.visits[0].checkin_id]));
             }
             // Select all charges by default
-            const allChargeIds = patient.visits.flatMap((v) => v.charges.map((c) => c.id));
+            const allChargeIds = patient.visits.flatMap((v) =>
+                v.charges.map((c) => c.id),
+            );
             setSelectedCharges(new Set(allChargeIds));
             setPaymentMethod('cash');
             setNotes('');
@@ -300,10 +313,9 @@ export function PatientBillingModal({
 
     if (!patient) return null;
 
-
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden flex flex-col">
+            <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
                 <DialogHeader className="flex-shrink-0">
                     <DialogTitle>
                         {step === 'charges' && 'Patient Billing'}
@@ -311,9 +323,12 @@ export function PatientBillingModal({
                         {step === 'success' && 'Payment Successful'}
                     </DialogTitle>
                     <DialogDescription>
-                        {step === 'charges' && 'Select charges and process payment'}
-                        {step === 'payment' && 'Complete the payment transaction'}
-                        {step === 'success' && 'Payment has been processed successfully'}
+                        {step === 'charges' &&
+                            'Select charges and process payment'}
+                        {step === 'payment' &&
+                            'Complete the payment transaction'}
+                        {step === 'success' &&
+                            'Payment has been processed successfully'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -329,7 +344,8 @@ export function PatientBillingModal({
                                     </div>
                                     <div>
                                         <h3 className="font-semibold">
-                                            {patient.patient.first_name} {patient.patient.last_name}
+                                            {patient.patient.first_name}{' '}
+                                            {patient.patient.last_name}
                                         </h3>
                                         <p className="text-sm text-muted-foreground">
                                             {patient.patient.patient_number}
@@ -347,16 +363,22 @@ export function PatientBillingModal({
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950/30">
-                                    <p className="text-xs text-muted-foreground">Patient Owes</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Patient Owes
+                                    </p>
                                     <p className="text-xl font-bold text-orange-600">
                                         {formatCurrency(totalPatientOwes)}
                                     </p>
                                 </div>
                                 {totalInsuranceCovered > 0 && (
                                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30">
-                                        <p className="text-xs text-muted-foreground">Insurance Covers</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Insurance Covers
+                                        </p>
                                         <p className="text-xl font-bold text-green-600">
-                                            {formatCurrency(totalInsuranceCovered)}
+                                            {formatCurrency(
+                                                totalInsuranceCovered,
+                                            )}
                                         </p>
                                     </div>
                                 )}
@@ -367,15 +389,25 @@ export function PatientBillingModal({
                                 <div className="flex items-center gap-2">
                                     <Checkbox
                                         id="select-all"
-                                        checked={selectedCharges.size === allCharges.length}
+                                        checked={
+                                            selectedCharges.size ===
+                                            allCharges.length
+                                        }
                                         onCheckedChange={toggleAllCharges}
                                     />
-                                    <Label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
-                                        {selectedCharges.size} of {allCharges.length} charges selected
+                                    <Label
+                                        htmlFor="select-all"
+                                        className="cursor-pointer text-sm font-medium"
+                                    >
+                                        {selectedCharges.size} of{' '}
+                                        {allCharges.length} charges selected
                                     </Label>
                                 </div>
                                 <span className="text-sm text-muted-foreground">
-                                    {patient.visits_with_charges} visit{patient.visits_with_charges !== 1 ? 's' : ''}
+                                    {patient.visits_with_charges} visit
+                                    {patient.visits_with_charges !== 1
+                                        ? 's'
+                                        : ''}
                                 </span>
                             </div>
 
@@ -384,12 +416,18 @@ export function PatientBillingModal({
                                 {patient.visits.map((visit) => (
                                     <Collapsible
                                         key={visit.checkin_id}
-                                        open={expandedVisits.has(visit.checkin_id)}
-                                        onOpenChange={() => toggleVisit(visit.checkin_id)}
+                                        open={expandedVisits.has(
+                                            visit.checkin_id,
+                                        )}
+                                        onOpenChange={() =>
+                                            toggleVisit(visit.checkin_id)
+                                        }
                                     >
                                         <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-3 hover:bg-muted/50">
                                             <div className="flex items-center gap-2">
-                                                {expandedVisits.has(visit.checkin_id) ? (
+                                                {expandedVisits.has(
+                                                    visit.checkin_id,
+                                                ) ? (
                                                     <ChevronDown className="h-4 w-4" />
                                                 ) : (
                                                     <ChevronRight className="h-4 w-4" />
@@ -399,17 +437,29 @@ export function PatientBillingModal({
                                                         {visit.department.name}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {visit.checked_in_at} • {visit.charges_count} charge{visit.charges_count !== 1 ? 's' : ''}
+                                                        {visit.checked_in_at} •{' '}
+                                                        {visit.charges_count}{' '}
+                                                        charge
+                                                        {visit.charges_count !==
+                                                        1
+                                                            ? 's'
+                                                            : ''}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-sm font-semibold text-orange-600">
-                                                    {formatCurrency(visit.patient_copay)}
+                                                    {formatCurrency(
+                                                        visit.patient_copay,
+                                                    )}
                                                 </p>
-                                                {visit.insurance_covered > 0 && (
+                                                {visit.insurance_covered >
+                                                    0 && (
                                                     <p className="text-xs text-green-600">
-                                                        Ins: {formatCurrency(visit.insurance_covered)}
+                                                        Ins:{' '}
+                                                        {formatCurrency(
+                                                            visit.insurance_covered,
+                                                        )}
                                                     </p>
                                                 )}
                                             </div>
@@ -420,30 +470,54 @@ export function PatientBillingModal({
                                                     <div
                                                         key={charge.id}
                                                         className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-                                                            selectedCharges.has(charge.id)
+                                                            selectedCharges.has(
+                                                                charge.id,
+                                                            )
                                                                 ? 'border-primary/50 bg-primary/5'
                                                                 : 'bg-muted/20'
                                                         }`}
                                                     >
                                                         <Checkbox
-                                                            checked={selectedCharges.has(charge.id)}
-                                                            onCheckedChange={() => toggleCharge(charge.id)}
+                                                            checked={selectedCharges.has(
+                                                                charge.id,
+                                                            )}
+                                                            onCheckedChange={() =>
+                                                                toggleCharge(
+                                                                    charge.id,
+                                                                )
+                                                            }
                                                         />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className="text-sm font-medium truncate">
-                                                                    {charge.description}
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="truncate text-sm font-medium">
+                                                                    {
+                                                                        charge.description
+                                                                    }
                                                                 </span>
                                                                 <InsuranceCoverageBadge
-                                                                    isInsuranceClaim={charge.is_insurance_claim}
-                                                                    insuranceCoveredAmount={charge.insurance_covered_amount}
-                                                                    patientCopayAmount={charge.patient_copay_amount}
-                                                                    amount={charge.amount}
+                                                                    isInsuranceClaim={
+                                                                        charge.is_insurance_claim
+                                                                    }
+                                                                    insuranceCoveredAmount={
+                                                                        charge.insurance_covered_amount
+                                                                    }
+                                                                    patientCopayAmount={
+                                                                        charge.patient_copay_amount
+                                                                    }
+                                                                    amount={
+                                                                        charge.amount
+                                                                    }
                                                                     className="text-xs"
                                                                 />
                                                             </div>
                                                             <p className="text-xs text-muted-foreground">
-                                                                {formatServiceType(charge.service_type)} • {formatDateTime(charge.charged_at)}
+                                                                {formatServiceType(
+                                                                    charge.service_type,
+                                                                )}{' '}
+                                                                •{' '}
+                                                                {formatDateTime(
+                                                                    charge.charged_at,
+                                                                )}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-2">
@@ -452,44 +526,58 @@ export function PatientBillingModal({
                                                                     {formatCurrency(
                                                                         charge.is_insurance_claim
                                                                             ? charge.patient_copay_amount
-                                                                            : charge.amount
+                                                                            : charge.amount,
                                                                     )}
                                                                 </p>
                                                                 {charge.is_insurance_claim && (
                                                                     <p className="text-[10px] text-muted-foreground">
-                                                                        of {formatCurrency(charge.amount)}
+                                                                        of{' '}
+                                                                        {formatCurrency(
+                                                                            charge.amount,
+                                                                        )}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                             {/* Waive/Adjust Actions */}
-                                                            {(permissions.canWaiveCharges || permissions.canAdjustCharges) && (
+                                                            {(permissions.canWaiveCharges ||
+                                                                permissions.canAdjustCharges) && (
                                                                 <div className="flex gap-1">
-                                                                    {permissions.canWaiveCharges && onWaiveCharge && (
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            className="h-7 px-2 text-xs"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                onWaiveCharge(charge.id);
-                                                                            }}
-                                                                        >
-                                                                            Waive
-                                                                        </Button>
-                                                                    )}
-                                                                    {permissions.canAdjustCharges && onAdjustCharge && (
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            className="h-7 px-2 text-xs"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                onAdjustCharge(charge.id);
-                                                                            }}
-                                                                        >
-                                                                            Adjust
-                                                                        </Button>
-                                                                    )}
+                                                                    {permissions.canWaiveCharges &&
+                                                                        onWaiveCharge && (
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="h-7 px-2 text-xs"
+                                                                                onClick={(
+                                                                                    e,
+                                                                                ) => {
+                                                                                    e.stopPropagation();
+                                                                                    onWaiveCharge(
+                                                                                        charge.id,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                Waive
+                                                                            </Button>
+                                                                        )}
+                                                                    {permissions.canAdjustCharges &&
+                                                                        onAdjustCharge && (
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="h-7 px-2 text-xs"
+                                                                                onClick={(
+                                                                                    e,
+                                                                                ) => {
+                                                                                    e.stopPropagation();
+                                                                                    onAdjustCharge(
+                                                                                        charge.id,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                Adjust
+                                                                            </Button>
+                                                                        )}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -510,25 +598,31 @@ export function PatientBillingModal({
                         </div>
                     )}
 
-
                     {/* Payment Step */}
                     {step === 'payment' && (
                         <div className="space-y-4">
                             {/* Amount to Collect */}
                             <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-center dark:border-orange-800 dark:bg-orange-950/30">
-                                <p className="text-sm text-muted-foreground">Amount to Collect</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Amount to Collect
+                                </p>
                                 <p className="text-3xl font-bold text-orange-600">
                                     {formatCurrency(totalPatientOwes)}
                                 </p>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    {selectedCharges.size} charge{selectedCharges.size !== 1 ? 's' : ''} selected
+                                    {selectedCharges.size} charge
+                                    {selectedCharges.size !== 1 ? 's' : ''}{' '}
+                                    selected
                                 </p>
                             </div>
 
                             {/* Payment Method Selection */}
                             <div className="space-y-2">
                                 <Label>Payment Method</Label>
-                                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <Select
+                                    value={paymentMethod}
+                                    onValueChange={setPaymentMethod}
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
@@ -574,7 +668,9 @@ export function PatientBillingModal({
 
                             {/* Notes */}
                             <div className="space-y-2">
-                                <Label htmlFor="payment-notes">Notes (Optional)</Label>
+                                <Label htmlFor="payment-notes">
+                                    Notes (Optional)
+                                </Label>
                                 <Textarea
                                     id="payment-notes"
                                     value={notes}
@@ -595,7 +691,7 @@ export function PatientBillingModal({
 
                     {/* Success Step */}
                     {step === 'success' && (
-                        <div className="space-y-6 text-center py-8">
+                        <div className="space-y-6 py-8 text-center">
                             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                                 <CheckCircle2 className="h-12 w-12 text-green-600" />
                             </div>
@@ -603,8 +699,9 @@ export function PatientBillingModal({
                                 <p className="text-2xl font-bold text-green-600">
                                     {formatCurrency(totalPatientOwes)}
                                 </p>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Payment received via {paymentMethod.replace('_', ' ')}
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Payment received via{' '}
+                                    {paymentMethod.replace('_', ' ')}
                                 </p>
                             </div>
                         </div>
@@ -629,12 +726,19 @@ export function PatientBillingModal({
 
                     {step === 'payment' && (
                         <>
-                            <Button variant="outline" onClick={() => setStep('charges')}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setStep('charges')}
+                            >
                                 Back
                             </Button>
                             <Button
                                 onClick={handleProcessPayment}
-                                disabled={isProcessing || (paymentMethod === 'cash' && amountTendered < totalPatientOwes)}
+                                disabled={
+                                    isProcessing ||
+                                    (paymentMethod === 'cash' &&
+                                        amountTendered < totalPatientOwes)
+                                }
                             >
                                 {isProcessing ? (
                                     <>
@@ -668,10 +772,7 @@ export function PatientBillingModal({
                                 <Eye className="mr-2 h-4 w-4" />
                                 View
                             </Button>
-                            <Button
-                                variant="ghost"
-                                onClick={handleClose}
-                            >
+                            <Button variant="ghost" onClick={handleClose}>
                                 Done
                             </Button>
                         </div>

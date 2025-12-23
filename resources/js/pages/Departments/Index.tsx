@@ -53,9 +53,15 @@ const defaultTypes: Record<string, string> = {
     support: 'Support',
 };
 
-export default function DepartmentsIndex({ departments, types = defaultTypes, stats, filters }: Props) {
+export default function DepartmentsIndex({
+    departments,
+    types = defaultTypes,
+    stats,
+    filters,
+}: Props) {
     const [showModal, setShowModal] = useState(false);
-    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+    const [editingDepartment, setEditingDepartment] =
+        useState<Department | null>(null);
 
     const handleEdit = (department: Department) => {
         setEditingDepartment(department);

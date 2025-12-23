@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -124,7 +124,6 @@ interface Props {
     permissions?: Permissions;
 }
 
-
 export default function HistoryIndex({
     payments,
     cashiers,
@@ -136,12 +135,20 @@ export default function HistoryIndex({
     const [startDate, setStartDate] = useState(filters.start_date);
     const [endDate, setEndDate] = useState(filters.end_date);
     const [cashierId, setCashierId] = useState(filters.cashier_id || '');
-    const [patientSearch, setPatientSearch] = useState(filters.patient_search || '');
-    const [paymentMethod, setPaymentMethod] = useState(filters.payment_method || '');
+    const [patientSearch, setPatientSearch] = useState(
+        filters.patient_search || '',
+    );
+    const [paymentMethod, setPaymentMethod] = useState(
+        filters.payment_method || '',
+    );
     const [minAmount, setMinAmount] = useState(filters.min_amount || '');
     const [maxAmount, setMaxAmount] = useState(filters.max_amount || '');
-    const [receiptSearch, setReceiptSearch] = useState(filters.receipt_search || '');
-    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+    const [receiptSearch, setReceiptSearch] = useState(
+        filters.receipt_search || '',
+    );
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(
+        null,
+    );
     const [showDetail, setShowDetail] = useState(false);
 
     const formatCurrency = (amount: number) => {
@@ -282,7 +289,6 @@ export default function HistoryIndex({
                     />
                 </div>
 
-
                 {/* Filters */}
                 <Card>
                     <CardHeader className="pb-3">
@@ -300,7 +306,9 @@ export default function HistoryIndex({
                                 <Input
                                     type="date"
                                     value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                                    onChange={(e) =>
+                                        setStartDate(e.target.value)
+                                    }
                                     className="mt-1"
                                 />
                             </div>
@@ -319,14 +327,24 @@ export default function HistoryIndex({
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Cashier
                                 </label>
-                                <Select value={cashierId || 'all'} onValueChange={(v) => setCashierId(v === 'all' ? '' : v)}>
+                                <Select
+                                    value={cashierId || 'all'}
+                                    onValueChange={(v) =>
+                                        setCashierId(v === 'all' ? '' : v)
+                                    }
+                                >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Cashiers" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Cashiers</SelectItem>
+                                        <SelectItem value="all">
+                                            All Cashiers
+                                        </SelectItem>
                                         {cashiers.map((c) => (
-                                            <SelectItem key={c.id} value={c.id.toString()}>
+                                            <SelectItem
+                                                key={c.id}
+                                                value={c.id.toString()}
+                                            >
                                                 {c.name}
                                             </SelectItem>
                                         ))}
@@ -337,14 +355,24 @@ export default function HistoryIndex({
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Payment Method
                                 </label>
-                                <Select value={paymentMethod || 'all'} onValueChange={(v) => setPaymentMethod(v === 'all' ? '' : v)}>
+                                <Select
+                                    value={paymentMethod || 'all'}
+                                    onValueChange={(v) =>
+                                        setPaymentMethod(v === 'all' ? '' : v)
+                                    }
+                                >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Methods" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Methods</SelectItem>
+                                        <SelectItem value="all">
+                                            All Methods
+                                        </SelectItem>
                                         {paymentMethods.map((m) => (
-                                            <SelectItem key={m.id} value={m.code}>
+                                            <SelectItem
+                                                key={m.id}
+                                                value={m.code}
+                                            >
                                                 {m.name}
                                             </SelectItem>
                                         ))}
@@ -356,12 +384,14 @@ export default function HistoryIndex({
                                     Patient Search
                                 </label>
                                 <div className="relative mt-1">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
                                         type="text"
                                         placeholder="Name or patient number"
                                         value={patientSearch}
-                                        onChange={(e) => setPatientSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setPatientSearch(e.target.value)
+                                        }
                                         className="pl-9"
                                     />
                                 </div>
@@ -371,12 +401,14 @@ export default function HistoryIndex({
                                     Receipt Number
                                 </label>
                                 <div className="relative mt-1">
-                                    <Receipt className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Receipt className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
                                         type="text"
                                         placeholder="Search receipt"
                                         value={receiptSearch}
-                                        onChange={(e) => setReceiptSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setReceiptSearch(e.target.value)
+                                        }
                                         className="pl-9"
                                     />
                                 </div>
@@ -389,7 +421,9 @@ export default function HistoryIndex({
                                     type="number"
                                     placeholder="0.00"
                                     value={minAmount}
-                                    onChange={(e) => setMinAmount(e.target.value)}
+                                    onChange={(e) =>
+                                        setMinAmount(e.target.value)
+                                    }
                                     className="mt-1"
                                 />
                             </div>
@@ -401,20 +435,26 @@ export default function HistoryIndex({
                                     type="number"
                                     placeholder="0.00"
                                     value={maxAmount}
-                                    onChange={(e) => setMaxAmount(e.target.value)}
+                                    onChange={(e) =>
+                                        setMaxAmount(e.target.value)
+                                    }
                                     className="mt-1"
                                 />
                             </div>
                         </div>
                         <div className="mt-4 flex gap-2">
-                            <Button onClick={handleFilterApply}>Apply Filters</Button>
-                            <Button variant="outline" onClick={handleClearFilters}>
+                            <Button onClick={handleFilterApply}>
+                                Apply Filters
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={handleClearFilters}
+                            >
                                 Clear
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
-
 
                 {/* Payments Table */}
                 <Card>
@@ -432,28 +472,44 @@ export default function HistoryIndex({
                                             <TableHead>Patient</TableHead>
                                             <TableHead>Description</TableHead>
                                             <TableHead>Method</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
+                                            <TableHead className="text-right">
+                                                Amount
+                                            </TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Cashier</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {payments.data.map((payment) => (
                                             <TableRow key={payment.id}>
                                                 <TableCell className="whitespace-nowrap">
-                                                    {formatDateTime(payment.paid_at)}
+                                                    {formatDateTime(
+                                                        payment.paid_at,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="font-mono text-sm">
-                                                    {payment.receipt_number || '-'}
+                                                    {payment.receipt_number ||
+                                                        '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div>
                                                         <div className="font-medium">
-                                                            {payment.patient_checkin?.patient.name || 'Unknown'}
+                                                            {payment
+                                                                .patient_checkin
+                                                                ?.patient
+                                                                .name ||
+                                                                'Unknown'}
                                                         </div>
                                                         <div className="text-xs text-muted-foreground">
-                                                            {payment.patient_checkin?.patient.patient_number}
+                                                            {
+                                                                payment
+                                                                    .patient_checkin
+                                                                    ?.patient
+                                                                    .patient_number
+                                                            }
                                                         </div>
                                                     </div>
                                                 </TableCell>
@@ -461,22 +517,34 @@ export default function HistoryIndex({
                                                     {payment.description}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getPaymentMethodLabel(payment.metadata?.payment_method)}
+                                                    {getPaymentMethodLabel(
+                                                        payment.metadata
+                                                            ?.payment_method,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium text-green-600">
-                                                    {formatCurrency(payment.paid_amount)}
+                                                    {formatCurrency(
+                                                        payment.paid_amount,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getStatusBadge(payment.status)}
+                                                    {getStatusBadge(
+                                                        payment.status,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {payment.processed_by_user?.name || '-'}
+                                                    {payment.processed_by_user
+                                                        ?.name || '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleViewDetail(payment)}
+                                                        onClick={() =>
+                                                            handleViewDetail(
+                                                                payment,
+                                                            )
+                                                        }
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
@@ -490,28 +558,49 @@ export default function HistoryIndex({
                                 {payments.last_page > 1 && (
                                     <div className="mt-4 flex items-center justify-between">
                                         <div className="text-sm text-muted-foreground">
-                                            Showing {(payments.current_page - 1) * payments.per_page + 1} to{' '}
-                                            {Math.min(payments.current_page * payments.per_page, payments.total)} of{' '}
-                                            {payments.total} results
+                                            Showing{' '}
+                                            {(payments.current_page - 1) *
+                                                payments.per_page +
+                                                1}{' '}
+                                            to{' '}
+                                            {Math.min(
+                                                payments.current_page *
+                                                    payments.per_page,
+                                                payments.total,
+                                            )}{' '}
+                                            of {payments.total} results
                                         </div>
                                         <div className="flex gap-1">
-                                            {payments.links.map((link, index) => (
-                                                <Button
-                                                    key={index}
-                                                    variant={link.active ? 'default' : 'outline'}
-                                                    size="sm"
-                                                    disabled={!link.url}
-                                                    onClick={() => handlePageChange(link.url)}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ))}
+                                            {payments.links.map(
+                                                (link, index) => (
+                                                    <Button
+                                                        key={index}
+                                                        variant={
+                                                            link.active
+                                                                ? 'default'
+                                                                : 'outline'
+                                                        }
+                                                        size="sm"
+                                                        disabled={!link.url}
+                                                        onClick={() =>
+                                                            handlePageChange(
+                                                                link.url,
+                                                            )
+                                                        }
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: link.label,
+                                                        }}
+                                                    />
+                                                ),
+                                            )}
                                         </div>
                                     </div>
                                 )}
                             </>
                         ) : (
                             <div className="py-8 text-center text-muted-foreground">
-                                No payment transactions found for the selected filters
+                                No payment transactions found for the selected
+                                filters
                             </div>
                         )}
                     </CardContent>

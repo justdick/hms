@@ -87,12 +87,18 @@ export default function VitalsModal({
         if (open && checkin) {
             if (isEditMode && existingVitals) {
                 setFormData({
-                    blood_pressure_systolic: existingVitals.blood_pressure_systolic?.toString() || '',
-                    blood_pressure_diastolic: existingVitals.blood_pressure_diastolic?.toString() || '',
+                    blood_pressure_systolic:
+                        existingVitals.blood_pressure_systolic?.toString() ||
+                        '',
+                    blood_pressure_diastolic:
+                        existingVitals.blood_pressure_diastolic?.toString() ||
+                        '',
                     temperature: existingVitals.temperature?.toString() || '',
                     pulse_rate: existingVitals.pulse_rate?.toString() || '',
-                    respiratory_rate: existingVitals.respiratory_rate?.toString() || '',
-                    oxygen_saturation: existingVitals.oxygen_saturation?.toString() || '',
+                    respiratory_rate:
+                        existingVitals.respiratory_rate?.toString() || '',
+                    oxygen_saturation:
+                        existingVitals.oxygen_saturation?.toString() || '',
                     weight: existingVitals.weight?.toString() || '',
                     height: existingVitals.height?.toString() || '',
                     notes: existingVitals.notes || '',
@@ -120,9 +126,9 @@ export default function VitalsModal({
     };
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
         if (errors[field]) {
-            setErrors(prev => {
+            setErrors((prev) => {
                 const newErrors = { ...prev };
                 delete newErrors[field];
                 return newErrors;
@@ -137,12 +143,22 @@ export default function VitalsModal({
 
         const submitData: Record<string, string | number | null> = {};
 
-        if (formData.blood_pressure_systolic) submitData.blood_pressure_systolic = parseFloat(formData.blood_pressure_systolic);
-        if (formData.blood_pressure_diastolic) submitData.blood_pressure_diastolic = parseFloat(formData.blood_pressure_diastolic);
-        if (formData.temperature) submitData.temperature = parseFloat(formData.temperature);
-        if (formData.pulse_rate) submitData.pulse_rate = parseInt(formData.pulse_rate);
-        if (formData.respiratory_rate) submitData.respiratory_rate = parseInt(formData.respiratory_rate);
-        if (formData.oxygen_saturation) submitData.oxygen_saturation = parseInt(formData.oxygen_saturation);
+        if (formData.blood_pressure_systolic)
+            submitData.blood_pressure_systolic = parseFloat(
+                formData.blood_pressure_systolic,
+            );
+        if (formData.blood_pressure_diastolic)
+            submitData.blood_pressure_diastolic = parseFloat(
+                formData.blood_pressure_diastolic,
+            );
+        if (formData.temperature)
+            submitData.temperature = parseFloat(formData.temperature);
+        if (formData.pulse_rate)
+            submitData.pulse_rate = parseInt(formData.pulse_rate);
+        if (formData.respiratory_rate)
+            submitData.respiratory_rate = parseInt(formData.respiratory_rate);
+        if (formData.oxygen_saturation)
+            submitData.oxygen_saturation = parseInt(formData.oxygen_saturation);
         if (formData.weight) submitData.weight = parseFloat(formData.weight);
         if (formData.height) submitData.height = parseFloat(formData.height);
         if (formData.notes) submitData.notes = formData.notes;
@@ -162,22 +178,26 @@ export default function VitalsModal({
                 },
             });
         } else {
-            router.post('/checkin/vitals', {
-                patient_checkin_id: checkin?.id,
-                ...submitData,
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Vital signs recorded successfully');
-                    setProcessing(false);
-                    onSuccess();
+            router.post(
+                '/checkin/vitals',
+                {
+                    patient_checkin_id: checkin?.id,
+                    ...submitData,
                 },
-                onError: (errs) => {
-                    setErrors(errs as Record<string, string>);
-                    toast.error('Failed to record vital signs');
-                    setProcessing(false);
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success('Vital signs recorded successfully');
+                        setProcessing(false);
+                        onSuccess();
+                    },
+                    onError: (errs) => {
+                        setErrors(errs as Record<string, string>);
+                        toast.error('Failed to record vital signs');
+                        setProcessing(false);
+                    },
                 },
-            });
+            );
         }
     };
 
@@ -194,34 +214,51 @@ export default function VitalsModal({
                         {isEditMode ? 'Edit Vital Signs' : 'Record Vital Signs'}
                     </DialogTitle>
                     <p className="text-sm text-muted-foreground">
-                        {checkin.patient.full_name} • {checkin.patient.age} yrs, {checkin.patient.gender} • {checkin.department.name}
+                        {checkin.patient.full_name} • {checkin.patient.age} yrs,{' '}
+                        {checkin.patient.gender} • {checkin.department.name}
                     </p>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Blood Pressure - prominent */}
                     <div className="rounded-lg border bg-muted/30 p-3">
-                        <Label className="text-sm font-medium mb-2 block">Blood Pressure (mmHg)</Label>
+                        <Label className="mb-2 block text-sm font-medium">
+                            Blood Pressure (mmHg)
+                        </Label>
                         <div className="flex items-center gap-2">
                             <Input
                                 value={formData.blood_pressure_systolic}
-                                onChange={(e) => handleInputChange('blood_pressure_systolic', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_pressure_systolic',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Systolic"
                                 type="number"
-                                className="text-center text-lg font-semibold h-11"
+                                className="h-11 text-center text-lg font-semibold"
                             />
-                            <span className="text-xl font-bold text-muted-foreground">/</span>
+                            <span className="text-xl font-bold text-muted-foreground">
+                                /
+                            </span>
                             <Input
                                 value={formData.blood_pressure_diastolic}
-                                onChange={(e) => handleInputChange('blood_pressure_diastolic', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_pressure_diastolic',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Diastolic"
                                 type="number"
-                                className="text-center text-lg font-semibold h-11"
+                                className="h-11 text-center text-lg font-semibold"
                             />
                         </div>
-                        {(errors.blood_pressure_systolic || errors.blood_pressure_diastolic) && (
-                            <p className="text-xs text-destructive mt-1">
-                                {errors.blood_pressure_systolic || errors.blood_pressure_diastolic}
+                        {(errors.blood_pressure_systolic ||
+                            errors.blood_pressure_diastolic) && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {errors.blood_pressure_systolic ||
+                                    errors.blood_pressure_diastolic}
                             </p>
                         )}
                     </div>
@@ -229,10 +266,17 @@ export default function VitalsModal({
                     {/* Row 1: Temp, Pulse, Resp */}
                     <div className="grid grid-cols-3 gap-3">
                         <div>
-                            <Label className="text-xs text-muted-foreground">Temp (°C)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Temp (°C)
+                            </Label>
                             <Input
                                 value={formData.temperature}
-                                onChange={(e) => handleInputChange('temperature', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'temperature',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="37.0"
@@ -240,20 +284,34 @@ export default function VitalsModal({
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Pulse (BPM)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Pulse (BPM)
+                            </Label>
                             <Input
                                 value={formData.pulse_rate}
-                                onChange={(e) => handleInputChange('pulse_rate', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'pulse_rate',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="72"
                                 className="text-center"
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Resp (/min)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Resp (/min)
+                            </Label>
                             <Input
                                 value={formData.respiratory_rate}
-                                onChange={(e) => handleInputChange('respiratory_rate', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'respiratory_rate',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="16"
                                 className="text-center"
@@ -264,20 +322,31 @@ export default function VitalsModal({
                     {/* Row 2: SpO2, Weight, Height */}
                     <div className="grid grid-cols-3 gap-3">
                         <div>
-                            <Label className="text-xs text-muted-foreground">SpO₂ (%)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                SpO₂ (%)
+                            </Label>
                             <Input
                                 value={formData.oxygen_saturation}
-                                onChange={(e) => handleInputChange('oxygen_saturation', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'oxygen_saturation',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="98"
                                 className="text-center"
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Weight (kg)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Weight (kg)
+                            </Label>
                             <Input
                                 value={formData.weight}
-                                onChange={(e) => handleInputChange('weight', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange('weight', e.target.value)
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="70.0"
@@ -285,10 +354,14 @@ export default function VitalsModal({
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Height (cm)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Height (cm)
+                            </Label>
                             <Input
                                 value={formData.height}
-                                onChange={(e) => handleInputChange('height', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange('height', e.target.value)
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="170"
@@ -299,21 +372,31 @@ export default function VitalsModal({
 
                     {/* Notes - compact */}
                     <div>
-                        <Label className="text-xs text-muted-foreground">Notes (Optional)</Label>
+                        <Label className="text-xs text-muted-foreground">
+                            Notes (Optional)
+                        </Label>
                         <Textarea
                             value={formData.notes}
-                            onChange={(e) => handleInputChange('notes', e.target.value)}
+                            onChange={(e) =>
+                                handleInputChange('notes', e.target.value)
+                            }
                             placeholder="Any additional observations..."
                             rows={2}
                         />
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={handleModalClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleModalClose}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={processing}>
-                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             {isEditMode ? 'Update Vitals' : 'Save Vitals'}
                         </Button>
                     </DialogFooter>

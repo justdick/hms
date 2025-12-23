@@ -35,14 +35,25 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316', '#6b7280'];
+const COLORS = [
+    '#10b981',
+    '#3b82f6',
+    '#f59e0b',
+    '#8b5cf6',
+    '#06b6d4',
+    '#f97316',
+    '#6b7280',
+];
 
 export function RevenueSummary({
     revenueByPaymentMethod,
     viewAllHref,
     className,
 }: RevenueSummaryProps) {
-    const totalRevenue = revenueByPaymentMethod.reduce((sum, item) => sum + item.total_amount, 0);
+    const totalRevenue = revenueByPaymentMethod.reduce(
+        (sum, item) => sum + item.total_amount,
+        0,
+    );
 
     const chartData = revenueByPaymentMethod.map((item, index) => ({
         name: item.payment_method,
@@ -56,8 +67,12 @@ export function RevenueSummary({
                 <div className="flex items-center gap-2">
                     <PieChartIcon className="h-5 w-5 text-primary" />
                     <div>
-                        <CardTitle className="text-base font-semibold">Revenue by Payment Method</CardTitle>
-                        <CardDescription>Today's revenue breakdown</CardDescription>
+                        <CardTitle className="text-base font-semibold">
+                            Revenue by Payment Method
+                        </CardTitle>
+                        <CardDescription>
+                            Today's revenue breakdown
+                        </CardDescription>
                     </div>
                 </div>
                 {viewAllHref && (
@@ -76,7 +91,7 @@ export function RevenueSummary({
                         <span>No revenue today</span>
                     </div>
                 ) : (
-                    <div className="flex flex-col lg:flex-row items-center gap-4">
+                    <div className="flex flex-col items-center gap-4 lg:flex-row">
                         {/* Pie Chart */}
                         <div className="h-[200px] w-full lg:w-1/2">
                             <ResponsiveContainer width="100%" height="100%">
@@ -91,34 +106,57 @@ export function RevenueSummary({
                                         dataKey="value"
                                     >
                                         {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={entry.color}
+                                            />
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value: number) => formatCurrency(value)}
-                                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                                        formatter={(value: number) =>
+                                            formatCurrency(value)
+                                        }
+                                        contentStyle={{
+                                            borderRadius: '8px',
+                                            border: '1px solid #e5e7eb',
+                                        }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
 
                         {/* Legend & Total */}
-                        <div className="w-full lg:w-1/2 space-y-3">
+                        <div className="w-full space-y-3 lg:w-1/2">
                             <div className="text-center lg:text-left">
-                                <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-                                <div className="text-sm text-muted-foreground">Total Revenue</div>
+                                <div className="text-2xl font-bold">
+                                    {formatCurrency(totalRevenue)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Total Revenue
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 {revenueByPaymentMethod.map((item, index) => (
-                                    <div key={item.payment_method_key} className="flex items-center justify-between text-sm">
+                                    <div
+                                        key={item.payment_method_key}
+                                        className="flex items-center justify-between text-sm"
+                                    >
                                         <div className="flex items-center gap-2">
                                             <div
                                                 className="h-3 w-3 rounded-full"
-                                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                                style={{
+                                                    backgroundColor:
+                                                        COLORS[
+                                                            index %
+                                                                COLORS.length
+                                                        ],
+                                                }}
                                             />
                                             <span>{item.payment_method}</span>
                                         </div>
-                                        <span className="font-medium">{formatCurrency(item.total_amount)}</span>
+                                        <span className="font-medium">
+                                            {formatCurrency(item.total_amount)}
+                                        </span>
                                     </div>
                                 ))}
                             </div>

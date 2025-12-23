@@ -233,9 +233,12 @@ export const createWardPatientsColumns = (
                         'Are you sure you want to remove the bed assignment?',
                     )
                 ) {
-                    router.delete(`/admissions/${admission.id}/bed-assignment`, {
-                        preserveScroll: true,
-                    });
+                    router.delete(
+                        `/admissions/${admission.id}/bed-assignment`,
+                        {
+                            preserveScroll: true,
+                        },
+                    );
                 }
             };
 
@@ -306,7 +309,9 @@ export const createWardPatientsColumns = (
                     {admission.consultation?.doctor ? (
                         <div className="flex items-center gap-2 text-sm">
                             <Stethoscope className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                            <span>Dr. {admission.consultation.doctor.name}</span>
+                            <span>
+                                Dr. {admission.consultation.doctor.name}
+                            </span>
                         </div>
                     ) : (
                         <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -422,7 +427,10 @@ export const createWardPatientsColumns = (
             const hasTodayMeds =
                 admission.today_medication_administrations &&
                 admission.today_medication_administrations.length > 0;
-            const givenCount = admission.today_medication_administrations?.filter(m => m.status === 'given').length || 0;
+            const givenCount =
+                admission.today_medication_administrations?.filter(
+                    (m) => m.status === 'given',
+                ).length || 0;
 
             return (
                 <Link

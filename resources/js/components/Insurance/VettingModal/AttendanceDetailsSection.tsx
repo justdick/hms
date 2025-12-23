@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -6,7 +7,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Calendar, ClipboardList, Stethoscope, UserCheck } from 'lucide-react';
 import type { AttendanceDetails } from './types';
 
@@ -38,8 +38,8 @@ const attendanceTypeColors: Record<string, string> = {
  *
  * @example
  * ```tsx
- * <AttendanceDetailsSection 
- *   attendance={vettingData.attendance} 
+ * <AttendanceDetailsSection
+ *   attendance={vettingData.attendance}
  *   onAttendanceChange={(field, value) => handleChange(field, value)}
  * />
  * ```
@@ -108,27 +108,39 @@ export function AttendanceDetailsSection({
                         {onAttendanceChange && !disabled ? (
                             <Select
                                 value={attendance.type_of_attendance || 'EAE'}
-                                onValueChange={(value) => onAttendanceChange('type_of_attendance', value)}
+                                onValueChange={(value) =>
+                                    onAttendanceChange(
+                                        'type_of_attendance',
+                                        value,
+                                    )
+                                }
                             >
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Object.entries(attendanceTypeOptions).map(([code, label]) => (
-                                        <SelectItem key={code} value={code}>
-                                            {code} - {label}
-                                        </SelectItem>
-                                    ))}
+                                    {Object.entries(attendanceTypeOptions).map(
+                                        ([code, label]) => (
+                                            <SelectItem key={code} value={code}>
+                                                {code} - {label}
+                                            </SelectItem>
+                                        ),
+                                    )}
                                 </SelectContent>
                             </Select>
                         ) : (
                             <div className="mt-1">
                                 <Badge
                                     className={
-                                        attendanceTypeColors[attendance.type_of_attendance] || 'bg-gray-500'
+                                        attendanceTypeColors[
+                                            attendance.type_of_attendance
+                                        ] || 'bg-gray-500'
                                     }
                                 >
-                                    {attendance.type_of_attendance} - {attendanceTypeOptions[attendance.type_of_attendance] || attendance.type_of_attendance}
+                                    {attendance.type_of_attendance} -{' '}
+                                    {attendanceTypeOptions[
+                                        attendance.type_of_attendance
+                                    ] || attendance.type_of_attendance}
                                 </Badge>
                             </div>
                         )}
@@ -170,23 +182,30 @@ export function AttendanceDetailsSection({
                         {onAttendanceChange && !disabled ? (
                             <Select
                                 value={attendance.type_of_service || 'OPD'}
-                                onValueChange={(value) => onAttendanceChange('type_of_service', value)}
+                                onValueChange={(value) =>
+                                    onAttendanceChange('type_of_service', value)
+                                }
                             >
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Object.entries(serviceTypeOptions).map(([code, label]) => (
-                                        <SelectItem key={code} value={code}>
-                                            {code} - {label}
-                                        </SelectItem>
-                                    ))}
+                                    {Object.entries(serviceTypeOptions).map(
+                                        ([code, label]) => (
+                                            <SelectItem key={code} value={code}>
+                                                {code} - {label}
+                                            </SelectItem>
+                                        ),
+                                    )}
                                 </SelectContent>
                             </Select>
                         ) : (
                             <div className="mt-1">
                                 <Badge variant="outline">
-                                    {attendance.type_of_service} - {serviceTypeOptions[attendance.type_of_service] || attendance.type_of_service}
+                                    {attendance.type_of_service} -{' '}
+                                    {serviceTypeOptions[
+                                        attendance.type_of_service
+                                    ] || attendance.type_of_service}
                                 </Badge>
                             </div>
                         )}
@@ -200,17 +219,28 @@ export function AttendanceDetailsSection({
                         {onAttendanceChange && !disabled ? (
                             <Select
                                 value={attendance.specialty_attended || 'OPDC'}
-                                onValueChange={(value) => onAttendanceChange('specialty_attended', value)}
+                                onValueChange={(value) =>
+                                    onAttendanceChange(
+                                        'specialty_attended',
+                                        value,
+                                    )
+                                }
                             >
                                 <SelectTrigger className="mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="max-h-60 overflow-y-auto" position="popper" sideOffset={4}>
-                                    {Object.entries(specialtyOptions).map(([code, label]) => (
-                                        <SelectItem key={code} value={code}>
-                                            {code} - {label}
-                                        </SelectItem>
-                                    ))}
+                                <SelectContent
+                                    className="max-h-60 overflow-y-auto"
+                                    position="popper"
+                                    sideOffset={4}
+                                >
+                                    {Object.entries(specialtyOptions).map(
+                                        ([code, label]) => (
+                                            <SelectItem key={code} value={code}>
+                                                {code} - {label}
+                                            </SelectItem>
+                                        ),
+                                    )}
                                 </SelectContent>
                             </Select>
                         ) : (
@@ -219,7 +249,10 @@ export function AttendanceDetailsSection({
                                     className="h-4 w-4 text-gray-400"
                                     aria-hidden="true"
                                 />
-                                {attendance.specialty_attended || 'N/A'} - {specialtyOptions[attendance.specialty_attended || ''] || ''}
+                                {attendance.specialty_attended || 'N/A'} -{' '}
+                                {specialtyOptions[
+                                    attendance.specialty_attended || ''
+                                ] || ''}
                             </p>
                         )}
                     </div>
@@ -233,7 +266,12 @@ export function AttendanceDetailsSection({
                             <Input
                                 className="mt-1"
                                 value={attendance.attending_prescriber || ''}
-                                onChange={(e) => onAttendanceChange('attending_prescriber', e.target.value)}
+                                onChange={(e) =>
+                                    onAttendanceChange(
+                                        'attending_prescriber',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Enter prescriber name"
                             />
                         ) : (

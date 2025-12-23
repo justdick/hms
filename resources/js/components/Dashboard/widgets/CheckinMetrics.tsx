@@ -1,8 +1,7 @@
-import * as React from 'react';
 import { ClipboardCheck, Clock, Stethoscope } from 'lucide-react';
 
-import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 
 export interface CheckinMetricsData {
     todayCheckins: number;
@@ -35,7 +34,9 @@ export function CheckinMetrics({ metrics, checkinHref }: CheckinMetricsProps) {
                 title="Awaiting Consultation"
                 value={metrics.awaitingConsultation}
                 icon={Stethoscope}
-                variant={metrics.awaitingConsultation > 5 ? 'warning' : 'success'}
+                variant={
+                    metrics.awaitingConsultation > 5 ? 'warning' : 'success'
+                }
             />
         </DashboardMetricsGrid>
     );

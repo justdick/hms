@@ -44,7 +44,10 @@ const chartConfig = {
 
 export function PatientFlowChart({ data, className }: PatientFlowChartProps) {
     const totalCheckins = data.reduce((sum, d) => sum + d.checkins, 0);
-    const totalConsultations = data.reduce((sum, d) => sum + d.consultations, 0);
+    const totalConsultations = data.reduce(
+        (sum, d) => sum + d.consultations,
+        0,
+    );
 
     return (
         <Card className={cn('', className)}>
@@ -85,7 +88,10 @@ export function PatientFlowChart({ data, className }: PatientFlowChartProps) {
                         No data available
                     </div>
                 ) : (
-                    <ChartContainer config={chartConfig} className="h-[220px] w-full">
+                    <ChartContainer
+                        config={chartConfig}
+                        className="h-[220px] w-full"
+                    >
                         <AreaChart
                             data={data}
                             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -157,8 +163,11 @@ export function PatientFlowChart({ data, className }: PatientFlowChartProps) {
                                 content={
                                     <ChartTooltipContent
                                         labelFormatter={(_, payload) => {
-                                            if (payload?.[0]?.payload?.fullDate) {
-                                                return payload[0].payload.fullDate;
+                                            if (
+                                                payload?.[0]?.payload?.fullDate
+                                            ) {
+                                                return payload[0].payload
+                                                    .fullDate;
                                             }
                                             return '';
                                         }}

@@ -36,7 +36,14 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
-import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from 'recharts';
+import {
+    CartesianGrid,
+    LabelList,
+    Line,
+    LineChart,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 interface VitalSign {
     id: number;

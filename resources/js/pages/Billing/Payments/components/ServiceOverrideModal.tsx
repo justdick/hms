@@ -44,7 +44,12 @@ export function ServiceOverrideModal({
     const [showConfirmation, setShowConfirmation] = useState(false);
 
     const totalAmount = selectedCharges.reduce((sum, charge) => {
-        return sum + (charge.is_insurance_claim ? charge.patient_copay_amount : charge.amount);
+        return (
+            sum +
+            (charge.is_insurance_claim
+                ? charge.patient_copay_amount
+                : charge.amount)
+        );
     }, 0);
 
     const handleSubmit = () => {
@@ -97,7 +102,8 @@ export function ServiceOverrideModal({
                             Confirm Override
                         </DialogTitle>
                         <DialogDescription>
-                            Please confirm you want to create this billing override.
+                            Please confirm you want to create this billing
+                            override.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -112,17 +118,24 @@ export function ServiceOverrideModal({
                                 <span className="font-semibold">
                                     {formatCurrency(totalAmount)}
                                 </span>{' '}
-                                as <span className="font-semibold">owing</span> for{' '}
-                                <span className="font-semibold">{patientName}</span>.
+                                as <span className="font-semibold">owing</span>{' '}
+                                for{' '}
+                                <span className="font-semibold">
+                                    {patientName}
+                                </span>
+                                .
                             </p>
                             <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
-                                The patient will be able to proceed with services without
-                                immediate payment. This action will be logged for audit purposes.
+                                The patient will be able to proceed with
+                                services without immediate payment. This action
+                                will be logged for audit purposes.
                             </p>
                         </div>
 
                         <div>
-                            <Label className="text-sm font-medium">Reason provided:</Label>
+                            <Label className="text-sm font-medium">
+                                Reason provided:
+                            </Label>
                             <p className="mt-1 text-sm text-muted-foreground italic">
                                 "{reason}"
                             </p>
@@ -167,8 +180,8 @@ export function ServiceOverrideModal({
                         Create Billing Override
                     </DialogTitle>
                     <DialogDescription>
-                        Allow the patient to proceed with services without immediate payment.
-                        The charges will be marked as owing.
+                        Allow the patient to proceed with services without
+                        immediate payment. The charges will be marked as owing.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -177,7 +190,9 @@ export function ServiceOverrideModal({
                     <div className="rounded-lg border bg-muted/50 p-4">
                         <div className="mb-3">
                             <p className="text-sm font-medium">Patient</p>
-                            <p className="text-lg font-semibold">{patientName}</p>
+                            <p className="text-lg font-semibold">
+                                {patientName}
+                            </p>
                         </div>
 
                         <div className="space-y-2">
@@ -204,7 +219,9 @@ export function ServiceOverrideModal({
                                 ))}
                             </div>
                             <div className="flex items-center justify-between border-t pt-2">
-                                <span className="font-medium">Total Amount</span>
+                                <span className="font-medium">
+                                    Total Amount
+                                </span>
                                 <span className="text-lg font-bold text-primary">
                                     {formatCurrency(totalAmount)}
                                 </span>
@@ -215,7 +232,8 @@ export function ServiceOverrideModal({
                     {/* Reason Input */}
                     <div className="space-y-2">
                         <Label htmlFor="reason">
-                            Reason for Override <span className="text-destructive">*</span>
+                            Reason for Override{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Textarea
                             id="reason"
@@ -230,7 +248,8 @@ export function ServiceOverrideModal({
                         </p>
                         {reason.length > 0 && reason.length < 10 && (
                             <p className="text-xs text-destructive">
-                                Please provide a more detailed reason (at least 10 characters)
+                                Please provide a more detailed reason (at least
+                                10 characters)
                             </p>
                         )}
                     </div>
@@ -238,15 +257,20 @@ export function ServiceOverrideModal({
                     {/* Warning */}
                     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
                         <p className="text-xs text-amber-800 dark:text-amber-200">
-                            <strong>Note:</strong> This action will be logged with your name,
-                            timestamp, and the reason provided. The patient's charges will be
-                            marked as "owing" and will appear in outstanding balance reports.
+                            <strong>Note:</strong> This action will be logged
+                            with your name, timestamp, and the reason provided.
+                            The patient's charges will be marked as "owing" and
+                            will appear in outstanding balance reports.
                         </p>
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                    <Button
+                        variant="outline"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
                         Cancel
                     </Button>
                     <Button

@@ -120,7 +120,7 @@ export function MyCollectionsModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogContent className="flex max-h-[85vh] max-w-4xl flex-col overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>My Collections Today</DialogTitle>
                     <DialogDescription>
@@ -136,7 +136,7 @@ export function MyCollectionsModal({
 
                 <div className="flex items-center gap-2 py-2">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             placeholder="Search by patient, receipt number..."
                             value={searchQuery}
@@ -205,10 +205,16 @@ export function MyCollectionsModal({
                                             {transaction.patient ? (
                                                 <div>
                                                     <p className="font-medium">
-                                                        {transaction.patient.name}
+                                                        {
+                                                            transaction.patient
+                                                                .name
+                                                        }
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {transaction.patient.patient_number}
+                                                        {
+                                                            transaction.patient
+                                                                .patient_number
+                                                        }
                                                     </p>
                                                 </div>
                                             ) : (
@@ -235,8 +241,7 @@ export function MyCollectionsModal({
                                             <Badge variant="secondary">
                                                 {paymentMethodLabels[
                                                     transaction.payment_method
-                                                ] ||
-                                                    transaction.payment_method}
+                                                ] || transaction.payment_method}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right font-medium">

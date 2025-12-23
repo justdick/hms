@@ -94,10 +94,14 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
 
     const handleApplyFilters = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/admin/insurance/reports/rejection-analysis', localFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/rejection-analysis',
+            localFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleClearFilters = () => {
@@ -110,22 +114,30 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
             provider_id: null,
         };
         setLocalFilters(defaultFilters);
-        router.get('/admin/insurance/reports/rejection-analysis', defaultFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/rejection-analysis',
+            defaultFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleExport = () => {
         const params = new URLSearchParams();
-        if (localFilters.date_from) params.append('date_from', localFilters.date_from);
-        if (localFilters.date_to) params.append('date_to', localFilters.date_to);
-        if (localFilters.provider_id) params.append('provider_id', localFilters.provider_id);
+        if (localFilters.date_from)
+            params.append('date_from', localFilters.date_from);
+        if (localFilters.date_to)
+            params.append('date_to', localFilters.date_to);
+        if (localFilters.provider_id)
+            params.append('provider_id', localFilters.provider_id);
         window.location.href = `/admin/insurance/reports/rejection-analysis/export?${params.toString()}`;
     };
 
     const formatCurrency = (amount: number | string) => {
-        const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+        const numAmount =
+            typeof amount === 'string' ? parseFloat(amount) : amount;
         return new Intl.NumberFormat('en-GH', {
             style: 'currency',
             currency: 'GHS',
@@ -137,7 +149,7 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
     // Calculate total for percentage calculations
     const totalRejectionCount = data.rejection_reasons.reduce(
         (sum, reason) => sum + reason.count,
-        0
+        0,
     );
 
     return (
@@ -158,7 +170,9 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.visit('/admin/insurance/reports')}
+                            onClick={() =>
+                                router.visit('/admin/insurance/reports')
+                            }
                         >
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back
@@ -174,8 +188,13 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {hasActiveFilters && <Badge variant="secondary">Filters active</Badge>}
-                        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+                        {hasActiveFilters && (
+                            <Badge variant="secondary">Filters active</Badge>
+                        )}
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
                             <Filter className="mr-2 h-4 w-4" />
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
@@ -190,15 +209,25 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                 {showFilters && (
                     <Card>
                         <CardContent className="p-6">
-                            <form onSubmit={handleApplyFilters} className="space-y-4">
+                            <form
+                                onSubmit={handleApplyFilters}
+                                className="space-y-4"
+                            >
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div className="space-y-2">
-                                        <Label htmlFor="date_from">Date From</Label>
+                                        <Label htmlFor="date_from">
+                                            Date From
+                                        </Label>
                                         <Input
                                             id="date_from"
                                             type="date"
                                             value={localFilters.date_from || ''}
-                                            onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                                            onChange={(e) =>
+                                                handleFilterChange(
+                                                    'date_from',
+                                                    e.target.value,
+                                                )
+                                            }
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -207,22 +236,42 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                             id="date_to"
                                             type="date"
                                             value={localFilters.date_to || ''}
-                                            onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                                            onChange={(e) =>
+                                                handleFilterChange(
+                                                    'date_to',
+                                                    e.target.value,
+                                                )
+                                            }
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="provider">Insurance Provider</Label>
+                                        <Label htmlFor="provider">
+                                            Insurance Provider
+                                        </Label>
                                         <Select
-                                            value={localFilters.provider_id || 'all'}
-                                            onValueChange={(value) => handleFilterChange('provider_id', value)}
+                                            value={
+                                                localFilters.provider_id ||
+                                                'all'
+                                            }
+                                            onValueChange={(value) =>
+                                                handleFilterChange(
+                                                    'provider_id',
+                                                    value,
+                                                )
+                                            }
                                         >
                                             <SelectTrigger id="provider">
                                                 <SelectValue placeholder="All providers" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All providers</SelectItem>
+                                                <SelectItem value="all">
+                                                    All providers
+                                                </SelectItem>
                                                 {providers.map((provider) => (
-                                                    <SelectItem key={provider.id} value={provider.id.toString()}>
+                                                    <SelectItem
+                                                        key={provider.id}
+                                                        value={provider.id.toString()}
+                                                    >
                                                         {provider.name}
                                                     </SelectItem>
                                                 ))}
@@ -232,7 +281,11 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button type="submit">Apply Filters</Button>
-                                    <Button type="button" variant="outline" onClick={handleClearFilters}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleClearFilters}
+                                    >
                                         <X className="mr-2 h-4 w-4" />
                                         Reset to Default
                                     </Button>
@@ -267,7 +320,9 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                         Total Rejected Amount
                                     </p>
                                     <p className="text-3xl font-bold text-red-600">
-                                        {formatCurrency(data.total_rejected_amount)}
+                                        {formatCurrency(
+                                            data.total_rejected_amount,
+                                        )}
                                     </p>
                                 </div>
                                 <AlertCircle className="h-10 w-10 text-red-600" />
@@ -287,7 +342,9 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                 {data.rejection_reasons.map((reason, index) => {
                                     const percentage =
                                         totalRejectionCount > 0
-                                            ? (reason.count / totalRejectionCount) * 100
+                                            ? (reason.count /
+                                                  totalRejectionCount) *
+                                              100
                                             : 0;
                                     return (
                                         <div
@@ -297,15 +354,29 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                             <div className="mb-2 flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <AlertCircle className="h-4 w-4 text-red-500" />
-                                                    <span className="font-medium">{reason.reason}</span>
+                                                    <span className="font-medium">
+                                                        {reason.reason}
+                                                    </span>
                                                 </div>
-                                                <Badge variant="outline">{reason.count} claims</Badge>
+                                                <Badge variant="outline">
+                                                    {reason.count} claims
+                                                </Badge>
                                             </div>
                                             <div className="mb-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                                                <span>{formatCurrency(reason.total_amount)}</span>
-                                                <span>{percentage.toFixed(1)}% of rejections</span>
+                                                <span>
+                                                    {formatCurrency(
+                                                        reason.total_amount,
+                                                    )}
+                                                </span>
+                                                <span>
+                                                    {percentage.toFixed(1)}% of
+                                                    rejections
+                                                </span>
                                             </div>
-                                            <Progress value={percentage} className="h-2" />
+                                            <Progress
+                                                value={percentage}
+                                                className="h-2"
+                                            />
                                         </div>
                                     );
                                 })}
@@ -330,37 +401,56 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Provider</TableHead>
-                                            <TableHead className="text-right">Rejected Claims</TableHead>
-                                            <TableHead className="text-right">Total Amount</TableHead>
-                                            <TableHead className="text-right">% of Total</TableHead>
+                                            <TableHead className="text-right">
+                                                Rejected Claims
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Total Amount
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                % of Total
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {data.rejections_by_provider.map((provider, index) => {
-                                            const percentage =
-                                                data.total_rejected > 0
-                                                    ? (provider.count / data.total_rejected) * 100
-                                                    : 0;
-                                            return (
-                                                <TableRow key={index}>
-                                                    <TableCell className="font-medium">
-                                                        <div className="flex items-center gap-2">
-                                                            <Building2 className="h-4 w-4 text-gray-500" />
-                                                            {provider.provider}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Badge variant="destructive">{provider.count}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-semibold text-red-600">
-                                                        {formatCurrency(provider.total_amount)}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        {percentage.toFixed(1)}%
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
+                                        {data.rejections_by_provider.map(
+                                            (provider, index) => {
+                                                const percentage =
+                                                    data.total_rejected > 0
+                                                        ? (provider.count /
+                                                              data.total_rejected) *
+                                                          100
+                                                        : 0;
+                                                return (
+                                                    <TableRow key={index}>
+                                                        <TableCell className="font-medium">
+                                                            <div className="flex items-center gap-2">
+                                                                <Building2 className="h-4 w-4 text-gray-500" />
+                                                                {
+                                                                    provider.provider
+                                                                }
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Badge variant="destructive">
+                                                                {provider.count}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-semibold text-red-600">
+                                                            {formatCurrency(
+                                                                provider.total_amount,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {percentage.toFixed(
+                                                                1,
+                                                            )}
+                                                            %
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            },
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
@@ -387,41 +477,66 @@ export default function RejectionAnalysis({ data, providers, filters }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Month</TableHead>
-                                            <TableHead className="text-right">Total Claims</TableHead>
-                                            <TableHead className="text-right">Rejected</TableHead>
-                                            <TableHead className="text-right">Rejection Rate</TableHead>
-                                            <TableHead className="w-48">Trend</TableHead>
+                                            <TableHead className="text-right">
+                                                Total Claims
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Rejected
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Rejection Rate
+                                            </TableHead>
+                                            <TableHead className="w-48">
+                                                Trend
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {data.rejection_trends.map((trend, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell className="font-medium">{trend.month}</TableCell>
-                                                <TableCell className="text-right">{trend.total}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Badge variant="destructive">{trend.rejected}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <span
-                                                        className={
-                                                            trend.rejection_rate > 10
-                                                                ? 'font-semibold text-red-600'
-                                                                : trend.rejection_rate > 5
-                                                                  ? 'text-orange-600'
-                                                                  : 'text-green-600'
-                                                        }
-                                                    >
-                                                        {trend.rejection_rate.toFixed(1)}%
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Progress
-                                                        value={Math.min(trend.rejection_rate * 5, 100)}
-                                                        className="h-2"
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {data.rejection_trends.map(
+                                            (trend, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell className="font-medium">
+                                                        {trend.month}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {trend.total}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Badge variant="destructive">
+                                                            {trend.rejected}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <span
+                                                            className={
+                                                                trend.rejection_rate >
+                                                                10
+                                                                    ? 'font-semibold text-red-600'
+                                                                    : trend.rejection_rate >
+                                                                        5
+                                                                      ? 'text-orange-600'
+                                                                      : 'text-green-600'
+                                                            }
+                                                        >
+                                                            {trend.rejection_rate.toFixed(
+                                                                1,
+                                                            )}
+                                                            %
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Progress
+                                                            value={Math.min(
+                                                                trend.rejection_rate *
+                                                                    5,
+                                                                100,
+                                                            )}
+                                                            className="h-2"
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ),
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>

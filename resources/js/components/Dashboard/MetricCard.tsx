@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { Link } from '@inertiajs/react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { type LucideIcon } from 'lucide-react';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ const metricCardVariants = cva(
         defaultVariants: {
             variant: 'default',
         },
-    }
+    },
 );
 
 const metricIconVariants = cva(
@@ -42,7 +42,7 @@ const metricIconVariants = cva(
         defaultVariants: {
             variant: 'default',
         },
-    }
+    },
 );
 
 export interface MetricCardProps
@@ -69,10 +69,10 @@ export function MetricCard({
                 <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:gap-1">
-                <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                <span className="truncate text-xs font-medium text-muted-foreground sm:text-sm">
                     {title}
                 </span>
-                <span className="text-xl sm:text-2xl font-bold leading-none tracking-tight">
+                <span className="text-xl leading-none font-bold tracking-tight sm:text-2xl">
                     {value}
                 </span>
             </div>
@@ -81,8 +81,8 @@ export function MetricCard({
 
     const cardClasses = cn(
         metricCardVariants({ variant }),
-        href && 'hover:bg-accent/50 cursor-pointer',
-        className
+        href && 'cursor-pointer hover:bg-accent/50',
+        className,
     );
 
     if (href) {

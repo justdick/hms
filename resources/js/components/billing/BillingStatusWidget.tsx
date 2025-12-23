@@ -147,8 +147,6 @@ export default function BillingStatusWidget({
         return null;
     }
 
-
-
     const getServiceIcon = (service: string, canProceed: boolean) => {
         const IconComponent = canProceed ? CheckCircle : XCircle;
         return (

@@ -8,7 +8,8 @@ import {
     Users,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,8 +19,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { cn } from '@/lib/utils';
 
 export interface DoctorMetricsData {
     consultationQueue: number;
@@ -34,7 +34,11 @@ export interface DoctorMetricsProps {
     labResultsHref?: string;
 }
 
-export function DoctorMetrics({ metrics, consultationHref, labResultsHref }: DoctorMetricsProps) {
+export function DoctorMetrics({
+    metrics,
+    consultationHref,
+    labResultsHref,
+}: DoctorMetricsProps) {
     return (
         <DashboardMetricsGrid columns={4}>
             <MetricCard
@@ -99,9 +103,7 @@ export function NextPatients({
                     <CardTitle className="text-base font-semibold">
                         Next Patients
                     </CardTitle>
-                    <CardDescription>
-                        Ready for consultation
-                    </CardDescription>
+                    <CardDescription>Ready for consultation</CardDescription>
                 </div>
                 {viewAllHref && (
                     <Button variant="ghost" size="sm" asChild>
@@ -125,25 +127,30 @@ export function NextPatients({
                                 key={patient.id}
                                 className={cn(
                                     'flex items-center justify-between rounded-lg border p-3',
-                                    index === 0 && 'border-primary bg-primary/5'
+                                    index === 0 &&
+                                        'border-primary bg-primary/5',
                                 )}
                             >
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         {index === 0 && (
-                                            <Badge variant="default" className="text-xs">
+                                            <Badge
+                                                variant="default"
+                                                className="text-xs"
+                                            >
                                                 Next
                                             </Badge>
                                         )}
-                                        <span className="font-medium text-sm">
+                                        <span className="text-sm font-medium">
                                             {patient.patient_name}
                                         </span>
                                     </div>
                                     <span className="text-xs text-muted-foreground">
-                                        {patient.department} • {patient.patient_number}
+                                        {patient.department} •{' '}
+                                        {patient.patient_number}
                                     </span>
                                     {patient.chief_complaint && (
-                                        <span className="text-xs text-muted-foreground mt-1 italic">
+                                        <span className="mt-1 text-xs text-muted-foreground italic">
                                             "{patient.chief_complaint}"
                                         </span>
                                     )}
@@ -151,12 +158,16 @@ export function NextPatients({
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center gap-1 text-muted-foreground">
                                         <Clock className="h-3 w-3" />
-                                        <span className="text-xs font-mono">{patient.wait_time}</span>
+                                        <span className="font-mono text-xs">
+                                            {patient.wait_time}
+                                        </span>
                                     </div>
                                     {index === 0 && onStartConsultation && (
                                         <Button
                                             size="sm"
-                                            onClick={() => onStartConsultation(patient.id)}
+                                            onClick={() =>
+                                                onStartConsultation(patient.id)
+                                            }
                                         >
                                             Start
                                         </Button>

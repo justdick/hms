@@ -17,16 +17,17 @@ export default function AuthSimpleLayout({
 }: PropsWithChildren<AuthLayoutProps>) {
     const { theme } = usePage<SharedData>().props;
     const logoUrl = theme?.branding?.logoUrl;
-    const hospitalName = theme?.branding?.hospitalName || 'Hospital Management System';
+    const hospitalName =
+        theme?.branding?.hospitalName || 'Hospital Management System';
 
     return (
         <div className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
             {/* Subtle gradient background using theme colors */}
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-secondary via-background to-secondary/50 dark:from-background dark:via-background dark:to-secondary/20" />
-            
+
             {/* Decorative elements using theme primary color */}
             <div className="absolute top-0 left-1/4 -z-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl dark:bg-primary/5" />
-            <div className="absolute bottom-0 right-1/4 -z-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl dark:bg-accent/10" />
+            <div className="absolute right-1/4 bottom-0 -z-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl dark:bg-accent/10" />
 
             <div className="w-full max-w-md">
                 {/* Card container */}
@@ -71,7 +72,8 @@ export default function AuthSimpleLayout({
 
                 {/* Footer */}
                 <p className="mt-6 text-center text-xs text-muted-foreground">
-                    © {new Date().getFullYear()} {hospitalName}. All rights reserved.
+                    © {new Date().getFullYear()} {hospitalName}. All rights
+                    reserved.
                 </p>
             </div>
         </div>

@@ -71,16 +71,21 @@ export function PlanSelector({
                 )}
 
                 {/* Private Insurance Plans - Grouped by Provider */}
-                {Object.entries(groupedPrivatePlans).map(([provider, providerPlans]) => (
-                    <SelectGroup key={provider}>
-                        <SelectLabel>{provider}</SelectLabel>
-                        {providerPlans.map((plan) => (
-                            <SelectItem key={plan.id} value={plan.id.toString()}>
-                                {plan.name}
-                            </SelectItem>
-                        ))}
-                    </SelectGroup>
-                ))}
+                {Object.entries(groupedPrivatePlans).map(
+                    ([provider, providerPlans]) => (
+                        <SelectGroup key={provider}>
+                            <SelectLabel>{provider}</SelectLabel>
+                            {providerPlans.map((plan) => (
+                                <SelectItem
+                                    key={plan.id}
+                                    value={plan.id.toString()}
+                                >
+                                    {plan.name}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    ),
+                )}
             </SelectContent>
         </Select>
     );

@@ -600,7 +600,8 @@ export default function PatientsShow({
                                                     Patient Account
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    Manage deposits and credit limits
+                                                    Manage deposits and credit
+                                                    limits
                                                 </CardDescription>
                                             </div>
                                             <div className="flex gap-2">
@@ -608,7 +609,11 @@ export default function PatientsShow({
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => setCreditLimitModalOpen(true)}
+                                                        onClick={() =>
+                                                            setCreditLimitModalOpen(
+                                                                true,
+                                                            )
+                                                        }
                                                     >
                                                         <Shield className="mr-2 h-4 w-4" />
                                                         Set Credit Limit
@@ -617,7 +622,11 @@ export default function PatientsShow({
                                                 {can_process_payment && (
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => setDepositModalOpen(true)}
+                                                        onClick={() =>
+                                                            setDepositModalOpen(
+                                                                true,
+                                                            )
+                                                        }
                                                     >
                                                         <Plus className="mr-2 h-4 w-4" />
                                                         Add Deposit
@@ -626,26 +635,40 @@ export default function PatientsShow({
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    {account_summary && (account_summary.balance !== 0 || account_summary.credit_limit > 0) && (
-                                        <CardContent>
-                                            <div className="grid gap-4 sm:grid-cols-2">
-                                                <div className="rounded-lg border p-4">
-                                                    <p className="text-sm text-muted-foreground">Account Balance</p>
-                                                    <p className={`text-2xl font-bold ${account_summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                        {formatCurrency(account_summary.balance)}
-                                                    </p>
+                                    {account_summary &&
+                                        (account_summary.balance !== 0 ||
+                                            account_summary.credit_limit >
+                                                0) && (
+                                            <CardContent>
+                                                <div className="grid gap-4 sm:grid-cols-2">
+                                                    <div className="rounded-lg border p-4">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Account Balance
+                                                        </p>
+                                                        <p
+                                                            className={`text-2xl font-bold ${account_summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                                                        >
+                                                            {formatCurrency(
+                                                                account_summary.balance,
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                    <div className="rounded-lg border p-4">
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Credit Limit
+                                                        </p>
+                                                        <p className="text-2xl font-bold text-blue-600">
+                                                            {account_summary.credit_limit >=
+                                                            999999999
+                                                                ? 'Unlimited'
+                                                                : formatCurrency(
+                                                                      account_summary.credit_limit,
+                                                                  )}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="rounded-lg border p-4">
-                                                    <p className="text-sm text-muted-foreground">Credit Limit</p>
-                                                    <p className="text-2xl font-bold text-blue-600">
-                                                        {account_summary.credit_limit >= 999999999
-                                                            ? 'Unlimited'
-                                                            : formatCurrency(account_summary.credit_limit)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    )}
+                                            </CardContent>
+                                        )}
                                 </Card>
                             )}
 
@@ -1015,7 +1038,9 @@ export default function PatientsShow({
                         phone_number: patient.phone_number || '',
                         account_balance: account_summary?.balance || 0,
                         credit_limit: account_summary?.credit_limit || 0,
-                        available_balance: (account_summary?.balance || 0) + (account_summary?.credit_limit || 0),
+                        available_balance:
+                            (account_summary?.balance || 0) +
+                            (account_summary?.credit_limit || 0),
                     }}
                 />
             )}
@@ -1033,7 +1058,6 @@ export default function PatientsShow({
                 currentLimit={account_summary?.credit_limit || 0}
                 formatCurrency={formatCurrency}
             />
-
         </AppLayout>
     );
 }

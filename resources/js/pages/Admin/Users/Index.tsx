@@ -49,12 +49,19 @@ interface FlashData {
     temporary_password?: string;
 }
 
-export default function UsersIndex({ users, roles, departments, filters }: Props) {
+export default function UsersIndex({
+    users,
+    roles,
+    departments,
+    filters,
+}: Props) {
     const { props } = usePage<{ flash?: FlashData }>();
     const flash = props.flash || {};
 
     const [passwordModalOpen, setPasswordModalOpen] = useState(false);
-    const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
+    const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
+        null,
+    );
     const [copied, setCopied] = useState(false);
 
     // Show password modal when temporary_password is in flash
@@ -120,8 +127,9 @@ export default function UsersIndex({ users, roles, departments, filters }: Props
                             Temporary Password
                         </DialogTitle>
                         <DialogDescription>
-                            Please share this temporary password with the user securely. They will be
-                            required to change it on their next login.
+                            Please share this temporary password with the user
+                            securely. They will be required to change it on
+                            their next login.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="my-4">
@@ -129,13 +137,18 @@ export default function UsersIndex({ users, roles, departments, filters }: Props
                             <code className="flex-1 font-mono text-lg font-semibold">
                                 {temporaryPassword}
                             </code>
-                            <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={copyToClipboard}
+                            >
                                 <Copy className="mr-1 h-4 w-4" />
                                 {copied ? 'Copied!' : 'Copy'}
                             </Button>
                         </div>
                         <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
-                            ⚠️ This password will only be shown once. Make sure to copy it now.
+                            ⚠️ This password will only be shown once. Make sure
+                            to copy it now.
                         </p>
                     </div>
                     <DialogFooter>

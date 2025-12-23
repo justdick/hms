@@ -8,13 +8,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
-import {
-    Calendar,
-    Clock,
-    MoreVertical,
-    Pill,
-    XCircle,
-} from 'lucide-react';
+import { Calendar, Clock, MoreVertical, Pill, XCircle } from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -177,7 +171,9 @@ export function MedicationHistoryCard({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                    onClick={() => onDiscontinue(prescription.id)}
+                                    onClick={() =>
+                                        onDiscontinue(prescription.id)
+                                    }
                                     className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                                 >
                                     <XCircle className="mr-2 h-4 w-4" />

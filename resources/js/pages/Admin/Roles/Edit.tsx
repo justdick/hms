@@ -43,14 +43,23 @@ export default function RolesEdit({ role, permissions }: Props) {
 
     const toggleCategory = (category: string) => {
         const categoryPermissions = permissions[category].map((p) => p.name);
-        const allSelected = categoryPermissions.every((p) => data.permissions.includes(p));
+        const allSelected = categoryPermissions.every((p) =>
+            data.permissions.includes(p),
+        );
 
         if (allSelected) {
             // Deselect all in category
-            setData('permissions', data.permissions.filter((p) => !categoryPermissions.includes(p)));
+            setData(
+                'permissions',
+                data.permissions.filter(
+                    (p) => !categoryPermissions.includes(p),
+                ),
+            );
         } else {
             // Select all in category
-            const newPermissions = [...new Set([...data.permissions, ...categoryPermissions])];
+            const newPermissions = [
+                ...new Set([...data.permissions, ...categoryPermissions]),
+            ];
             setData('permissions', newPermissions);
         }
     };
@@ -62,7 +71,9 @@ export default function RolesEdit({ role, permissions }: Props) {
 
     const isCategoryPartiallySelected = (category: string) => {
         const categoryPermissions = permissions[category].map((p) => p.name);
-        const selectedCount = categoryPermissions.filter((p) => data.permissions.includes(p)).length;
+        const selectedCount = categoryPermissions.filter((p) =>
+            data.permissions.includes(p),
+        ).length;
         return selectedCount > 0 && selectedCount < categoryPermissions.length;
     };
 
@@ -126,13 +137,17 @@ export default function RolesEdit({ role, permissions }: Props) {
                                     id="name"
                                     type="text"
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
                                     placeholder="e.g., Doctor, Nurse, Receptionist"
                                     required
                                     className="mt-1 max-w-md"
                                 />
                                 {errors.name && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.name}
+                                    </p>
                                 )}
                             </div>
                         </CardContent>
@@ -146,63 +161,107 @@ export default function RolesEdit({ role, permissions }: Props) {
                                 Permissions
                             </CardTitle>
                             <p className="text-sm text-gray-500">
-                                Select the permissions this role should have. Selected: {data.permissions.length}
+                                Select the permissions this role should have.
+                                Selected: {data.permissions.length}
                             </p>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">
-                                {Object.entries(permissions).map(([category, categoryPermissions]) => (
-                                    <div key={category} className="rounded-lg border p-4 dark:border-gray-700">
-                                        {/* Category Header */}
-                                        <div className="mb-3 flex items-center gap-2 border-b pb-2 dark:border-gray-700">
-                                            <Checkbox
-                                                id={`category-${category}`}
-                                                checked={isCategoryFullySelected(category)}
-                                                ref={(el) => {
-                                                    if (el) {
-                                                        (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = isCategoryPartiallySelected(category);
+                                {Object.entries(permissions).map(
+                                    ([category, categoryPermissions]) => (
+                                        <div
+                                            key={category}
+                                            className="rounded-lg border p-4 dark:border-gray-700"
+                                        >
+                                            {/* Category Header */}
+                                            <div className="mb-3 flex items-center gap-2 border-b pb-2 dark:border-gray-700">
+                                                <Checkbox
+                                                    id={`category-${category}`}
+                                                    checked={isCategoryFullySelected(
+                                                        category,
+                                                    )}
+                                                    ref={(el) => {
+                                                        if (el) {
+                                                            (
+                                                                el as HTMLButtonElement & {
+                                                                    indeterminate: boolean;
+                                                                }
+                                                            ).indeterminate =
+                                                                isCategoryPartiallySelected(
+                                                                    category,
+                                                                );
+                                                        }
+                                                    }}
+                                                    onCheckedChange={() =>
+                                                        toggleCategory(category)
                                                     }
-                                                }}
-                                                onCheckedChange={() => toggleCategory(category)}
-                                            />
-                                            <Label
-                                                htmlFor={`category-${category}`}
-                                                className="cursor-pointer text-base font-semibold"
-                                            >
-                                                {formatCategoryName(category)}
-                                            </Label>
-                                            <span className="text-sm text-gray-500">
-                                                ({categoryPermissions.filter((p) => data.permissions.includes(p.name)).length}/{categoryPermissions.length})
-                                            </span>
-                                        </div>
-
-                                        {/* Permissions in Category */}
-                                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                                            {categoryPermissions.map((permission) => (
-                                                <div
-                                                    key={permission.id}
-                                                    className="flex items-center space-x-2"
+                                                />
+                                                <Label
+                                                    htmlFor={`category-${category}`}
+                                                    className="cursor-pointer text-base font-semibold"
                                                 >
-                                                    <Checkbox
-                                                        id={`permission-${permission.id}`}
-                                                        checked={data.permissions.includes(permission.name)}
-                                                        onCheckedChange={() => togglePermission(permission.name)}
-                                                    />
-                                                    <Label
-                                                        htmlFor={`permission-${permission.id}`}
-                                                        className="cursor-pointer text-sm font-normal"
-                                                        title={permission.name}
-                                                    >
-                                                        {formatPermissionName(permission.name)}
-                                                    </Label>
-                                                </div>
-                                            ))}
+                                                    {formatCategoryName(
+                                                        category,
+                                                    )}
+                                                </Label>
+                                                <span className="text-sm text-gray-500">
+                                                    (
+                                                    {
+                                                        categoryPermissions.filter(
+                                                            (p) =>
+                                                                data.permissions.includes(
+                                                                    p.name,
+                                                                ),
+                                                        ).length
+                                                    }
+                                                    /
+                                                    {categoryPermissions.length}
+                                                    )
+                                                </span>
+                                            </div>
+
+                                            {/* Permissions in Category */}
+                                            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                                                {categoryPermissions.map(
+                                                    (permission) => (
+                                                        <div
+                                                            key={permission.id}
+                                                            className="flex items-center space-x-2"
+                                                        >
+                                                            <Checkbox
+                                                                id={`permission-${permission.id}`}
+                                                                checked={data.permissions.includes(
+                                                                    permission.name,
+                                                                )}
+                                                                onCheckedChange={() =>
+                                                                    togglePermission(
+                                                                        permission.name,
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Label
+                                                                htmlFor={`permission-${permission.id}`}
+                                                                className="cursor-pointer text-sm font-normal"
+                                                                title={
+                                                                    permission.name
+                                                                }
+                                                            >
+                                                                {formatPermissionName(
+                                                                    permission.name,
+                                                                )}
+                                                            </Label>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ),
+                                )}
                             </div>
                             {errors.permissions && (
-                                <p className="mt-2 text-sm text-red-600">{errors.permissions}</p>
+                                <p className="mt-2 text-sm text-red-600">
+                                    {errors.permissions}
+                                </p>
                             )}
                         </CardContent>
                     </Card>

@@ -35,7 +35,6 @@ import {
     Check,
     ChevronsUpDown,
     FileText,
-    Image,
     Loader2,
     Scan,
     Upload,
@@ -79,7 +78,8 @@ export function ExternalImageUploadDialog({
     const [search, setSearch] = useState('');
     const [services, setServices] = useState<ImagingService[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedService, setSelectedService] = useState<ImagingService | null>(null);
+    const [selectedService, setSelectedService] =
+        useState<ImagingService | null>(null);
     const [facilityName, setFacilityName] = useState('');
     const [studyDate, setStudyDate] = useState('');
     const [notes, setNotes] = useState('');
@@ -126,7 +126,7 @@ export function ExternalImageUploadDialog({
                 searchServices(value);
             }, 300);
         },
-        [searchServices]
+        [searchServices],
     );
 
     const handleSelectService = (service: ImagingService) => {
@@ -190,7 +190,7 @@ export function ExternalImageUploadDialog({
 
     const updateFileDescription = (id: string, description: string) => {
         setFiles((prev) =>
-            prev.map((f) => (f.id === id ? { ...f, description } : f))
+            prev.map((f) => (f.id === id ? { ...f, description } : f)),
         );
     };
 
@@ -238,7 +238,8 @@ export function ExternalImageUploadDialog({
         }
 
         if (!facilityName.trim()) {
-            newErrors.external_facility_name = 'External facility name is required.';
+            newErrors.external_facility_name =
+                'External facility name is required.';
         }
 
         if (!studyDate) {
@@ -248,13 +249,15 @@ export function ExternalImageUploadDialog({
             const today = new Date();
             today.setHours(23, 59, 59, 999);
             if (selectedDate > today) {
-                newErrors.external_study_date = 'Study date cannot be in the future.';
+                newErrors.external_study_date =
+                    'Study date cannot be in the future.';
             }
         }
 
         const validFiles = files.filter((f) => !f.error);
         if (validFiles.length === 0) {
-            newErrors.files = 'Please select at least one valid file to upload.';
+            newErrors.files =
+                'Please select at least one valid file to upload.';
         }
 
         setErrors(newErrors);
@@ -282,21 +285,30 @@ export function ExternalImageUploadDialog({
         validFiles.forEach((fileItem, index) => {
             formData.append('files[]', fileItem.file);
             if (fileItem.description.trim()) {
-                formData.append(`descriptions[${index}]`, fileItem.description.trim());
+                formData.append(
+                    `descriptions[${index}]`,
+                    fileItem.description.trim(),
+                );
             }
         });
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            
-            const response = await fetch(`/consultation/${consultationId}/external-images`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
+            const csrfToken =
+                document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute('content') || '';
+
+            const response = await fetch(
+                `/consultation/${consultationId}/external-images`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        Accept: 'application/json',
+                    },
+                    body: formData,
                 },
-                body: formData,
-            });
+            );
 
             if (response.ok) {
                 // Success - close dialog and refresh page
@@ -308,7 +320,9 @@ export function ExternalImageUploadDialog({
                 if (data.errors) {
                     const newErrors: Record<string, string> = {};
                     Object.entries(data.errors).forEach(([key, value]) => {
-                        newErrors[key] = Array.isArray(value) ? value[0] : String(value);
+                        newErrors[key] = Array.isArray(value)
+                            ? value[0]
+                            : String(value);
                     });
                     setErrors(newErrors);
                 } else if (data.message) {
@@ -373,8 +387,9 @@ export function ExternalImageUploadDialog({
                         Upload External Imaging Study
                     </DialogTitle>
                     <DialogDescription>
-                        Upload imaging results from an external facility. These images will be
-                        added to the patient's record for reference.
+                        Upload imaging results from an external facility. These
+                        images will be added to the patient's record for
+                        reference.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -384,16 +399,22 @@ export function ExternalImageUploadDialog({
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{errors.general}</AlertDescription>
+                            <AlertDescription>
+                                {errors.general}
+                            </AlertDescription>
                         </Alert>
                     )}
 
                     {/* Imaging Study Type Selection */}
                     <div className="space-y-2">
                         <Label>
-                            Imaging Study Type <span className="text-destructive">*</span>
+                            Imaging Study Type{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
-                        <Popover open={serviceSelectOpen} onOpenChange={setServiceSelectOpen}>
+                        <Popover
+                            open={serviceSelectOpen}
+                            onOpenChange={setServiceSelectOpen}
+                        >
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="outline"
@@ -401,7 +422,8 @@ export function ExternalImageUploadDialog({
                                     aria-expanded={serviceSelectOpen}
                                     className={cn(
                                         'w-full justify-between',
-                                        errors.lab_service_id && 'border-destructive'
+                                        errors.lab_service_id &&
+                                            'border-destructive',
                                     )}
                                 >
                                     <span className="truncate">
@@ -412,7 +434,10 @@ export function ExternalImageUploadDialog({
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[450px] p-0" align="start">
+                            <PopoverContent
+                                className="w-[450px] p-0"
+                                align="start"
+                            >
                                 <Command shouldFilter={false}>
                                     <CommandInput
                                         placeholder="Type at least 2 characters to search..."
@@ -427,42 +452,59 @@ export function ExternalImageUploadDialog({
                                         )}
                                         {!loading && search.length < 2 && (
                                             <div className="py-6 text-center text-sm text-muted-foreground">
-                                                Type at least 2 characters to search
+                                                Type at least 2 characters to
+                                                search
                                             </div>
                                         )}
-                                        {!loading && search.length >= 2 && services.length === 0 && (
-                                            <CommandEmpty>
-                                                No imaging study found for "{search}"
-                                            </CommandEmpty>
-                                        )}
+                                        {!loading &&
+                                            search.length >= 2 &&
+                                            services.length === 0 && (
+                                                <CommandEmpty>
+                                                    No imaging study found for "
+                                                    {search}"
+                                                </CommandEmpty>
+                                            )}
                                         {!loading && services.length > 0 && (
                                             <CommandGroup>
                                                 {services.map((service) => (
                                                     <CommandItem
                                                         key={service.id}
                                                         value={service.id.toString()}
-                                                        onSelect={() => handleSelectService(service)}
+                                                        onSelect={() =>
+                                                            handleSelectService(
+                                                                service,
+                                                            )
+                                                        }
                                                         className="cursor-pointer"
                                                     >
                                                         <Check
                                                             className={cn(
                                                                 'mr-2 h-4 w-4',
-                                                                selectedService?.id === service.id
+                                                                selectedService?.id ===
+                                                                    service.id
                                                                     ? 'opacity-100'
-                                                                    : 'opacity-0'
+                                                                    : 'opacity-0',
                                                             )}
                                                         />
                                                         <div className="flex flex-1 flex-col gap-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-medium">
-                                                                    {service.name}
+                                                                    {
+                                                                        service.name
+                                                                    }
                                                                 </span>
-                                                                <Badge variant="outline" className="text-xs">
-                                                                    {service.code}
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-xs"
+                                                                >
+                                                                    {
+                                                                        service.code
+                                                                    }
                                                                 </Badge>
                                                             </div>
                                                             <span className="text-xs text-muted-foreground">
-                                                                {service.modality || service.category}
+                                                                {service.modality ||
+                                                                    service.category}
                                                             </span>
                                                         </div>
                                                     </CommandItem>
@@ -477,7 +519,9 @@ export function ExternalImageUploadDialog({
                             <div className="mt-2 flex items-center gap-2 rounded-md bg-muted p-3 text-sm">
                                 <Scan className="h-4 w-4 text-purple-600" />
                                 <div>
-                                    <span className="font-medium">{selectedService.name}</span>
+                                    <span className="font-medium">
+                                        {selectedService.name}
+                                    </span>
                                     <span className="ml-2 text-muted-foreground">
                                         ({selectedService.code})
                                     </span>
@@ -485,7 +529,9 @@ export function ExternalImageUploadDialog({
                             </div>
                         )}
                         {errors.lab_service_id && (
-                            <p className="text-sm text-destructive">{errors.lab_service_id}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.lab_service_id}
+                            </p>
                         )}
                     </div>
 
@@ -493,7 +539,8 @@ export function ExternalImageUploadDialog({
                     <div className="space-y-2">
                         <Label htmlFor="facility-name">
                             <Building2 className="mr-1 inline h-4 w-4" />
-                            External Facility Name <span className="text-destructive">*</span>
+                            External Facility Name{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Input
                             id="facility-name"
@@ -501,12 +548,20 @@ export function ExternalImageUploadDialog({
                             value={facilityName}
                             onChange={(e) => {
                                 setFacilityName(e.target.value);
-                                setErrors((prev) => ({ ...prev, external_facility_name: '' }));
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    external_facility_name: '',
+                                }));
                             }}
-                            className={cn(errors.external_facility_name && 'border-destructive')}
+                            className={cn(
+                                errors.external_facility_name &&
+                                    'border-destructive',
+                            )}
                         />
                         {errors.external_facility_name && (
-                            <p className="text-sm text-destructive">{errors.external_facility_name}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.external_facility_name}
+                            </p>
                         )}
                     </div>
 
@@ -514,7 +569,8 @@ export function ExternalImageUploadDialog({
                     <div className="space-y-2">
                         <Label htmlFor="study-date">
                             <Calendar className="mr-1 inline h-4 w-4" />
-                            Study Date <span className="text-destructive">*</span>
+                            Study Date{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Input
                             id="study-date"
@@ -522,20 +578,29 @@ export function ExternalImageUploadDialog({
                             value={studyDate}
                             onChange={(e) => {
                                 setStudyDate(e.target.value);
-                                setErrors((prev) => ({ ...prev, external_study_date: '' }));
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    external_study_date: '',
+                                }));
                             }}
                             max={new Date().toISOString().split('T')[0]}
-                            className={cn(errors.external_study_date && 'border-destructive')}
+                            className={cn(
+                                errors.external_study_date &&
+                                    'border-destructive',
+                            )}
                         />
                         {errors.external_study_date && (
-                            <p className="text-sm text-destructive">{errors.external_study_date}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.external_study_date}
+                            </p>
                         )}
                     </div>
 
                     {/* File Upload Area */}
                     <div className="space-y-2">
                         <Label>
-                            Image Files <span className="text-destructive">*</span>
+                            Image Files{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <div
                             className={cn(
@@ -543,7 +608,7 @@ export function ExternalImageUploadDialog({
                                 isDragging
                                     ? 'border-primary bg-primary/5'
                                     : 'border-muted-foreground/25 hover:border-muted-foreground/50',
-                                errors.files && 'border-destructive'
+                                errors.files && 'border-destructive',
                             )}
                             onDragEnter={handleDragEnter}
                             onDragLeave={handleDragLeave}
@@ -566,19 +631,24 @@ export function ExternalImageUploadDialog({
                                         <button
                                             type="button"
                                             className="text-primary underline hover:no-underline"
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() =>
+                                                fileInputRef.current?.click()
+                                            }
                                         >
                                             browse
                                         </button>
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        JPEG, PNG, PDF up to {MAX_FILE_SIZE}MB each (max 10 files)
+                                        JPEG, PNG, PDF up to {MAX_FILE_SIZE}MB
+                                        each (max 10 files)
                                     </p>
                                 </div>
                             </div>
                         </div>
                         {errors.files && (
-                            <p className="text-sm text-destructive">{errors.files}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.files}
+                            </p>
                         )}
                     </div>
 
@@ -592,7 +662,8 @@ export function ExternalImageUploadDialog({
                                         key={fileItem.id}
                                         className={cn(
                                             'flex items-start gap-3 rounded-lg border p-3',
-                                            fileItem.error && 'border-destructive bg-destructive/5'
+                                            fileItem.error &&
+                                                'border-destructive bg-destructive/5',
                                         )}
                                     >
                                         {/* Preview */}
@@ -616,12 +687,16 @@ export function ExternalImageUploadDialog({
                                                 <div className="min-w-0">
                                                     <p
                                                         className="truncate text-sm font-medium"
-                                                        title={fileItem.file.name}
+                                                        title={
+                                                            fileItem.file.name
+                                                        }
                                                     >
                                                         {fileItem.file.name}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {formatFileSize(fileItem.file.size)}
+                                                        {formatFileSize(
+                                                            fileItem.file.size,
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <Button
@@ -629,7 +704,9 @@ export function ExternalImageUploadDialog({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-6 w-6"
-                                                    onClick={() => removeFile(fileItem.id)}
+                                                    onClick={() =>
+                                                        removeFile(fileItem.id)
+                                                    }
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>
@@ -641,7 +718,10 @@ export function ExternalImageUploadDialog({
                                                     placeholder="Description (e.g., PA View, Lateral View)"
                                                     value={fileItem.description}
                                                     onChange={(e) =>
-                                                        updateFileDescription(fileItem.id, e.target.value)
+                                                        updateFileDescription(
+                                                            fileItem.id,
+                                                            e.target.value,
+                                                        )
                                                     }
                                                     className="h-8 text-sm"
                                                 />
@@ -649,7 +729,9 @@ export function ExternalImageUploadDialog({
 
                                             {/* Error Message */}
                                             {fileItem.error && (
-                                                <p className="text-xs text-destructive">{fileItem.error}</p>
+                                                <p className="text-xs text-destructive">
+                                                    {fileItem.error}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
@@ -657,7 +739,8 @@ export function ExternalImageUploadDialog({
                             </div>
                             {hasFileErrors && (
                                 <p className="text-sm text-amber-600 dark:text-amber-400">
-                                    Some files have errors and will not be uploaded.
+                                    Some files have errors and will not be
+                                    uploaded.
                                 </p>
                             )}
                         </div>
@@ -682,9 +765,9 @@ export function ExternalImageUploadDialog({
                             External Images
                         </AlertTitle>
                         <AlertDescription className="text-blue-700 dark:text-blue-300">
-                            External imaging studies are for reference only and will not generate
-                            billing charges. They will be clearly marked as external in the
-                            patient's record.
+                            External imaging studies are for reference only and
+                            will not generate billing charges. They will be
+                            clearly marked as external in the patient's record.
                         </AlertDescription>
                     </Alert>
 
@@ -712,7 +795,10 @@ export function ExternalImageUploadDialog({
                             ) : (
                                 <>
                                     <Upload className="mr-2 h-4 w-4" />
-                                    Upload {validFilesCount > 0 ? `${validFilesCount} File${validFilesCount !== 1 ? 's' : ''}` : 'Files'}
+                                    Upload{' '}
+                                    {validFilesCount > 0
+                                        ? `${validFilesCount} File${validFilesCount !== 1 ? 's' : ''}`
+                                        : 'Files'}
                                 </>
                             )}
                         </Button>

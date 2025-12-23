@@ -136,11 +136,12 @@ export default function AsyncDiagnosisSelect({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content || '',
+                    'X-CSRF-TOKEN':
+                        document.querySelector<HTMLMetaElement>(
+                            'meta[name="csrf-token"]',
+                        )?.content || '',
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     diagnosis: search,
                     icd_10: customIcdCode.trim(),
                 }),
@@ -210,11 +211,12 @@ export default function AsyncDiagnosisSelect({
                         {!loading &&
                             search.length >= 2 &&
                             diagnoses.length === 0 && (
-                                <CommandEmpty className="py-2 px-2">
+                                <CommandEmpty className="px-2 py-2">
                                     {!showCustomForm ? (
                                         <>
-                                            <div className="text-center text-sm text-muted-foreground mb-2">
-                                                No diagnosis found for "{search}"
+                                            <div className="mb-2 text-center text-sm text-muted-foreground">
+                                                No diagnosis found for "{search}
+                                                "
                                             </div>
                                             <Button
                                                 variant="outline"
@@ -236,27 +238,37 @@ export default function AsyncDiagnosisSelect({
                                                     <Label className="text-xs text-muted-foreground">
                                                         Diagnosis Name
                                                     </Label>
-                                                    <div className="text-sm font-medium mt-1">
+                                                    <div className="mt-1 text-sm font-medium">
                                                         {search}
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <Label htmlFor="icd-code" className="text-xs">
-                                                        ICD-10 Code <span className="text-destructive">*</span>
+                                                    <Label
+                                                        htmlFor="icd-code"
+                                                        className="text-xs"
+                                                    >
+                                                        ICD-10 Code{' '}
+                                                        <span className="text-destructive">
+                                                            *
+                                                        </span>
                                                     </Label>
                                                     <Input
                                                         id="icd-code"
                                                         placeholder="e.g., A00.0"
                                                         value={customIcdCode}
                                                         onChange={(e) => {
-                                                            setCustomIcdCode(e.target.value.toUpperCase());
-                                                            setCustomError(null);
+                                                            setCustomIcdCode(
+                                                                e.target.value.toUpperCase(),
+                                                            );
+                                                            setCustomError(
+                                                                null,
+                                                            );
                                                         }}
                                                         className="mt-1 h-8"
                                                         autoFocus
                                                     />
                                                     {customError && (
-                                                        <p className="text-xs text-destructive mt-1">
+                                                        <p className="mt-1 text-xs text-destructive">
                                                             {customError}
                                                         </p>
                                                     )}
@@ -268,7 +280,9 @@ export default function AsyncDiagnosisSelect({
                                                     size="sm"
                                                     className="flex-1"
                                                     onClick={() => {
-                                                        setShowCustomForm(false);
+                                                        setShowCustomForm(
+                                                            false,
+                                                        );
                                                         setCustomIcdCode('');
                                                         setCustomError(null);
                                                     }}
@@ -280,7 +294,10 @@ export default function AsyncDiagnosisSelect({
                                                     size="sm"
                                                     className="flex-1"
                                                     onClick={handleCreateCustom}
-                                                    disabled={creating || !customIcdCode.trim()}
+                                                    disabled={
+                                                        creating ||
+                                                        !customIcdCode.trim()
+                                                    }
                                                 >
                                                     {creating ? (
                                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -318,7 +335,7 @@ export default function AsyncDiagnosisSelect({
                                                 {diagnosis.is_custom ? (
                                                     <Badge
                                                         variant="secondary"
-                                                        className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                                        className="bg-amber-100 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                                     >
                                                         Custom
                                                     </Badge>

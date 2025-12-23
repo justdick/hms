@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight, FlaskConical } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 export interface PendingLabResultItem {
     id: number;
@@ -36,14 +36,23 @@ export interface PendingLabResultsProps {
     className?: string;
 }
 
-const priorityVariants: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+const priorityVariants: Record<
+    string,
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'outline' | 'destructive';
+    }
+> = {
     stat: { label: 'STAT', variant: 'destructive' },
     urgent: { label: 'Urgent', variant: 'destructive' },
     routine: { label: 'Routine', variant: 'outline' },
 };
 
 function getPriorityBadge(priority: string) {
-    const config = priorityVariants[priority] || { label: priority, variant: 'outline' as const };
+    const config = priorityVariants[priority] || {
+        label: priority,
+        variant: 'outline' as const,
+    };
     return (
         <Badge variant={config.variant} className="whitespace-nowrap">
             {config.label}
@@ -85,14 +94,18 @@ export function PendingLabResults({
                         No pending lab results
                     </div>
                 ) : (
-                    <div className="overflow-x-auto -mx-6">
+                    <div className="-mx-6 overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Patient</TableHead>
                                     <TableHead>Test</TableHead>
-                                    <TableHead className="hidden sm:table-cell">Priority</TableHead>
-                                    <TableHead className="text-right hidden md:table-cell">Result Date</TableHead>
+                                    <TableHead className="hidden sm:table-cell">
+                                        Priority
+                                    </TableHead>
+                                    <TableHead className="hidden text-right md:table-cell">
+                                        Result Date
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -116,7 +129,7 @@ export function PendingLabResults({
                                         <TableCell className="hidden sm:table-cell">
                                             {getPriorityBadge(result.priority)}
                                         </TableCell>
-                                        <TableCell className="text-right text-muted-foreground hidden md:table-cell">
+                                        <TableCell className="hidden text-right text-muted-foreground md:table-cell">
                                             {result.result_entered_at || '-'}
                                         </TableCell>
                                     </TableRow>

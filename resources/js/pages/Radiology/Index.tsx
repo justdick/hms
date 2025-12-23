@@ -107,19 +107,42 @@ interface Props {
     filters: Filters;
 }
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusConfig: Record<
+    string,
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }
+> = {
     ordered: { label: 'Ordered', variant: 'secondary' },
     in_progress: { label: 'In Progress', variant: 'default' },
     completed: { label: 'Completed', variant: 'outline' },
 };
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
-    stat: { label: 'STAT', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-bold animate-pulse' },
-    urgent: { label: 'URGENT', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 font-semibold' },
-    routine: { label: 'Routine', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
+    stat: {
+        label: 'STAT',
+        className:
+            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-bold animate-pulse',
+    },
+    urgent: {
+        label: 'URGENT',
+        className:
+            'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 font-semibold',
+    },
+    routine: {
+        label: 'Routine',
+        className:
+            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+    },
 };
 
-export default function RadiologyIndex({ orders, stats, modalities, filters }: Props) {
+export default function RadiologyIndex({
+    orders,
+    stats,
+    modalities,
+    filters,
+}: Props) {
     const [search, setSearch] = React.useState(filters.search || '');
     const [dateFrom, setDateFrom] = React.useState(filters.date_from || '');
     const [dateTo, setDateTo] = React.useState(filters.date_to || '');
@@ -196,26 +219,36 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
     };
 
     const handleMarkInProgress = (orderId: number) => {
-        router.patch(`/radiology/orders/${orderId}/in-progress`, {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.patch(
+            `/radiology/orders/${orderId}/in-progress`,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
-    const prevLink = orders.links.find((link) => link.label.includes('Previous'));
+    const prevLink = orders.links.find((link) =>
+        link.label.includes('Previous'),
+    );
     const nextLink = orders.links.find((link) => link.label.includes('Next'));
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'Investigations', href: '#' },
-            { title: 'Radiology', href: '/radiology' },
-        ]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Investigations', href: '#' },
+                { title: 'Radiology', href: '/radiology' },
+            ]}
+        >
             <Head title="Radiology Worklist" />
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Radiology Worklist</h1>
+                        <h1 className="text-2xl font-bold">
+                            Radiology Worklist
+                        </h1>
                         <p className="text-muted-foreground">
                             Process imaging orders and upload results
                         </p>
@@ -260,17 +293,23 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                     <Input
                                         placeholder="Search patients, studies..."
                                         value={search}
-                                        onChange={(e) => handleSearchChange(e.target.value)}
+                                        onChange={(e) =>
+                                            handleSearchChange(e.target.value)
+                                        }
                                         className="pl-10"
                                     />
                                 </div>
 
                                 {/* Per Page Selector */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">Show</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        Show
+                                    </span>
                                     <select
                                         value={orders.per_page}
-                                        onChange={(e) => handlePerPageChange(e.target.value)}
+                                        onChange={(e) =>
+                                            handlePerPageChange(e.target.value)
+                                        }
                                         className="h-8 rounded-md border border-input bg-background px-2 text-sm"
                                     >
                                         <option value="10">10</option>
@@ -283,21 +322,44 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                 {/* Status Filter */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="border-dashed">
-                                            Status: {allStatuses.find((s) => s.value === currentStatus)?.label}
+                                        <Button
+                                            variant="outline"
+                                            className="border-dashed"
+                                        >
+                                            Status:{' '}
+                                            {
+                                                allStatuses.find(
+                                                    (s) =>
+                                                        s.value ===
+                                                        currentStatus,
+                                                )?.label
+                                            }
                                             <ChevronDown className="ml-2 h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                        <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        onCloseAutoFocus={(e) =>
+                                            e.preventDefault()
+                                        }
+                                    >
+                                        <DropdownMenuLabel>
+                                            Filter by Status
+                                        </DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         {allStatuses.map((status) => (
                                             <DropdownMenuCheckboxItem
                                                 key={status.value}
-                                                checked={currentStatus === status.value}
+                                                checked={
+                                                    currentStatus ===
+                                                    status.value
+                                                }
                                                 onCheckedChange={(checked) => {
                                                     if (checked) {
-                                                        handleFilterChange('status', status.value);
+                                                        handleFilterChange(
+                                                            'status',
+                                                            status.value,
+                                                        );
                                                     }
                                                 }}
                                             >
@@ -310,19 +372,35 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                 {/* Priority Filter */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="border-dashed">
-                                            Priority{currentPriority ? `: ${currentPriority.toUpperCase()}` : ''}
+                                        <Button
+                                            variant="outline"
+                                            className="border-dashed"
+                                        >
+                                            Priority
+                                            {currentPriority
+                                                ? `: ${currentPriority.toUpperCase()}`
+                                                : ''}
                                             <ChevronDown className="ml-2 h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                        <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        onCloseAutoFocus={(e) =>
+                                            e.preventDefault()
+                                        }
+                                    >
+                                        <DropdownMenuLabel>
+                                            Filter by Priority
+                                        </DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuCheckboxItem
                                             checked={!currentPriority}
                                             onCheckedChange={(checked) => {
                                                 if (checked) {
-                                                    handleFilterChange('priority', undefined);
+                                                    handleFilterChange(
+                                                        'priority',
+                                                        undefined,
+                                                    );
                                                 }
                                             }}
                                         >
@@ -331,9 +409,16 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                         {priorities.map((priority) => (
                                             <DropdownMenuCheckboxItem
                                                 key={priority}
-                                                checked={currentPriority === priority}
+                                                checked={
+                                                    currentPriority === priority
+                                                }
                                                 onCheckedChange={(checked) => {
-                                                    handleFilterChange('priority', checked ? priority : undefined);
+                                                    handleFilterChange(
+                                                        'priority',
+                                                        checked
+                                                            ? priority
+                                                            : undefined,
+                                                    );
                                                 }}
                                             >
                                                 {priority.toUpperCase()}
@@ -346,19 +431,35 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                 {modalities.length > 0 && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="border-dashed">
-                                                Modality{currentModality ? `: ${currentModality}` : ''}
+                                            <Button
+                                                variant="outline"
+                                                className="border-dashed"
+                                            >
+                                                Modality
+                                                {currentModality
+                                                    ? `: ${currentModality}`
+                                                    : ''}
                                                 <ChevronDown className="ml-2 h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                            <DropdownMenuLabel>Filter by Modality</DropdownMenuLabel>
+                                        <DropdownMenuContent
+                                            align="start"
+                                            onCloseAutoFocus={(e) =>
+                                                e.preventDefault()
+                                            }
+                                        >
+                                            <DropdownMenuLabel>
+                                                Filter by Modality
+                                            </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuCheckboxItem
                                                 checked={!currentModality}
                                                 onCheckedChange={(checked) => {
                                                     if (checked) {
-                                                        handleFilterChange('modality', undefined);
+                                                        handleFilterChange(
+                                                            'modality',
+                                                            undefined,
+                                                        );
                                                     }
                                                 }}
                                             >
@@ -367,9 +468,19 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                             {modalities.map((modality) => (
                                                 <DropdownMenuCheckboxItem
                                                     key={modality}
-                                                    checked={currentModality === modality}
-                                                    onCheckedChange={(checked) => {
-                                                        handleFilterChange('modality', checked ? modality : undefined);
+                                                    checked={
+                                                        currentModality ===
+                                                        modality
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) => {
+                                                        handleFilterChange(
+                                                            'modality',
+                                                            checked
+                                                                ? modality
+                                                                : undefined,
+                                                        );
                                                     }}
                                                 >
                                                     {modality}
@@ -382,40 +493,68 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                 {/* Date Range Filter */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="border-dashed">
+                                        <Button
+                                            variant="outline"
+                                            className="border-dashed"
+                                        >
                                             <Calendar className="mr-2 h-4 w-4" />
                                             Date Range
                                             {(dateFrom || dateTo) && (
-                                                <Badge variant="secondary" className="ml-2">
-                                                    {dateFrom && dateTo ? `${dateFrom} - ${dateTo}` : dateFrom || dateTo}
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="ml-2"
+                                                >
+                                                    {dateFrom && dateTo
+                                                        ? `${dateFrom} - ${dateTo}`
+                                                        : dateFrom || dateTo}
                                                 </Badge>
                                             )}
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className="w-72 p-4" onCloseAutoFocus={(e) => e.preventDefault()}>
+                                    <DropdownMenuContent
+                                        align="start"
+                                        className="w-72 p-4"
+                                        onCloseAutoFocus={(e) =>
+                                            e.preventDefault()
+                                        }
+                                    >
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="text-sm font-medium">From</label>
+                                                <label className="text-sm font-medium">
+                                                    From
+                                                </label>
                                                 <Input
                                                     type="date"
                                                     value={dateFrom}
-                                                    onChange={(e) => setDateFrom(e.target.value)}
+                                                    onChange={(e) =>
+                                                        setDateFrom(
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     className="mt-1"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm font-medium">To</label>
+                                                <label className="text-sm font-medium">
+                                                    To
+                                                </label>
                                                 <Input
                                                     type="date"
                                                     value={dateTo}
-                                                    onChange={(e) => setDateTo(e.target.value)}
+                                                    onChange={(e) =>
+                                                        setDateTo(
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     className="mt-1"
                                                 />
                                             </div>
                                             <div className="flex gap-2">
                                                 <Button
                                                     size="sm"
-                                                    onClick={handleDateFilterChange}
+                                                    onClick={
+                                                        handleDateFilterChange
+                                                    }
                                                 >
                                                     Apply
                                                 </Button>
@@ -425,8 +564,14 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                                     onClick={() => {
                                                         setDateFrom('');
                                                         setDateTo('');
-                                                        handleFilterChange('date_from', undefined);
-                                                        handleFilterChange('date_to', undefined);
+                                                        handleFilterChange(
+                                                            'date_from',
+                                                            undefined,
+                                                        );
+                                                        handleFilterChange(
+                                                            'date_to',
+                                                            undefined,
+                                                        );
                                                     }}
                                                 >
                                                     Clear
@@ -449,7 +594,9 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                             <TableHead>Ordered By</TableHead>
                                             <TableHead>Ordered</TableHead>
                                             <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -457,78 +604,162 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                             orders.data.map((order) => (
                                                 <TableRow
                                                     key={order.id}
-                                                    className={order.priority === 'stat' ? 'bg-red-50 dark:bg-red-950/20' : ''}
+                                                    className={
+                                                        order.priority ===
+                                                        'stat'
+                                                            ? 'bg-red-50 dark:bg-red-950/20'
+                                                            : ''
+                                                    }
                                                 >
                                                     <TableCell>
-                                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${priorityConfig[order.priority]?.className || ''}`}>
-                                                            {order.priority === 'stat' && (
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${priorityConfig[order.priority]?.className || ''}`}
+                                                        >
+                                                            {order.priority ===
+                                                                'stat' && (
                                                                 <AlertCircle className="mr-1 h-3 w-3" />
                                                             )}
-                                                            {priorityConfig[order.priority]?.label || order.priority}
+                                                            {priorityConfig[
+                                                                order.priority
+                                                            ]?.label ||
+                                                                order.priority}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
                                                         {order.patient ? (
                                                             <div>
                                                                 <div className="font-medium">
-                                                                    {order.patient.first_name} {order.patient.last_name}
+                                                                    {
+                                                                        order
+                                                                            .patient
+                                                                            .first_name
+                                                                    }{' '}
+                                                                    {
+                                                                        order
+                                                                            .patient
+                                                                            .last_name
+                                                                    }
                                                                 </div>
                                                                 <div className="text-sm text-muted-foreground">
-                                                                    {order.patient.patient_number}
+                                                                    {
+                                                                        order
+                                                                            .patient
+                                                                            .patient_number
+                                                                    }
                                                                 </div>
                                                                 {order.context && (
                                                                     <div className="text-xs text-muted-foreground">
-                                                                        {order.context}
+                                                                        {
+                                                                            order.context
+                                                                        }
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-muted-foreground">Unknown</span>
+                                                            <span className="text-muted-foreground">
+                                                                Unknown
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-medium">{order.lab_service.name}</span>
+                                                            <span className="font-medium">
+                                                                {
+                                                                    order
+                                                                        .lab_service
+                                                                        .name
+                                                                }
+                                                            </span>
                                                             {order.has_images && (
                                                                 <Image className="h-4 w-4 text-green-600" />
                                                             )}
                                                         </div>
                                                         {order.clinical_notes && (
-                                                            <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={order.clinical_notes}>
-                                                                {order.clinical_notes}
+                                                            <div
+                                                                className="max-w-[200px] truncate text-xs text-muted-foreground"
+                                                                title={
+                                                                    order.clinical_notes
+                                                                }
+                                                            >
+                                                                {
+                                                                    order.clinical_notes
+                                                                }
                                                             </div>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {order.lab_service.modality ? (
-                                                            <Badge variant="outline">{order.lab_service.modality}</Badge>
+                                                        {order.lab_service
+                                                            .modality ? (
+                                                            <Badge variant="outline">
+                                                                {
+                                                                    order
+                                                                        .lab_service
+                                                                        .modality
+                                                                }
+                                                            </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground">-</span>
+                                                            <span className="text-muted-foreground">
+                                                                -
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="text-sm">{order.ordered_by.name}</div>
+                                                        <div className="text-sm">
+                                                            {
+                                                                order.ordered_by
+                                                                    .name
+                                                            }
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-1 text-sm">
                                                             <Clock className="h-3 w-3 text-muted-foreground" />
-                                                            <span title={format(new Date(order.ordered_at), 'PPpp')}>
-                                                                {formatDistanceToNow(new Date(order.ordered_at), { addSuffix: true })}
+                                                            <span
+                                                                title={format(
+                                                                    new Date(
+                                                                        order.ordered_at,
+                                                                    ),
+                                                                    'PPpp',
+                                                                )}
+                                                            >
+                                                                {formatDistanceToNow(
+                                                                    new Date(
+                                                                        order.ordered_at,
+                                                                    ),
+                                                                    {
+                                                                        addSuffix: true,
+                                                                    },
+                                                                )}
                                                             </span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={statusConfig[order.status]?.variant || 'secondary'}>
-                                                            {statusConfig[order.status]?.label || order.status}
+                                                        <Badge
+                                                            variant={
+                                                                statusConfig[
+                                                                    order.status
+                                                                ]?.variant ||
+                                                                'secondary'
+                                                            }
+                                                        >
+                                                            {statusConfig[
+                                                                order.status
+                                                            ]?.label ||
+                                                                order.status}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            {order.status === 'ordered' && (
+                                                            {order.status ===
+                                                                'ordered' && (
                                                                 <Button
                                                                     size="sm"
                                                                     variant="outline"
-                                                                    onClick={() => handleMarkInProgress(order.id)}
+                                                                    onClick={() =>
+                                                                        handleMarkInProgress(
+                                                                            order.id,
+                                                                        )
+                                                                    }
                                                                     title="Start Processing"
                                                                 >
                                                                     <Play className="h-4 w-4" />
@@ -539,7 +770,9 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                                                 variant="default"
                                                                 asChild
                                                             >
-                                                                <Link href={`/radiology/orders/${order.id}`}>
+                                                                <Link
+                                                                    href={`/radiology/orders/${order.id}`}
+                                                                >
                                                                     <Eye className="mr-1 h-4 w-4" />
                                                                     View
                                                                 </Link>
@@ -550,12 +783,20 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={8} className="h-24 text-center">
+                                                <TableCell
+                                                    colSpan={8}
+                                                    className="h-24 text-center"
+                                                >
                                                     <div className="flex flex-col items-center gap-2">
                                                         <Scan className="h-8 w-8 text-muted-foreground" />
-                                                        <div>No imaging orders found.</div>
+                                                        <div>
+                                                            No imaging orders
+                                                            found.
+                                                        </div>
                                                         <div className="text-sm text-muted-foreground">
-                                                            No imaging orders match your current filters.
+                                                            No imaging orders
+                                                            match your current
+                                                            filters.
                                                         </div>
                                                     </div>
                                                 </TableCell>
@@ -570,7 +811,8 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                 <div className="text-sm text-muted-foreground">
                                     {orders.from && orders.to ? (
                                         <>
-                                            Showing {orders.from} to {orders.to} of {orders.total} order(s)
+                                            Showing {orders.from} to {orders.to}{' '}
+                                            of {orders.total} order(s)
                                         </>
                                     ) : (
                                         <>No results</>
@@ -580,7 +822,11 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handlePageChange(prevLink?.url ?? null)}
+                                        onClick={() =>
+                                            handlePageChange(
+                                                prevLink?.url ?? null,
+                                            )
+                                        }
                                         disabled={!prevLink?.url}
                                     >
                                         Previous
@@ -588,17 +834,25 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                     {orders.links
                                         .filter(
                                             (link) =>
-                                                !link.label.includes('Previous') &&
+                                                !link.label.includes(
+                                                    'Previous',
+                                                ) &&
                                                 !link.label.includes('Next'),
                                         )
                                         .slice(0, 5) // Limit visible page numbers
                                         .map((link, index) => (
                                             <Button
                                                 key={index}
-                                                variant={link.active ? 'default' : 'outline'}
+                                                variant={
+                                                    link.active
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
                                                 size="sm"
                                                 className="min-w-[40px]"
-                                                onClick={() => handlePageChange(link.url)}
+                                                onClick={() =>
+                                                    handlePageChange(link.url)
+                                                }
                                                 disabled={!link.url}
                                             >
                                                 {link.label}
@@ -607,7 +861,11 @@ export default function RadiologyIndex({ orders, stats, modalities, filters }: P
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handlePageChange(nextLink?.url ?? null)}
+                                        onClick={() =>
+                                            handlePageChange(
+                                                nextLink?.url ?? null,
+                                            )
+                                        }
                                         disabled={!nextLink?.url}
                                     >
                                         Next

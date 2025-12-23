@@ -18,8 +18,13 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/ui/stat-card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,6 +32,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -140,7 +146,9 @@ export default function BackupIndex({ backups }: Props) {
         router.post(`/admin/backups/${backup.id}/toggle-protection`);
     };
 
-    const completedBackups = backups.data.filter((b) => b.status === 'completed');
+    const completedBackups = backups.data.filter(
+        (b) => b.status === 'completed',
+    );
     const totalSize = completedBackups.reduce((sum, b) => sum + b.file_size, 0);
     const cloudBackups = completedBackups.filter((b) => b.google_drive_file_id);
 
@@ -167,7 +175,10 @@ export default function BackupIndex({ backups }: Props) {
                                 Settings
                             </a>
                         </Button>
-                        <Button onClick={handleCreateBackup} disabled={isCreating}>
+                        <Button
+                            onClick={handleCreateBackup}
+                            disabled={isCreating}
+                        >
                             {isCreating ? (
                                 <>
                                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -227,9 +238,13 @@ export default function BackupIndex({ backups }: Props) {
                                     No backups yet
                                 </h3>
                                 <p className="mt-2 text-gray-600 dark:text-gray-400">
-                                    Create your first backup to protect your data.
+                                    Create your first backup to protect your
+                                    data.
                                 </p>
-                                <Button onClick={handleCreateBackup} className="mt-4">
+                                <Button
+                                    onClick={handleCreateBackup}
+                                    className="mt-4"
+                                >
                                     <Plus className="mr-2 h-4 w-4" />
                                     Create Backup
                                 </Button>
@@ -261,7 +276,9 @@ export default function BackupIndex({ backups }: Props) {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                {formatFileSize(backup.file_size)}
+                                                {formatFileSize(
+                                                    backup.file_size,
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
@@ -290,15 +307,21 @@ export default function BackupIndex({ backups }: Props) {
                                                     )}
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{getStatusBadge(backup.status)}</TableCell>
+                                            <TableCell>
+                                                {getStatusBadge(backup.status)}
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">
-                                                    {getSourceLabel(backup.source)}
+                                                    {getSourceLabel(
+                                                        backup.source,
+                                                    )}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="text-sm">
-                                                    {formatDate(backup.created_at)}
+                                                    {formatDate(
+                                                        backup.created_at,
+                                                    )}
                                                 </div>
                                                 {backup.creator && (
                                                     <div className="text-xs text-gray-500">
@@ -308,14 +331,21 @@ export default function BackupIndex({ backups }: Props) {
                                             </TableCell>
                                             <TableCell>
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                        >
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         {backup.file_path && (
-                                                            <DropdownMenuItem asChild>
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
                                                                 <a
                                                                     href={`/admin/backups/${backup.id}/download`}
                                                                 >
@@ -324,10 +354,13 @@ export default function BackupIndex({ backups }: Props) {
                                                                 </a>
                                                             </DropdownMenuItem>
                                                         )}
-                                                        {backup.status === 'completed' && (
+                                                        {backup.status ===
+                                                            'completed' && (
                                                             <DropdownMenuItem
                                                                 onClick={() =>
-                                                                    setRestoreBackup(backup)
+                                                                    setRestoreBackup(
+                                                                        backup,
+                                                                    )
                                                                 }
                                                             >
                                                                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -336,13 +369,16 @@ export default function BackupIndex({ backups }: Props) {
                                                         )}
                                                         <DropdownMenuItem
                                                             onClick={() =>
-                                                                handleToggleProtection(backup)
+                                                                handleToggleProtection(
+                                                                    backup,
+                                                                )
                                                             }
                                                         >
                                                             {backup.is_protected ? (
                                                                 <>
                                                                     <ShieldOff className="mr-2 h-4 w-4" />
-                                                                    Remove Protection
+                                                                    Remove
+                                                                    Protection
                                                                 </>
                                                             ) : (
                                                                 <>
@@ -353,9 +389,15 @@ export default function BackupIndex({ backups }: Props) {
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(backup)}
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    backup,
+                                                                )
+                                                            }
                                                             className="text-red-600"
-                                                            disabled={backup.is_protected}
+                                                            disabled={
+                                                                backup.is_protected
+                                                            }
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             Delete

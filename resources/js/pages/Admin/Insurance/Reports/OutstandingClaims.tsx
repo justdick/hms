@@ -97,29 +97,39 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
 
     const handleApplyFilters = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/admin/insurance/reports/outstanding-claims', localFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/outstanding-claims',
+            localFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleClearFilters = () => {
         const defaultFilters = { provider_id: null };
         setLocalFilters(defaultFilters);
-        router.get('/admin/insurance/reports/outstanding-claims', defaultFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/outstanding-claims',
+            defaultFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleExport = () => {
         const params = new URLSearchParams();
-        if (localFilters.provider_id) params.append('provider_id', localFilters.provider_id);
+        if (localFilters.provider_id)
+            params.append('provider_id', localFilters.provider_id);
         window.location.href = `/admin/insurance/reports/outstanding-claims/export?${params.toString()}`;
     };
 
     const formatCurrency = (amount: number | string) => {
-        const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+        const numAmount =
+            typeof amount === 'string' ? parseFloat(amount) : amount;
         return new Intl.NumberFormat('en-GH', {
             style: 'currency',
             currency: 'GHS',
@@ -131,7 +141,7 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
     // Calculate total for percentage calculations
     const totalAgingAmount = Object.values(data.aging_analysis).reduce(
         (sum, bucket) => sum + bucket.amount,
-        0
+        0,
     );
 
     return (
@@ -152,7 +162,9 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.visit('/admin/insurance/reports')}
+                            onClick={() =>
+                                router.visit('/admin/insurance/reports')
+                            }
                         >
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back
@@ -168,8 +180,13 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {hasActiveFilters && <Badge variant="secondary">Filters active</Badge>}
-                        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+                        {hasActiveFilters && (
+                            <Badge variant="secondary">Filters active</Badge>
+                        )}
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
                             <Filter className="mr-2 h-4 w-4" />
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
@@ -184,21 +201,39 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                 {showFilters && (
                     <Card>
                         <CardContent className="p-6">
-                            <form onSubmit={handleApplyFilters} className="space-y-4">
+                            <form
+                                onSubmit={handleApplyFilters}
+                                className="space-y-4"
+                            >
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div className="space-y-2">
-                                        <Label htmlFor="provider">Insurance Provider</Label>
+                                        <Label htmlFor="provider">
+                                            Insurance Provider
+                                        </Label>
                                         <Select
-                                            value={localFilters.provider_id || 'all'}
-                                            onValueChange={(value) => handleFilterChange('provider_id', value)}
+                                            value={
+                                                localFilters.provider_id ||
+                                                'all'
+                                            }
+                                            onValueChange={(value) =>
+                                                handleFilterChange(
+                                                    'provider_id',
+                                                    value,
+                                                )
+                                            }
                                         >
                                             <SelectTrigger id="provider">
                                                 <SelectValue placeholder="All providers" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All providers</SelectItem>
+                                                <SelectItem value="all">
+                                                    All providers
+                                                </SelectItem>
                                                 {providers.map((provider) => (
-                                                    <SelectItem key={provider.id} value={provider.id.toString()}>
+                                                    <SelectItem
+                                                        key={provider.id}
+                                                        value={provider.id.toString()}
+                                                    >
                                                         {provider.name}
                                                     </SelectItem>
                                                 ))}
@@ -209,7 +244,11 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                                 <div className="flex items-center gap-2">
                                     <Button type="submit">Apply Filters</Button>
                                     {hasActiveFilters && (
-                                        <Button type="button" variant="outline" onClick={handleClearFilters}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleClearFilters}
+                                        >
                                             <X className="mr-2 h-4 w-4" />
                                             Clear Filters
                                         </Button>
@@ -243,38 +282,50 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                            {Object.entries(data.aging_analysis).map(([bucket, bucketData]) => {
-                                const percentage =
-                                    totalAgingAmount > 0
-                                        ? (bucketData.amount / totalAgingAmount) * 100
-                                        : 0;
-                                return (
-                                    <div
-                                        key={bucket}
-                                        className="rounded-lg border p-4 dark:border-gray-700"
-                                    >
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <Badge className={agingColors[bucket]}>
-                                                {agingLabels[bucket]}
-                                            </Badge>
-                                            <span className="text-sm text-gray-500">
-                                                {percentage.toFixed(1)}%
-                                            </span>
+                            {Object.entries(data.aging_analysis).map(
+                                ([bucket, bucketData]) => {
+                                    const percentage =
+                                        totalAgingAmount > 0
+                                            ? (bucketData.amount /
+                                                  totalAgingAmount) *
+                                              100
+                                            : 0;
+                                    return (
+                                        <div
+                                            key={bucket}
+                                            className="rounded-lg border p-4 dark:border-gray-700"
+                                        >
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <Badge
+                                                    className={
+                                                        agingColors[bucket]
+                                                    }
+                                                >
+                                                    {agingLabels[bucket]}
+                                                </Badge>
+                                                <span className="text-sm text-gray-500">
+                                                    {percentage.toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <p className="text-2xl font-bold">
+                                                {bucketData.count}
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                claims
+                                            </p>
+                                            <p className="mt-2 text-lg font-semibold">
+                                                {formatCurrency(
+                                                    bucketData.amount,
+                                                )}
+                                            </p>
+                                            <Progress
+                                                value={percentage}
+                                                className="mt-2"
+                                            />
                                         </div>
-                                        <p className="text-2xl font-bold">{bucketData.count}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            claims
-                                        </p>
-                                        <p className="mt-2 text-lg font-semibold">
-                                            {formatCurrency(bucketData.amount)}
-                                        </p>
-                                        <Progress
-                                            value={percentage}
-                                            className="mt-2"
-                                        />
-                                    </div>
-                                );
-                            })}
+                                    );
+                                },
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -291,54 +342,101 @@ export default function OutstandingClaims({ data, providers, filters }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Provider</TableHead>
-                                            <TableHead className="text-right">Claims</TableHead>
-                                            <TableHead className="text-right">Outstanding Amount</TableHead>
-                                            <TableHead className="text-right">Oldest Claim</TableHead>
-                                            <TableHead className="text-right">Risk Level</TableHead>
+                                            <TableHead className="text-right">
+                                                Claims
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Outstanding Amount
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Oldest Claim
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Risk Level
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {Object.entries(data.by_provider)
-                                            .sort(([, a], [, b]) => b.amount - a.amount)
-                                            .map(([providerName, providerData]) => {
-                                                let riskLevel = 'Low';
-                                                let riskColor = 'bg-green-500';
-                                                if (providerData.oldest_claim_days > 90) {
-                                                    riskLevel = 'High';
-                                                    riskColor = 'bg-red-500';
-                                                } else if (providerData.oldest_claim_days > 60) {
-                                                    riskLevel = 'Medium';
-                                                    riskColor = 'bg-orange-500';
-                                                } else if (providerData.oldest_claim_days > 30) {
-                                                    riskLevel = 'Low-Medium';
-                                                    riskColor = 'bg-yellow-500';
-                                                }
+                                            .sort(
+                                                ([, a], [, b]) =>
+                                                    b.amount - a.amount,
+                                            )
+                                            .map(
+                                                ([
+                                                    providerName,
+                                                    providerData,
+                                                ]) => {
+                                                    let riskLevel = 'Low';
+                                                    let riskColor =
+                                                        'bg-green-500';
+                                                    if (
+                                                        providerData.oldest_claim_days >
+                                                        90
+                                                    ) {
+                                                        riskLevel = 'High';
+                                                        riskColor =
+                                                            'bg-red-500';
+                                                    } else if (
+                                                        providerData.oldest_claim_days >
+                                                        60
+                                                    ) {
+                                                        riskLevel = 'Medium';
+                                                        riskColor =
+                                                            'bg-orange-500';
+                                                    } else if (
+                                                        providerData.oldest_claim_days >
+                                                        30
+                                                    ) {
+                                                        riskLevel =
+                                                            'Low-Medium';
+                                                        riskColor =
+                                                            'bg-yellow-500';
+                                                    }
 
-                                                return (
-                                                    <TableRow key={providerName}>
-                                                        <TableCell className="font-medium">
-                                                            <div className="flex items-center gap-2">
-                                                                <Building2 className="h-4 w-4 text-gray-500" />
-                                                                {providerName}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Badge variant="outline">
-                                                                {providerData.count}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="text-right font-semibold text-red-600">
-                                                            {formatCurrency(providerData.amount)}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            {providerData.oldest_claim_days} days
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Badge className={riskColor}>{riskLevel}</Badge>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
+                                                    return (
+                                                        <TableRow
+                                                            key={providerName}
+                                                        >
+                                                            <TableCell className="font-medium">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Building2 className="h-4 w-4 text-gray-500" />
+                                                                    {
+                                                                        providerName
+                                                                    }
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                <Badge variant="outline">
+                                                                    {
+                                                                        providerData.count
+                                                                    }
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-right font-semibold text-red-600">
+                                                                {formatCurrency(
+                                                                    providerData.amount,
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {
+                                                                    providerData.oldest_claim_days
+                                                                }{' '}
+                                                                days
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                <Badge
+                                                                    className={
+                                                                        riskColor
+                                                                    }
+                                                                >
+                                                                    {riskLevel}
+                                                                </Badge>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                },
+                                            )}
                                     </TableBody>
                                 </Table>
                             </div>

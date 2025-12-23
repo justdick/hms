@@ -32,7 +32,11 @@ interface Props {
     payment: Payment | null;
 }
 
-export default function VoidConfirmationModal({ open, onOpenChange, payment }: Props) {
+export default function VoidConfirmationModal({
+    open,
+    onOpenChange,
+    payment,
+}: Props) {
     const [reason, setReason] = useState('');
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +50,7 @@ export default function VoidConfirmationModal({ open, onOpenChange, payment }: P
 
     const handleVoid = () => {
         if (!payment) return;
-        
+
         if (reason.length < 10) {
             setError('Please provide a reason with at least 10 characters');
             return;
@@ -64,12 +68,16 @@ export default function VoidConfirmationModal({ open, onOpenChange, payment }: P
                     onOpenChange(false);
                 },
                 onError: (errors) => {
-                    setError(errors.error || errors.reason || 'Failed to void payment');
+                    setError(
+                        errors.error ||
+                            errors.reason ||
+                            'Failed to void payment',
+                    );
                 },
                 onFinish: () => {
                     setProcessing(false);
                 },
-            }
+            },
         );
     };
 
@@ -90,45 +98,58 @@ export default function VoidConfirmationModal({ open, onOpenChange, payment }: P
                         Void Payment
                     </DialogTitle>
                     <DialogDescription>
-                        This action will mark the payment as voided. The original record will be maintained for audit purposes.
+                        This action will mark the payment as voided. The
+                        original record will be maintained for audit purposes.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
                     {/* Warning */}
                     <div className="flex items-start gap-3 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-                        <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                         <div className="text-sm text-red-800 dark:text-red-200">
-                            <p className="font-medium">Warning: This action cannot be undone</p>
+                            <p className="font-medium">
+                                Warning: This action cannot be undone
+                            </p>
                             <p className="mt-1">
-                                Voiding this payment will mark it as invalid. The patient may need to make a new payment.
+                                Voiding this payment will mark it as invalid.
+                                The patient may need to make a new payment.
                             </p>
                         </div>
                     </div>
 
                     {/* Payment Details */}
-                    <div className="rounded-lg border p-3 space-y-2">
+                    <div className="space-y-2 rounded-lg border p-3">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Patient</span>
+                            <span className="text-muted-foreground">
+                                Patient
+                            </span>
                             <span className="font-medium">
-                                {payment.patient_checkin?.patient.name || 'Unknown'}
+                                {payment.patient_checkin?.patient.name ||
+                                    'Unknown'}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Receipt #</span>
+                            <span className="text-muted-foreground">
+                                Receipt #
+                            </span>
                             <span className="font-mono text-sm">
                                 {payment.receipt_number || '-'}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Amount</span>
+                            <span className="text-muted-foreground">
+                                Amount
+                            </span>
                             <span className="font-medium text-red-600">
                                 {formatCurrency(payment.paid_amount)}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Description</span>
-                            <span className="font-medium text-right max-w-[200px] truncate">
+                            <span className="text-muted-foreground">
+                                Description
+                            </span>
+                            <span className="max-w-[200px] truncate text-right font-medium">
                                 {payment.description}
                             </span>
                         </div>
@@ -137,7 +158,8 @@ export default function VoidConfirmationModal({ open, onOpenChange, payment }: P
                     {/* Reason Input */}
                     <div className="space-y-2">
                         <Label htmlFor="void-reason">
-                            Reason for voiding <span className="text-red-500">*</span>
+                            Reason for voiding{' '}
+                            <span className="text-red-500">*</span>
                         </Label>
                         <Textarea
                             id="void-reason"

@@ -161,8 +161,12 @@ export function ClaimsDataTable<TData, TValue>({
     };
 
     // Find prev/next links from pagination
-    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -308,8 +312,8 @@ export function ClaimsDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.from && pagination.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of {pagination.total}{' '}
-                            claim(s)
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} claim(s)
                         </>
                     ) : (
                         <>No results</>

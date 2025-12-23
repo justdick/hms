@@ -71,7 +71,6 @@ interface DataTableProps<TData, TValue> {
     filters?: Filters;
 }
 
-
 export function DataTable<TData, TValue>({
     columns,
     data,
@@ -207,7 +206,8 @@ export function DataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <Filter className="mr-2 h-4 w-4" />
-                            Category{currentCategory ? `: ${currentCategory}` : ''}
+                            Category
+                            {currentCategory ? `: ${currentCategory}` : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -248,7 +248,10 @@ export function DataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <AlertTriangle className="mr-2 h-4 w-4" />
-                            Stock Status{currentStockStatus ? `: ${stockStatuses.find(s => s.value === currentStockStatus)?.label}` : ''}
+                            Stock Status
+                            {currentStockStatus
+                                ? `: ${stockStatuses.find((s) => s.value === currentStockStatus)?.label}`
+                                : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -261,7 +264,10 @@ export function DataTable<TData, TValue>({
                             checked={!currentStockStatus}
                             onCheckedChange={(checked) => {
                                 if (checked) {
-                                    handleFilterChange('stock_status', undefined);
+                                    handleFilterChange(
+                                        'stock_status',
+                                        undefined,
+                                    );
                                 }
                             }}
                         >

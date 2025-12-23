@@ -52,7 +52,11 @@ interface Props {
     canManageNhisSettings: boolean;
 }
 
-export default function EditDrug({ drug, categories, canManageNhisSettings }: Props) {
+export default function EditDrug({
+    drug,
+    categories,
+    canManageNhisSettings,
+}: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: drug.name || '',
         generic_name: drug.generic_name || '',
@@ -594,8 +598,12 @@ export default function EditDrug({ drug, categories, canManageNhisSettings }: Pr
                                             <div className="flex items-center space-x-2">
                                                 <Checkbox
                                                     id="nhis_claim_qty_as_one"
-                                                    checked={data.nhis_claim_qty_as_one}
-                                                    onCheckedChange={(checked) =>
+                                                    checked={
+                                                        data.nhis_claim_qty_as_one
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
                                                         setData(
                                                             'nhis_claim_qty_as_one',
                                                             checked as boolean,
@@ -607,7 +615,10 @@ export default function EditDrug({ drug, categories, canManageNhisSettings }: Pr
                                                 </Label>
                                             </div>
                                             <p className="text-xs text-gray-500">
-                                                For drugs like Arthemeter and Pessary where NHIS requires quantity = 1 regardless of actual tablets dispensed
+                                                For drugs like Arthemeter and
+                                                Pessary where NHIS requires
+                                                quantity = 1 regardless of
+                                                actual tablets dispensed
                                             </p>
                                         </>
                                     )}

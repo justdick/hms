@@ -125,7 +125,8 @@ export function ReviewPrescriptionsModal({
                     // Unpriced drug - default to external
                     action = 'external';
                     quantityToDispense = null;
-                    reason = 'Drug is unpriced - patient to purchase externally';
+                    reason =
+                        'Drug is unpriced - patient to purchase externally';
                 } else if (pd.stock_status.in_stock === 0) {
                     // Out of stock - default to external
                     action = 'external';

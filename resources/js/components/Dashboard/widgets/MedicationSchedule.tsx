@@ -30,9 +30,17 @@ export interface MedicationScheduleProps {
 }
 
 const statusConfig = {
-    given: { label: 'Given', variant: 'default' as const, className: 'bg-green-600' },
+    given: {
+        label: 'Given',
+        variant: 'default' as const,
+        className: 'bg-green-600',
+    },
     held: { label: 'Held', variant: 'secondary' as const, className: '' },
-    refused: { label: 'Refused', variant: 'destructive' as const, className: '' },
+    refused: {
+        label: 'Refused',
+        variant: 'destructive' as const,
+        className: '',
+    },
     omitted: { label: 'Omitted', variant: 'outline' as const, className: '' },
 };
 
@@ -43,7 +51,7 @@ export function MedicationSchedule({
 }: MedicationScheduleProps) {
     // Show only last 5 medications
     const recent = schedule.slice(0, 5);
-    const givenCount = schedule.filter(m => m.status === 'given').length;
+    const givenCount = schedule.filter((m) => m.status === 'given').length;
 
     return (
         <Card className={cn('', className)}>
@@ -56,9 +64,11 @@ export function MedicationSchedule({
                         </CardTitle>
                         <CardDescription>
                             {givenCount > 0 ? (
-                                <span className="text-green-600">{givenCount} given today</span>
+                                <span className="text-green-600">
+                                    {givenCount} given today
+                                </span>
                             ) : (
-                                'Today\'s activity'
+                                "Today's activity"
                             )}
                         </CardDescription>
                     </div>
@@ -81,31 +91,34 @@ export function MedicationSchedule({
                 ) : (
                     <div className="space-y-2">
                         {recent.map((med) => {
-                            const config = statusConfig[med.status] || statusConfig.given;
+                            const config =
+                                statusConfig[med.status] || statusConfig.given;
                             return (
                                 <div
                                     key={med.id}
                                     className="flex items-center justify-between rounded-lg border p-3"
                                 >
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="font-medium text-sm truncate">
+                                    <div className="flex min-w-0 flex-col">
+                                        <span className="truncate text-sm font-medium">
                                             {med.patient_name}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
-                                            {med.ward}{med.bed ? ` • Bed ${med.bed}` : ''}
+                                            {med.ward}
+                                            {med.bed ? ` • Bed ${med.bed}` : ''}
                                         </span>
-                                        <span className="text-xs text-muted-foreground truncate">
-                                            {med.medication} {med.dosage && `(${med.dosage})`}
+                                        <span className="truncate text-xs text-muted-foreground">
+                                            {med.medication}{' '}
+                                            {med.dosage && `(${med.dosage})`}
                                         </span>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1 shrink-0">
-                                        <Badge 
+                                    <div className="flex shrink-0 flex-col items-end gap-1">
+                                        <Badge
                                             variant={config.variant}
                                             className={config.className}
                                         >
                                             {config.label}
                                         </Badge>
-                                        <span className="text-xs text-muted-foreground flex items-center">
+                                        <span className="flex items-center text-xs text-muted-foreground">
                                             <Clock className="mr-1 h-3 w-3" />
                                             {med.administered_at}
                                         </span>

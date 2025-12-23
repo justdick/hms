@@ -156,7 +156,8 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                                                 key={provider.id}
                                                 value={provider.id.toString()}
                                             >
-                                                {provider.name} ({provider.code})
+                                                {provider.name} ({provider.code}
+                                                )
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -170,7 +171,9 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="plan_name">Plan Name *</Label>
+                                    <Label htmlFor="plan_name">
+                                        Plan Name *
+                                    </Label>
                                     <Input
                                         id="plan_name"
                                         type="text"
@@ -191,7 +194,9 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="plan_code">Plan Code *</Label>
+                                    <Label htmlFor="plan_code">
+                                        Plan Code *
+                                    </Label>
                                     <Input
                                         id="plan_code"
                                         type="text"
@@ -199,7 +204,8 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
-                                                plan_code: e.target.value.toUpperCase(),
+                                                plan_code:
+                                                    e.target.value.toUpperCase(),
                                             })
                                         }
                                         maxLength={50}
@@ -215,7 +221,9 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="plan_type">Plan Type *</Label>
+                                    <Label htmlFor="plan_type">
+                                        Plan Type *
+                                    </Label>
                                     <Select
                                         value={formData.plan_type}
                                         onValueChange={(value) =>
@@ -329,7 +337,9 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                                         id="default_copay_percentage"
                                         type="number"
                                         step="0.01"
-                                        value={formData.default_copay_percentage}
+                                        value={
+                                            formData.default_copay_percentage
+                                        }
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
@@ -350,9 +360,9 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                         <CardHeader>
                             <CardTitle>Category Default Coverage</CardTitle>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Set default coverage percentages for each service
-                                category. These are used when no item-specific
-                                coverage rule exists.
+                                Set default coverage percentages for each
+                                service category. These are used when no
+                                item-specific coverage rule exists.
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -527,7 +537,8 @@ export default function Edit({ plan: planWrapper, providers }: Props) {
                                     onCheckedChange={(checked) =>
                                         setFormData({
                                             ...formData,
-                                            requires_referral: checked as boolean,
+                                            requires_referral:
+                                                checked as boolean,
                                         })
                                     }
                                 />

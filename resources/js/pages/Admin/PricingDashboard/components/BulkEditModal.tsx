@@ -123,8 +123,8 @@ export function BulkEditModal({
                 <DialogHeader>
                     <DialogTitle>Bulk Edit Copay</DialogTitle>
                     <DialogDescription>
-                        Set the same copay amount for {selectedItems.length} selected
-                        items.
+                        Set the same copay amount for {selectedItems.length}{' '}
+                        selected items.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -134,11 +134,17 @@ export function BulkEditModal({
                         <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
                             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                             <div className="text-sm">
-                                <strong>{unmappedCount}</strong> item(s) are not mapped to NHIS tariffs.
+                                <strong>{unmappedCount}</strong> item(s) are not
+                                mapped to NHIS tariffs.
                                 {mappedCount > 0 && (
-                                    <> <strong>{mappedCount}</strong> item(s) are mapped.</>
-                                )}
-                                {' '}Unmapped items will use flexible copay (patient pays full amount).
+                                    <>
+                                        {' '}
+                                        <strong>{mappedCount}</strong> item(s)
+                                        are mapped.
+                                    </>
+                                )}{' '}
+                                Unmapped items will use flexible copay (patient
+                                pays full amount).
                             </div>
                         </div>
                     )}
@@ -147,45 +153,56 @@ export function BulkEditModal({
                     <div className="space-y-2">
                         <Label>Selected Items ({selectedItems.length})</Label>
                         <ScrollArea className="h-40 rounded-md border p-3">
-                            {Object.entries(groupedItems).map(([category, items]) => (
-                                <div key={category} className="mb-3 last:mb-0">
-                                    <div className="mb-1 flex items-center gap-2">
-                                        <Badge variant="outline" className="text-xs">
-                                            {category}
-                                        </Badge>
-                                        <span className="text-xs text-gray-500">
-                                            ({items.length} items)
-                                        </span>
-                                    </div>
-                                    <ul className="space-y-1 pl-2">
-                                        {items.slice(0, 5).map((item) => (
-                                            <li
-                                                key={`${item.type}-${item.id}`}
-                                                className="text-sm text-gray-600 dark:text-gray-400"
+                            {Object.entries(groupedItems).map(
+                                ([category, items]) => (
+                                    <div
+                                        key={category}
+                                        className="mb-3 last:mb-0"
+                                    >
+                                        <div className="mb-1 flex items-center gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs"
                                             >
-                                                {item.name}
-                                                {item.code && (
-                                                    <span className="ml-1 font-mono text-xs text-gray-400">
-                                                        ({item.code})
-                                                    </span>
-                                                )}
-                                            </li>
-                                        ))}
-                                        {items.length > 5 && (
-                                            <li className="text-xs text-gray-400">
-                                                ... and {items.length - 5} more
-                                            </li>
-                                        )}
-                                    </ul>
-                                </div>
-                            ))}
+                                                {category}
+                                            </Badge>
+                                            <span className="text-xs text-gray-500">
+                                                ({items.length} items)
+                                            </span>
+                                        </div>
+                                        <ul className="space-y-1 pl-2">
+                                            {items.slice(0, 5).map((item) => (
+                                                <li
+                                                    key={`${item.type}-${item.id}`}
+                                                    className="text-sm text-gray-600 dark:text-gray-400"
+                                                >
+                                                    {item.name}
+                                                    {item.code && (
+                                                        <span className="ml-1 font-mono text-xs text-gray-400">
+                                                            ({item.code})
+                                                        </span>
+                                                    )}
+                                                </li>
+                                            ))}
+                                            {items.length > 5 && (
+                                                <li className="text-xs text-gray-400">
+                                                    ... and {items.length - 5}{' '}
+                                                    more
+                                                </li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                ),
+                            )}
                         </ScrollArea>
                     </div>
 
                     {/* Copay Input */}
                     <div className="space-y-2">
                         <Label htmlFor="copay-amount">
-                            {isNhis ? 'Patient Copay Amount' : 'Fixed Copay Amount'}
+                            {isNhis
+                                ? 'Patient Copay Amount'
+                                : 'Fixed Copay Amount'}
                         </Label>
                         <div className="flex items-center gap-2">
                             <span className="text-gray-500">GH₵</span>
@@ -232,7 +249,10 @@ export function BulkEditModal({
                     >
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit} disabled={processing || !copayAmount}>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={processing || !copayAmount}
+                    >
                         {processing ? 'Updating...' : 'Update All'}
                     </Button>
                 </DialogFooter>

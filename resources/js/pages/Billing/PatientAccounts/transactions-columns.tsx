@@ -62,7 +62,11 @@ const getTransactionTypeBadge = (type: string) => {
         case 'refund':
             return <Badge variant="outline">Refund</Badge>;
         case 'adjustment':
-            return <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">Adjustment</Badge>;
+            return (
+                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                    Adjustment
+                </Badge>
+            );
         case 'credit_limit_change':
             return <Badge variant="secondary">Credit Change</Badge>;
         default:
@@ -76,7 +80,9 @@ export const transactionsColumns: ColumnDef<TransactionData>[] = [
         id: 'date',
         header: 'Date',
         cell: ({ row }) => (
-            <div className="text-sm">{formatDate(row.original.transacted_at)}</div>
+            <div className="text-sm">
+                {formatDate(row.original.transacted_at)}
+            </div>
         ),
     },
     {
@@ -84,7 +90,9 @@ export const transactionsColumns: ColumnDef<TransactionData>[] = [
         id: 'transaction_number',
         header: 'Transaction #',
         cell: ({ row }) => (
-            <div className="font-mono text-sm">{row.original.transaction_number}</div>
+            <div className="font-mono text-sm">
+                {row.original.transaction_number}
+            </div>
         ),
     },
     {
@@ -103,10 +111,14 @@ export const transactionsColumns: ColumnDef<TransactionData>[] = [
                 <div>
                     <div>{txn.description}</div>
                     {txn.notes && (
-                        <div className="text-sm text-gray-500 italic">{txn.notes}</div>
+                        <div className="text-sm text-gray-500 italic">
+                            {txn.notes}
+                        </div>
                     )}
                     {txn.payment_method && (
-                        <div className="text-sm text-gray-500">via {txn.payment_method.name}</div>
+                        <div className="text-sm text-gray-500">
+                            via {txn.payment_method.name}
+                        </div>
                     )}
                 </div>
             );
@@ -119,8 +131,11 @@ export const transactionsColumns: ColumnDef<TransactionData>[] = [
         cell: ({ row }) => {
             const amount = Number(row.original.amount);
             return (
-                <div className={`text-right font-medium ${amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {amount >= 0 ? '+' : ''}{formatCurrency(amount)}
+                <div
+                    className={`text-right font-medium ${amount >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
+                    {amount >= 0 ? '+' : ''}
+                    {formatCurrency(amount)}
                 </div>
             );
         },
@@ -130,7 +145,9 @@ export const transactionsColumns: ColumnDef<TransactionData>[] = [
         id: 'balance_after',
         header: () => <div className="text-right">Balance After</div>,
         cell: ({ row }) => (
-            <div className="text-right">{formatCurrency(row.original.balance_after)}</div>
+            <div className="text-right">
+                {formatCurrency(row.original.balance_after)}
+            </div>
         ),
     },
 ];

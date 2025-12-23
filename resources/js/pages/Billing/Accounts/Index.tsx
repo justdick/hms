@@ -10,8 +10,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
+import { formatCurrency } from '@/lib/utils';
 import { Head, router } from '@inertiajs/react';
 import {
     Building2,
@@ -64,7 +64,6 @@ interface Props {
     paymentMethods: PaymentMethod[];
     filters: Filters;
 }
-
 
 export default function AccountsIndex({
     totalCollections,
@@ -148,7 +147,7 @@ export default function AccountsIndex({
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap items-end gap-4">
-                            <div className="flex-1 min-w-[150px]">
+                            <div className="min-w-[150px] flex-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Start Date
                                 </label>
@@ -161,7 +160,7 @@ export default function AccountsIndex({
                                     className="mt-1"
                                 />
                             </div>
-                            <div className="flex-1 min-w-[150px]">
+                            <div className="min-w-[150px] flex-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     End Date
                                 </label>
@@ -201,7 +200,6 @@ export default function AccountsIndex({
                         </div>
                     </CardContent>
                 </Card>
-
 
                 {/* Summary Stats */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -289,13 +287,12 @@ export default function AccountsIndex({
                                 </TableBody>
                             </Table>
                         ) : (
-                            <div className="text-center py-8 text-muted-foreground">
+                            <div className="py-8 text-center text-muted-foreground">
                                 No collections found for the selected period
                             </div>
                         )}
                     </CardContent>
                 </Card>
-
 
                 {/* Collections by Payment Method and Department */}
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -327,9 +324,9 @@ export default function AccountsIndex({
                                                         )}
                                                     </span>
                                                 </div>
-                                                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                                                     <div
-                                                        className="h-full bg-blue-600 rounded-full transition-all"
+                                                        className="h-full rounded-full bg-blue-600 transition-all"
                                                         style={{
                                                             width: `${totalByPaymentMethod > 0 ? (method.total_amount / totalByPaymentMethod) * 100 : 0}%`,
                                                         }}
@@ -337,7 +334,9 @@ export default function AccountsIndex({
                                                 </div>
                                                 <div className="flex justify-between text-xs text-muted-foreground">
                                                     <span>
-                                                        {method.transaction_count}{' '}
+                                                        {
+                                                            method.transaction_count
+                                                        }{' '}
                                                         transactions
                                                     </span>
                                                     <span>
@@ -357,13 +356,13 @@ export default function AccountsIndex({
                                     {collectionsByPaymentMethod.filter(
                                         (m) => m.total_amount > 0,
                                     ).length === 0 && (
-                                        <div className="text-center py-4 text-muted-foreground">
+                                        <div className="py-4 text-center text-muted-foreground">
                                             No collections found
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center py-8 text-muted-foreground">
+                                <div className="py-8 text-center text-muted-foreground">
                                     No payment method data available
                                 </div>
                             )}
@@ -396,9 +395,9 @@ export default function AccountsIndex({
                                                     )}
                                                 </span>
                                             </div>
-                                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                                                 <div
-                                                    className="h-full bg-purple-600 rounded-full transition-all"
+                                                    className="h-full rounded-full bg-purple-600 transition-all"
                                                     style={{
                                                         width: `${totalByDepartment > 0 ? (dept.total_amount / totalByDepartment) * 100 : 0}%`,
                                                     }}
@@ -424,7 +423,7 @@ export default function AccountsIndex({
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-8 text-muted-foreground">
+                                <div className="py-8 text-center text-muted-foreground">
                                     No department data available
                                 </div>
                             )}

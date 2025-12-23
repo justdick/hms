@@ -49,9 +49,9 @@ export default function LabOrderingSystem({
     onOrderSubmit,
     onClose,
 }: LabOrderingSystemProps) {
-    const [selectedTests, setSelectedTests] = useState<Map<number, SelectedTest>>(
-        new Map(),
-    );
+    const [selectedTests, setSelectedTests] = useState<
+        Map<number, SelectedTest>
+    >(new Map());
 
     const handleServiceSelect = (service: LabService) => {
         if (selectedTests.has(service.id)) {
@@ -151,11 +151,19 @@ export default function LabOrderingSystem({
                                                             {test.service.name}
                                                         </h3>
                                                         <p className="text-sm text-muted-foreground">
-                                                            {test.service.code} •{' '}
-                                                            {test.service.category}
+                                                            {test.service.code}{' '}
+                                                            •{' '}
+                                                            {
+                                                                test.service
+                                                                    .category
+                                                            }
                                                         </p>
                                                         <p className="text-xs text-muted-foreground">
-                                                            Sample: {test.service.sample_type}
+                                                            Sample:{' '}
+                                                            {
+                                                                test.service
+                                                                    .sample_type
+                                                            }
                                                         </p>
                                                     </div>
                                                     <Button
@@ -175,7 +183,9 @@ export default function LabOrderingSystem({
                                                     <div>
                                                         <Label>Priority</Label>
                                                         <Select
-                                                            value={test.priority}
+                                                            value={
+                                                                test.priority
+                                                            }
                                                             onValueChange={(
                                                                 value,
                                                             ) =>
@@ -262,9 +272,7 @@ export default function LabOrderingSystem({
                             <div className="flex gap-2">
                                 <Button
                                     variant="outline"
-                                    onClick={() =>
-                                        setSelectedTests(new Map())
-                                    }
+                                    onClick={() => setSelectedTests(new Map())}
                                 >
                                     Clear All
                                 </Button>

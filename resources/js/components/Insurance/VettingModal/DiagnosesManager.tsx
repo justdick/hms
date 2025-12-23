@@ -267,7 +267,7 @@ export function DiagnosesManager({
                                                                         {diagnosis.is_custom ? (
                                                                             <Badge
                                                                                 variant="secondary"
-                                                                                className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                                                                className="bg-amber-100 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                                                             >
                                                                                 Custom
                                                                             </Badge>
@@ -346,7 +346,9 @@ export function DiagnosesManager({
                                         {diagnosis.name}
                                     </p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {diagnosis.icd_code ? `ICD-10: ${diagnosis.icd_code}` : 'Custom diagnosis'}
+                                        {diagnosis.icd_code
+                                            ? `ICD-10: ${diagnosis.icd_code}`
+                                            : 'Custom diagnosis'}
                                     </p>
                                 </div>
                             </div>
@@ -361,7 +363,9 @@ export function DiagnosesManager({
                                                 : 'border-gray-400 text-gray-500 dark:text-gray-400'
                                         }
                                     >
-                                        {diagnosis.type === 'principal' ? 'Principal' : 'Provisional'}
+                                        {diagnosis.type === 'principal'
+                                            ? 'Principal'
+                                            : 'Provisional'}
                                     </Badge>
                                 )}
                                 {diagnosis.is_primary && (

@@ -29,7 +29,10 @@ const statusDescriptions: Record<PricingStatusValue, string> = {
     priced: 'Items with a positive cash price',
 };
 
-export function PricingStatusFilter({ value, onChange }: PricingStatusFilterProps) {
+export function PricingStatusFilter({
+    value,
+    onChange,
+}: PricingStatusFilterProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -38,7 +41,9 @@ export function PricingStatusFilter({ value, onChange }: PricingStatusFilterProp
                     Pricing Status
                     {value !== 'all' && (
                         <Badge
-                            variant={value === 'unpriced' ? 'destructive' : 'default'}
+                            variant={
+                                value === 'unpriced' ? 'destructive' : 'default'
+                            }
                             className="ml-2"
                         >
                             {statusLabels[value]}
@@ -50,20 +55,22 @@ export function PricingStatusFilter({ value, onChange }: PricingStatusFilterProp
             <DropdownMenuContent align="start" className="w-56">
                 <DropdownMenuLabel>Filter by Pricing Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {(Object.keys(statusLabels) as PricingStatusValue[]).map((status) => (
-                    <DropdownMenuCheckboxItem
-                        key={status}
-                        checked={value === status}
-                        onCheckedChange={() => onChange(status)}
-                    >
-                        <div className="flex flex-col">
-                            <span>{statusLabels[status]}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {statusDescriptions[status]}
-                            </span>
-                        </div>
-                    </DropdownMenuCheckboxItem>
-                ))}
+                {(Object.keys(statusLabels) as PricingStatusValue[]).map(
+                    (status) => (
+                        <DropdownMenuCheckboxItem
+                            key={status}
+                            checked={value === status}
+                            onCheckedChange={() => onChange(status)}
+                        >
+                            <div className="flex flex-col">
+                                <span>{statusLabels[status]}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {statusDescriptions[status]}
+                                </span>
+                            </div>
+                        </DropdownMenuCheckboxItem>
+                    ),
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );

@@ -37,7 +37,8 @@ export function PricingSummaryCards({
                 onClick={() => onFilterClick?.('priced')}
                 className={cn(
                     'cursor-pointer transition-all hover:scale-[1.02]',
-                    activeFilter === 'priced' && 'ring-2 ring-primary ring-offset-2 rounded-lg',
+                    activeFilter === 'priced' &&
+                        'rounded-lg ring-2 ring-primary ring-offset-2',
                 )}
             >
                 <StatCard
@@ -53,7 +54,8 @@ export function PricingSummaryCards({
                 onClick={() => onFilterClick?.('unpriced')}
                 className={cn(
                     'cursor-pointer transition-all hover:scale-[1.02]',
-                    activeFilter === 'unpriced' && 'ring-2 ring-primary ring-offset-2 rounded-lg',
+                    activeFilter === 'unpriced' &&
+                        'rounded-lg ring-2 ring-primary ring-offset-2',
                 )}
             >
                 <StatCard
@@ -100,7 +102,7 @@ export function PricingSummaryCards({
                     className={cn(
                         'cursor-pointer transition-all hover:scale-[1.02]',
                         (activeFilter === 'all' || !activeFilter) &&
-                            'ring-2 ring-primary ring-offset-2 rounded-lg',
+                            'rounded-lg ring-2 ring-primary ring-offset-2',
                     )}
                 >
                     <StatCard

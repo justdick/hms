@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -23,7 +23,6 @@ import { Head, router } from '@inertiajs/react';
 import {
     AlertCircle,
     Calendar,
-    Download,
     FileSpreadsheet,
     FileText,
     Filter,
@@ -130,7 +129,11 @@ export default function OutstandingReport({
             min_amount: '',
             max_amount: '',
         });
-        router.get('/billing/accounts/reports/outstanding', {}, { preserveState: true });
+        router.get(
+            '/billing/accounts/reports/outstanding',
+            {},
+            { preserveState: true },
+        );
     };
 
     const exportToExcel = () => {
@@ -170,7 +173,10 @@ export default function OutstandingReport({
             breadcrumbs={[
                 { title: 'Billing', href: '/billing' },
                 { title: 'Accounts', href: '/billing/accounts' },
-                { title: 'Outstanding Balances', href: '/billing/accounts/reports/outstanding' },
+                {
+                    title: 'Outstanding Balances',
+                    href: '/billing/accounts/reports/outstanding',
+                },
             ]}
         >
             <Head title="Outstanding Balances Report" />
@@ -183,7 +189,8 @@ export default function OutstandingReport({
                             Outstanding Balances Report
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            View and manage patient outstanding balances with aging analysis
+                            View and manage patient outstanding balances with
+                            aging analysis
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -220,7 +227,9 @@ export default function OutstandingReport({
                     />
                     <StatCard
                         label="Overdue (90+ days)"
-                        value={formatCurrency(summary.aging_totals.days_90_plus)}
+                        value={formatCurrency(
+                            summary.aging_totals.days_90_plus,
+                        )}
                         icon={<AlertCircle className="h-4 w-4" />}
                         variant="warning"
                     />
@@ -229,7 +238,9 @@ export default function OutstandingReport({
                 {/* Aging Summary Bar */}
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-base">Aging Distribution</CardTitle>
+                        <CardTitle className="text-base">
+                            Aging Distribution
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex h-4 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
@@ -269,19 +280,25 @@ export default function OutstandingReport({
                         <div className="mt-2 flex justify-between text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <div className="h-2 w-2 rounded-full bg-green-500" />
-                                Current: {formatCurrency(summary.aging_totals.current)}
+                                Current:{' '}
+                                {formatCurrency(summary.aging_totals.current)}
                             </div>
                             <div className="flex items-center gap-1">
                                 <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                                31-60: {formatCurrency(summary.aging_totals.days_30)}
+                                31-60:{' '}
+                                {formatCurrency(summary.aging_totals.days_30)}
                             </div>
                             <div className="flex items-center gap-1">
                                 <div className="h-2 w-2 rounded-full bg-orange-500" />
-                                61-90: {formatCurrency(summary.aging_totals.days_60)}
+                                61-90:{' '}
+                                {formatCurrency(summary.aging_totals.days_60)}
                             </div>
                             <div className="flex items-center gap-1">
                                 <div className="h-2 w-2 rounded-full bg-red-500" />
-                                90+: {formatCurrency(summary.aging_totals.days_90_plus)}
+                                90+:{' '}
+                                {formatCurrency(
+                                    summary.aging_totals.days_90_plus,
+                                )}
                             </div>
                         </div>
                     </CardContent>
@@ -304,14 +321,19 @@ export default function OutstandingReport({
                                 <Select
                                     value={localFilters.department_id || 'all'}
                                     onValueChange={(value) =>
-                                        handleFilterChange('department_id', value === 'all' ? '' : value)
+                                        handleFilterChange(
+                                            'department_id',
+                                            value === 'all' ? '' : value,
+                                        )
                                     }
                                 >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Departments" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Departments</SelectItem>
+                                        <SelectItem value="all">
+                                            All Departments
+                                        </SelectItem>
                                         {departments.map((dept) => (
                                             <SelectItem
                                                 key={dept.id}
@@ -331,16 +353,25 @@ export default function OutstandingReport({
                                 <Select
                                     value={localFilters.has_insurance || 'all'}
                                     onValueChange={(value) =>
-                                        handleFilterChange('has_insurance', value === 'all' ? '' : value)
+                                        handleFilterChange(
+                                            'has_insurance',
+                                            value === 'all' ? '' : value,
+                                        )
                                     }
                                 >
                                     <SelectTrigger className="mt-1">
                                         <SelectValue placeholder="All Patients" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Patients</SelectItem>
-                                        <SelectItem value="true">Insured Only</SelectItem>
-                                        <SelectItem value="false">Uninsured Only</SelectItem>
+                                        <SelectItem value="all">
+                                            All Patients
+                                        </SelectItem>
+                                        <SelectItem value="true">
+                                            Insured Only
+                                        </SelectItem>
+                                        <SelectItem value="false">
+                                            Uninsured Only
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -354,7 +385,10 @@ export default function OutstandingReport({
                                     placeholder="0.00"
                                     value={localFilters.min_amount}
                                     onChange={(e) =>
-                                        handleFilterChange('min_amount', e.target.value)
+                                        handleFilterChange(
+                                            'min_amount',
+                                            e.target.value,
+                                        )
                                     }
                                     className="mt-1"
                                 />
@@ -369,13 +403,18 @@ export default function OutstandingReport({
                                     placeholder="No limit"
                                     value={localFilters.max_amount}
                                     onChange={(e) =>
-                                        handleFilterChange('max_amount', e.target.value)
+                                        handleFilterChange(
+                                            'max_amount',
+                                            e.target.value,
+                                        )
                                     }
                                     className="mt-1"
                                 />
                             </div>
 
-                            <Button onClick={applyFilters}>Apply Filters</Button>
+                            <Button onClick={applyFilters}>
+                                Apply Filters
+                            </Button>
                             <Button variant="outline" onClick={clearFilters}>
                                 Clear
                             </Button>
@@ -395,20 +434,24 @@ export default function OutstandingReport({
                                     <TableRow>
                                         <TableHead>Patient</TableHead>
                                         <TableHead>Insurance</TableHead>
-                                        <TableHead className="text-right">Total</TableHead>
-                                        <TableHead className="text-right bg-green-50 dark:bg-green-900/20">
+                                        <TableHead className="text-right">
+                                            Total
+                                        </TableHead>
+                                        <TableHead className="bg-green-50 text-right dark:bg-green-900/20">
                                             Current
                                         </TableHead>
-                                        <TableHead className="text-right bg-yellow-50 dark:bg-yellow-900/20">
+                                        <TableHead className="bg-yellow-50 text-right dark:bg-yellow-900/20">
                                             31-60
                                         </TableHead>
-                                        <TableHead className="text-right bg-orange-50 dark:bg-orange-900/20">
+                                        <TableHead className="bg-orange-50 text-right dark:bg-orange-900/20">
                                             61-90
                                         </TableHead>
-                                        <TableHead className="text-right bg-red-50 dark:bg-red-900/20">
+                                        <TableHead className="bg-red-50 text-right dark:bg-red-900/20">
                                             90+
                                         </TableHead>
-                                        <TableHead className="text-center">Actions</TableHead>
+                                        <TableHead className="text-center">
+                                            Actions
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -417,41 +460,67 @@ export default function OutstandingReport({
                                             <TableRow
                                                 key={balance.patient_id}
                                                 className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                onClick={() => toggleExpanded(balance.patient_id)}
+                                                onClick={() =>
+                                                    toggleExpanded(
+                                                        balance.patient_id,
+                                                    )
+                                                }
                                             >
                                                 <TableCell>
                                                     <div>
                                                         <div className="font-medium">
-                                                            {balance.patient_name}
+                                                            {
+                                                                balance.patient_name
+                                                            }
                                                         </div>
                                                         <div className="text-xs text-muted-foreground">
-                                                            {balance.patient_number}
+                                                            {
+                                                                balance.patient_number
+                                                            }
                                                         </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     {balance.has_insurance ? (
-                                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-                                                            {balance.insurance_provider}
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                                                        >
+                                                            {
+                                                                balance.insurance_provider
+                                                            }
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="secondary">None</Badge>
+                                                        <Badge variant="secondary">
+                                                            None
+                                                        </Badge>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right font-bold text-red-600">
-                                                    {formatCurrency(balance.total_outstanding)}
+                                                    {formatCurrency(
+                                                        balance.total_outstanding,
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right bg-green-50 dark:bg-green-900/20">
-                                                    {formatCurrency(balance.aging.current)}
+                                                <TableCell className="bg-green-50 text-right dark:bg-green-900/20">
+                                                    {formatCurrency(
+                                                        balance.aging.current,
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right bg-yellow-50 dark:bg-yellow-900/20">
-                                                    {formatCurrency(balance.aging.days_30)}
+                                                <TableCell className="bg-yellow-50 text-right dark:bg-yellow-900/20">
+                                                    {formatCurrency(
+                                                        balance.aging.days_30,
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right bg-orange-50 dark:bg-orange-900/20">
-                                                    {formatCurrency(balance.aging.days_60)}
+                                                <TableCell className="bg-orange-50 text-right dark:bg-orange-900/20">
+                                                    {formatCurrency(
+                                                        balance.aging.days_60,
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right bg-red-50 dark:bg-red-900/20">
-                                                    {formatCurrency(balance.aging.days_90_plus)}
+                                                <TableCell className="bg-red-50 text-right dark:bg-red-900/20">
+                                                    {formatCurrency(
+                                                        balance.aging
+                                                            .days_90_plus,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Button
@@ -459,56 +528,89 @@ export default function OutstandingReport({
                                                         size="sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            toggleExpanded(balance.patient_id);
+                                                            toggleExpanded(
+                                                                balance.patient_id,
+                                                            );
                                                         }}
                                                     >
-                                                        {expandedPatient === balance.patient_id
+                                                        {expandedPatient ===
+                                                        balance.patient_id
                                                             ? 'Hide'
                                                             : 'Details'}
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
-                                            {expandedPatient === balance.patient_id && (
+                                            {expandedPatient ===
+                                                balance.patient_id && (
                                                 <TableRow>
-                                                    <TableCell colSpan={8} className="bg-gray-50 dark:bg-gray-800/50">
+                                                    <TableCell
+                                                        colSpan={8}
+                                                        className="bg-gray-50 dark:bg-gray-800/50"
+                                                    >
                                                         <div className="p-4">
-                                                            <h4 className="font-medium mb-2">
-                                                                Service Breakdown
+                                                            <h4 className="mb-2 font-medium">
+                                                                Service
+                                                                Breakdown
                                                             </h4>
-                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                                {Object.entries(balance.service_breakdown).map(
-                                                                    ([type, data]) => (
+                                                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                                                                {Object.entries(
+                                                                    balance.service_breakdown,
+                                                                ).map(
+                                                                    ([
+                                                                        type,
+                                                                        data,
+                                                                    ]) => (
                                                                         <div
-                                                                            key={type}
-                                                                            className="bg-white dark:bg-gray-900 p-3 rounded-lg border"
+                                                                            key={
+                                                                                type
+                                                                            }
+                                                                            className="rounded-lg border bg-white p-3 dark:bg-gray-900"
                                                                         >
                                                                             <div className="text-xs text-muted-foreground capitalize">
-                                                                                {type.replace('_', ' ')}
+                                                                                {type.replace(
+                                                                                    '_',
+                                                                                    ' ',
+                                                                                )}
                                                                             </div>
                                                                             <div className="font-medium">
-                                                                                {formatCurrency(data.amount)}
+                                                                                {formatCurrency(
+                                                                                    data.amount,
+                                                                                )}
                                                                             </div>
                                                                             <div className="text-xs text-muted-foreground">
-                                                                                {data.count} charge(s)
+                                                                                {
+                                                                                    data.count
+                                                                                }{' '}
+                                                                                charge(s)
                                                                             </div>
                                                                         </div>
-                                                                    )
+                                                                    ),
                                                                 )}
                                                             </div>
-                                                            {balance.departments.length > 0 && (
+                                                            {balance.departments
+                                                                .length > 0 && (
                                                                 <div className="mt-3">
                                                                     <span className="text-sm text-muted-foreground">
                                                                         Departments:{' '}
                                                                     </span>
-                                                                    {balance.departments.map((dept, idx) => (
-                                                                        <Badge
-                                                                            key={idx}
-                                                                            variant="outline"
-                                                                            className="mr-1"
-                                                                        >
-                                                                            {dept}
-                                                                        </Badge>
-                                                                    ))}
+                                                                    {balance.departments.map(
+                                                                        (
+                                                                            dept,
+                                                                            idx,
+                                                                        ) => (
+                                                                            <Badge
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                                variant="outline"
+                                                                                className="mr-1"
+                                                                            >
+                                                                                {
+                                                                                    dept
+                                                                                }
+                                                                            </Badge>
+                                                                        ),
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -520,11 +622,14 @@ export default function OutstandingReport({
                                 </TableBody>
                             </Table>
                         ) : (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <AlertCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                                <p className="text-lg font-medium">No outstanding balances found</p>
+                            <div className="py-12 text-center text-muted-foreground">
+                                <AlertCircle className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                                <p className="text-lg font-medium">
+                                    No outstanding balances found
+                                </p>
                                 <p className="text-sm">
-                                    All patients have paid their charges or no charges match the filters.
+                                    All patients have paid their charges or no
+                                    charges match the filters.
                                 </p>
                             </div>
                         )}

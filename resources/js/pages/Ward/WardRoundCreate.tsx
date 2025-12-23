@@ -276,10 +276,11 @@ export default function WardRoundCreate({
     }>({ open: false, type: 'diagnosis', id: null });
 
     // Prescription editing state
-    const [editingPrescription, setEditingPrescription] = useState<Prescription | null>(null);
+    const [editingPrescription, setEditingPrescription] =
+        useState<Prescription | null>(null);
 
     // Get admission date for validation (round date must be >= admission date)
-    const admissionDate = admission.admission_date 
+    const admissionDate = admission.admission_date
         ? new Date(admission.admission_date).toISOString().split('T')[0]
         : '';
 
@@ -293,7 +294,7 @@ export default function WardRoundCreate({
         assessment_notes: wardRound.assessment_notes || '',
         plan_notes: wardRound.plan_notes || '',
         follow_up_date: '',
-        round_datetime: wardRound.round_datetime 
+        round_datetime: wardRound.round_datetime
             ? new Date(wardRound.round_datetime).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
         past_medical_surgical_history:
@@ -435,7 +436,10 @@ export default function WardRoundCreate({
         setPrescriptionData('dose_quantity', prescription.dose_quantity || '');
         setPrescriptionData('frequency', prescription.frequency);
         setPrescriptionData('duration', prescription.duration);
-        setPrescriptionData('quantity_to_dispense', prescription.quantity_to_dispense || '');
+        setPrescriptionData(
+            'quantity_to_dispense',
+            prescription.quantity_to_dispense || '',
+        );
         setPrescriptionData('instructions', prescription.instructions || '');
     };
 
@@ -749,7 +753,10 @@ export default function WardRoundCreate({
                         </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Label htmlFor="round_date" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <Label
+                            htmlFor="round_date"
+                            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
                             Round Date:
                         </Label>
                         <input
@@ -763,7 +770,6 @@ export default function WardRoundCreate({
                             min={admissionDate}
                             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                         />
-
                     </div>
                 </div>
 
@@ -1137,15 +1143,22 @@ export default function WardRoundCreate({
                                                     </Label>
                                                     <AsyncLabServiceSelect
                                                         onSelect={(service) => {
-                                                            setSelectedLabService(service);
+                                                            setSelectedLabService(
+                                                                service,
+                                                            );
                                                             setLabOrderData(
                                                                 'lab_service_id',
                                                                 service.id.toString(),
                                                             );
                                                         }}
-                                                        excludeIds={wardRound.lab_orders?.map(
-                                                            (o) => o.lab_service.id,
-                                                        ) || []}
+                                                        excludeIds={
+                                                            wardRound.lab_orders?.map(
+                                                                (o) =>
+                                                                    o
+                                                                        .lab_service
+                                                                        .id,
+                                                            ) || []
+                                                        }
                                                         placeholder={
                                                             selectedLabService
                                                                 ? selectedLabService.name
@@ -1154,9 +1167,23 @@ export default function WardRoundCreate({
                                                     />
                                                     {selectedLabService && (
                                                         <div className="mt-2 rounded-md bg-muted p-2 text-sm">
-                                                            <p className="font-medium">{selectedLabService.name}</p>
+                                                            <p className="font-medium">
+                                                                {
+                                                                    selectedLabService.name
+                                                                }
+                                                            </p>
                                                             <p className="text-muted-foreground">
-                                                                {selectedLabService.code} • {selectedLabService.category} • {selectedLabService.sample_type}
+                                                                {
+                                                                    selectedLabService.code
+                                                                }{' '}
+                                                                •{' '}
+                                                                {
+                                                                    selectedLabService.category
+                                                                }{' '}
+                                                                •{' '}
+                                                                {
+                                                                    selectedLabService.sample_type
+                                                                }
                                                             </p>
                                                         </div>
                                                     )}

@@ -10,7 +10,6 @@ import {
 
 import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -103,9 +102,7 @@ export function VitalsQueue({
                     <CardTitle className="text-base font-semibold">
                         Vitals Queue
                     </CardTitle>
-                    <CardDescription>
-                        Patients awaiting vitals
-                    </CardDescription>
+                    <CardDescription>Patients awaiting vitals</CardDescription>
                 </div>
                 {viewAllHref && (
                     <Button variant="ghost" size="sm" asChild>
@@ -125,18 +122,21 @@ export function VitalsQueue({
                 ) : (
                     <div className="space-y-2">
                         {waiting.map((patient, index) => {
-                            const isLongWait = patient.wait_time.includes('h') || 
-                                (patient.wait_time.endsWith('m') && parseInt(patient.wait_time) > 15);
+                            const isLongWait =
+                                patient.wait_time.includes('h') ||
+                                (patient.wait_time.endsWith('m') &&
+                                    parseInt(patient.wait_time) > 15);
                             return (
                                 <div
                                     key={patient.id}
                                     className={cn(
                                         'flex items-center justify-between rounded-lg border p-3',
-                                        isLongWait && 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+                                        isLongWait &&
+                                            'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950',
                                     )}
                                 >
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-sm">
+                                        <span className="text-sm font-medium">
                                             {patient.patient_name}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
@@ -145,10 +145,13 @@ export function VitalsQueue({
                                     </div>
                                     <div className="flex items-center gap-1 text-muted-foreground">
                                         <Clock className="h-3 w-3" />
-                                        <span className={cn(
-                                            'text-xs font-mono',
-                                            isLongWait && 'text-amber-600 font-medium'
-                                        )}>
+                                        <span
+                                            className={cn(
+                                                'font-mono text-xs',
+                                                isLongWait &&
+                                                    'font-medium text-amber-600',
+                                            )}
+                                        >
                                             {patient.wait_time}
                                         </span>
                                     </div>

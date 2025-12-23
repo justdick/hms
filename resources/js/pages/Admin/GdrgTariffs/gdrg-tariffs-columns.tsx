@@ -42,7 +42,9 @@ export const createGdrgTariffsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     Code
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -64,7 +66,9 @@ export const createGdrgTariffsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -86,7 +90,9 @@ export const createGdrgTariffsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     MDC Category
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -111,7 +117,9 @@ export const createGdrgTariffsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                     className="w-full justify-end"
                 >
                     Tariff Price
@@ -134,7 +142,11 @@ export const createGdrgTariffsColumns = (
         cell: ({ row }) => {
             const ageCategory = row.original.age_category;
             return (
-                <Badge className={ageCategoryStyles[ageCategory] || ageCategoryStyles.all}>
+                <Badge
+                    className={
+                        ageCategoryStyles[ageCategory] || ageCategoryStyles.all
+                    }
+                >
                     {ageCategoryLabels[ageCategory] || ageCategory}
                 </Badge>
             );
@@ -178,7 +190,7 @@ export const createGdrgTariffsColumns = (
                         variant="ghost"
                         size="sm"
                         onClick={() => onDelete(tariff)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>

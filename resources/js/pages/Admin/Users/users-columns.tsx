@@ -41,7 +41,8 @@ export interface UserData {
 
 const PROTECTED_ADMIN_USERNAME = 'admin';
 
-const isProtectedAdmin = (user: UserData) => user.username === PROTECTED_ADMIN_USERNAME;
+const isProtectedAdmin = (user: UserData) =>
+    user.username === PROTECTED_ADMIN_USERNAME;
 
 export const usersColumns: ColumnDef<UserData>[] = [
     {
@@ -65,7 +66,9 @@ export const usersColumns: ColumnDef<UserData>[] = [
         accessorKey: 'username',
         header: 'Username',
         cell: ({ row }) => (
-            <span className="text-muted-foreground">{row.getValue('username')}</span>
+            <span className="text-muted-foreground">
+                {row.getValue('username')}
+            </span>
         ),
     },
     {
@@ -132,15 +135,23 @@ export const usersColumns: ColumnDef<UserData>[] = [
             const user = row.original;
 
             const handleToggleActive = () => {
-                router.post(`/admin/users/${user.id}/toggle-active`, {}, {
-                    preserveScroll: true,
-                });
+                router.post(
+                    `/admin/users/${user.id}/toggle-active`,
+                    {},
+                    {
+                        preserveScroll: true,
+                    },
+                );
             };
 
             const handleResetPassword = () => {
-                router.post(`/admin/users/${user.id}/reset-password`, {}, {
-                    preserveScroll: true,
-                });
+                router.post(
+                    `/admin/users/${user.id}/reset-password`,
+                    {},
+                    {
+                        preserveScroll: true,
+                    },
+                );
             };
 
             return (

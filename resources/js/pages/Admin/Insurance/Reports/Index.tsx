@@ -39,7 +39,9 @@ export default function Index() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground">
-                                    Overview of all claims with status breakdown, amounts claimed, approved, and paid by provider.
+                                    Overview of all claims with status
+                                    breakdown, amounts claimed, approved, and
+                                    paid by provider.
                                 </p>
                             </CardContent>
                         </Card>
@@ -60,7 +62,8 @@ export default function Index() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground">
-                                    Track unpaid claims with aging analysis (0-30, 31-60, 61-90, 90+ days) by provider.
+                                    Track unpaid claims with aging analysis
+                                    (0-30, 31-60, 61-90, 90+ days) by provider.
                                 </p>
                             </CardContent>
                         </Card>
@@ -81,7 +84,9 @@ export default function Index() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground">
-                                    Review rejection reasons, trends, and identify common issues to improve claim approval rates.
+                                    Review rejection reasons, trends, and
+                                    identify common issues to improve claim
+                                    approval rates.
                                 </p>
                             </CardContent>
                         </Card>
@@ -102,7 +107,8 @@ export default function Index() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground">
-                                    NHIS tariff mapping status showing which services have tariff codes configured.
+                                    NHIS tariff mapping status showing which
+                                    services have tariff codes configured.
                                 </p>
                             </CardContent>
                         </Card>

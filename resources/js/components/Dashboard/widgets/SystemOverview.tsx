@@ -1,10 +1,5 @@
 import { Link } from '@inertiajs/react';
-import {
-    Activity,
-    ArrowRight,
-    Building2,
-    Clock,
-} from 'lucide-react';
+import { Activity, ArrowRight, Building2, Clock } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -139,36 +134,36 @@ export function SystemOverview({
                 ) : (
                     <div className="space-y-4">
                         {/* Summary Stats */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-b pb-4">
+                        <div className="grid grid-cols-2 gap-3 border-b pb-4 sm:grid-cols-4 sm:gap-4">
                             <div className="flex flex-col items-center">
-                                <span className="text-xl sm:text-2xl font-bold">
+                                <span className="text-xl font-bold sm:text-2xl">
                                     {totals.checkins}
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                <span className="text-[10px] text-muted-foreground sm:text-xs">
                                     Check-ins
                                 </span>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-xl sm:text-2xl font-bold">
+                                <span className="text-xl font-bold sm:text-2xl">
                                     {totals.consultations}
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                <span className="text-[10px] text-muted-foreground sm:text-xs">
                                     Consultations
                                 </span>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-xl sm:text-2xl font-bold text-amber-600">
+                                <span className="text-xl font-bold text-amber-600 sm:text-2xl">
                                     {totals.waiting}
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                <span className="text-[10px] text-muted-foreground sm:text-xs">
                                     Waiting
                                 </span>
                             </div>
                             <div className="flex flex-col items-center">
-                                <span className="text-sm sm:text-lg font-bold text-green-600">
+                                <span className="text-sm font-bold text-green-600 sm:text-lg">
                                     {formatCurrency(totals.revenue)}
                                 </span>
-                                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                <span className="text-[10px] text-muted-foreground sm:text-xs">
                                     Revenue
                                 </span>
                             </div>
@@ -183,13 +178,13 @@ export function SystemOverview({
                                         <TableHead className="text-center">
                                             Check-ins
                                         </TableHead>
-                                        <TableHead className="text-center hidden sm:table-cell">
+                                        <TableHead className="hidden text-center sm:table-cell">
                                             Consultations
                                         </TableHead>
                                         <TableHead className="text-center">
                                             Waiting
                                         </TableHead>
-                                        <TableHead className="text-right hidden md:table-cell">
+                                        <TableHead className="hidden text-right md:table-cell">
                                             Revenue
                                         </TableHead>
                                     </TableRow>
@@ -230,7 +225,7 @@ export function SystemOverview({
                                                     {dept.checkins_today}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-center hidden sm:table-cell">
+                                            <TableCell className="hidden text-center sm:table-cell">
                                                 <span className="font-medium">
                                                     {dept.consultations_today}
                                                 </span>
@@ -250,7 +245,7 @@ export function SystemOverview({
                                                     </span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right hidden md:table-cell">
+                                            <TableCell className="hidden text-right md:table-cell">
                                                 <span className="font-medium text-green-600">
                                                     {formatCurrency(
                                                         dept.revenue_today,

@@ -83,7 +83,9 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                         <TableHead>RR (/min)</TableHead>
                         <TableHead>SpO₂ (%)</TableHead>
                         <TableHead>Recorded By</TableHead>
-                        {onEdit && <TableHead className="w-16">Actions</TableHead>}
+                        {onEdit && (
+                            <TableHead className="w-16">Actions</TableHead>
+                        )}
                     </TableRow>
                 </TableHeader>
                 <TableBody>

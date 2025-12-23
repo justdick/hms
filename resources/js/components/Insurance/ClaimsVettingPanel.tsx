@@ -281,8 +281,6 @@ export default function ClaimsVettingPanel({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, claim, onClose]);
 
-
-
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB', {
             day: '2-digit',

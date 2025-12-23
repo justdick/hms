@@ -85,7 +85,9 @@ function CategoryDataTable({
             header: ({ column }) => (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                     className="-ml-4"
                 >
                     Name
@@ -138,7 +140,9 @@ function CategoryDataTable({
             header: ({ column }) => (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                     className="-mr-4 ml-auto"
                 >
                     Price (GH₵)
@@ -146,7 +150,7 @@ function CategoryDataTable({
                 </Button>
             ),
             cell: ({ row }) => (
-                <span className="text-right font-mono block">
+                <span className="block text-right font-mono">
                     {Number(row.getValue('price')).toFixed(2)}
                 </span>
             ),
@@ -218,7 +222,7 @@ function CategoryDataTable({
         <div className="space-y-4">
             <div className="flex items-center gap-4">
                 <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search procedures..."
                         value={globalFilter ?? ''}
@@ -227,7 +231,8 @@ function CategoryDataTable({
                     />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {table.getFilteredRowModel().rows.length} of {data.length} procedures
+                    {table.getFilteredRowModel().rows.length} of {data.length}{' '}
+                    procedures
                 </div>
             </div>
 
@@ -241,7 +246,8 @@ function CategoryDataTable({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
+                                                  header.column.columnDef
+                                                      .header,
                                                   header.getContext(),
                                               )}
                                     </TableHead>
@@ -254,7 +260,9 @@ function CategoryDataTable({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -317,7 +325,9 @@ export default function MinorProcedureConfigurationIndex({
 }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingType, setEditingType] = useState<ProcedureType | null>(null);
-    const [activeTab, setActiveTab] = useState<'all' | 'minor' | 'major'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'minor' | 'major'>(
+        'all',
+    );
     const [isImporting, setIsImporting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -474,14 +484,20 @@ export default function MinorProcedureConfigurationIndex({
                 {/* Procedure Types Tabs */}
                 <Tabs
                     value={activeTab}
-                    onValueChange={(v) => setActiveTab(v as 'all' | 'minor' | 'major')}
+                    onValueChange={(v) =>
+                        setActiveTab(v as 'all' | 'minor' | 'major')
+                    }
                 >
                     <TabsList>
                         <TabsTrigger value="all">
                             All Procedures ({procedureTypes.length})
                         </TabsTrigger>
-                        <TabsTrigger value="minor">Minor ({minorCount})</TabsTrigger>
-                        <TabsTrigger value="major">Major/Theatre ({majorCount})</TabsTrigger>
+                        <TabsTrigger value="minor">
+                            Minor ({minorCount})
+                        </TabsTrigger>
+                        <TabsTrigger value="major">
+                            Major/Theatre ({majorCount})
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value={activeTab} className="mt-6 space-y-6">
@@ -521,7 +537,9 @@ export default function MinorProcedureConfigurationIndex({
                                             ? 'Get started by adding your first procedure type'
                                             : `No ${activeTab} procedures found`}
                                     </p>
-                                    <Button onClick={() => setShowCreateModal(true)}>
+                                    <Button
+                                        onClick={() => setShowCreateModal(true)}
+                                    >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add Procedure Type
                                     </Button>

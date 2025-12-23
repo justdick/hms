@@ -54,7 +54,9 @@ export function DepartmentActivityChart({
                             <CardTitle className="text-base font-semibold">
                                 Department Activity
                             </CardTitle>
-                            <CardDescription>Today's check-ins by department</CardDescription>
+                            <CardDescription>
+                                Today's check-ins by department
+                            </CardDescription>
                         </div>
                     </div>
                     <div className="text-right">
@@ -82,7 +84,12 @@ export function DepartmentActivityChart({
                             <BarChart
                                 data={activeData}
                                 layout="vertical"
-                                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                                margin={{
+                                    top: 5,
+                                    right: 30,
+                                    left: 0,
+                                    bottom: 5,
+                                }}
                             >
                                 <XAxis
                                     type="number"
@@ -102,8 +109,11 @@ export function DepartmentActivityChart({
                                     content={
                                         <ChartTooltipContent
                                             labelFormatter={(_, payload) => {
-                                                if (payload?.[0]?.payload?.name) {
-                                                    return payload[0].payload.name;
+                                                if (
+                                                    payload?.[0]?.payload?.name
+                                                ) {
+                                                    return payload[0].payload
+                                                        .name;
                                                 }
                                                 return '';
                                             }}
@@ -116,7 +126,10 @@ export function DepartmentActivityChart({
                                     barSize={20}
                                 >
                                     {activeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.fill}
+                                        />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -124,7 +137,9 @@ export function DepartmentActivityChart({
 
                         {topDepartment && topDepartment.checkins > 0 && (
                             <div className="flex items-center justify-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm">
-                                <span className="text-muted-foreground">Busiest:</span>
+                                <span className="text-muted-foreground">
+                                    Busiest:
+                                </span>
                                 <span
                                     className="font-medium"
                                     style={{ color: topDepartment.fill }}

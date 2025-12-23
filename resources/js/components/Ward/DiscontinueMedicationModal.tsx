@@ -99,8 +99,9 @@ export function DiscontinueMedicationModal({
                                 This medication will be marked as discontinued
                             </p>
                             <p className="text-orange-700 dark:text-orange-300">
-                                Past administrations will be preserved in the patient's record.
-                                No further doses should be given.
+                                Past administrations will be preserved in the
+                                patient's record. No further doses should be
+                                given.
                             </p>
                         </div>
                     </div>

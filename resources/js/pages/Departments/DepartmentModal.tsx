@@ -133,12 +133,17 @@ export default function DepartmentModal({
                                 id="name"
                                 value={formData.name}
                                 onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
+                                    setFormData({
+                                        ...formData,
+                                        name: e.target.value,
+                                    })
                                 }
                                 placeholder="e.g., General OPD"
                             />
                             {errors.name && (
-                                <p className="text-sm text-red-600">{errors.name}</p>
+                                <p className="text-sm text-red-600">
+                                    {errors.name}
+                                </p>
                             )}
                         </div>
 
@@ -157,7 +162,9 @@ export default function DepartmentModal({
                                 maxLength={10}
                             />
                             {errors.code && (
-                                <p className="text-sm text-red-600">{errors.code}</p>
+                                <p className="text-sm text-red-600">
+                                    {errors.code}
+                                </p>
                             )}
                             <p className="text-xs text-muted-foreground">
                                 Max 10 chars, used for NHIS
@@ -171,13 +178,18 @@ export default function DepartmentModal({
                             id="description"
                             value={formData.description}
                             onChange={(e) =>
-                                setFormData({ ...formData, description: e.target.value })
+                                setFormData({
+                                    ...formData,
+                                    description: e.target.value,
+                                })
                             }
                             placeholder="Brief description"
                             rows={2}
                         />
                         {errors.description && (
-                            <p className="text-sm text-red-600">{errors.description}</p>
+                            <p className="text-sm text-red-600">
+                                {errors.description}
+                            </p>
                         )}
                     </div>
 
@@ -194,15 +206,22 @@ export default function DepartmentModal({
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Object.entries(types).map(([value, label]) => (
-                                        <SelectItem key={value} value={value}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
+                                    {Object.entries(types).map(
+                                        ([value, label]) => (
+                                            <SelectItem
+                                                key={value}
+                                                value={value}
+                                            >
+                                                {label}
+                                            </SelectItem>
+                                        ),
+                                    )}
                                 </SelectContent>
                             </Select>
                             {errors.type && (
-                                <p className="text-sm text-red-600">{errors.type}</p>
+                                <p className="text-sm text-red-600">
+                                    {errors.type}
+                                </p>
                             )}
                         </div>
 
@@ -211,7 +230,10 @@ export default function DepartmentModal({
                                 id="is_active"
                                 checked={formData.is_active}
                                 onCheckedChange={(checked) =>
-                                    setFormData({ ...formData, is_active: checked })
+                                    setFormData({
+                                        ...formData,
+                                        is_active: checked,
+                                    })
                                 }
                             />
                             <Label htmlFor="is_active">Active</Label>
@@ -219,7 +241,11 @@ export default function DepartmentModal({
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={isSubmitting}>

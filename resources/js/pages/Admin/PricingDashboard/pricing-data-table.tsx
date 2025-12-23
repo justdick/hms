@@ -124,13 +124,18 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
     onDownloadTemplate,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [search, setSearch] = React.useState(filters.search || '');
-    const [unmappedOnly, setUnmappedOnly] = React.useState(filters.unmapped_only || false);
-    const [pricingStatus, setPricingStatus] = React.useState<PricingStatusValue>(
-        (filters.pricing_status as PricingStatusValue) || 'all',
+    const [unmappedOnly, setUnmappedOnly] = React.useState(
+        filters.unmapped_only || false,
     );
+    const [pricingStatus, setPricingStatus] =
+        React.useState<PricingStatusValue>(
+            (filters.pricing_status as PricingStatusValue) || 'all',
+        );
 
     const table = useReactTable({
         data,
@@ -189,7 +194,10 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
         setPricingStatus(status);
         router.get(
             '/admin/pricing-dashboard',
-            { ...filters, pricing_status: status === 'all' ? undefined : status },
+            {
+                ...filters,
+                pricing_status: status === 'all' ? undefined : status,
+            },
             { preserveState: true, preserveScroll: true },
         );
     };
@@ -220,17 +228,28 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
     };
 
     const hasActiveFilters =
-        filters.category || filters.search || filters.unmapped_only || filters.pricing_status;
+        filters.category ||
+        filters.search ||
+        filters.unmapped_only ||
+        filters.pricing_status;
 
     // Find prev/next links from pagination
-    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
             {/* Top Action Buttons */}
             <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={onDownloadTemplate}>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDownloadTemplate}
+                >
                     <Download className="mr-2 h-4 w-4" />
                     Template
                 </Button>
@@ -252,7 +271,9 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                     <Input
                         placeholder="Search by name or code..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -281,14 +302,17 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                             Category
                             {filters.category && (
                                 <Badge variant="secondary" className="ml-2">
-                                    {categoryLabels[filters.category] || filters.category}
+                                    {categoryLabels[filters.category] ||
+                                        filters.category}
                                 </Badge>
                             )}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                        <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                            Filter by Category
+                        </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             checked={!filters.category}
@@ -302,7 +326,9 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                                 <DropdownMenuCheckboxItem
                                     key={cat}
                                     checked={filters.category === cat}
-                                    onCheckedChange={() => handleCategoryChange(cat)}
+                                    onCheckedChange={() =>
+                                        handleCategoryChange(cat)
+                                    }
                                 >
                                     <Icon className="mr-2 h-4 w-4" />
                                     {categoryLabels[cat] || cat}
@@ -328,7 +354,10 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                                 handleUnmappedOnlyChange(checked === true)
                             }
                         />
-                        <Label htmlFor="unmapped_only" className="cursor-pointer text-sm">
+                        <Label
+                            htmlFor="unmapped_only"
+                            className="cursor-pointer text-sm"
+                        >
                             Unmapped only
                         </Label>
                     </div>
@@ -336,7 +365,11 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
 
                 {/* Clear Filters */}
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearFilters}
+                    >
                         <X className="mr-2 h-4 w-4" />
                         Clear
                     </Button>
@@ -390,7 +423,8 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
-                                                      header.column.columnDef.header,
+                                                      header.column.columnDef
+                                                          .header,
                                                       header.getContext(),
                                                   )}
                                         </TableHead>
@@ -404,7 +438,9 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                     className={`hover:bg-muted/50 ${
                                         isNhis && !row.original.is_mapped
                                             ? 'bg-yellow-50 dark:bg-yellow-950/20'
@@ -431,7 +467,8 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                                         <AlertCircle className="h-8 w-8 text-muted-foreground" />
                                         <div>No items found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            Try adjusting your filters or search criteria.
+                                            Try adjusting your filters or search
+                                            criteria.
                                         </div>
                                     </div>
                                 </TableCell>
@@ -446,8 +483,8 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.from && pagination.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of {pagination.total}{' '}
-                            item(s)
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} item(s)
                         </>
                     ) : (
                         <>No results</>

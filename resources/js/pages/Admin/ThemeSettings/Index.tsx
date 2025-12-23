@@ -1,20 +1,44 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useTheme, type ThemeConfig, type ThemeColors } from '@/contexts/theme-context';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    useTheme,
+    type ThemeColors,
+    type ThemeConfig,
+} from '@/contexts/theme-context';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { AlertCircle, Check, Palette, RefreshCw, Save, Upload, X } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import {
+    AlertCircle,
+    Check,
+    Palette,
+    RefreshCw,
+    Save,
+    Upload,
+    X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HslColorPicker } from 'react-colorful';
 
 // Get CSRF token from cookie (more reliable than meta tag on first load)
 function getCsrfToken(): string {
     // Try meta tag first
-    const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const metaToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
     if (metaToken) return metaToken;
 
     // Fall back to XSRF-TOKEN cookie (Laravel sets this)
@@ -34,29 +58,77 @@ interface Props {
 }
 
 // Color configuration for the picker - grouped by section
-const mainColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
+const mainColorConfig: {
+    key: keyof ThemeColors;
+    label: string;
+    description: string;
+}[] = [
     { key: 'primary', label: 'Primary', description: 'Main brand color' },
-    { key: 'primaryForeground', label: 'Primary Foreground', description: 'Text on primary' },
+    {
+        key: 'primaryForeground',
+        label: 'Primary Foreground',
+        description: 'Text on primary',
+    },
     { key: 'secondary', label: 'Secondary', description: 'Secondary elements' },
-    { key: 'secondaryForeground', label: 'Secondary Foreground', description: 'Text on secondary' },
+    {
+        key: 'secondaryForeground',
+        label: 'Secondary Foreground',
+        description: 'Text on secondary',
+    },
     { key: 'accent', label: 'Accent', description: 'Accent highlights' },
-    { key: 'accentForeground', label: 'Accent Foreground', description: 'Text on accent' },
+    {
+        key: 'accentForeground',
+        label: 'Accent Foreground',
+        description: 'Text on accent',
+    },
 ];
 
-const statusColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
+const statusColorConfig: {
+    key: keyof ThemeColors;
+    label: string;
+    description: string;
+}[] = [
     { key: 'success', label: 'Success', description: 'Success states' },
     { key: 'warning', label: 'Warning', description: 'Warning states' },
     { key: 'error', label: 'Error', description: 'Error states' },
     { key: 'info', label: 'Info', description: 'Info states' },
 ];
 
-const sidebarColorConfig: { key: keyof ThemeColors; label: string; description: string }[] = [
-    { key: 'sidebar', label: 'Sidebar Background', description: 'Sidebar background color' },
-    { key: 'sidebarForeground', label: 'Sidebar Text', description: 'Text color in sidebar' },
-    { key: 'sidebarPrimary', label: 'Sidebar Primary', description: 'Active/selected items' },
-    { key: 'sidebarPrimaryForeground', label: 'Sidebar Primary Text', description: 'Text on active items' },
-    { key: 'sidebarAccent', label: 'Sidebar Accent', description: 'Hover/highlight background' },
-    { key: 'sidebarAccentForeground', label: 'Sidebar Accent Text', description: 'Text on hover items' },
+const sidebarColorConfig: {
+    key: keyof ThemeColors;
+    label: string;
+    description: string;
+}[] = [
+    {
+        key: 'sidebar',
+        label: 'Sidebar Background',
+        description: 'Sidebar background color',
+    },
+    {
+        key: 'sidebarForeground',
+        label: 'Sidebar Text',
+        description: 'Text color in sidebar',
+    },
+    {
+        key: 'sidebarPrimary',
+        label: 'Sidebar Primary',
+        description: 'Active/selected items',
+    },
+    {
+        key: 'sidebarPrimaryForeground',
+        label: 'Sidebar Primary Text',
+        description: 'Text on active items',
+    },
+    {
+        key: 'sidebarAccent',
+        label: 'Sidebar Accent',
+        description: 'Hover/highlight background',
+    },
+    {
+        key: 'sidebarAccentForeground',
+        label: 'Sidebar Accent Text',
+        description: 'Text on hover items',
+    },
 ];
 
 // Convert HSL string to CSS hsl() format
@@ -97,7 +169,11 @@ function ColorSwatch({
     disabled?: boolean;
 }) {
     const parsed = parseHSL(value);
-    const [localColor, setLocalColor] = useState({ h: parsed?.h ?? 0, s: parsed?.s ?? 50, l: parsed?.l ?? 50 });
+    const [localColor, setLocalColor] = useState({
+        h: parsed?.h ?? 0,
+        s: parsed?.s ?? 50,
+        l: parsed?.l ?? 50,
+    });
     const [isOpen, setIsOpen] = useState(false);
     const isInternalChange = useRef(false);
 
@@ -113,32 +189,38 @@ function ColorSwatch({
         }
     }, [value]);
 
-    const handlePickerChange = useCallback((color: { h: number; s: number; l: number }) => {
-        const clamped = {
-            h: Math.max(0, Math.min(360, Math.round(color.h))),
-            s: Math.max(0, Math.min(100, Math.round(color.s))),
-            l: Math.max(0, Math.min(100, Math.round(color.l))),
-        };
-        setLocalColor(clamped);
-        isInternalChange.current = true;
-        onChange(formatHSL(clamped.h, clamped.s, clamped.l));
-    }, [onChange]);
+    const handlePickerChange = useCallback(
+        (color: { h: number; s: number; l: number }) => {
+            const clamped = {
+                h: Math.max(0, Math.min(360, Math.round(color.h))),
+                s: Math.max(0, Math.min(100, Math.round(color.s))),
+                l: Math.max(0, Math.min(100, Math.round(color.l))),
+            };
+            setLocalColor(clamped);
+            isInternalChange.current = true;
+            onChange(formatHSL(clamped.h, clamped.s, clamped.l));
+        },
+        [onChange],
+    );
 
-    const handleInputChange = useCallback((field: 'h' | 's' | 'l', val: number) => {
-        const max = field === 'h' ? 360 : 100;
-        const clamped = Math.max(0, Math.min(max, val));
-        const newColor = { ...localColor, [field]: clamped };
-        setLocalColor(newColor);
-        isInternalChange.current = true;
-        onChange(formatHSL(newColor.h, newColor.s, newColor.l));
-    }, [localColor, onChange]);
+    const handleInputChange = useCallback(
+        (field: 'h' | 's' | 'l', val: number) => {
+            const max = field === 'h' ? 360 : 100;
+            const clamped = Math.max(0, Math.min(max, val));
+            const newColor = { ...localColor, [field]: clamped };
+            setLocalColor(newColor);
+            isInternalChange.current = true;
+            onChange(formatHSL(newColor.h, newColor.s, newColor.l));
+        },
+        [localColor, onChange],
+    );
 
     return (
         <div className="flex items-center gap-3 rounded-lg border p-3 dark:border-gray-700">
             <Popover open={isOpen} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild disabled={disabled}>
                     <button
-                        className="h-10 w-10 shrink-0 rounded-md border shadow-sm transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                        className="h-10 w-10 shrink-0 rounded-md border shadow-sm transition-transform hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
                         style={{ backgroundColor: hslToCSS(value) }}
                         aria-label={`Pick color for ${label}`}
                     />
@@ -156,7 +238,12 @@ function ColorSwatch({
                                 min={0}
                                 max={360}
                                 value={localColor.h}
-                                onChange={(e) => handleInputChange('h', parseInt(e.target.value) || 0)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'h',
+                                        parseInt(e.target.value) || 0,
+                                    )
+                                }
                                 className="h-7 text-xs"
                             />
                         </div>
@@ -167,7 +254,12 @@ function ColorSwatch({
                                 min={0}
                                 max={100}
                                 value={localColor.s}
-                                onChange={(e) => handleInputChange('s', parseInt(e.target.value) || 0)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        's',
+                                        parseInt(e.target.value) || 0,
+                                    )
+                                }
                                 className="h-7 text-xs"
                             />
                         </div>
@@ -178,36 +270,52 @@ function ColorSwatch({
                                 min={0}
                                 max={100}
                                 value={localColor.l}
-                                onChange={(e) => handleInputChange('l', parseInt(e.target.value) || 0)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'l',
+                                        parseInt(e.target.value) || 0,
+                                    )
+                                }
                                 className="h-7 text-xs"
                             />
                         </div>
                     </div>
                 </PopoverContent>
             </Popover>
-            <div className="flex-1 min-w-0">
-                <Label className="font-medium text-sm">{label}</Label>
-                <p className="text-xs text-muted-foreground truncate">{description}</p>
+            <div className="min-w-0 flex-1">
+                <Label className="text-sm font-medium">{label}</Label>
+                <p className="truncate text-xs text-muted-foreground">
+                    {description}
+                </p>
             </div>
         </div>
     );
 }
 
-export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme }: Props) {
+export default function ThemeSettingsIndex({
+    theme: initialTheme,
+    canManageTheme,
+}: Props) {
     const { theme: contextTheme, updateTheme, resetTheme } = useTheme();
     const [localTheme, setLocalTheme] = useState<ThemeConfig>(initialTheme);
     const [isSaving, setIsSaving] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>(
+        'idle',
+    );
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Track changes
     useEffect(() => {
-        const colorsChanged = JSON.stringify(localTheme.colors) !== JSON.stringify(initialTheme.colors);
-        const brandingChanged = JSON.stringify(localTheme.branding) !== JSON.stringify(initialTheme.branding);
+        const colorsChanged =
+            JSON.stringify(localTheme.colors) !==
+            JSON.stringify(initialTheme.colors);
+        const brandingChanged =
+            JSON.stringify(localTheme.branding) !==
+            JSON.stringify(initialTheme.branding);
         setHasChanges(colorsChanged || brandingChanged);
     }, [localTheme, initialTheme]);
 
@@ -216,28 +324,33 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
         updateTheme(localTheme);
     }, [localTheme, updateTheme]);
 
-    const handleColorChange = useCallback((key: keyof ThemeColors, value: string) => {
-        setLocalTheme((prev) => ({
-            ...prev,
-            colors: {
-                ...prev.colors,
-                [key]: value,
-            },
-        }));
-        setSaveStatus('idle');
-    }, []);
+    const handleColorChange = useCallback(
+        (key: keyof ThemeColors, value: string) => {
+            setLocalTheme((prev) => ({
+                ...prev,
+                colors: {
+                    ...prev.colors,
+                    [key]: value,
+                },
+            }));
+            setSaveStatus('idle');
+        },
+        [],
+    );
 
-    const handleBrandingChange = useCallback((key: 'hospitalName', value: string) => {
-        setLocalTheme((prev) => ({
-            ...prev,
-            branding: {
-                ...prev.branding,
-                [key]: value,
-            },
-        }));
-        setSaveStatus('idle');
-    }, []);
-
+    const handleBrandingChange = useCallback(
+        (key: 'hospitalName', value: string) => {
+            setLocalTheme((prev) => ({
+                ...prev,
+                branding: {
+                    ...prev.branding,
+                    [key]: value,
+                },
+            }));
+            setSaveStatus('idle');
+        },
+        [],
+    );
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -256,14 +369,18 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                 credentials: 'same-origin',
                 body: JSON.stringify({
                     colors: localTheme.colors,
-                    branding: { hospitalName: localTheme.branding.hospitalName },
+                    branding: {
+                        hospitalName: localTheme.branding.hospitalName,
+                    },
                 }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Failed to save theme settings');
+                throw new Error(
+                    data.message || 'Failed to save theme settings',
+                );
             }
 
             setSaveStatus('success');
@@ -271,14 +388,22 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
             setTimeout(() => setSaveStatus('idle'), 3000);
         } catch (error) {
             setSaveStatus('error');
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to save theme settings');
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to save theme settings',
+            );
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleReset = async () => {
-        if (!confirm('Are you sure you want to reset all theme settings to defaults?')) {
+        if (
+            !confirm(
+                'Are you sure you want to reset all theme settings to defaults?',
+            )
+        ) {
             return;
         }
 
@@ -300,7 +425,9 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Failed to reset theme settings');
+                throw new Error(
+                    data.message || 'Failed to reset theme settings',
+                );
             }
 
             setLocalTheme(data.data);
@@ -309,20 +436,33 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
             setHasChanges(false);
             router.reload({ only: ['theme'] });
         } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to reset theme settings');
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to reset theme settings',
+            );
         } finally {
             setIsResetting(false);
         }
     };
 
-    const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleLogoUpload = async (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         // Validate file type
-        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+        const validTypes = [
+            'image/png',
+            'image/jpeg',
+            'image/jpg',
+            'image/svg+xml',
+        ];
         if (!validTypes.includes(file.type)) {
-            setErrorMessage('Invalid file type. Please upload a PNG, JPG, or SVG file.');
+            setErrorMessage(
+                'Invalid file type. Please upload a PNG, JPG, or SVG file.',
+            );
             return;
         }
 
@@ -366,7 +506,11 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
             setSaveStatus('success');
             setTimeout(() => setSaveStatus('idle'), 3000);
         } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to upload logo');
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to upload logo',
+            );
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) {
@@ -385,7 +529,6 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
         }));
         setHasChanges(true);
     };
-
 
     return (
         <AppLayout
@@ -425,12 +568,16 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                             onClick={handleReset}
                             disabled={isResetting || !canManageTheme}
                         >
-                            <RefreshCw className={`mr-2 h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
+                            <RefreshCw
+                                className={`mr-2 h-4 w-4 ${isResetting ? 'animate-spin' : ''}`}
+                            />
                             Reset to Defaults
                         </Button>
                         <Button
                             onClick={handleSave}
-                            disabled={isSaving || !hasChanges || !canManageTheme}
+                            disabled={
+                                isSaving || !hasChanges || !canManageTheme
+                            }
                         >
                             <Save className="mr-2 h-4 w-4" />
                             {isSaving ? 'Saving...' : 'Save Changes'}
@@ -457,7 +604,10 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                 {!canManageTheme && (
                     <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
                         <AlertCircle className="h-5 w-5" />
-                        <span>You don't have permission to modify theme settings. Contact an administrator.</span>
+                        <span>
+                            You don't have permission to modify theme settings.
+                            Contact an administrator.
+                        </span>
                     </div>
                 )}
 
@@ -473,11 +623,18 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                         <CardContent className="space-y-6">
                             {/* Hospital Name */}
                             <div className="space-y-2">
-                                <Label htmlFor="hospitalName">Hospital Name</Label>
+                                <Label htmlFor="hospitalName">
+                                    Hospital Name
+                                </Label>
                                 <Input
                                     id="hospitalName"
                                     value={localTheme.branding.hospitalName}
-                                    onChange={(e) => handleBrandingChange('hospitalName', e.target.value)}
+                                    onChange={(e) =>
+                                        handleBrandingChange(
+                                            'hospitalName',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Enter hospital name"
                                     disabled={!canManageTheme}
                                 />
@@ -490,7 +647,9 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                     {localTheme.branding.logoUrl ? (
                                         <div className="relative">
                                             <img
-                                                src={localTheme.branding.logoUrl}
+                                                src={
+                                                    localTheme.branding.logoUrl
+                                                }
                                                 alt="Hospital Logo"
                                                 className="h-16 w-16 rounded-lg border object-contain dark:border-gray-700"
                                             />
@@ -498,7 +657,7 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full p-0"
+                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
                                                     onClick={handleRemoveLogo}
                                                 >
                                                     <X className="h-3 w-3" />
@@ -518,15 +677,23 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                             onChange={handleLogoUpload}
                                             className="hidden"
                                             id="logo-upload"
-                                            disabled={!canManageTheme || isUploading}
+                                            disabled={
+                                                !canManageTheme || isUploading
+                                            }
                                         />
                                         <Button
                                             variant="outline"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            disabled={!canManageTheme || isUploading}
+                                            onClick={() =>
+                                                fileInputRef.current?.click()
+                                            }
+                                            disabled={
+                                                !canManageTheme || isUploading
+                                            }
                                         >
                                             <Upload className="mr-2 h-4 w-4" />
-                                            {isUploading ? 'Uploading...' : 'Upload Logo'}
+                                            {isUploading
+                                                ? 'Uploading...'
+                                                : 'Upload Logo'}
                                         </Button>
                                         <p className="mt-1 text-xs text-muted-foreground">
                                             PNG, JPG, or SVG. Max 2MB.
@@ -557,32 +724,51 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                     ) : (
                                         <div
                                             className="flex h-10 w-10 items-center justify-center rounded font-bold text-white"
-                                            style={{ backgroundColor: hslToCSS(localTheme.colors.primary) }}
+                                            style={{
+                                                backgroundColor: hslToCSS(
+                                                    localTheme.colors.primary,
+                                                ),
+                                            }}
                                         >
                                             H
                                         </div>
                                     )}
-                                    <span className="font-semibold">{localTheme.branding.hospitalName}</span>
+                                    <span className="font-semibold">
+                                        {localTheme.branding.hospitalName}
+                                    </span>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     <button
                                         className="rounded px-3 py-1.5 text-sm font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.primary) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.primary,
+                                            ),
+                                        }}
                                     >
                                         Primary Button
                                     </button>
                                     <button
                                         className="rounded px-3 py-1.5 text-sm font-medium"
                                         style={{
-                                            backgroundColor: hslToCSS(localTheme.colors.secondary),
-                                            color: hslToCSS(localTheme.colors.secondaryForeground),
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.secondary,
+                                            ),
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .secondaryForeground,
+                                            ),
                                         }}
                                     >
                                         Secondary
                                     </button>
                                     <button
                                         className="rounded px-3 py-1.5 text-sm font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.accent) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.accent,
+                                            ),
+                                        }}
                                     >
                                         Accent
                                     </button>
@@ -590,25 +776,41 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                 <div className="flex flex-wrap gap-2">
                                     <span
                                         className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.success) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.success,
+                                            ),
+                                        }}
                                     >
                                         Success
                                     </span>
                                     <span
                                         className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.warning) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.warning,
+                                            ),
+                                        }}
                                     >
                                         Warning
                                     </span>
                                     <span
                                         className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.error) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.error,
+                                            ),
+                                        }}
                                     >
                                         Error
                                     </span>
                                     <span
                                         className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                        style={{ backgroundColor: hslToCSS(localTheme.colors.info) }}
+                                        style={{
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors.info,
+                                            ),
+                                        }}
                                     >
                                         Info
                                     </span>
@@ -628,17 +830,23 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {mainColorConfig.map(({ key, label, description }) => (
-                                <ColorSwatch
-                                    key={key}
-                                    colorKey={key}
-                                    value={localTheme.colors[key] ?? '0 0% 50%'}
-                                    label={label}
-                                    description={description}
-                                    onChange={(value) => handleColorChange(key, value)}
-                                    disabled={!canManageTheme}
-                                />
-                            ))}
+                            {mainColorConfig.map(
+                                ({ key, label, description }) => (
+                                    <ColorSwatch
+                                        key={key}
+                                        colorKey={key}
+                                        value={
+                                            localTheme.colors[key] ?? '0 0% 50%'
+                                        }
+                                        label={label}
+                                        description={description}
+                                        onChange={(value) =>
+                                            handleColorChange(key, value)
+                                        }
+                                        disabled={!canManageTheme}
+                                    />
+                                ),
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -653,17 +861,23 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            {statusColorConfig.map(({ key, label, description }) => (
-                                <ColorSwatch
-                                    key={key}
-                                    colorKey={key}
-                                    value={localTheme.colors[key] ?? '0 0% 50%'}
-                                    label={label}
-                                    description={description}
-                                    onChange={(value) => handleColorChange(key, value)}
-                                    disabled={!canManageTheme}
-                                />
-                            ))}
+                            {statusColorConfig.map(
+                                ({ key, label, description }) => (
+                                    <ColorSwatch
+                                        key={key}
+                                        colorKey={key}
+                                        value={
+                                            localTheme.colors[key] ?? '0 0% 50%'
+                                        }
+                                        label={label}
+                                        description={description}
+                                        onChange={(value) =>
+                                            handleColorChange(key, value)
+                                        }
+                                        disabled={!canManageTheme}
+                                    />
+                                ),
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -673,43 +887,71 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                     <CardHeader>
                         <CardTitle>Sidebar Colors</CardTitle>
                         <CardDescription>
-                            Customize the sidebar appearance including the area around the logo
+                            Customize the sidebar appearance including the area
+                            around the logo
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {sidebarColorConfig.map(({ key, label, description }) => (
-                                <ColorSwatch
-                                    key={key}
-                                    colorKey={key}
-                                    value={localTheme.colors[key] ?? '0 0% 50%'}
-                                    label={label}
-                                    description={description}
-                                    onChange={(value) => handleColorChange(key, value)}
-                                    disabled={!canManageTheme}
-                                />
-                            ))}
+                            {sidebarColorConfig.map(
+                                ({ key, label, description }) => (
+                                    <ColorSwatch
+                                        key={key}
+                                        colorKey={key}
+                                        value={
+                                            localTheme.colors[key] ?? '0 0% 50%'
+                                        }
+                                        label={label}
+                                        description={description}
+                                        onChange={(value) =>
+                                            handleColorChange(key, value)
+                                        }
+                                        disabled={!canManageTheme}
+                                    />
+                                ),
+                            )}
                         </div>
                         {/* Sidebar Preview */}
                         <div className="mt-4 rounded-lg border p-4 dark:border-gray-700">
-                            <p className="mb-2 text-sm font-medium">Sidebar Preview</p>
+                            <p className="mb-2 text-sm font-medium">
+                                Sidebar Preview
+                            </p>
                             <div
                                 className="w-48 rounded-lg p-3"
-                                style={{ backgroundColor: hslToCSS(localTheme.colors.sidebar ?? '210 20% 98%') }}
+                                style={{
+                                    backgroundColor: hslToCSS(
+                                        localTheme.colors.sidebar ??
+                                            '210 20% 98%',
+                                    ),
+                                }}
                             >
-                                <div className="flex items-center gap-2 mb-3">
+                                <div className="mb-3 flex items-center gap-2">
                                     <div
-                                        className="h-8 w-8 rounded flex items-center justify-center text-xs font-bold"
+                                        className="flex h-8 w-8 items-center justify-center rounded text-xs font-bold"
                                         style={{
-                                            backgroundColor: hslToCSS(localTheme.colors.sidebarPrimary ?? '210 90% 45%'),
-                                            color: hslToCSS(localTheme.colors.sidebarPrimaryForeground ?? '0 0% 100%'),
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarPrimary ??
+                                                    '210 90% 45%',
+                                            ),
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarPrimaryForeground ??
+                                                    '0 0% 100%',
+                                            ),
                                         }}
                                     >
                                         H
                                     </div>
                                     <span
-                                        className="text-sm font-semibold truncate"
-                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                        className="truncate text-sm font-semibold"
+                                        style={{
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarForeground ??
+                                                    '210 40% 20%',
+                                            ),
+                                        }}
                                     >
                                         Hospital
                                     </span>
@@ -718,21 +960,41 @@ export default function ThemeSettingsIndex({ theme: initialTheme, canManageTheme
                                     <div
                                         className="rounded px-2 py-1.5 text-xs"
                                         style={{
-                                            backgroundColor: hslToCSS(localTheme.colors.sidebarAccent ?? '210 30% 94%'),
-                                            color: hslToCSS(localTheme.colors.sidebarAccentForeground ?? '210 40% 25%'),
+                                            backgroundColor: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarAccent ??
+                                                    '210 30% 94%',
+                                            ),
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarAccentForeground ??
+                                                    '210 40% 25%',
+                                            ),
                                         }}
                                     >
                                         Dashboard
                                     </div>
                                     <div
                                         className="px-2 py-1.5 text-xs"
-                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                        style={{
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarForeground ??
+                                                    '210 40% 20%',
+                                            ),
+                                        }}
                                     >
                                         Patients
                                     </div>
                                     <div
                                         className="px-2 py-1.5 text-xs"
-                                        style={{ color: hslToCSS(localTheme.colors.sidebarForeground ?? '210 40% 20%') }}
+                                        style={{
+                                            color: hslToCSS(
+                                                localTheme.colors
+                                                    .sidebarForeground ??
+                                                    '210 40% 20%',
+                                            ),
+                                        }}
                                     >
                                         Check-in
                                     </div>

@@ -1,41 +1,73 @@
-import { useCallback, useEffect, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
 import { DashboardLayout } from '@/components/Dashboard/DashboardLayout';
-import { QuickActions, type QuickAction } from '@/components/Dashboard/QuickActions';
+import {
+    QuickActions,
+    type QuickAction,
+} from '@/components/Dashboard/QuickActions';
 
 // Metrics widgets
-import { ReceptionistMetrics, type ReceptionistMetricsData } from '@/components/Dashboard/widgets/RecentCheckins';
-import { DoctorMetrics, type DoctorMetricsData } from '@/components/Dashboard/widgets/ConsultationQueue';
-import { PharmacistMetrics, type PharmacistMetricsData } from '@/components/Dashboard/widgets/PrescriptionQueue';
-import { NurseMetrics, type NurseMetricsData } from '@/components/Dashboard/widgets/VitalsQueue';
-import { CashierMetrics, type CashierMetricsData } from '@/components/Dashboard/widgets/RecentPayments';
-import { InsuranceMetrics, type InsuranceMetricsData } from '@/components/Dashboard/widgets/ClaimsQueue';
-import { FinanceMetrics, type FinanceMetricsData } from '@/components/Dashboard/widgets/FinanceMetrics';
-import { AdminMetrics, type AdminMetricsData } from '@/components/Dashboard/widgets/AdminMetrics';
+import {
+    AdminMetrics,
+    type AdminMetricsData,
+} from '@/components/Dashboard/widgets/AdminMetrics';
+import {
+    InsuranceMetrics,
+    type InsuranceMetricsData,
+} from '@/components/Dashboard/widgets/ClaimsQueue';
+import {
+    DoctorMetrics,
+    type DoctorMetricsData,
+} from '@/components/Dashboard/widgets/ConsultationQueue';
+import {
+    FinanceMetrics,
+    type FinanceMetricsData,
+} from '@/components/Dashboard/widgets/FinanceMetrics';
+import {
+    PharmacistMetrics,
+    type PharmacistMetricsData,
+} from '@/components/Dashboard/widgets/PrescriptionQueue';
+import {
+    ReceptionistMetrics,
+    type ReceptionistMetricsData,
+} from '@/components/Dashboard/widgets/RecentCheckins';
+import {
+    CashierMetrics,
+    type CashierMetricsData,
+} from '@/components/Dashboard/widgets/RecentPayments';
+import {
+    NurseMetrics,
+    type NurseMetricsData,
+} from '@/components/Dashboard/widgets/VitalsQueue';
 
 // Chart widgets (only for admin/finance)
-import { RevenueSummary, type RevenueByPaymentMethod } from '@/components/Dashboard/widgets/RevenueSummary';
+import {
+    DepartmentActivityChart,
+    type DepartmentActivityData,
+} from '@/components/Dashboard/widgets/DepartmentActivityChart';
 import {
     PatientFlowChart,
     type PatientFlowData,
 } from '@/components/Dashboard/widgets/PatientFlowChart';
 import {
+    RevenueSummary,
+    type RevenueByPaymentMethod,
+} from '@/components/Dashboard/widgets/RevenueSummary';
+import {
     RevenueTrendChart,
     type RevenueTrendData,
 } from '@/components/Dashboard/widgets/RevenueTrendChart';
-import {
-    DepartmentActivityChart,
-    type DepartmentActivityData,
-} from '@/components/Dashboard/widgets/DepartmentActivityChart';
 
 import { Skeleton } from '@/components/ui/skeleton';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+];
 
 interface DashboardMetrics {
     todayCheckins?: number;
@@ -70,7 +102,6 @@ interface DashboardMetrics {
     totalDepartments?: number;
 }
 
-
 interface DashboardLists {
     revenueByPaymentMethod?: RevenueByPaymentMethod[];
     // Admin charts data
@@ -89,9 +120,12 @@ interface DashboardProps {
 
 function MetricsSkeleton() {
     return (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex flex-col items-center gap-2 rounded-xl border p-4">
+                <div
+                    key={i}
+                    className="flex flex-col items-center gap-2 rounded-xl border p-4"
+                >
                     <Skeleton className="h-6 w-6" />
                     <Skeleton className="h-8 w-16" />
                     <Skeleton className="h-3 w-20" />
@@ -103,17 +137,23 @@ function MetricsSkeleton() {
 
 const POLLING_INTERVAL = 30000;
 
-
 export default function Dashboard() {
-    const { visibleWidgets, quickActions, metrics, lists } = usePage<DashboardProps>().props;
+    const { visibleWidgets, quickActions, metrics, lists } =
+        usePage<DashboardProps>().props;
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const hasWidget = useCallback((id: string) => visibleWidgets.includes(id), [visibleWidgets]);
+    const hasWidget = useCallback(
+        (id: string) => visibleWidgets.includes(id),
+        [visibleWidgets],
+    );
 
     useEffect(() => {
         const id = setInterval(() => {
             setIsRefreshing(true);
-            router.reload({ only: ['metrics', 'lists'], onFinish: () => setIsRefreshing(false) });
+            router.reload({
+                only: ['metrics', 'lists'],
+                onFinish: () => setIsRefreshing(false),
+            });
         }, POLLING_INTERVAL);
         return () => clearInterval(id);
     }, []);
@@ -176,17 +216,24 @@ export default function Dashboard() {
         totalDepartments: metrics?.totalDepartments ?? 0,
     };
 
-
     const renderMetrics = () => {
         if (!metricsLoaded) return <MetricsSkeleton />;
-        if (hasWidget('admin_metrics')) return <AdminMetrics metrics={adminData} />;
-        if (hasWidget('finance_metrics')) return <FinanceMetrics metrics={financeData} />;
-        if (hasWidget('claims_metrics')) return <InsuranceMetrics metrics={insuranceData} />;
-        if (hasWidget('billing_metrics')) return <CashierMetrics metrics={cashierData} />;
-        if (hasWidget('consultation_queue')) return <DoctorMetrics metrics={doctorData} />;
-        if (hasWidget('prescription_queue')) return <PharmacistMetrics metrics={pharmacistData} />;
-        if (hasWidget('vitals_queue')) return <NurseMetrics metrics={nurseData} />;
-        if (hasWidget('checkin_metrics')) return <ReceptionistMetrics metrics={receptionistData} />;
+        if (hasWidget('admin_metrics'))
+            return <AdminMetrics metrics={adminData} />;
+        if (hasWidget('finance_metrics'))
+            return <FinanceMetrics metrics={financeData} />;
+        if (hasWidget('claims_metrics'))
+            return <InsuranceMetrics metrics={insuranceData} />;
+        if (hasWidget('billing_metrics'))
+            return <CashierMetrics metrics={cashierData} />;
+        if (hasWidget('consultation_queue'))
+            return <DoctorMetrics metrics={doctorData} />;
+        if (hasWidget('prescription_queue'))
+            return <PharmacistMetrics metrics={pharmacistData} />;
+        if (hasWidget('vitals_queue'))
+            return <NurseMetrics metrics={nurseData} />;
+        if (hasWidget('checkin_metrics'))
+            return <ReceptionistMetrics metrics={receptionistData} />;
         return null;
     };
 
@@ -207,7 +254,9 @@ export default function Dashboard() {
                     </div>
                     {/* Department activity full width */}
                     {lists.departmentActivity && (
-                        <DepartmentActivityChart data={lists.departmentActivity} />
+                        <DepartmentActivityChart
+                            data={lists.departmentActivity}
+                        />
                     )}
                 </div>
             );
@@ -215,12 +264,15 @@ export default function Dashboard() {
 
         // Finance: Revenue breakdown chart
         if (hasWidget('revenue_summary') && lists?.revenueByPaymentMethod) {
-            return <RevenueSummary revenueByPaymentMethod={lists.revenueByPaymentMethod} />;
+            return (
+                <RevenueSummary
+                    revenueByPaymentMethod={lists.revenueByPaymentMethod}
+                />
+            );
         }
 
         return null;
     };
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -237,7 +289,9 @@ export default function Dashboard() {
                     {renderMetrics()}
 
                     {/* Quick Actions */}
-                    {quickActions.length > 0 && <QuickActions actions={quickActions} columns={4} />}
+                    {quickActions.length > 0 && (
+                        <QuickActions actions={quickActions} columns={4} />
+                    )}
 
                     {/* Charts (only for admin/finance) */}
                     {renderCharts()}

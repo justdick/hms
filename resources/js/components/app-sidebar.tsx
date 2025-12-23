@@ -117,8 +117,6 @@ function buildBillingNavItems(billingPermissions?: {
         });
     }
 
-
-
     // Configuration - requires configure permission
     if (billingPermissions?.configure) {
         items.push({
@@ -213,7 +211,10 @@ export function AppSidebar() {
             title: 'Investigations',
             href: '/lab',
             icon: TestTubes,
-            items: investigationsItems.length > 0 ? investigationsItems : undefined,
+            items:
+                investigationsItems.length > 0
+                    ? investigationsItems
+                    : undefined,
         },
         {
             title: 'Minor Procedures',
@@ -322,7 +323,10 @@ export function AppSidebar() {
         });
     }
 
-    if (auth.permissions?.nhisSettings?.view || auth.permissions?.nhisSettings?.manage) {
+    if (
+        auth.permissions?.nhisSettings?.view ||
+        auth.permissions?.nhisSettings?.manage
+    ) {
         adminItems.push({
             title: 'NHIS Settings',
             href: '/admin/nhis-settings',

@@ -39,11 +39,11 @@ interface ChargeSelectionListProps {
 
 /**
  * ChargeSelectionList Component
- * 
+ *
  * Displays a list of charges with checkboxes for selection.
  * All charges are selected by default.
  * Calculates and displays totals based on selection.
- * 
+ *
  * Requirements: 1.1, 1.2, 1.5
  */
 export function ChargeSelectionList({
@@ -99,18 +99,23 @@ export function ChargeSelectionList({
         const calculateInsuranceCovered = (chargeList: ChargeItem[]) =>
             chargeList.reduce(
                 (sum, c) =>
-                    sum + (c.is_insurance_claim ? c.insurance_covered_amount : 0),
+                    sum +
+                    (c.is_insurance_claim ? c.insurance_covered_amount : 0),
                 0,
             );
 
         return {
             selectedCount: selectedCharges.length,
             totalCount: charges.length,
-            selectedAmount: selectedCharges.reduce((sum, c) => sum + c.amount, 0),
+            selectedAmount: selectedCharges.reduce(
+                (sum, c) => sum + c.amount,
+                0,
+            ),
             totalAmount: charges.reduce((sum, c) => sum + c.amount, 0),
             selectedPatientOwes: calculatePatientOwes(selectedCharges),
             totalPatientOwes: calculatePatientOwes(charges),
-            selectedInsuranceCovered: calculateInsuranceCovered(selectedCharges),
+            selectedInsuranceCovered:
+                calculateInsuranceCovered(selectedCharges),
             totalInsuranceCovered: calculateInsuranceCovered(charges),
             remainingUnpaidAmount: calculatePatientOwes(unselectedCharges),
         };
@@ -136,8 +141,7 @@ export function ChargeSelectionList({
     const allSelected =
         charges.length > 0 && localSelectedIds.length === charges.length;
     const someSelected =
-        localSelectedIds.length > 0 &&
-        localSelectedIds.length < charges.length;
+        localSelectedIds.length > 0 && localSelectedIds.length < charges.length;
 
     const formatServiceType = (serviceType: string) => {
         return serviceType
@@ -178,7 +182,9 @@ export function ChargeSelectionList({
                         checked={allSelected}
                         onCheckedChange={handleSelectAll}
                         aria-label="Select all charges"
-                        className={someSelected ? 'data-[state=checked]:bg-muted' : ''}
+                        className={
+                            someSelected ? 'data-[state=checked]:bg-muted' : ''
+                        }
                     />
                     <label
                         htmlFor="select-all-charges"
@@ -216,7 +222,10 @@ export function ChargeSelectionList({
                                     id={`charge-${charge.id}`}
                                     checked={isSelected}
                                     onCheckedChange={(checked) =>
-                                        handleChargeToggle(charge.id, checked as boolean)
+                                        handleChargeToggle(
+                                            charge.id,
+                                            checked as boolean,
+                                        )
                                     }
                                     aria-label={`Select ${charge.description}`}
                                 />
@@ -234,19 +243,28 @@ export function ChargeSelectionList({
                                         </span>
                                         {charge.is_insurance_claim && (
                                             <InsuranceCoverageBadge
-                                                isInsuranceClaim={charge.is_insurance_claim}
+                                                isInsuranceClaim={
+                                                    charge.is_insurance_claim
+                                                }
                                                 insuranceCoveredAmount={
                                                     charge.insurance_covered_amount
                                                 }
-                                                patientCopayAmount={charge.patient_copay_amount}
+                                                patientCopayAmount={
+                                                    charge.patient_copay_amount
+                                                }
                                                 amount={charge.amount}
                                                 className="text-xs"
                                             />
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-xs">
-                                            {formatServiceType(charge.service_type)}
+                                        <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                        >
+                                            {formatServiceType(
+                                                charge.service_type,
+                                            )}
                                         </Badge>
                                         <span className="text-xs text-muted-foreground">
                                             {formatDateTime(charge.charged_at)}
@@ -259,10 +277,13 @@ export function ChargeSelectionList({
                                     {charge.is_insurance_claim ? (
                                         <div className="space-y-0.5">
                                             <div className="text-sm font-semibold text-orange-600">
-                                                {formatCurrency(charge.patient_copay_amount)}
+                                                {formatCurrency(
+                                                    charge.patient_copay_amount,
+                                                )}
                                             </div>
                                             <div className="text-xs text-muted-foreground">
-                                                of {formatCurrency(charge.amount)}
+                                                of{' '}
+                                                {formatCurrency(charge.amount)}
                                             </div>
                                         </div>
                                     ) : (
@@ -314,7 +335,10 @@ export function ChargeSelectionList({
                                     Insurance Covers:
                                 </span>
                                 <span className="font-medium text-green-600">
-                                    -{formatCurrency(summary.selectedInsuranceCovered)}
+                                    -
+                                    {formatCurrency(
+                                        summary.selectedInsuranceCovered,
+                                    )}
                                 </span>
                             </div>
                         )}
@@ -337,7 +361,9 @@ export function ChargeSelectionList({
                                     Remaining Unpaid:
                                 </span>
                                 <span className="font-medium text-muted-foreground">
-                                    {formatCurrency(summary.remainingUnpaidAmount)}
+                                    {formatCurrency(
+                                        summary.remainingUnpaidAmount,
+                                    )}
                                 </span>
                             </div>
                         )}
@@ -357,12 +383,15 @@ export function calculateChargeSelectionTotals(
     selectedIds: number[],
 ): ChargeSelectionSummary {
     const selectedCharges = charges.filter((c) => selectedIds.includes(c.id));
-    const unselectedCharges = charges.filter((c) => !selectedIds.includes(c.id));
+    const unselectedCharges = charges.filter(
+        (c) => !selectedIds.includes(c.id),
+    );
 
     const calculatePatientOwes = (chargeList: ChargeItem[]) =>
         chargeList.reduce(
             (sum, c) =>
-                sum + (c.is_insurance_claim ? c.patient_copay_amount : c.amount),
+                sum +
+                (c.is_insurance_claim ? c.patient_copay_amount : c.amount),
             0,
         );
 

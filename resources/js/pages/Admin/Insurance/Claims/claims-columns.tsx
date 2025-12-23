@@ -3,7 +3,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Calendar, Eye, FileCheck, Pencil, Trash2 } from 'lucide-react';
+import {
+    ArrowUpDown,
+    Calendar,
+    Eye,
+    FileCheck,
+    Pencil,
+    Trash2,
+} from 'lucide-react';
 
 export interface InsuranceProvider {
     id: number;

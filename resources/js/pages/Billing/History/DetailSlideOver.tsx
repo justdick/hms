@@ -79,7 +79,13 @@ interface Props {
     canRefund?: boolean;
 }
 
-export default function DetailSlideOver({ open, onOpenChange, payment, canVoid = false, canRefund = false }: Props) {
+export default function DetailSlideOver({
+    open,
+    onOpenChange,
+    payment,
+    canVoid = false,
+    canRefund = false,
+}: Props) {
     const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [showVoidModal, setShowVoidModal] = useState(false);
@@ -93,10 +99,12 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
 
     const fetchAuditTrail = async () => {
         if (!payment) return;
-        
+
         setLoading(true);
         try {
-            const response = await fetch(`/billing/accounts/history/${payment.id}`);
+            const response = await fetch(
+                `/billing/accounts/history/${payment.id}`,
+            );
             const data = await response.json();
             if (data.auditTrail) {
                 setAuditTrail(data.auditTrail);
@@ -196,7 +204,9 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
             case 'credit_tag_removed':
                 return 'Credit Tag Removed';
             default:
-                return action.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+                return action
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, (l) => l.toUpperCase());
         }
     };
 
@@ -204,7 +214,7 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+            <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                         <Receipt className="h-5 w-5" />
@@ -253,11 +263,18 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                                     {payment.patient_checkin.patient.name}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                    {payment.patient_checkin.patient.patient_number}
+                                    {
+                                        payment.patient_checkin.patient
+                                            .patient_number
+                                    }
                                 </div>
                                 {payment.patient_checkin.department && (
                                     <div className="mt-1 text-sm text-muted-foreground">
-                                        Department: {payment.patient_checkin.department.name}
+                                        Department:{' '}
+                                        {
+                                            payment.patient_checkin.department
+                                                .name
+                                        }
                                     </div>
                                 )}
                             </div>
@@ -270,42 +287,57 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                             <CreditCard className="h-4 w-4" />
                             Payment Information
                         </h4>
-                        <div className="rounded-lg border p-3 space-y-2">
+                        <div className="space-y-2 rounded-lg border p-3">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Service Type</span>
+                                <span className="text-muted-foreground">
+                                    Service Type
+                                </span>
                                 <span className="font-medium capitalize">
                                     {payment.service_type.replace(/_/g, ' ')}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Description</span>
-                                <span className="font-medium text-right max-w-[200px]">
+                                <span className="text-muted-foreground">
+                                    Description
+                                </span>
+                                <span className="max-w-[200px] text-right font-medium">
                                     {payment.description}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Payment Method</span>
+                                <span className="text-muted-foreground">
+                                    Payment Method
+                                </span>
                                 <span className="font-medium capitalize">
-                                    {payment.metadata?.payment_method?.replace(/_/g, ' ') || 'Cash'}
+                                    {payment.metadata?.payment_method?.replace(
+                                        /_/g,
+                                        ' ',
+                                    ) || 'Cash'}
                                 </span>
                             </div>
                             {payment.metadata?.reference_number && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Reference</span>
+                                    <span className="text-muted-foreground">
+                                        Reference
+                                    </span>
                                     <span className="font-mono text-sm">
                                         {payment.metadata.reference_number}
                                     </span>
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Date/Time</span>
+                                <span className="text-muted-foreground">
+                                    Date/Time
+                                </span>
                                 <span className="font-medium">
                                     {formatDateTime(payment.paid_at)}
                                 </span>
                             </div>
                             {payment.processed_by_user && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Processed By</span>
+                                    <span className="text-muted-foreground">
+                                        Processed By
+                                    </span>
                                     <span className="font-medium">
                                         {payment.processed_by_user.name}
                                     </span>
@@ -313,7 +345,6 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                             )}
                         </div>
                     </div>
-
 
                     {/* Audit Trail */}
                     <div className="space-y-2">
@@ -332,15 +363,21 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                                         <div key={entry.id} className="p-3">
                                             <div className="flex items-start gap-3">
                                                 <div className="mt-0.5">
-                                                    {getActionIcon(entry.action)}
+                                                    {getActionIcon(
+                                                        entry.action,
+                                                    )}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <div className="flex items-center justify-between">
                                                         <span className="font-medium">
-                                                            {getActionLabel(entry.action)}
+                                                            {getActionLabel(
+                                                                entry.action,
+                                                            )}
                                                         </span>
                                                         <span className="text-xs text-muted-foreground">
-                                                            {formatDateTime(entry.created_at)}
+                                                            {formatDateTime(
+                                                                entry.created_at,
+                                                            )}
                                                         </span>
                                                     </div>
                                                     <div className="text-sm text-muted-foreground">
@@ -351,22 +388,46 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                                                             "{entry.reason}"
                                                         </div>
                                                     )}
-                                                    {entry.new_values && Object.keys(entry.new_values).length > 0 && (
-                                                        <div className="mt-2 text-xs bg-gray-50 dark:bg-gray-800 rounded p-2">
-                                                            {Object.entries(entry.new_values).map(([key, value]) => (
-                                                                <div key={key} className="flex justify-between">
-                                                                    <span className="text-muted-foreground">
-                                                                        {key.replace(/_/g, ' ')}:
-                                                                    </span>
-                                                                    <span className="font-mono">
-                                                                        {typeof value === 'object' 
-                                                                            ? JSON.stringify(value) 
-                                                                            : String(value)}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                    {entry.new_values &&
+                                                        Object.keys(
+                                                            entry.new_values,
+                                                        ).length > 0 && (
+                                                            <div className="mt-2 rounded bg-gray-50 p-2 text-xs dark:bg-gray-800">
+                                                                {Object.entries(
+                                                                    entry.new_values,
+                                                                ).map(
+                                                                    ([
+                                                                        key,
+                                                                        value,
+                                                                    ]) => (
+                                                                        <div
+                                                                            key={
+                                                                                key
+                                                                            }
+                                                                            className="flex justify-between"
+                                                                        >
+                                                                            <span className="text-muted-foreground">
+                                                                                {key.replace(
+                                                                                    /_/g,
+                                                                                    ' ',
+                                                                                )}
+                                                                                :
+                                                                            </span>
+                                                                            <span className="font-mono">
+                                                                                {typeof value ===
+                                                                                'object'
+                                                                                    ? JSON.stringify(
+                                                                                          value,
+                                                                                      )
+                                                                                    : String(
+                                                                                          value,
+                                                                                      )}
+                                                                            </span>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        )}
                                                 </div>
                                             </div>
                                         </div>
@@ -381,32 +442,38 @@ export default function DetailSlideOver({ open, onOpenChange, payment, canVoid =
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 pt-4 border-t">
+                    <div className="flex flex-col gap-2 border-t pt-4">
                         {/* Void and Refund buttons - only show for paid/partial payments */}
-                        {(payment.status === 'paid' || payment.status === 'partial') && (canVoid || canRefund) && (
-                            <div className="flex gap-2">
-                                {canVoid && (
-                                    <Button
-                                        variant="destructive"
-                                        className="flex-1"
-                                        onClick={() => setShowVoidModal(true)}
-                                    >
-                                        <XCircle className="mr-2 h-4 w-4" />
-                                        Void
-                                    </Button>
-                                )}
-                                {canRefund && (
-                                    <Button
-                                        variant="outline"
-                                        className="flex-1 text-purple-600 border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                                        onClick={() => setShowRefundModal(true)}
-                                    >
-                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                        Refund
-                                    </Button>
-                                )}
-                            </div>
-                        )}
+                        {(payment.status === 'paid' ||
+                            payment.status === 'partial') &&
+                            (canVoid || canRefund) && (
+                                <div className="flex gap-2">
+                                    {canVoid && (
+                                        <Button
+                                            variant="destructive"
+                                            className="flex-1"
+                                            onClick={() =>
+                                                setShowVoidModal(true)
+                                            }
+                                        >
+                                            <XCircle className="mr-2 h-4 w-4" />
+                                            Void
+                                        </Button>
+                                    )}
+                                    {canRefund && (
+                                        <Button
+                                            variant="outline"
+                                            className="flex-1 border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                            onClick={() =>
+                                                setShowRefundModal(true)
+                                            }
+                                        >
+                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                            Refund
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         <Button
                             variant="outline"
                             className="w-full"

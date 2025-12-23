@@ -72,7 +72,9 @@ export function VettingModal({
     // Local state for editable fields
     const [selectedGdrg, setSelectedGdrg] = useState<GdrgTariff | null>(null);
     const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
-    const [attendanceUpdates, setAttendanceUpdates] = useState<Record<string, string>>({});
+    const [attendanceUpdates, setAttendanceUpdates] = useState<
+        Record<string, string>
+    >({});
 
     // Focus management
     const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -136,19 +138,22 @@ export function VettingModal({
     }, [isOpen]);
 
     // Handle attendance field changes
-    const handleAttendanceChange = useCallback((field: string, value: string) => {
-        setAttendanceUpdates((prev) => ({ ...prev, [field]: value }));
-        // Also update the vettingData for immediate UI feedback
-        if (vettingData) {
-            setVettingData({
-                ...vettingData,
-                attendance: {
-                    ...vettingData.attendance,
-                    [field]: value,
-                },
-            });
-        }
-    }, [vettingData]);
+    const handleAttendanceChange = useCallback(
+        (field: string, value: string) => {
+            setAttendanceUpdates((prev) => ({ ...prev, [field]: value }));
+            // Also update the vettingData for immediate UI feedback
+            if (vettingData) {
+                setVettingData({
+                    ...vettingData,
+                    attendance: {
+                        ...vettingData.attendance,
+                        [field]: value,
+                    },
+                });
+            }
+        },
+        [vettingData],
+    );
 
     // Focus management
     useEffect(() => {
@@ -185,29 +190,51 @@ export function VettingModal({
     const calculateTotals = useCallback(() => {
         if (!vettingData) return null;
 
-        const gdrgAmount = selectedGdrg ? Number(selectedGdrg.tariff_price) || 0 : 0;
+        const gdrgAmount = selectedGdrg
+            ? Number(selectedGdrg.tariff_price) || 0
+            : 0;
 
         // Recalculate category totals from current items
-        const calculateCategoryTotal = (items: typeof vettingData.items.investigations) => {
+        const calculateCategoryTotal = (
+            items: typeof vettingData.items.investigations,
+        ) => {
             if (vettingData.is_nhis) {
                 return items
-                    .filter((item) => item.is_covered && item.nhis_price !== null)
-                    .reduce((sum, item) => sum + (item.nhis_price || 0) * item.quantity, 0);
+                    .filter(
+                        (item) => item.is_covered && item.nhis_price !== null,
+                    )
+                    .reduce(
+                        (sum, item) =>
+                            sum + (item.nhis_price || 0) * item.quantity,
+                        0,
+                    );
             }
             return items.reduce((sum, item) => sum + item.subtotal, 0);
         };
 
-        const investigationsTotal = calculateCategoryTotal(vettingData.items.investigations);
-        const prescriptionsTotal = calculateCategoryTotal(vettingData.items.prescriptions);
-        const proceduresTotal = calculateCategoryTotal(vettingData.items.procedures);
+        const investigationsTotal = calculateCategoryTotal(
+            vettingData.items.investigations,
+        );
+        const prescriptionsTotal = calculateCategoryTotal(
+            vettingData.items.prescriptions,
+        );
+        const proceduresTotal = calculateCategoryTotal(
+            vettingData.items.procedures,
+        );
 
         const unmappedCount = vettingData.is_nhis
-            ? vettingData.items.investigations.filter((i) => !i.is_covered).length +
-              vettingData.items.prescriptions.filter((i) => !i.is_covered).length +
+            ? vettingData.items.investigations.filter((i) => !i.is_covered)
+                  .length +
+              vettingData.items.prescriptions.filter((i) => !i.is_covered)
+                  .length +
               vettingData.items.procedures.filter((i) => !i.is_covered).length
             : 0;
 
-        const grandTotal = gdrgAmount + investigationsTotal + prescriptionsTotal + proceduresTotal;
+        const grandTotal =
+            gdrgAmount +
+            investigationsTotal +
+            prescriptionsTotal +
+            proceduresTotal;
 
         return {
             investigations: investigationsTotal,
@@ -345,8 +372,12 @@ export function VettingModal({
                                     className="h-5 w-5"
                                     aria-hidden="true"
                                 />
-                                {isViewOnly ? 'Claim Details' : isEditMode ? 'Edit Claim' : 'Claim Vetting'} -{' '}
-                                {vettingData.attendance.claim_check_code}
+                                {isViewOnly
+                                    ? 'Claim Details'
+                                    : isEditMode
+                                      ? 'Edit Claim'
+                                      : 'Claim Vetting'}{' '}
+                                - {vettingData.attendance.claim_check_code}
                             </DialogTitle>
                             <DialogDescription id="vetting-modal-description">
                                 {isViewOnly
@@ -377,7 +408,9 @@ export function VettingModal({
                                     />
                                     <AttendanceDetailsSection
                                         attendance={vettingData.attendance}
-                                        onAttendanceChange={handleAttendanceChange}
+                                        onAttendanceChange={
+                                            handleAttendanceChange
+                                        }
                                         disabled={processing || isViewOnly}
                                     />
                                 </div>
@@ -474,7 +507,10 @@ export function VettingModal({
                                 </div>
                                 <div className="flex gap-2">
                                     {isViewOnly ? (
-                                        <Button variant="outline" onClick={onClose}>
+                                        <Button
+                                            variant="outline"
+                                            onClick={onClose}
+                                        >
                                             Close
                                         </Button>
                                     ) : isEditMode ? (

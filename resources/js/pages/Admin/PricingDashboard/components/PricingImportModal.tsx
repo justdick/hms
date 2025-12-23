@@ -11,7 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { router } from '@inertiajs/react';
-import { AlertCircle, CheckCircle, FileSpreadsheet, Upload } from 'lucide-react';
+import {
+    AlertCircle,
+    CheckCircle,
+    FileSpreadsheet,
+    Upload,
+} from 'lucide-react';
 import { ChangeEvent, useState } from 'react';
 
 interface PricingImportModalProps {
@@ -89,8 +94,10 @@ export function PricingImportModal({
                 clearInterval(progressInterval);
                 setProgress(100);
                 setProcessing(false);
-                
-                const flash = page.props.flash as { success?: string; error?: string } | undefined;
+
+                const flash = page.props.flash as
+                    | { success?: string; error?: string }
+                    | undefined;
                 if (flash?.success) {
                     // Parse the success message for details
                     const match = flash.success.match(

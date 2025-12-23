@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 import {
     ArrowRight,
     CheckCircle2,
-    Clock,
     DollarSign,
     FileCheck,
     FileSearch,
@@ -10,6 +9,8 @@ import {
     Send,
 } from 'lucide-react';
 
+import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,8 +20,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { cn } from '@/lib/utils';
 
 export interface InsuranceMetricsData {
@@ -141,7 +140,8 @@ export function PendingClaims({
                                 key={claim.id}
                                 className={cn(
                                     'flex items-center justify-between rounded-lg border p-3',
-                                    claim.days_pending > 7 && 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+                                    claim.days_pending > 7 &&
+                                        'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950',
                                 )}
                             >
                                 <div className="flex flex-col">
@@ -150,12 +150,17 @@ export function PendingClaims({
                                             {claim.claim_check_code}
                                         </span>
                                         {claim.days_pending > 7 && (
-                                            <Badge variant="outline" className="text-xs text-amber-600">
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs text-amber-600"
+                                            >
                                                 {claim.days_pending}d old
                                             </Badge>
                                         )}
                                     </div>
-                                    <span className="text-sm">{claim.patient_name}</span>
+                                    <span className="text-sm">
+                                        {claim.patient_name}
+                                    </span>
                                     <span className="text-xs text-muted-foreground">
                                         {claim.insurance_provider}
                                     </span>
@@ -251,7 +256,12 @@ export function RecentBatches({
                                         <span className="font-mono text-xs font-medium">
                                             {batch.batch_number}
                                         </span>
-                                        <Badge variant={getBatchStatusVariant(batch.status)} className="text-xs">
+                                        <Badge
+                                            variant={getBatchStatusVariant(
+                                                batch.status,
+                                            )}
+                                            className="text-xs"
+                                        >
                                             {batch.status}
                                         </Badge>
                                     </div>

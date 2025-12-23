@@ -8,7 +8,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Copy, Check, User, FileText } from 'lucide-react';
+import { Check, CheckCircle2, Copy, FileText, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -64,7 +64,7 @@ export default function CheckinPromptDialog({
                 <div className="space-y-4">
                     {/* Prominent Folder Number Display */}
                     <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 dark:bg-primary/10">
-                        <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <div className="mb-2 flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                             <FileText className="h-3.5 w-3.5" />
                             Folder Number
                         </div>

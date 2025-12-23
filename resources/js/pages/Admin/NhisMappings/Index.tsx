@@ -5,7 +5,10 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { FlaskConical, Link2, Pill, Stethoscope } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { createNhisMappingsColumns, NhisMappingData } from './nhis-mappings-columns';
+import {
+    createNhisMappingsColumns,
+    NhisMappingData,
+} from './nhis-mappings-columns';
 import { NhisMappingsDataTable } from './nhis-mappings-data-table';
 
 interface Filters {
@@ -38,7 +41,11 @@ interface Props {
     itemTypes: string[];
 }
 
-export default function NhisMappingsIndex({ mappings, filters, itemTypes }: Props) {
+export default function NhisMappingsIndex({
+    mappings,
+    filters,
+    itemTypes,
+}: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [importModalOpen, setImportModalOpen] = useState(false);
 

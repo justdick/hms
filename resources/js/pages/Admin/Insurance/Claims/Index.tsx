@@ -5,12 +5,12 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { ClipboardList, FileCheck, FileText, Send } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { ClaimsDataTable } from './claims-data-table';
 import {
     createClaimsColumns,
     InsuranceClaim,
     InsuranceProvider,
 } from './claims-columns';
+import { ClaimsDataTable } from './claims-data-table';
 
 interface PaginationLink {
     url: string | null;
@@ -109,7 +109,11 @@ export default function InsuranceClaimsIndex({
      * Handles claim deletion
      */
     const handleDeleteClaim = useCallback((claimId: number) => {
-        if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
+        if (
+            confirm(
+                'Are you sure you want to delete this claim? This action cannot be undone.',
+            )
+        ) {
             router.delete(`/admin/insurance/claims/${claimId}`, {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -121,7 +125,13 @@ export default function InsuranceClaimsIndex({
 
     // Memoize columns to prevent unnecessary re-renders
     const columns = useMemo(
-        () => createClaimsColumns(handleVetClaim, handleViewClaim, handleEditClaim, handleDeleteClaim),
+        () =>
+            createClaimsColumns(
+                handleVetClaim,
+                handleViewClaim,
+                handleEditClaim,
+                handleDeleteClaim,
+            ),
         [handleVetClaim, handleViewClaim, handleEditClaim, handleDeleteClaim],
     );
 

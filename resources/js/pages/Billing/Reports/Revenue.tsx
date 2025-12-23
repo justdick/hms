@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/ui/stat-card';
 import {
     Select,
     SelectContent,
@@ -9,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -23,7 +23,6 @@ import {
     ArrowDown,
     ArrowUp,
     BarChart3,
-    Calendar,
     DollarSign,
     FileSpreadsheet,
     FileText,
@@ -79,7 +78,6 @@ interface Comparison {
     previous_period_end: string;
 }
 
-
 interface Report {
     grouped_data: GroupedDataItem[];
     summary: Summary;
@@ -114,13 +112,17 @@ export default function RevenueReport({ report, departments, filters }: Props) {
     };
 
     const applyFilters = () => {
-        router.get('/billing/accounts/reports/revenue', {
-            start_date: localFilters.start_date,
-            end_date: localFilters.end_date,
-            group_by: localFilters.group_by,
-        }, {
-            preserveState: true,
-        });
+        router.get(
+            '/billing/accounts/reports/revenue',
+            {
+                start_date: localFilters.start_date,
+                end_date: localFilters.end_date,
+                group_by: localFilters.group_by,
+            },
+            {
+                preserveState: true,
+            },
+        );
     };
 
     const setQuickDateRange = (days: number) => {
@@ -171,7 +173,10 @@ export default function RevenueReport({ report, departments, filters }: Props) {
             breadcrumbs={[
                 { title: 'Billing', href: '/billing' },
                 { title: 'Accounts', href: '/billing/accounts' },
-                { title: 'Revenue Report', href: '/billing/accounts/reports/revenue' },
+                {
+                    title: 'Revenue Report',
+                    href: '/billing/accounts/reports/revenue',
+                },
             ]}
         >
             <Head title="Revenue Report" />
@@ -215,35 +220,61 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                     />
                     <StatCard
                         label="Average Transaction"
-                        value={formatCurrency(report.summary.average_transaction)}
+                        value={formatCurrency(
+                            report.summary.average_transaction,
+                        )}
                         icon={<TrendingUp className="h-4 w-4" />}
                     />
                     <StatCard
                         label={`vs Previous: ${formatCurrency(report.comparison.previous_total)}`}
                         value={`${isPositiveChange ? '+' : ''}${report.comparison.percentage_change.toFixed(1)}%`}
-                        icon={isPositiveChange ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                        icon={
+                            isPositiveChange ? (
+                                <ArrowUp className="h-4 w-4" />
+                            ) : (
+                                <ArrowDown className="h-4 w-4" />
+                            )
+                        }
                         variant={isPositiveChange ? 'success' : 'error'}
                     />
                 </div>
-
 
                 {/* Daily Trend Chart */}
                 {report.daily_trend.length > 0 && (
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">Daily Revenue Trend</CardTitle>
+                            <CardTitle className="text-base">
+                                Daily Revenue Trend
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[300px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={report.daily_trend}>
                                         <defs>
-                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                                            <linearGradient
+                                                id="colorRevenue"
+                                                x1="0"
+                                                y1="0"
+                                                x2="0"
+                                                y2="1"
+                                            >
+                                                <stop
+                                                    offset="5%"
+                                                    stopColor="#16a34a"
+                                                    stopOpacity={0.3}
+                                                />
+                                                <stop
+                                                    offset="95%"
+                                                    stopColor="#16a34a"
+                                                    stopOpacity={0}
+                                                />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            className="stroke-muted"
+                                        />
                                         <XAxis
                                             dataKey="label"
                                             tick={{ fontSize: 12 }}
@@ -254,13 +285,21 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                             tick={{ fontSize: 12 }}
                                             tickLine={false}
                                             axisLine={false}
-                                            tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                                            tickFormatter={(value) =>
+                                                `${(value / 1000).toFixed(0)}k`
+                                            }
                                         />
                                         <Tooltip
-                                            formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                                            labelFormatter={(label) => `Date: ${label}`}
+                                            formatter={(value: number) => [
+                                                formatCurrency(value),
+                                                'Revenue',
+                                            ]}
+                                            labelFormatter={(label) =>
+                                                `Date: ${label}`
+                                            }
                                             contentStyle={{
-                                                backgroundColor: 'hsl(var(--background))',
+                                                backgroundColor:
+                                                    'hsl(var(--background))',
                                                 border: '1px solid hsl(var(--border))',
                                                 borderRadius: '8px',
                                             }}
@@ -298,9 +337,12 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                     type="date"
                                     value={localFilters.start_date}
                                     onChange={(e) =>
-                                        handleFilterChange('start_date', e.target.value)
+                                        handleFilterChange(
+                                            'start_date',
+                                            e.target.value,
+                                        )
                                     }
-                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
                                 />
                             </div>
 
@@ -312,9 +354,12 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                     type="date"
                                     value={localFilters.end_date}
                                     onChange={(e) =>
-                                        handleFilterChange('end_date', e.target.value)
+                                        handleFilterChange(
+                                            'end_date',
+                                            e.target.value,
+                                        )
                                     }
-                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
                                 />
                             </div>
 
@@ -332,16 +377,28 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                         <SelectValue placeholder="Select grouping" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="date">Date</SelectItem>
-                                        <SelectItem value="department">Department</SelectItem>
-                                        <SelectItem value="service_type">Service Type</SelectItem>
-                                        <SelectItem value="payment_method">Payment Method</SelectItem>
-                                        <SelectItem value="cashier">Cashier</SelectItem>
+                                        <SelectItem value="date">
+                                            Date
+                                        </SelectItem>
+                                        <SelectItem value="department">
+                                            Department
+                                        </SelectItem>
+                                        <SelectItem value="service_type">
+                                            Service Type
+                                        </SelectItem>
+                                        <SelectItem value="payment_method">
+                                            Payment Method
+                                        </SelectItem>
+                                        <SelectItem value="cashier">
+                                            Cashier
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            <Button onClick={applyFilters}>Apply Filters</Button>
+                            <Button onClick={applyFilters}>
+                                Apply Filters
+                            </Button>
 
                             <div className="flex gap-2">
                                 <Button
@@ -370,73 +427,110 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                     </CardContent>
                 </Card>
 
-
                 {/* Grouped Data Visualization */}
-                {localFilters.group_by !== 'date' && report.grouped_data.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">
-                                Revenue by {getGroupByLabel(localFilters.group_by)}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={report.grouped_data} layout="vertical">
-                                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                        <XAxis
-                                            type="number"
-                                            tick={{ fontSize: 12 }}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                                        />
-                                        <YAxis
-                                            type="category"
-                                            dataKey="label"
-                                            tick={{ fontSize: 12 }}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            width={120}
-                                        />
-                                        <Tooltip
-                                            formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                                            contentStyle={{
-                                                backgroundColor: 'hsl(var(--background))',
-                                                border: '1px solid hsl(var(--border))',
-                                                borderRadius: '8px',
-                                            }}
-                                        />
-                                        <Bar dataKey="total" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                {localFilters.group_by !== 'date' &&
+                    report.grouped_data.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">
+                                    Revenue by{' '}
+                                    {getGroupByLabel(localFilters.group_by)}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer
+                                        width="100%"
+                                        height="100%"
+                                    >
+                                        <BarChart
+                                            data={report.grouped_data}
+                                            layout="vertical"
+                                        >
+                                            <CartesianGrid
+                                                strokeDasharray="3 3"
+                                                className="stroke-muted"
+                                            />
+                                            <XAxis
+                                                type="number"
+                                                tick={{ fontSize: 12 }}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickFormatter={(value) =>
+                                                    `${(value / 1000).toFixed(0)}k`
+                                                }
+                                            />
+                                            <YAxis
+                                                type="category"
+                                                dataKey="label"
+                                                tick={{ fontSize: 12 }}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                width={120}
+                                            />
+                                            <Tooltip
+                                                formatter={(value: number) => [
+                                                    formatCurrency(value),
+                                                    'Revenue',
+                                                ]}
+                                                contentStyle={{
+                                                    backgroundColor:
+                                                        'hsl(var(--background))',
+                                                    border: '1px solid hsl(var(--border))',
+                                                    borderRadius: '8px',
+                                                }}
+                                            />
+                                            <Bar
+                                                dataKey="total"
+                                                fill="#3b82f6"
+                                                radius={[0, 4, 4, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                 {/* Data Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Revenue by {getGroupByLabel(localFilters.group_by)}</CardTitle>
+                        <CardTitle>
+                            Revenue by {getGroupByLabel(localFilters.group_by)}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         {report.grouped_data.length > 0 ? (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>{getGroupByLabel(localFilters.group_by)}</TableHead>
-                                        <TableHead className="text-right">Total Revenue</TableHead>
-                                        <TableHead className="text-center">Transactions</TableHead>
-                                        <TableHead className="text-right">Average</TableHead>
-                                        <TableHead className="text-right">% of Total</TableHead>
+                                        <TableHead>
+                                            {getGroupByLabel(
+                                                localFilters.group_by,
+                                            )}
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Total Revenue
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            Transactions
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Average
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            % of Total
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {report.grouped_data.map((item, index) => {
                                         const percentOfTotal =
                                             report.summary.total_revenue > 0
-                                                ? (item.total / report.summary.total_revenue) * 100
+                                                ? (item.total /
+                                                      report.summary
+                                                          .total_revenue) *
+                                                  100
                                                 : 0;
 
                                         return (
@@ -451,19 +545,25 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                                     {item.count.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {formatCurrency(item.average)}
+                                                    {formatCurrency(
+                                                        item.average,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Badge
                                                         variant={
                                                             percentOfTotal >= 20
                                                                 ? 'default'
-                                                                : percentOfTotal >= 10
+                                                                : percentOfTotal >=
+                                                                    10
                                                                   ? 'secondary'
                                                                   : 'outline'
                                                         }
                                                     >
-                                                        {percentOfTotal.toFixed(1)}%
+                                                        {percentOfTotal.toFixed(
+                                                            1,
+                                                        )}
+                                                        %
                                                     </Badge>
                                                 </TableCell>
                                             </TableRow>
@@ -473,13 +573,18 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                     <TableRow className="bg-muted/50 font-bold">
                                         <TableCell>Total</TableCell>
                                         <TableCell className="text-right text-green-600">
-                                            {formatCurrency(report.summary.total_revenue)}
+                                            {formatCurrency(
+                                                report.summary.total_revenue,
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {report.summary.transaction_count.toLocaleString()}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {formatCurrency(report.summary.average_transaction)}
+                                            {formatCurrency(
+                                                report.summary
+                                                    .average_transaction,
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Badge>100%</Badge>
@@ -488,10 +593,13 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                 </TableBody>
                             </Table>
                         ) : (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <BarChart3 className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                                <p>No revenue data found for the selected period.</p>
-                                <p className="text-sm mt-2">
+                            <div className="py-12 text-center text-muted-foreground">
+                                <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                                <p>
+                                    No revenue data found for the selected
+                                    period.
+                                </p>
+                                <p className="mt-2 text-sm">
                                     Try adjusting the date range or filters.
                                 </p>
                             </div>
@@ -502,7 +610,9 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                 {/* Period Comparison Card */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Period Comparison</CardTitle>
+                        <CardTitle className="text-base">
+                            Period Comparison
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-4 md:grid-cols-2">
@@ -510,33 +620,40 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                 <div className="text-sm font-medium text-muted-foreground">
                                     Current Period
                                 </div>
-                                <div className="text-xs text-muted-foreground mb-2">
-                                    {report.summary.period_start} to {report.summary.period_end}
+                                <div className="mb-2 text-xs text-muted-foreground">
+                                    {report.summary.period_start} to{' '}
+                                    {report.summary.period_end}
                                 </div>
                                 <div className="text-2xl font-bold text-green-600">
-                                    {formatCurrency(report.summary.total_revenue)}
+                                    {formatCurrency(
+                                        report.summary.total_revenue,
+                                    )}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                    {report.summary.transaction_count.toLocaleString()} transactions
+                                    {report.summary.transaction_count.toLocaleString()}{' '}
+                                    transactions
                                 </div>
                             </div>
                             <div className="rounded-lg border p-4">
                                 <div className="text-sm font-medium text-muted-foreground">
                                     Previous Period
                                 </div>
-                                <div className="text-xs text-muted-foreground mb-2">
+                                <div className="mb-2 text-xs text-muted-foreground">
                                     {report.comparison.previous_period_start} to{' '}
                                     {report.comparison.previous_period_end}
                                 </div>
                                 <div className="text-2xl font-bold text-gray-600">
-                                    {formatCurrency(report.comparison.previous_total)}
+                                    {formatCurrency(
+                                        report.comparison.previous_total,
+                                    )}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                    {report.comparison.previous_count.toLocaleString()} transactions
+                                    {report.comparison.previous_count.toLocaleString()}{' '}
+                                    transactions
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-4 p-4 rounded-lg bg-muted/50">
+                        <div className="mt-4 rounded-lg bg-muted/50 p-4">
                             <div className="flex items-center gap-2">
                                 {isPositiveChange ? (
                                     <ArrowUp className="h-5 w-5 text-green-600" />
@@ -545,16 +662,22 @@ export default function RevenueReport({ report, departments, filters }: Props) {
                                 )}
                                 <span
                                     className={`text-lg font-semibold ${
-                                        isPositiveChange ? 'text-green-600' : 'text-red-600'
+                                        isPositiveChange
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
                                     }`}
                                 >
                                     {isPositiveChange ? '+' : ''}
-                                    {report.comparison.percentage_change.toFixed(1)}% change
+                                    {report.comparison.percentage_change.toFixed(
+                                        1,
+                                    )}
+                                    % change
                                 </span>
                                 <span className="text-muted-foreground">
                                     ({isPositiveChange ? '+' : ''}
                                     {formatCurrency(
-                                        report.summary.total_revenue - report.comparison.previous_total
+                                        report.summary.total_revenue -
+                                            report.comparison.previous_total,
                                     )}
                                     )
                                 </span>

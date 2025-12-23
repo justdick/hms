@@ -109,9 +109,9 @@ export default function NhisSettingsIndex({ settings }: Props) {
                                             Manual Entry
                                         </Label>
                                         <p className="text-sm text-muted-foreground">
-                                            Staff manually opens the NHIA portal,
-                                            verifies membership, and enters the
-                                            CCC code into HMS.
+                                            Staff manually opens the NHIA
+                                            portal, verifies membership, and
+                                            enters the CCC code into HMS.
                                         </p>
                                     </div>
                                 </div>
@@ -131,8 +131,9 @@ export default function NhisSettingsIndex({ settings }: Props) {
                                         <p className="text-sm text-muted-foreground">
                                             Uses the HMS NHIS Extension to
                                             automatically verify membership and
-                                            capture CCC codes. Requires extension
-                                            installation on all workstations.
+                                            capture CCC codes. Requires
+                                            extension installation on all
+                                            workstations.
                                         </p>
                                     </div>
                                 </div>
@@ -271,7 +272,8 @@ export default function NhisSettingsIndex({ settings }: Props) {
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Credentials for automatic login to NHIA portal (used by extension). Password is encrypted.
+                                Credentials for automatic login to NHIA portal
+                                (used by extension). Password is encrypted.
                             </p>
 
                             <div className="flex items-center justify-between rounded-lg border p-4">

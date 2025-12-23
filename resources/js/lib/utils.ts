@@ -16,7 +16,7 @@ export function formatCurrency(
     options: {
         showSymbol?: boolean;
         decimals?: number;
-    } = {}
+    } = {},
 ): string {
     const { showSymbol = true, decimals = 2 } = options;
 
@@ -41,5 +41,7 @@ export function formatCurrency(
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const formattedWithSeparators = parts.join('.');
 
-    return showSymbol ? `GH₵ ${formattedWithSeparators}` : formattedWithSeparators;
+    return showSymbol
+        ? `GH₵ ${formattedWithSeparators}`
+        : formattedWithSeparators;
 }

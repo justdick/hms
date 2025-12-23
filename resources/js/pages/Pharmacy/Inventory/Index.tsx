@@ -12,8 +12,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StatCard } from '@/components/ui/stat-card';
-import { formatCurrency } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
+import { formatCurrency } from '@/lib/utils';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -67,7 +67,12 @@ interface Props {
     filters: Filters;
 }
 
-export default function InventoryIndex({ drugs, categories, stats, filters }: Props) {
+export default function InventoryIndex({
+    drugs,
+    categories,
+    stats,
+    filters,
+}: Props) {
     const [importModalOpen, setImportModalOpen] = useState(false);
     const { data, setData, post, processing, reset } = useForm<{
         file: File | null;
@@ -273,7 +278,10 @@ export default function InventoryIndex({ drugs, categories, stats, filters }: Pr
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {drugs.data.length > 0 || filters.search || filters.category || filters.stock_status ? (
+                        {drugs.data.length > 0 ||
+                        filters.search ||
+                        filters.category ||
+                        filters.stock_status ? (
                             <DataTable
                                 columns={inventoryColumns}
                                 data={drugs.data}

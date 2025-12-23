@@ -38,14 +38,14 @@ import {
     Pill,
     X,
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 // Helper to get current datetime in local format for datetime-local input
 function getCurrentDateTimeLocal(): string {
     const now = new Date();
     return now.toISOString().slice(0, 16);
 }
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 interface Drug {
     id: number;
@@ -119,20 +119,28 @@ export function MedicationAdministrationPanel({
     onOpenChange,
     canEditTimestamp = false,
 }: MedicationAdministrationPanelProps) {
-    const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
-    const [actionType, setActionType] = useState<'give' | 'hold' | 'refuse' | 'omit' | null>(null);
+    const [selectedPrescription, setSelectedPrescription] =
+        useState<Prescription | null>(null);
+    const [actionType, setActionType] = useState<
+        'give' | 'hold' | 'refuse' | 'omit' | null
+    >(null);
 
     // Filter active prescriptions (not discontinued)
-    const activePrescriptions = prescriptions.filter(p => !p.discontinued_at && p.status !== 'discontinued');
+    const activePrescriptions = prescriptions.filter(
+        (p) => !p.discontinued_at && p.status !== 'discontinued',
+    );
 
     // Get today's administration count for each prescription
     const getAdminCountToday = (prescriptionId: number) => {
         return todayAdministrations.filter(
-            a => a.prescription_id === prescriptionId && a.status === 'given'
+            (a) => a.prescription_id === prescriptionId && a.status === 'given',
         ).length;
     };
 
-    const handleAction = (prescription: Prescription, action: 'give' | 'hold' | 'refuse' | 'omit') => {
+    const handleAction = (
+        prescription: Prescription,
+        action: 'give' | 'hold' | 'refuse' | 'omit',
+    ) => {
         setSelectedPrescription(prescription);
         setActionType(action);
     };
@@ -145,15 +153,19 @@ export function MedicationAdministrationPanel({
     return (
         <>
             <Sheet open={open} onOpenChange={onOpenChange}>
-                <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
+                <SheetContent
+                    side="right"
+                    className="w-full overflow-y-auto sm:max-w-2xl"
+                >
                     <SheetHeader>
                         <SheetTitle className="flex items-center gap-2">
                             <Pill className="h-5 w-5" />
                             Medication Administration
                         </SheetTitle>
                         <SheetDescription>
-                            {admission.patient.first_name} {admission.patient.last_name} • 
-                            Bed {admission.bed?.bed_number || 'Unassigned'}
+                            {admission.patient.first_name}{' '}
+                            {admission.patient.last_name} • Bed{' '}
+                            {admission.bed?.bed_number || 'Unassigned'}
                         </SheetDescription>
                     </SheetHeader>
 
@@ -166,10 +178,15 @@ export function MedicationAdministrationPanel({
                                 </p>
                             </div>
                         ) : (
-                            activePrescriptions.map(prescription => {
-                                const adminCount = getAdminCountToday(prescription.id);
-                                const expectedDoses = prescription.expected_doses_per_day || 0;
-                                const isPrn = prescription.frequency?.toUpperCase() === 'PRN';
+                            activePrescriptions.map((prescription) => {
+                                const adminCount = getAdminCountToday(
+                                    prescription.id,
+                                );
+                                const expectedDoses =
+                                    prescription.expected_doses_per_day || 0;
+                                const isPrn =
+                                    prescription.frequency?.toUpperCase() ===
+                                    'PRN';
 
                                 return (
                                     <Card key={prescription.id}>
@@ -177,31 +194,59 @@ export function MedicationAdministrationPanel({
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <CardTitle className="text-base">
-                                                        {prescription.drug?.name || prescription.medication_name}
-                                                        {prescription.drug?.strength && (
+                                                        {prescription.drug
+                                                            ?.name ||
+                                                            prescription.medication_name}
+                                                        {prescription.drug
+                                                            ?.strength && (
                                                             <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                                                {prescription.drug.strength}
+                                                                {
+                                                                    prescription
+                                                                        .drug
+                                                                        .strength
+                                                                }
                                                             </span>
                                                         )}
                                                     </CardTitle>
                                                     <p className="mt-1 text-sm text-muted-foreground">
-                                                        {prescription.dose_quantity || prescription.dosage} • {prescription.frequency} • {prescription.duration}
+                                                        {prescription.dose_quantity ||
+                                                            prescription.dosage}{' '}
+                                                        •{' '}
+                                                        {prescription.frequency}{' '}
+                                                        •{' '}
+                                                        {prescription.duration}
                                                     </p>
                                                     {prescription.instructions && (
                                                         <p className="mt-1 text-xs text-muted-foreground italic">
-                                                            {prescription.instructions}
+                                                            {
+                                                                prescription.instructions
+                                                            }
                                                         </p>
                                                     )}
                                                 </div>
                                                 <div className="text-right">
                                                     {isPrn ? (
-                                                        <Badge variant="outline">PRN</Badge>
+                                                        <Badge variant="outline">
+                                                            PRN
+                                                        </Badge>
                                                     ) : (
-                                                        <Badge 
-                                                            variant={adminCount >= expectedDoses ? 'default' : 'secondary'}
-                                                            className={adminCount >= expectedDoses ? 'bg-green-600' : ''}
+                                                        <Badge
+                                                            variant={
+                                                                adminCount >=
+                                                                expectedDoses
+                                                                    ? 'default'
+                                                                    : 'secondary'
+                                                            }
+                                                            className={
+                                                                adminCount >=
+                                                                expectedDoses
+                                                                    ? 'bg-green-600'
+                                                                    : ''
+                                                            }
                                                         >
-                                                            {adminCount}/{expectedDoses} today
+                                                            {adminCount}/
+                                                            {expectedDoses}{' '}
+                                                            today
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -212,7 +257,12 @@ export function MedicationAdministrationPanel({
                                                 <Button
                                                     size="sm"
                                                     className="bg-green-600 hover:bg-green-700"
-                                                    onClick={() => handleAction(prescription, 'give')}
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            prescription,
+                                                            'give',
+                                                        )
+                                                    }
                                                 >
                                                     <CheckCircle2 className="mr-1 h-4 w-4" />
                                                     Give
@@ -220,7 +270,12 @@ export function MedicationAdministrationPanel({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => handleAction(prescription, 'hold')}
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            prescription,
+                                                            'hold',
+                                                        )
+                                                    }
                                                 >
                                                     <Hand className="mr-1 h-4 w-4" />
                                                     Hold
@@ -228,7 +283,12 @@ export function MedicationAdministrationPanel({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => handleAction(prescription, 'refuse')}
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            prescription,
+                                                            'refuse',
+                                                        )
+                                                    }
                                                 >
                                                     <X className="mr-1 h-4 w-4" />
                                                     Refused
@@ -236,7 +296,12 @@ export function MedicationAdministrationPanel({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => handleAction(prescription, 'omit')}
+                                                    onClick={() =>
+                                                        handleAction(
+                                                            prescription,
+                                                            'omit',
+                                                        )
+                                                    }
                                                 >
                                                     <Ban className="mr-1 h-4 w-4" />
                                                     Omit
@@ -256,18 +321,28 @@ export function MedicationAdministrationPanel({
                                     Recent Administration Log
                                 </h3>
                                 <div className="space-y-2">
-                                    {todayAdministrations.map(admin => {
-                                        const prescription = prescriptions.find(p => p.id === admin.prescription_id);
-                                        const adminDate = new Date(admin.administered_at);
-                                        const isToday = adminDate.toDateString() === new Date().toDateString();
+                                    {todayAdministrations.map((admin) => {
+                                        const prescription = prescriptions.find(
+                                            (p) =>
+                                                p.id === admin.prescription_id,
+                                        );
+                                        const adminDate = new Date(
+                                            admin.administered_at,
+                                        );
+                                        const isToday =
+                                            adminDate.toDateString() ===
+                                            new Date().toDateString();
                                         return (
-                                            <div 
-                                                key={admin.id} 
+                                            <div
+                                                key={admin.id}
                                                 className="flex items-center justify-between rounded-lg border p-3 text-sm"
                                             >
                                                 <div>
                                                     <span className="font-medium">
-                                                        {prescription?.drug?.name || prescription?.medication_name || 'Unknown'}
+                                                        {prescription?.drug
+                                                            ?.name ||
+                                                            prescription?.medication_name ||
+                                                            'Unknown'}
                                                     </span>
                                                     {admin.dosage_given && (
                                                         <span className="ml-2 text-muted-foreground">
@@ -276,12 +351,19 @@ export function MedicationAdministrationPanel({
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <StatusBadge status={admin.status} />
+                                                    <StatusBadge
+                                                        status={admin.status}
+                                                    />
                                                     <span className="text-xs text-muted-foreground">
-                                                        {isToday 
-                                                            ? format(adminDate, 'HH:mm')
-                                                            : format(adminDate, 'MMM d, HH:mm')
-                                                        }
+                                                        {isToday
+                                                            ? format(
+                                                                  adminDate,
+                                                                  'HH:mm',
+                                                              )
+                                                            : format(
+                                                                  adminDate,
+                                                                  'MMM d, HH:mm',
+                                                              )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -336,7 +418,13 @@ export function MedicationAdministrationPanel({
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }> = {
+    const variants: Record<
+        string,
+        {
+            variant: 'default' | 'secondary' | 'destructive' | 'outline';
+            className?: string;
+        }
+    > = {
         given: { variant: 'default', className: 'bg-green-600' },
         held: { variant: 'secondary' },
         refused: { variant: 'destructive' },
@@ -358,14 +446,22 @@ interface ActionDialogProps {
     canEditTimestamp?: boolean;
 }
 
-function GiveMedicationDialog({ admission, prescription, open, onClose, canEditTimestamp = false }: ActionDialogProps) {
+function GiveMedicationDialog({
+    admission,
+    prescription,
+    open,
+    onClose,
+    canEditTimestamp = false,
+}: ActionDialogProps) {
     const [dosageGiven, setDosageGiven] = useState(
-        prescription.dose_quantity || prescription.dosage || ''
+        prescription.dose_quantity || prescription.dosage || '',
     );
     const [route, setRoute] = useState(prescription.route || 'oral');
     const [notes, setNotes] = useState('');
     const [useCustomTime, setUseCustomTime] = useState(false);
-    const [administeredAt, setAdministeredAt] = useState(getCurrentDateTimeLocal());
+    const [administeredAt, setAdministeredAt] = useState(
+        getCurrentDateTimeLocal(),
+    );
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -379,7 +475,10 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                 dosage_given: dosageGiven,
                 route,
                 notes: notes || undefined,
-                administered_at: (canEditTimestamp && useCustomTime) ? administeredAt : undefined,
+                administered_at:
+                    canEditTimestamp && useCustomTime
+                        ? administeredAt
+                        : undefined,
             },
             {
                 onSuccess: () => {
@@ -387,10 +486,13 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                     onClose();
                 },
                 onError: (errors) => {
-                    toast.error(Object.values(errors)[0] as string || 'Failed to record medication');
+                    toast.error(
+                        (Object.values(errors)[0] as string) ||
+                            'Failed to record medication',
+                    );
                 },
                 onFinish: () => setSubmitting(false),
-            }
+            },
         );
     };
 
@@ -401,8 +503,10 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                     <DialogHeader>
                         <DialogTitle>Give Medication</DialogTitle>
                         <DialogDescription>
-                            {prescription.drug?.name || prescription.medication_name}
-                            {prescription.drug?.strength && ` ${prescription.drug.strength}`}
+                            {prescription.drug?.name ||
+                                prescription.medication_name}
+                            {prescription.drug?.strength &&
+                                ` ${prescription.drug.strength}`}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -425,14 +529,30 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="oral">Oral (PO)</SelectItem>
-                                    <SelectItem value="IV">Intravenous (IV)</SelectItem>
-                                    <SelectItem value="IM">Intramuscular (IM)</SelectItem>
-                                    <SelectItem value="SC">Subcutaneous (SC)</SelectItem>
-                                    <SelectItem value="topical">Topical</SelectItem>
-                                    <SelectItem value="sublingual">Sublingual</SelectItem>
-                                    <SelectItem value="rectal">Rectal</SelectItem>
-                                    <SelectItem value="inhaled">Inhaled</SelectItem>
+                                    <SelectItem value="oral">
+                                        Oral (PO)
+                                    </SelectItem>
+                                    <SelectItem value="IV">
+                                        Intravenous (IV)
+                                    </SelectItem>
+                                    <SelectItem value="IM">
+                                        Intramuscular (IM)
+                                    </SelectItem>
+                                    <SelectItem value="SC">
+                                        Subcutaneous (SC)
+                                    </SelectItem>
+                                    <SelectItem value="topical">
+                                        Topical
+                                    </SelectItem>
+                                    <SelectItem value="sublingual">
+                                        Sublingual
+                                    </SelectItem>
+                                    <SelectItem value="rectal">
+                                        Rectal
+                                    </SelectItem>
+                                    <SelectItem value="inhaled">
+                                        Inhaled
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -455,22 +575,34 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                                     <Checkbox
                                         id="use_custom_time"
                                         checked={useCustomTime}
-                                        onCheckedChange={(checked) => setUseCustomTime(checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setUseCustomTime(checked === true)
+                                        }
                                     />
-                                    <Label htmlFor="use_custom_time" className="cursor-pointer text-sm font-normal">
+                                    <Label
+                                        htmlFor="use_custom_time"
+                                        className="cursor-pointer text-sm font-normal"
+                                    >
                                         Record for a different date/time
                                     </Label>
                                 </div>
                                 {useCustomTime && (
                                     <div>
-                                        <Label htmlFor="administered_at" className="text-xs text-muted-foreground">
+                                        <Label
+                                            htmlFor="administered_at"
+                                            className="text-xs text-muted-foreground"
+                                        >
                                             When was this medication given?
                                         </Label>
                                         <Input
                                             id="administered_at"
                                             type="datetime-local"
                                             value={administeredAt}
-                                            onChange={(e) => setAdministeredAt(e.target.value)}
+                                            onChange={(e) =>
+                                                setAdministeredAt(
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                     </div>
@@ -480,10 +612,18 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={submitting} className="bg-green-600 hover:bg-green-700">
+                        <Button
+                            type="submit"
+                            disabled={submitting}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
                             {submitting ? 'Recording...' : 'Record Given'}
                         </Button>
                     </DialogFooter>
@@ -493,10 +633,18 @@ function GiveMedicationDialog({ admission, prescription, open, onClose, canEditT
     );
 }
 
-function HoldMedicationDialog({ admission, prescription, open, onClose, canEditTimestamp = false }: ActionDialogProps) {
+function HoldMedicationDialog({
+    admission,
+    prescription,
+    open,
+    onClose,
+    canEditTimestamp = false,
+}: ActionDialogProps) {
     const [notes, setNotes] = useState('');
     const [useCustomTime, setUseCustomTime] = useState(false);
-    const [administeredAt, setAdministeredAt] = useState(getCurrentDateTimeLocal());
+    const [administeredAt, setAdministeredAt] = useState(
+        getCurrentDateTimeLocal(),
+    );
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -508,7 +656,10 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
             {
                 prescription_id: prescription.id,
                 notes,
-                administered_at: (canEditTimestamp && useCustomTime) ? administeredAt : undefined,
+                administered_at:
+                    canEditTimestamp && useCustomTime
+                        ? administeredAt
+                        : undefined,
             },
             {
                 onSuccess: () => {
@@ -516,10 +667,13 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
                     onClose();
                 },
                 onError: (errors) => {
-                    toast.error(Object.values(errors)[0] as string || 'Failed to record');
+                    toast.error(
+                        (Object.values(errors)[0] as string) ||
+                            'Failed to record',
+                    );
                 },
                 onFinish: () => setSubmitting(false),
-            }
+            },
         );
     };
 
@@ -533,7 +687,8 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
                             Hold Medication
                         </DialogTitle>
                         <DialogDescription>
-                            {prescription.drug?.name || prescription.medication_name}
+                            {prescription.drug?.name ||
+                                prescription.medication_name}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -561,22 +716,34 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
                                     <Checkbox
                                         id="hold_use_custom_time"
                                         checked={useCustomTime}
-                                        onCheckedChange={(checked) => setUseCustomTime(checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setUseCustomTime(checked === true)
+                                        }
                                     />
-                                    <Label htmlFor="hold_use_custom_time" className="cursor-pointer text-sm font-normal">
+                                    <Label
+                                        htmlFor="hold_use_custom_time"
+                                        className="cursor-pointer text-sm font-normal"
+                                    >
                                         Record for a different date/time
                                     </Label>
                                 </div>
                                 {useCustomTime && (
                                     <div>
-                                        <Label htmlFor="hold_administered_at" className="text-xs text-muted-foreground">
+                                        <Label
+                                            htmlFor="hold_administered_at"
+                                            className="text-xs text-muted-foreground"
+                                        >
                                             When was this medication held?
                                         </Label>
                                         <Input
                                             id="hold_administered_at"
                                             type="datetime-local"
                                             value={administeredAt}
-                                            onChange={(e) => setAdministeredAt(e.target.value)}
+                                            onChange={(e) =>
+                                                setAdministeredAt(
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                     </div>
@@ -586,10 +753,17 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={submitting || notes.length < 10}>
+                        <Button
+                            type="submit"
+                            disabled={submitting || notes.length < 10}
+                        >
                             {submitting ? 'Recording...' : 'Record Held'}
                         </Button>
                     </DialogFooter>
@@ -599,10 +773,18 @@ function HoldMedicationDialog({ admission, prescription, open, onClose, canEditT
     );
 }
 
-function RefuseMedicationDialog({ admission, prescription, open, onClose, canEditTimestamp = false }: ActionDialogProps) {
+function RefuseMedicationDialog({
+    admission,
+    prescription,
+    open,
+    onClose,
+    canEditTimestamp = false,
+}: ActionDialogProps) {
     const [notes, setNotes] = useState('');
     const [useCustomTime, setUseCustomTime] = useState(false);
-    const [administeredAt, setAdministeredAt] = useState(getCurrentDateTimeLocal());
+    const [administeredAt, setAdministeredAt] = useState(
+        getCurrentDateTimeLocal(),
+    );
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -614,7 +796,10 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
             {
                 prescription_id: prescription.id,
                 notes,
-                administered_at: (canEditTimestamp && useCustomTime) ? administeredAt : undefined,
+                administered_at:
+                    canEditTimestamp && useCustomTime
+                        ? administeredAt
+                        : undefined,
             },
             {
                 onSuccess: () => {
@@ -622,10 +807,13 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
                     onClose();
                 },
                 onError: (errors) => {
-                    toast.error(Object.values(errors)[0] as string || 'Failed to record');
+                    toast.error(
+                        (Object.values(errors)[0] as string) ||
+                            'Failed to record',
+                    );
                 },
                 onFinish: () => setSubmitting(false),
-            }
+            },
         );
     };
 
@@ -639,7 +827,8 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
                             Patient Refused Medication
                         </DialogTitle>
                         <DialogDescription>
-                            {prescription.drug?.name || prescription.medication_name}
+                            {prescription.drug?.name ||
+                                prescription.medication_name}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -662,22 +851,34 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
                                     <Checkbox
                                         id="refuse_use_custom_time"
                                         checked={useCustomTime}
-                                        onCheckedChange={(checked) => setUseCustomTime(checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setUseCustomTime(checked === true)
+                                        }
                                     />
-                                    <Label htmlFor="refuse_use_custom_time" className="cursor-pointer text-sm font-normal">
+                                    <Label
+                                        htmlFor="refuse_use_custom_time"
+                                        className="cursor-pointer text-sm font-normal"
+                                    >
                                         Record for a different date/time
                                     </Label>
                                 </div>
                                 {useCustomTime && (
                                     <div>
-                                        <Label htmlFor="refuse_administered_at" className="text-xs text-muted-foreground">
+                                        <Label
+                                            htmlFor="refuse_administered_at"
+                                            className="text-xs text-muted-foreground"
+                                        >
                                             When did the patient refuse?
                                         </Label>
                                         <Input
                                             id="refuse_administered_at"
                                             type="datetime-local"
                                             value={administeredAt}
-                                            onChange={(e) => setAdministeredAt(e.target.value)}
+                                            onChange={(e) =>
+                                                setAdministeredAt(
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                     </div>
@@ -687,10 +888,18 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={submitting} variant="destructive">
+                        <Button
+                            type="submit"
+                            disabled={submitting}
+                            variant="destructive"
+                        >
                             {submitting ? 'Recording...' : 'Record Refused'}
                         </Button>
                     </DialogFooter>
@@ -700,10 +909,18 @@ function RefuseMedicationDialog({ admission, prescription, open, onClose, canEdi
     );
 }
 
-function OmitMedicationDialog({ admission, prescription, open, onClose, canEditTimestamp = false }: ActionDialogProps) {
+function OmitMedicationDialog({
+    admission,
+    prescription,
+    open,
+    onClose,
+    canEditTimestamp = false,
+}: ActionDialogProps) {
     const [notes, setNotes] = useState('');
     const [useCustomTime, setUseCustomTime] = useState(false);
-    const [administeredAt, setAdministeredAt] = useState(getCurrentDateTimeLocal());
+    const [administeredAt, setAdministeredAt] = useState(
+        getCurrentDateTimeLocal(),
+    );
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -715,7 +932,10 @@ function OmitMedicationDialog({ admission, prescription, open, onClose, canEditT
             {
                 prescription_id: prescription.id,
                 notes,
-                administered_at: (canEditTimestamp && useCustomTime) ? administeredAt : undefined,
+                administered_at:
+                    canEditTimestamp && useCustomTime
+                        ? administeredAt
+                        : undefined,
             },
             {
                 onSuccess: () => {
@@ -723,10 +943,13 @@ function OmitMedicationDialog({ admission, prescription, open, onClose, canEditT
                     onClose();
                 },
                 onError: (errors) => {
-                    toast.error(Object.values(errors)[0] as string || 'Failed to record');
+                    toast.error(
+                        (Object.values(errors)[0] as string) ||
+                            'Failed to record',
+                    );
                 },
                 onFinish: () => setSubmitting(false),
-            }
+            },
         );
     };
 
@@ -740,7 +963,8 @@ function OmitMedicationDialog({ admission, prescription, open, onClose, canEditT
                             Omit Medication
                         </DialogTitle>
                         <DialogDescription>
-                            {prescription.drug?.name || prescription.medication_name}
+                            {prescription.drug?.name ||
+                                prescription.medication_name}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -768,22 +992,34 @@ function OmitMedicationDialog({ admission, prescription, open, onClose, canEditT
                                     <Checkbox
                                         id="omit_use_custom_time"
                                         checked={useCustomTime}
-                                        onCheckedChange={(checked) => setUseCustomTime(checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setUseCustomTime(checked === true)
+                                        }
                                     />
-                                    <Label htmlFor="omit_use_custom_time" className="cursor-pointer text-sm font-normal">
+                                    <Label
+                                        htmlFor="omit_use_custom_time"
+                                        className="cursor-pointer text-sm font-normal"
+                                    >
                                         Record for a different date/time
                                     </Label>
                                 </div>
                                 {useCustomTime && (
                                     <div>
-                                        <Label htmlFor="omit_administered_at" className="text-xs text-muted-foreground">
+                                        <Label
+                                            htmlFor="omit_administered_at"
+                                            className="text-xs text-muted-foreground"
+                                        >
                                             When was this medication omitted?
                                         </Label>
                                         <Input
                                             id="omit_administered_at"
                                             type="datetime-local"
                                             value={administeredAt}
-                                            onChange={(e) => setAdministeredAt(e.target.value)}
+                                            onChange={(e) =>
+                                                setAdministeredAt(
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                     </div>
@@ -793,10 +1029,17 @@ function OmitMedicationDialog({ admission, prescription, open, onClose, canEditT
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={submitting || notes.length < 10}>
+                        <Button
+                            type="submit"
+                            disabled={submitting || notes.length < 10}
+                        >
                             {submitting ? 'Recording...' : 'Record Omitted'}
                         </Button>
                     </DialogFooter>

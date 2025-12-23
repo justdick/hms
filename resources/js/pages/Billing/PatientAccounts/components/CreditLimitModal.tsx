@@ -32,9 +32,17 @@ interface Props {
 
 const UNLIMITED_CREDIT_VALUE = 999999999;
 
-export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, formatCurrency }: Props) {
+export function CreditLimitModal({
+    isOpen,
+    onClose,
+    patient,
+    currentLimit,
+    formatCurrency,
+}: Props) {
     const isCurrentlyUnlimited = currentLimit >= UNLIMITED_CREDIT_VALUE;
-    const [creditLimit, setCreditLimit] = useState(isCurrentlyUnlimited ? '0' : String(currentLimit));
+    const [creditLimit, setCreditLimit] = useState(
+        isCurrentlyUnlimited ? '0' : String(currentLimit),
+    );
     const [isUnlimited, setIsUnlimited] = useState(isCurrentlyUnlimited);
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,23 +63,29 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
         setErrors({});
         setIsSubmitting(true);
 
-        const finalCreditLimit = isUnlimited ? UNLIMITED_CREDIT_VALUE : Number(creditLimit);
+        const finalCreditLimit = isUnlimited
+            ? UNLIMITED_CREDIT_VALUE
+            : Number(creditLimit);
 
-        router.post(`/billing/patient-accounts/patient/${patient.id}/credit-limit`, {
-            credit_limit: finalCreditLimit,
-            reason,
-        }, {
-            onSuccess: () => {
-                resetForm();
-                onClose();
+        router.post(
+            `/billing/patient-accounts/patient/${patient.id}/credit-limit`,
+            {
+                credit_limit: finalCreditLimit,
+                reason,
             },
-            onError: (errors) => {
-                setErrors(errors as Record<string, string>);
+            {
+                onSuccess: () => {
+                    resetForm();
+                    onClose();
+                },
+                onError: (errors) => {
+                    setErrors(errors as Record<string, string>);
+                },
+                onFinish: () => {
+                    setIsSubmitting(false);
+                },
             },
-            onFinish: () => {
-                setIsSubmitting(false);
-            },
-        });
+        );
     };
 
     const resetForm = () => {
@@ -100,14 +114,17 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
                 <DialogHeader>
                     <DialogTitle>Set Credit Limit</DialogTitle>
                     <DialogDescription>
-                        Set the credit limit for {patient.first_name} {patient.last_name}
+                        Set the credit limit for {patient.first_name}{' '}
+                        {patient.last_name}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    <div className="rounded-lg border bg-gray-50 dark:bg-gray-800 p-4">
-                        <div className="text-sm text-gray-500">Current Credit Limit</div>
-                        <div className="text-xl font-bold text-blue-600 flex items-center gap-2">
+                    <div className="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800">
+                        <div className="text-sm text-gray-500">
+                            Current Credit Limit
+                        </div>
+                        <div className="flex items-center gap-2 text-xl font-bold text-blue-600">
                             {isCurrentlyUnlimited ? (
                                 <>
                                     <Infinity className="h-5 w-5" />
@@ -125,7 +142,10 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
                             checked={isUnlimited}
                             onCheckedChange={handleUnlimitedChange}
                         />
-                        <Label htmlFor="unlimited" className="flex items-center gap-2 cursor-pointer">
+                        <Label
+                            htmlFor="unlimited"
+                            className="flex cursor-pointer items-center gap-2"
+                        >
                             <Infinity className="h-4 w-4" />
                             Unlimited Credit
                         </Label>
@@ -133,7 +153,9 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
 
                     {!isUnlimited && (
                         <div className="space-y-2">
-                            <Label htmlFor="credit_limit">Credit Limit (GHS)</Label>
+                            <Label htmlFor="credit_limit">
+                                Credit Limit (GHS)
+                            </Label>
                             <Input
                                 id="credit_limit"
                                 type="number"
@@ -147,22 +169,27 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
                                 Set to 0 to remove credit privileges
                             </p>
                             {errors.credit_limit && (
-                                <p className="text-sm text-red-500">{errors.credit_limit}</p>
+                                <p className="text-sm text-red-500">
+                                    {errors.credit_limit}
+                                </p>
                             )}
                         </div>
                     )}
 
                     {isUnlimited && (
-                        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3">
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                                Unlimited credit allows the patient to receive services without balance restrictions.
-                                Use this for VIP patients or special arrangements.
+                                Unlimited credit allows the patient to receive
+                                services without balance restrictions. Use this
+                                for VIP patients or special arrangements.
                             </p>
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="reason">Reason for Change (Optional)</Label>
+                        <Label htmlFor="reason">
+                            Reason for Change (Optional)
+                        </Label>
                         <Textarea
                             id="reason"
                             placeholder="Explain why this credit limit is being set..."
@@ -171,13 +198,19 @@ export function CreditLimitModal({ isOpen, onClose, patient, currentLimit, forma
                             rows={3}
                         />
                         {errors.reason && (
-                            <p className="text-sm text-red-500">{errors.reason}</p>
+                            <p className="text-sm text-red-500">
+                                {errors.reason}
+                            </p>
                         )}
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                    <Button
+                        variant="outline"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
                         Cancel
                     </Button>
                     <Button onClick={handleSubmit} disabled={isSubmitting}>

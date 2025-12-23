@@ -5,7 +5,10 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { Activity, CheckCircle, Layers } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { createGdrgTariffsColumns, GdrgTariffData } from './gdrg-tariffs-columns';
+import {
+    createGdrgTariffsColumns,
+    GdrgTariffData,
+} from './gdrg-tariffs-columns';
 import { GdrgTariffsDataTable } from './gdrg-tariffs-data-table';
 
 interface Filters {
@@ -56,7 +59,9 @@ export default function GdrgTariffsIndex({
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [importModalOpen, setImportModalOpen] = useState(false);
-    const [selectedTariff, setSelectedTariff] = useState<GdrgTariffData | null>(null);
+    const [selectedTariff, setSelectedTariff] = useState<GdrgTariffData | null>(
+        null,
+    );
 
     const handleEdit = (tariff: GdrgTariffData) => {
         setSelectedTariff(tariff);
@@ -73,7 +78,10 @@ export default function GdrgTariffsIndex({
         }
     };
 
-    const columns = useMemo(() => createGdrgTariffsColumns(handleEdit, handleDelete), []);
+    const columns = useMemo(
+        () => createGdrgTariffsColumns(handleEdit, handleDelete),
+        [],
+    );
 
     const stats = useMemo(() => {
         const data = tariffs.data || [];
@@ -101,7 +109,8 @@ export default function GdrgTariffsIndex({
                         G-DRG Tariff Management
                     </h1>
                     <p className="text-muted-foreground">
-                        Manage Ghana Diagnosis Related Groups tariff codes and prices
+                        Manage Ghana Diagnosis Related Groups tariff codes and
+                        prices
                     </p>
                 </div>
 

@@ -208,10 +208,14 @@ export function LabOrdersDataTable<TData, TValue>({
                 {/* Per Page Selector */}
                 {hasPagination && (
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">Show</span>
+                        <span className="text-sm text-muted-foreground">
+                            Show
+                        </span>
                         <select
                             value={pagination.per_page}
-                            onChange={(e) => handlePerPageChange(e.target.value)}
+                            onChange={(e) =>
+                                handlePerPageChange(e.target.value)
+                            }
                             className="h-8 rounded-md border border-input bg-background px-2 text-sm"
                         >
                             <option value="5">5</option>
@@ -248,7 +252,10 @@ export function LabOrdersDataTable<TData, TValue>({
                                 checked={currentStatus === status.value}
                                 onCheckedChange={(checked) => {
                                     if (checked) {
-                                        handleFilterChange('status', status.value);
+                                        handleFilterChange(
+                                            'status',
+                                            status.value,
+                                        );
                                     }
                                 }}
                             >
@@ -262,7 +269,10 @@ export function LabOrdersDataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Priority{currentPriority ? `: ${currentPriority.toUpperCase()}` : ''}
+                            Priority
+                            {currentPriority
+                                ? `: ${currentPriority.toUpperCase()}`
+                                : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -305,7 +315,8 @@ export function LabOrdersDataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Category{currentCategory ? `: ${currentCategory}` : ''}
+                            Category
+                            {currentCategory ? `: ${currentCategory}` : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -452,7 +463,9 @@ export function LabOrdersDataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePageChange(prevLink?.url ?? null)}
+                            onClick={() =>
+                                handlePageChange(prevLink?.url ?? null)
+                            }
                             disabled={!prevLink?.url}
                         >
                             Previous
@@ -466,7 +479,9 @@ export function LabOrdersDataTable<TData, TValue>({
                             .map((link, index) => (
                                 <Button
                                     key={index}
-                                    variant={link.active ? 'default' : 'outline'}
+                                    variant={
+                                        link.active ? 'default' : 'outline'
+                                    }
                                     size="sm"
                                     className="min-w-[40px]"
                                     onClick={() => handlePageChange(link.url)}
@@ -478,7 +493,9 @@ export function LabOrdersDataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePageChange(nextLink?.url ?? null)}
+                            onClick={() =>
+                                handlePageChange(nextLink?.url ?? null)
+                            }
                             disabled={!nextLink?.url}
                         >
                             Next

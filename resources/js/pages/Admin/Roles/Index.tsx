@@ -18,6 +18,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -28,14 +36,6 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import {
     Key,
     MoreVertical,
@@ -88,13 +88,17 @@ export default function RolesIndex({ roles, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
 
     const handleSearch = () => {
-        router.get('/admin/roles', {
-            search: search || undefined,
-            per_page: filters.per_page,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/roles',
+            {
+                search: search || undefined,
+                per_page: filters.per_page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -171,12 +175,14 @@ export default function RolesIndex({ roles, filters }: Props) {
                                     Search
                                 </label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
                                         type="text"
                                         placeholder="Search by role name..."
                                         value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
                                         onKeyDown={handleKeyDown}
                                         className="pl-10"
                                     />
@@ -189,13 +195,17 @@ export default function RolesIndex({ roles, filters }: Props) {
                                 <Select
                                     value={String(filters.per_page || 5)}
                                     onValueChange={(value) => {
-                                        router.get('/admin/roles', {
-                                            search: search || undefined,
-                                            per_page: value,
-                                        }, {
-                                            preserveState: true,
-                                            preserveScroll: true,
-                                        });
+                                        router.get(
+                                            '/admin/roles',
+                                            {
+                                                search: search || undefined,
+                                                per_page: value,
+                                            },
+                                            {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            },
+                                        );
                                     }}
                                 >
                                     <SelectTrigger className="w-20">
@@ -222,118 +232,175 @@ export default function RolesIndex({ roles, filters }: Props) {
                     <CardContent className="p-0">
                         {roles.data.length > 0 ? (
                             <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Role Name</TableHead>
-                                        <TableHead className="text-center">Permissions</TableHead>
-                                        <TableHead className="text-center">Users</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {roles.data.map((role) => (
-                                        <TableRow key={role.id}>
-                                            <TableCell className="font-medium">
-                                                <div className="flex items-center gap-2">
-                                                    <Shield className="h-4 w-4 text-gray-400" />
-                                                    {role.name}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant="secondary">
-                                                    <Key className="mr-1 h-3 w-3" />
-                                                    {role.permissions_count}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant="outline">
-                                                    <Users className="mr-1 h-3 w-3" />
-                                                    {role.users_count}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {/* Protected role indicator */}
-                                                {role.name === 'Admin' ? (
-                                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                        Protected
-                                                    </span>
-                                                ) : (
-                                                    <>
-                                                        {/* Desktop Actions */}
-                                                        <div className="hidden items-center justify-end gap-2 lg:flex">
-                                                            <Link href={`/admin/roles/${role.id}/edit`}>
-                                                                <Button variant="outline" size="sm">
-                                                                    <Pencil className="mr-1 h-3 w-3" />
-                                                                    Edit
-                                                                </Button>
-                                                            </Link>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleDeleteClick(role)}
-                                                                disabled={role.users_count > 0}
-                                                                className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300'}
-                                                            >
-                                                                <Trash2 className="mr-1 h-3 w-3" />
-                                                                Delete
-                                                            </Button>
-                                                        </div>
-
-                                                        {/* Mobile Actions */}
-                                                        <div className="lg:hidden">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="sm">
-                                                                        <MoreVertical className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem asChild>
-                                                                        <Link href={`/admin/roles/${role.id}/edit`}>
-                                                                            <Pencil className="mr-2 h-4 w-4" />
-                                                                            Edit
-                                                                        </Link>
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => handleDeleteClick(role)}
-                                                                        disabled={role.users_count > 0}
-                                                                        className={role.users_count > 0 ? 'opacity-50' : 'text-red-600 dark:text-red-400'}
-                                                                    >
-                                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                                        Delete
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </TableCell>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Role Name</TableHead>
+                                            <TableHead className="text-center">
+                                                Permissions
+                                            </TableHead>
+                                            <TableHead className="text-center">
+                                                Users
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {roles.data.map((role) => (
+                                            <TableRow key={role.id}>
+                                                <TableCell className="font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        <Shield className="h-4 w-4 text-gray-400" />
+                                                        {role.name}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant="secondary">
+                                                        <Key className="mr-1 h-3 w-3" />
+                                                        {role.permissions_count}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant="outline">
+                                                        <Users className="mr-1 h-3 w-3" />
+                                                        {role.users_count}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {/* Protected role indicator */}
+                                                    {role.name === 'Admin' ? (
+                                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                            Protected
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            {/* Desktop Actions */}
+                                                            <div className="hidden items-center justify-end gap-2 lg:flex">
+                                                                <Link
+                                                                    href={`/admin/roles/${role.id}/edit`}
+                                                                >
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                    >
+                                                                        <Pencil className="mr-1 h-3 w-3" />
+                                                                        Edit
+                                                                    </Button>
+                                                                </Link>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteClick(
+                                                                            role,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        role.users_count >
+                                                                        0
+                                                                    }
+                                                                    className={
+                                                                        role.users_count >
+                                                                        0
+                                                                            ? 'opacity-50'
+                                                                            : 'text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300'
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="mr-1 h-3 w-3" />
+                                                                    Delete
+                                                                </Button>
+                                                            </div>
+
+                                                            {/* Mobile Actions */}
+                                                            <div className="lg:hidden">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                        >
+                                                                            <MoreVertical className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem
+                                                                            asChild
+                                                                        >
+                                                                            <Link
+                                                                                href={`/admin/roles/${role.id}/edit`}
+                                                                            >
+                                                                                <Pencil className="mr-2 h-4 w-4" />
+                                                                                Edit
+                                                                            </Link>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem
+                                                                            onClick={() =>
+                                                                                handleDeleteClick(
+                                                                                    role,
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                role.users_count >
+                                                                                0
+                                                                            }
+                                                                            className={
+                                                                                role.users_count >
+                                                                                0
+                                                                                    ? 'opacity-50'
+                                                                                    : 'text-red-600 dark:text-red-400'
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                                            Delete
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
 
                                 {/* Pagination */}
                                 {roles.last_page > 1 && (
                                     <div className="flex items-center justify-between border-t px-4 py-3 dark:border-gray-700">
                                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            Showing {roles.from} to {roles.to} of {roles.total} roles
+                                            Showing {roles.from} to {roles.to}{' '}
+                                            of {roles.total} roles
                                         </div>
                                         <div className="flex gap-1">
                                             {roles.links.map((link, index) => (
                                                 <Button
                                                     key={index}
-                                                    variant={link.active ? 'default' : 'outline'}
+                                                    variant={
+                                                        link.active
+                                                            ? 'default'
+                                                            : 'outline'
+                                                    }
                                                     size="sm"
                                                     disabled={!link.url}
                                                     onClick={() => {
                                                         if (link.url) {
-                                                            router.get(link.url, {}, { preserveState: true });
+                                                            router.get(
+                                                                link.url,
+                                                                {},
+                                                                {
+                                                                    preserveState: true,
+                                                                },
+                                                            );
                                                         }
                                                     }}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: link.label,
+                                                    }}
                                                 />
                                             ))}
                                         </div>
@@ -366,26 +433,34 @@ export default function RolesIndex({ roles, filters }: Props) {
             </div>
 
             {/* Delete Confirmation Dialog */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Role</AlertDialogTitle>
                         <AlertDialogDescription>
                             {roleToDelete && roleToDelete.users_count > 0 ? (
                                 <span className="text-red-600 dark:text-red-400">
-                                    Cannot delete this role because it has {roleToDelete.users_count} user(s) assigned.
-                                    Please reassign or remove users from this role first.
+                                    Cannot delete this role because it has{' '}
+                                    {roleToDelete.users_count} user(s) assigned.
+                                    Please reassign or remove users from this
+                                    role first.
                                 </span>
                             ) : (
                                 <>
-                                    Are you sure you want to delete the role "{roleToDelete?.name}"?
-                                    This action cannot be undone.
+                                    Are you sure you want to delete the role "
+                                    {roleToDelete?.name}"? This action cannot be
+                                    undone.
                                 </>
                             )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={handleDeleteCancel}>
+                            Cancel
+                        </AlertDialogCancel>
                         {roleToDelete && roleToDelete.users_count === 0 && (
                             <AlertDialogAction
                                 onClick={handleDeleteConfirm}

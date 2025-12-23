@@ -3,7 +3,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, FlaskConical, Pill, Stethoscope, Trash2 } from 'lucide-react';
+import {
+    ArrowUpDown,
+    FlaskConical,
+    Pill,
+    Stethoscope,
+    Trash2,
+} from 'lucide-react';
 
 export interface NhisTariff {
     id: number;
@@ -38,26 +44,33 @@ export interface NhisMappingData {
     created_at: string;
 }
 
-const itemTypeConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+const itemTypeConfig: Record<
+    string,
+    { label: string; icon: React.ReactNode; className: string }
+> = {
     drug: {
         label: 'Drug',
         icon: <Pill className="h-3 w-3" />,
-        className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        className:
+            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     },
     lab_service: {
         label: 'Lab Service',
         icon: <FlaskConical className="h-3 w-3" />,
-        className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+        className:
+            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     },
     procedure: {
         label: 'Procedure',
         icon: <Stethoscope className="h-3 w-3" />,
-        className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+        className:
+            'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
     },
     consumable: {
         label: 'Consumable',
         icon: <Pill className="h-3 w-3" />,
-        className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+        className:
+            'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     },
 };
 
@@ -71,7 +84,9 @@ export const createNhisMappingsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     Item Type
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -83,7 +98,8 @@ export const createNhisMappingsColumns = (
             const config = itemTypeConfig[itemType] || {
                 label: itemType,
                 icon: null,
-                className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+                className:
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
             };
 
             return (
@@ -104,7 +120,9 @@ export const createNhisMappingsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     Item Code
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -126,7 +144,9 @@ export const createNhisMappingsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     NHIS Code
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -136,7 +156,9 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="font-mono text-sm">
-                    {row.original.tariff?.code || row.original.nhis_tariff?.nhis_code || '-'}
+                    {row.original.tariff?.code ||
+                        row.original.nhis_tariff?.nhis_code ||
+                        '-'}
                 </div>
             );
         },
@@ -148,7 +170,9 @@ export const createNhisMappingsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                 >
                     NHIS Tariff Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -158,7 +182,9 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="max-w-[300px] truncate">
-                    {row.original.tariff?.name || row.original.nhis_tariff?.name || '-'}
+                    {row.original.tariff?.name ||
+                        row.original.nhis_tariff?.name ||
+                        '-'}
                 </div>
             );
         },
@@ -170,8 +196,10 @@ export const createNhisMappingsColumns = (
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="justify-end w-full"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                    className="w-full justify-end"
                 >
                     NHIS Price
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -181,7 +209,9 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="text-right font-medium">
-                    {row.original.tariff?.formatted_price || row.original.nhis_tariff?.formatted_price || '-'}
+                    {row.original.tariff?.formatted_price ||
+                        row.original.nhis_tariff?.formatted_price ||
+                        '-'}
                 </div>
             );
         },
@@ -198,7 +228,7 @@ export const createNhisMappingsColumns = (
                         variant="ghost"
                         size="sm"
                         onClick={() => onDelete(mapping)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>

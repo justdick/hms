@@ -2,9 +2,9 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, Calendar, Eye } from 'lucide-react';
-import { Link } from '@inertiajs/react';
 
 export interface ClaimBatch {
     id: number;
@@ -30,10 +30,22 @@ export interface ClaimBatch {
 
 const statusConfig: Record<string, { label: string; className: string }> = {
     draft: { label: 'Draft', className: 'bg-gray-500 hover:bg-gray-500' },
-    finalized: { label: 'Finalized', className: 'bg-blue-500 hover:bg-blue-500' },
-    submitted: { label: 'Submitted', className: 'bg-purple-500 hover:bg-purple-500' },
-    processing: { label: 'Processing', className: 'bg-yellow-500 hover:bg-yellow-500' },
-    completed: { label: 'Completed', className: 'bg-green-500 hover:bg-green-500' },
+    finalized: {
+        label: 'Finalized',
+        className: 'bg-blue-500 hover:bg-blue-500',
+    },
+    submitted: {
+        label: 'Submitted',
+        className: 'bg-purple-500 hover:bg-purple-500',
+    },
+    processing: {
+        label: 'Processing',
+        className: 'bg-yellow-500 hover:bg-yellow-500',
+    },
+    completed: {
+        label: 'Completed',
+        className: 'bg-green-500 hover:bg-green-500',
+    },
 };
 
 const formatCurrency = (amount: string | null) => {
@@ -59,7 +71,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Batch Number
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -76,7 +90,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Name
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -109,7 +125,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
             <Button
                 variant="ghost"
                 className="w-full justify-center"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Claims
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -117,7 +135,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
         ),
         cell: ({ row }) => (
             <div className="text-center">
-                <Badge variant="outline">{row.original.total_claims} claims</Badge>
+                <Badge variant="outline">
+                    {row.original.total_claims} claims
+                </Badge>
             </div>
         ),
     },
@@ -127,7 +147,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
             <Button
                 variant="ghost"
                 className="w-full justify-end"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Total Amount
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -171,7 +193,9 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Created
                 <ArrowUpDown className="ml-2 h-4 w-4" />

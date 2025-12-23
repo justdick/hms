@@ -358,7 +358,9 @@ export default function WardPatientShow({
 
     const [activeTab, setActiveTab] = useState('overview');
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
-    const [vitalsModalMode, setVitalsModalMode] = useState<'create' | 'edit'>('create');
+    const [vitalsModalMode, setVitalsModalMode] = useState<'create' | 'edit'>(
+        'create',
+    );
     const [editingVitals, setEditingVitals] = useState<VitalSign | null>(null);
     const [nursingNotesModalOpen, setNursingNotesModalOpen] = useState(false);
     const [wardRoundModalOpen, setWardRoundModalOpen] = useState(false);
@@ -441,30 +443,35 @@ export default function WardPatientShow({
     // Merge consultation vitals with ward vitals, deduplicating by ID
     const allVitals = useMemo(() => {
         const vitalsMap = new Map<number, VitalSign>();
-        
+
         // Add ward vitals first
-        (admission.vital_signs || []).forEach(v => vitalsMap.set(v.id, v));
-        
+        (admission.vital_signs || []).forEach((v) => vitalsMap.set(v.id, v));
+
         // Add consultation vitals (won't overwrite if same ID exists)
-        (admission.consultation?.patient_checkin?.vital_signs || []).forEach(v => {
-            if (!vitalsMap.has(v.id)) {
-                vitalsMap.set(v.id, v);
-            }
-        });
-        
+        (admission.consultation?.patient_checkin?.vital_signs || []).forEach(
+            (v) => {
+                if (!vitalsMap.has(v.id)) {
+                    vitalsMap.set(v.id, v);
+                }
+            },
+        );
+
         return Array.from(vitalsMap.values()).sort(
             (a, b) =>
                 new Date(b.recorded_at).getTime() -
                 new Date(a.recorded_at).getTime(),
         );
-    }, [admission.vital_signs, admission.consultation?.patient_checkin?.vital_signs]);
+    }, [
+        admission.vital_signs,
+        admission.consultation?.patient_checkin?.vital_signs,
+    ]);
 
     // Medication administrations
     const allMedications = admission.medication_administrations || [];
-    
+
     // Today's count for reference
-    const todayAdministrationsCount = allMedications.filter(
-        (med) => isToday(new Date(med.administered_at)),
+    const todayAdministrationsCount = allMedications.filter((med) =>
+        isToday(new Date(med.administered_at)),
     ).length;
 
     const latestVital = allVitals[0];
@@ -725,7 +732,11 @@ export default function WardPatientShow({
                         <div className="space-y-1 text-sm">
                             {admission.patient.date_of_birth && (
                                 <p className="font-semibold text-blue-700 dark:text-blue-300">
-                                    Age: {calculateAge(admission.patient.date_of_birth)} years
+                                    Age:{' '}
+                                    {calculateAge(
+                                        admission.patient.date_of_birth,
+                                    )}{' '}
+                                    years
                                 </p>
                             )}
                             {admission.patient.gender && (
@@ -776,7 +787,7 @@ export default function WardPatientShow({
                                 <Button
                                     size="sm"
                                     variant="default"
-                                    className="h-6 px-2 bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
+                                    className="h-6 bg-orange-500 px-2 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
                                     onClick={loadBedData}
                                 >
                                     <BedIcon className="mr-1 h-3 w-3" />
@@ -786,11 +797,14 @@ export default function WardPatientShow({
                         </div>
                         <div className="space-y-1">
                             <p className="font-semibold text-purple-700 dark:text-purple-300">
-                                {admission.bed ? `Bed ${admission.bed.bed_number}` : 'No bed assigned'}
+                                {admission.bed
+                                    ? `Bed ${admission.bed.bed_number}`
+                                    : 'No bed assigned'}
                             </p>
                             {admission.ward && (
                                 <p className="text-sm text-purple-600 dark:text-purple-400">
-                                    {admission.ward.name} ({admission.ward.code})
+                                    {admission.ward.name} ({admission.ward.code}
+                                    )
                                 </p>
                             )}
                         </div>
@@ -839,13 +853,29 @@ export default function WardPatientShow({
                         {admission.patient.active_insurance ? (
                             <div className="space-y-1">
                                 <p className="font-semibold text-teal-700 dark:text-teal-300">
-                                    {admission.patient.active_insurance.plan.provider.name}
+                                    {
+                                        admission.patient.active_insurance.plan
+                                            .provider.name
+                                    }
                                 </p>
                                 <p className="text-xs text-teal-600 dark:text-teal-400">
-                                    {admission.patient.active_insurance.plan.plan_name} ({admission.patient.active_insurance.plan.plan_type})
+                                    {
+                                        admission.patient.active_insurance.plan
+                                            .plan_name
+                                    }{' '}
+                                    (
+                                    {
+                                        admission.patient.active_insurance.plan
+                                            .plan_type
+                                    }
+                                    )
                                 </p>
                                 <p className="text-xs text-teal-600 dark:text-teal-400">
-                                    Member: {admission.patient.active_insurance.member_number}
+                                    Member:{' '}
+                                    {
+                                        admission.patient.active_insurance
+                                            .member_number
+                                    }
                                 </p>
                             </div>
                         ) : (
@@ -1000,7 +1030,9 @@ export default function WardPatientShow({
                                                     wardId={
                                                         admission.ward?.id || 0
                                                     }
-                                                    onClick={handleOpenNewVitals}
+                                                    onClick={
+                                                        handleOpenNewVitals
+                                                    }
                                                 />
                                             )}
                                             <Button
@@ -1101,14 +1133,17 @@ export default function WardPatientShow({
                                     Vital Signs History
                                 </h3>
                             </div>
-                            
+
                             {/* Vitals Table - Full Width */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Vitals History</CardTitle>
                                 </CardHeader>
                                 <CardContent className="max-h-[300px] overflow-y-auto">
-                                    <VitalsTable vitals={allVitals} onEdit={handleEditVitals} />
+                                    <VitalsTable
+                                        vitals={allVitals}
+                                        onEdit={handleEditVitals}
+                                    />
                                 </CardContent>
                             </Card>
 
@@ -1139,7 +1174,7 @@ export default function WardPatientShow({
                                 </Button>
                             </div>
 
-                            <MARTable 
+                            <MARTable
                                 administrations={allMedications}
                                 prescriptions={allPrescriptions}
                             />

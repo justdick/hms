@@ -3,14 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { router } from '@inertiajs/react';
 import {
     AlertCircle,
     CheckCircle,
     FileText,
-    Image,
     Loader2,
-    Trash2,
     Upload,
     X,
 } from 'lucide-react';
@@ -58,7 +55,7 @@ export function ImageUploadZone({
     const validateFile = (file: File): string | null => {
         // Check file type
         if (!acceptedTypes.includes(file.type)) {
-            return `Invalid file type. Accepted: ${acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}`;
+            return `Invalid file type. Accepted: ${acceptedTypes.map((t) => t.split('/')[1].toUpperCase()).join(', ')}`;
         }
 
         // Check file size
@@ -107,7 +104,7 @@ export function ImageUploadZone({
 
     const updateFileDescription = (id: string, description: string) => {
         setFiles((prev) =>
-            prev.map((f) => (f.id === id ? { ...f, description } : f))
+            prev.map((f) => (f.id === id ? { ...f, description } : f)),
         );
     };
 
@@ -158,8 +155,10 @@ export function ImageUploadZone({
             // Update status to uploading
             setFiles((prev) =>
                 prev.map((f) =>
-                    f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
-                )
+                    f.id === fileItem.id
+                        ? { ...f, status: 'uploading', progress: 0 }
+                        : f,
+                ),
             );
 
             const formData = new FormData();
@@ -169,15 +168,19 @@ export function ImageUploadZone({
             try {
                 // Use fetch for progress tracking
                 const xhr = new XMLHttpRequest();
-                
+
                 await new Promise<void>((resolve, reject) => {
                     xhr.upload.addEventListener('progress', (e) => {
                         if (e.lengthComputable) {
-                            const progress = Math.round((e.loaded / e.total) * 100);
+                            const progress = Math.round(
+                                (e.loaded / e.total) * 100,
+                            );
                             setFiles((prev) =>
                                 prev.map((f) =>
-                                    f.id === fileItem.id ? { ...f, progress } : f
-                                )
+                                    f.id === fileItem.id
+                                        ? { ...f, progress }
+                                        : f,
+                                ),
                             );
                         }
                     });
@@ -187,25 +190,36 @@ export function ImageUploadZone({
                             setFiles((prev) =>
                                 prev.map((f) =>
                                     f.id === fileItem.id
-                                        ? { ...f, status: 'success', progress: 100 }
-                                        : f
-                                )
+                                        ? {
+                                              ...f,
+                                              status: 'success',
+                                              progress: 100,
+                                          }
+                                        : f,
+                                ),
                             );
                             resolve();
                         } else {
                             let errorMessage = 'Upload failed';
                             try {
                                 const response = JSON.parse(xhr.responseText);
-                                errorMessage = response.message || response.errors?.file?.[0] || errorMessage;
+                                errorMessage =
+                                    response.message ||
+                                    response.errors?.file?.[0] ||
+                                    errorMessage;
                             } catch {
                                 // Use default error message
                             }
                             setFiles((prev) =>
                                 prev.map((f) =>
                                     f.id === fileItem.id
-                                        ? { ...f, status: 'error', error: errorMessage }
-                                        : f
-                                )
+                                        ? {
+                                              ...f,
+                                              status: 'error',
+                                              error: errorMessage,
+                                          }
+                                        : f,
+                                ),
                             );
                             reject(new Error(errorMessage));
                         }
@@ -215,15 +229,27 @@ export function ImageUploadZone({
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === fileItem.id
-                                    ? { ...f, status: 'error', error: 'Network error' }
-                                    : f
-                            )
+                                    ? {
+                                          ...f,
+                                          status: 'error',
+                                          error: 'Network error',
+                                      }
+                                    : f,
+                            ),
                         );
                         reject(new Error('Network error'));
                     });
 
-                    xhr.open('POST', `/radiology/orders/${labOrderId}/attachments`);
-                    xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                    xhr.open(
+                        'POST',
+                        `/radiology/orders/${labOrderId}/attachments`,
+                    );
+                    xhr.setRequestHeader(
+                        'X-CSRF-TOKEN',
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
+                    );
                     xhr.setRequestHeader('Accept', 'application/json');
                     xhr.send(formData);
                 });
@@ -236,7 +262,9 @@ export function ImageUploadZone({
         setIsUploading(false);
 
         // Check if all files uploaded successfully
-        const allSuccess = files.every((f) => f.status === 'success' || f.status === 'error');
+        const allSuccess = files.every(
+            (f) => f.status === 'success' || f.status === 'error',
+        );
         if (allSuccess && onUploadComplete) {
             onUploadComplete();
         }
@@ -292,7 +320,7 @@ export function ImageUploadZone({
                                 browse
                             </button>
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             JPEG, PNG, PDF up to {maxFileSize}MB each
                         </p>
                     </div>
@@ -303,18 +331,20 @@ export function ImageUploadZone({
             {files.length > 0 && (
                 <div className="space-y-3">
                     <Label>Selected Files ({files.length})</Label>
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    <div className="max-h-[300px] space-y-2 overflow-y-auto">
                         {files.map((fileItem) => (
                             <div
                                 key={fileItem.id}
                                 className={cn(
                                     'flex items-start gap-3 rounded-lg border p-3',
-                                    fileItem.status === 'error' && 'border-destructive bg-destructive/5',
-                                    fileItem.status === 'success' && 'border-green-500 bg-green-50 dark:bg-green-950/20',
+                                    fileItem.status === 'error' &&
+                                        'border-destructive bg-destructive/5',
+                                    fileItem.status === 'success' &&
+                                        'border-green-500 bg-green-50 dark:bg-green-950/20',
                                 )}
                             >
                                 {/* Preview */}
-                                <div className="h-16 w-16 flex-shrink-0 rounded-md bg-muted overflow-hidden">
+                                <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
                                     {fileItem.preview ? (
                                         <img
                                             src={fileItem.preview}
@@ -329,18 +359,24 @@ export function ImageUploadZone({
                                 </div>
 
                                 {/* File Info */}
-                                <div className="flex-1 min-w-0 space-y-2">
+                                <div className="min-w-0 flex-1 space-y-2">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate" title={fileItem.file.name}>
+                                            <p
+                                                className="truncate text-sm font-medium"
+                                                title={fileItem.file.name}
+                                            >
                                                 {fileItem.file.name}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                {formatFileSize(fileItem.file.size)}
+                                                {formatFileSize(
+                                                    fileItem.file.size,
+                                                )}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            {fileItem.status === 'uploading' && (
+                                            {fileItem.status ===
+                                                'uploading' && (
                                                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                             )}
                                             {fileItem.status === 'success' && (
@@ -349,13 +385,16 @@ export function ImageUploadZone({
                                             {fileItem.status === 'error' && (
                                                 <AlertCircle className="h-4 w-4 text-destructive" />
                                             )}
-                                            {fileItem.status !== 'uploading' && (
+                                            {fileItem.status !==
+                                                'uploading' && (
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-6 w-6"
-                                                    onClick={() => removeFile(fileItem.id)}
+                                                    onClick={() =>
+                                                        removeFile(fileItem.id)
+                                                    }
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>
@@ -368,24 +407,37 @@ export function ImageUploadZone({
                                         <Input
                                             placeholder="Description (e.g., PA View, Lateral View)"
                                             value={fileItem.description}
-                                            onChange={(e) => updateFileDescription(fileItem.id, e.target.value)}
+                                            onChange={(e) =>
+                                                updateFileDescription(
+                                                    fileItem.id,
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="h-8 text-sm"
                                         />
                                     )}
 
                                     {/* Progress Bar */}
                                     {fileItem.status === 'uploading' && (
-                                        <Progress value={fileItem.progress} className="h-1" />
+                                        <Progress
+                                            value={fileItem.progress}
+                                            className="h-1"
+                                        />
                                     )}
 
                                     {/* Error Message */}
-                                    {fileItem.status === 'error' && fileItem.error && (
-                                        <p className="text-xs text-destructive">{fileItem.error}</p>
-                                    )}
+                                    {fileItem.status === 'error' &&
+                                        fileItem.error && (
+                                            <p className="text-xs text-destructive">
+                                                {fileItem.error}
+                                            </p>
+                                        )}
 
                                     {/* Success Message */}
                                     {fileItem.status === 'success' && (
-                                        <p className="text-xs text-green-600">Uploaded successfully</p>
+                                        <p className="text-xs text-green-600">
+                                            Uploaded successfully
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -398,9 +450,10 @@ export function ImageUploadZone({
             {files.length > 0 && (
                 <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                        {pendingCount > 0 && `${pendingCount} file(s) ready to upload`}
+                        {pendingCount > 0 &&
+                            `${pendingCount} file(s) ready to upload`}
                         {hasErrors && (
-                            <span className="text-destructive ml-2">
+                            <span className="ml-2 text-destructive">
                                 Some files have errors
                             </span>
                         )}
@@ -427,7 +480,8 @@ export function ImageUploadZone({
                             ) : (
                                 <>
                                     <Upload className="mr-2 h-4 w-4" />
-                                    Upload {pendingCount} File{pendingCount !== 1 ? 's' : ''}
+                                    Upload {pendingCount} File
+                                    {pendingCount !== 1 ? 's' : ''}
                                 </>
                             )}
                         </Button>

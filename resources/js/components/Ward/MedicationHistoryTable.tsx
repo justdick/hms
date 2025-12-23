@@ -92,7 +92,11 @@ export function MedicationHistoryTable({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={medicationHistoryColumns({ onDiscontinue }).length}
+                                    colSpan={
+                                        medicationHistoryColumns({
+                                            onDiscontinue,
+                                        }).length
+                                    }
                                     className="h-24 text-center"
                                 >
                                     <div className="flex flex-col items-center gap-2">

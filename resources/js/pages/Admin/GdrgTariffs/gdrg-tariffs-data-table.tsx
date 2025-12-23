@@ -11,7 +11,14 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { Activity, ChevronDown, Filter, Plus, Search, Upload } from 'lucide-react';
+import {
+    Activity,
+    ChevronDown,
+    Filter,
+    Plus,
+    Search,
+    Upload,
+} from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -99,8 +106,10 @@ export function GdrgTariffsDataTable<TData, TValue>({
     ageCategories,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [search, setSearch] = React.useState(filters.search || '');
 
@@ -147,14 +156,26 @@ export function GdrgTariffsDataTable<TData, TValue>({
         debouncedSearch(value);
     };
 
-    const handleFilterChange = (key: keyof Filters, value: string | boolean | undefined) => {
+    const handleFilterChange = (
+        key: keyof Filters,
+        value: string | boolean | undefined,
+    ) => {
         router.get(
             window.location.pathname,
             {
                 search: search || undefined,
-                mdc_category: key === 'mdc_category' ? value || undefined : filters.mdc_category || undefined,
-                age_category: key === 'age_category' ? value || undefined : filters.age_category || undefined,
-                active_only: key === 'active_only' ? value || undefined : filters.active_only || undefined,
+                mdc_category:
+                    key === 'mdc_category'
+                        ? value || undefined
+                        : filters.mdc_category || undefined,
+                age_category:
+                    key === 'age_category'
+                        ? value || undefined
+                        : filters.age_category || undefined,
+                active_only:
+                    key === 'active_only'
+                        ? value || undefined
+                        : filters.active_only || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -193,7 +214,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                     <Input
                         placeholder="Search by code, name, MDC..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -222,12 +245,17 @@ export function GdrgTariffsDataTable<TData, TValue>({
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                    <DropdownMenuContent
+                        align="start"
+                        className="max-h-[300px] overflow-y-auto"
+                    >
                         <DropdownMenuLabel>Filter by MDC</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             checked={!filters.mdc_category}
-                            onCheckedChange={() => handleFilterChange('mdc_category', undefined)}
+                            onCheckedChange={() =>
+                                handleFilterChange('mdc_category', undefined)
+                            }
                         >
                             All Categories
                         </DropdownMenuCheckboxItem>
@@ -235,7 +263,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                             <DropdownMenuCheckboxItem
                                 key={cat}
                                 checked={filters.mdc_category === cat}
-                                onCheckedChange={() => handleFilterChange('mdc_category', cat)}
+                                onCheckedChange={() =>
+                                    handleFilterChange('mdc_category', cat)
+                                }
                             >
                                 {cat}
                             </DropdownMenuCheckboxItem>
@@ -248,7 +278,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <Filter className="mr-2 h-4 w-4" />
-                            {filters.age_category ? ageCategoryLabels[filters.age_category] : 'Age Category'}
+                            {filters.age_category
+                                ? ageCategoryLabels[filters.age_category]
+                                : 'Age Category'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -257,7 +289,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             checked={!filters.age_category}
-                            onCheckedChange={() => handleFilterChange('age_category', undefined)}
+                            onCheckedChange={() =>
+                                handleFilterChange('age_category', undefined)
+                            }
                         >
                             All Ages
                         </DropdownMenuCheckboxItem>
@@ -265,7 +299,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                             <DropdownMenuCheckboxItem
                                 key={cat}
                                 checked={filters.age_category === cat}
-                                onCheckedChange={() => handleFilterChange('age_category', cat)}
+                                onCheckedChange={() =>
+                                    handleFilterChange('age_category', cat)
+                                }
                             >
                                 {ageCategoryLabels[cat] || cat}
                             </DropdownMenuCheckboxItem>
@@ -278,9 +314,14 @@ export function GdrgTariffsDataTable<TData, TValue>({
                     <Checkbox
                         id="active_only"
                         checked={filters.active_only || false}
-                        onCheckedChange={(checked) => handleFilterChange('active_only', checked === true)}
+                        onCheckedChange={(checked) =>
+                            handleFilterChange('active_only', checked === true)
+                        }
                     />
-                    <Label htmlFor="active_only" className="cursor-pointer text-sm">
+                    <Label
+                        htmlFor="active_only"
+                        className="cursor-pointer text-sm"
+                    >
                         Active only
                     </Label>
                 </div>
@@ -302,7 +343,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                                         key={column.id}
                                         className="capitalize"
                                         checked={column.getIsVisible()}
-                                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
                                     >
                                         {column.id.replace(/_/g, ' ')}
                                     </DropdownMenuCheckboxItem>
@@ -335,7 +378,8 @@ export function GdrgTariffsDataTable<TData, TValue>({
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
-                                                      header.column.columnDef.header,
+                                                      header.column.columnDef
+                                                          .header,
                                                       header.getContext(),
                                                   )}
                                         </TableHead>
@@ -349,7 +393,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                     className="hover:bg-muted/50"
                                 >
                                     {row.getVisibleCells().map((cell) => (
@@ -364,27 +410,43 @@ export function GdrgTariffsDataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <Activity className="h-8 w-8 text-muted-foreground" />
                                         <div>No G-DRG tariffs found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {search || filters.mdc_category || filters.age_category || filters.active_only
+                                            {search ||
+                                            filters.mdc_category ||
+                                            filters.age_category ||
+                                            filters.active_only
                                                 ? 'Try adjusting your filters.'
                                                 : 'Get started by adding your first G-DRG tariff.'}
                                         </div>
-                                        {!search && !filters.mdc_category && !filters.age_category && !filters.active_only && (
-                                            <div className="mt-2 flex gap-2">
-                                                <Button variant="outline" size="sm" onClick={onImportClick}>
-                                                    <Upload className="mr-2 h-4 w-4" />
-                                                    Import
-                                                </Button>
-                                                <Button size="sm" onClick={onAddClick}>
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    Add Tariff
-                                                </Button>
-                                            </div>
-                                        )}
+                                        {!search &&
+                                            !filters.mdc_category &&
+                                            !filters.age_category &&
+                                            !filters.active_only && (
+                                                <div className="mt-2 flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={onImportClick}
+                                                    >
+                                                        <Upload className="mr-2 h-4 w-4" />
+                                                        Import
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={onAddClick}
+                                                    >
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        Add Tariff
+                                                    </Button>
+                                                </div>
+                                            )}
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -398,8 +460,9 @@ export function GdrgTariffsDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.meta?.from && pagination.meta?.to ? (
                         <>
-                            Showing {pagination.meta.from} to {pagination.meta.to} of{' '}
-                            {pagination.meta.total} tariff(s)
+                            Showing {pagination.meta.from} to{' '}
+                            {pagination.meta.to} of {pagination.meta.total}{' '}
+                            tariff(s)
                         </>
                     ) : (
                         <>No results</>
@@ -417,7 +480,8 @@ export function GdrgTariffsDataTable<TData, TValue>({
                     {pageLinks
                         .filter(
                             (link) =>
-                                !link.label.includes('Previous') && !link.label.includes('Next'),
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
                         )
                         .map((link, index) => (
                             <Button

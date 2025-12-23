@@ -13,8 +13,8 @@ import {
     Send,
 } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
-import { BatchesDataTable } from './batches-data-table';
 import { batchesColumns, ClaimBatch } from './batches-columns';
+import { BatchesDataTable } from './batches-data-table';
 
 const CreateBatchModal = lazy(
     () => import('@/components/Insurance/Batches/CreateBatchModal'),

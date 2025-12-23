@@ -14,14 +14,11 @@ import {
     Building2,
     Calendar,
     Check,
-    Clock,
     ExternalLink,
     FileText,
     Image,
     Scan,
-    User,
 } from 'lucide-react';
-import * as React from 'react';
 import { ImageGallery, type ImageAttachment } from './ImageGallery';
 
 interface LabService {
@@ -83,9 +80,11 @@ const parseReport = (reportNotes: string | undefined) => {
     if (!reportNotes) return { findings: null, impression: null, raw: null };
 
     const findingsMatch = reportNotes.match(
-        /\*\*FINDINGS:\*\*\n([\s\S]*?)(?=\n\n\*\*IMPRESSION:|$)/
+        /\*\*FINDINGS:\*\*\n([\s\S]*?)(?=\n\n\*\*IMPRESSION:|$)/,
     );
-    const impressionMatch = reportNotes.match(/\*\*IMPRESSION:\*\*\n([\s\S]*?)$/);
+    const impressionMatch = reportNotes.match(
+        /\*\*IMPRESSION:\*\*\n([\s\S]*?)$/,
+    );
 
     if (findingsMatch || impressionMatch) {
         return {
@@ -136,7 +135,10 @@ export function ImagingResultsModal({
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{order.lab_service.code}</span>
                         <span>•</span>
-                        <span>{order.lab_service.modality || order.lab_service.category}</span>
+                        <span>
+                            {order.lab_service.modality ||
+                                order.lab_service.category}
+                        </span>
                     </div>
                 </DialogHeader>
 
@@ -160,14 +162,21 @@ export function ImagingResultsModal({
                                 </div>
                                 {externalInfo.facilityName && (
                                     <p className="mt-1 text-sm text-purple-800 dark:text-purple-300">
-                                        <span className="font-medium">Facility:</span>{' '}
+                                        <span className="font-medium">
+                                            Facility:
+                                        </span>{' '}
                                         {externalInfo.facilityName}
                                     </p>
                                 )}
                                 {externalInfo.studyDate && (
                                     <p className="text-sm text-purple-800 dark:text-purple-300">
-                                        <span className="font-medium">Study Date:</span>{' '}
-                                        {format(new Date(externalInfo.studyDate), 'PPP')}
+                                        <span className="font-medium">
+                                            Study Date:
+                                        </span>{' '}
+                                        {format(
+                                            new Date(externalInfo.studyDate),
+                                            'PPP',
+                                        )}
                                     </p>
                                 )}
                             </div>
@@ -179,7 +188,9 @@ export function ImagingResultsModal({
                         <div className="flex items-start gap-2">
                             <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
                             <div>
-                                <p className="text-xs text-muted-foreground">Ordered</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Ordered
+                                </p>
                                 <p className="text-sm font-medium">
                                     {formatDateTime(order.ordered_at)}
                                 </p>
@@ -195,9 +206,13 @@ export function ImagingResultsModal({
                             <div className="flex items-start gap-2">
                                 <Check className="mt-0.5 h-4 w-4 text-green-600" />
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Completed</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Completed
+                                    </p>
                                     <p className="text-sm font-medium">
-                                        {formatDateTime(order.result_entered_at)}
+                                        {formatDateTime(
+                                            order.result_entered_at,
+                                        )}
                                     </p>
                                     {order.result_entered_by && (
                                         <p className="text-xs text-muted-foreground">
@@ -209,7 +224,9 @@ export function ImagingResultsModal({
                         )}
 
                         <div>
-                            <p className="text-xs text-muted-foreground">Status</p>
+                            <p className="text-xs text-muted-foreground">
+                                Status
+                            </p>
                             <Badge
                                 variant="outline"
                                 className={getStatusBadgeClasses(order.status)}
@@ -219,7 +236,9 @@ export function ImagingResultsModal({
                         </div>
 
                         <div>
-                            <p className="text-xs text-muted-foreground">Priority</p>
+                            <p className="text-xs text-muted-foreground">
+                                Priority
+                            </p>
                             {order.priority !== 'routine' ? (
                                 <Badge variant="destructive">
                                     {order.priority.toUpperCase()}
@@ -271,7 +290,7 @@ export function ImagingResultsModal({
                                                     FINDINGS
                                                 </h4>
                                                 <div className="rounded-lg bg-muted/50 p-4">
-                                                    <p className="whitespace-pre-wrap text-sm">
+                                                    <p className="text-sm whitespace-pre-wrap">
                                                         {report.findings}
                                                     </p>
                                                 </div>
@@ -283,7 +302,7 @@ export function ImagingResultsModal({
                                                     IMPRESSION
                                                 </h4>
                                                 <div className="rounded-lg border-l-4 border-green-500 bg-green-50 p-4 dark:bg-green-950/30">
-                                                    <p className="whitespace-pre-wrap text-sm">
+                                                    <p className="text-sm whitespace-pre-wrap">
                                                         {report.impression}
                                                     </p>
                                                 </div>
@@ -292,7 +311,9 @@ export function ImagingResultsModal({
                                     </div>
                                 ) : report.raw ? (
                                     <div className="rounded-lg bg-muted/50 p-4">
-                                        <p className="whitespace-pre-wrap text-sm">{report.raw}</p>
+                                        <p className="text-sm whitespace-pre-wrap">
+                                            {report.raw}
+                                        </p>
                                     </div>
                                 ) : null}
                             </div>
@@ -305,11 +326,14 @@ export function ImagingResultsModal({
                         !hasImages && (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <Scan className="h-16 w-16 text-muted-foreground/50" />
-                                <p className="mt-4 text-lg font-medium">Results Pending</p>
+                                <p className="mt-4 text-lg font-medium">
+                                    Results Pending
+                                </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {order.status === 'ordered' &&
                                         'Waiting for imaging to be performed'}
-                                    {order.status === 'in_progress' && 'Imaging in progress'}
+                                    {order.status === 'in_progress' &&
+                                        'Imaging in progress'}
                                     {order.status === 'external_referral' &&
                                         'Patient referred to external facility'}
                                 </p>
@@ -332,7 +356,10 @@ export function ImagingResultsModal({
                 </div>
 
                 <div className="flex justify-end gap-2 border-t pt-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                    >
                         Close
                     </Button>
                 </div>

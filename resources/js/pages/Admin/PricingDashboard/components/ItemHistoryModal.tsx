@@ -59,12 +59,15 @@ export function ItemHistoryModal({
         setError(null);
 
         try {
-            const response = await axios.get('/admin/pricing-dashboard/item-history', {
-                params: {
-                    item_type: item.type,
-                    item_id: item.id,
+            const response = await axios.get(
+                '/admin/pricing-dashboard/item-history',
+                {
+                    params: {
+                        item_type: item.type,
+                        item_id: item.id,
+                    },
                 },
-            });
+            );
             setHistory(response.data.history);
         } catch (err) {
             setError('Failed to load history');
@@ -116,7 +119,9 @@ export function ItemHistoryModal({
                     <DialogDescription>
                         <span className="font-medium">{item.name}</span>
                         {item.code && (
-                            <span className="ml-2 font-mono text-xs">({item.code})</span>
+                            <span className="ml-2 font-mono text-xs">
+                                ({item.code})
+                            </span>
                         )}
                     </DialogDescription>
                 </DialogHeader>
@@ -176,31 +181,43 @@ export function ItemHistoryModal({
                                                         entry.field_changed,
                                                     )}
                                                 >
-                                                    {fieldLabels[entry.field_changed] ||
-                                                        entry.field_changed}
+                                                    {fieldLabels[
+                                                        entry.field_changed
+                                                    ] || entry.field_changed}
                                                 </Badge>
                                             </div>
 
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-gray-500 line-through">
-                                                    {entry.field_changed === 'coverage'
+                                                    {entry.field_changed ===
+                                                    'coverage'
                                                         ? `${entry.old_value ?? 0}%`
-                                                        : formatCurrency(entry.old_value)}
+                                                        : formatCurrency(
+                                                              entry.old_value,
+                                                          )}
                                                 </span>
                                                 <ArrowRight className="h-3 w-3 text-gray-400" />
                                                 <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {entry.field_changed === 'coverage'
+                                                    {entry.field_changed ===
+                                                    'coverage'
                                                         ? `${entry.new_value}%`
-                                                        : formatCurrency(entry.new_value)}
+                                                        : formatCurrency(
+                                                              entry.new_value,
+                                                          )}
                                                 </span>
                                             </div>
 
                                             <div className="flex items-center gap-4 text-xs text-gray-500">
                                                 <span className="flex items-center gap-1">
                                                     <User className="h-3 w-3" />
-                                                    {entry.user?.name || 'System'}
+                                                    {entry.user?.name ||
+                                                        'System'}
                                                 </span>
-                                                <span>{formatDate(entry.created_at)}</span>
+                                                <span>
+                                                    {formatDate(
+                                                        entry.created_at,
+                                                    )}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

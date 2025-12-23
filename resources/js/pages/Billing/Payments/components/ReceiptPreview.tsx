@@ -81,9 +81,10 @@ export function ReceiptPreview({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content || '',
+                    'X-CSRF-TOKEN':
+                        document.querySelector<HTMLMetaElement>(
+                            'meta[name="csrf-token"]',
+                        )?.content || '',
                 },
                 body: JSON.stringify({ charge_ids: chargeIds }),
             });
@@ -96,7 +97,9 @@ export function ReceiptPreview({
             const data = await response.json();
             setReceipt(data.receipt);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load receipt');
+            setError(
+                err instanceof Error ? err.message : 'Failed to load receipt',
+            );
         } finally {
             setIsLoading(false);
         }
@@ -119,9 +122,10 @@ export function ReceiptPreview({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content || '',
+                    'X-CSRF-TOKEN':
+                        document.querySelector<HTMLMetaElement>(
+                            'meta[name="csrf-token"]',
+                        )?.content || '',
                 },
                 body: JSON.stringify({
                     charge_ids: chargeIds,
@@ -130,9 +134,15 @@ export function ReceiptPreview({
             });
 
             // Create a new window for printing
-            const printWindow = window.open('', '_blank', 'width=400,height=600');
+            const printWindow = window.open(
+                '',
+                '_blank',
+                'width=400,height=600',
+            );
             if (!printWindow) {
-                throw new Error('Could not open print window. Please allow popups.');
+                throw new Error(
+                    'Could not open print window. Please allow popups.',
+                );
             }
 
             // Write the receipt content to the new window
@@ -191,7 +201,9 @@ export function ReceiptPreview({
             }, 250);
         } catch (err) {
             console.error('Print error:', err);
-            setError(err instanceof Error ? err.message : 'Failed to print receipt');
+            setError(
+                err instanceof Error ? err.message : 'Failed to print receipt',
+            );
         } finally {
             setIsPrinting(false);
         }

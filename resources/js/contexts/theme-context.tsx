@@ -4,8 +4,8 @@ import {
     useContext,
     useEffect,
     useState,
-    type ReactNode,
     type JSX,
+    type ReactNode,
 } from 'react';
 
 export interface ThemeColors {
@@ -69,7 +69,6 @@ export const defaultTheme: ThemeConfig = {
         hospitalName: 'Hospital Management System',
     },
 };
-
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
@@ -229,9 +228,10 @@ export function isValidHslColor(value: string): boolean {
 /**
  * Validate a complete theme configuration.
  */
-export function validateThemeConfig(
-    config: Partial<ThemeConfig>,
-): { valid: boolean; errors: string[] } {
+export function validateThemeConfig(config: Partial<ThemeConfig>): {
+    valid: boolean;
+    errors: string[];
+} {
     const errors: string[] = [];
 
     if (config.colors) {

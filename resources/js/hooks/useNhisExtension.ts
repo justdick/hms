@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // Chrome extension API types (only available when extension is installed)
-declare const chrome: {
-    runtime?: {
-        sendMessage: (extensionId: string, message: unknown, callback?: (response: unknown) => void) => void;
-    };
-} | undefined;
+declare const chrome:
+    | {
+          runtime?: {
+              sendMessage: (
+                  extensionId: string,
+                  message: unknown,
+                  callback?: (response: unknown) => void,
+              ) => void;
+          };
+      }
+    | undefined;
 
 interface CccData {
     ccc: string | null;
@@ -23,7 +29,11 @@ interface UseNhisExtensionReturn {
     isExtensionInstalled: boolean;
     isVerifying: boolean;
     cccData: CccData | null;
-    startVerification: (membershipNumber: string, credentials?: { username: string; password: string }, portalUrl?: string) => void;
+    startVerification: (
+        membershipNumber: string,
+        credentials?: { username: string; password: string },
+        portalUrl?: string,
+    ) => void;
     clearCccData: () => void;
 }
 
@@ -66,7 +76,7 @@ export function useNhisExtension(): UseNhisExtensionReturn {
                         if ((response as { installed?: boolean })?.installed) {
                             setIsExtensionInstalled(true);
                         }
-                    }
+                    },
                 );
             } catch {
                 // Extension not available
@@ -80,42 +90,54 @@ export function useNhisExtension(): UseNhisExtensionReturn {
         }
 
         // Method 3: Use localStorage flag set by extension
-        const extensionFlag = localStorage.getItem('hms-nhis-extension-installed');
+        const extensionFlag = localStorage.getItem(
+            'hms-nhis-extension-installed',
+        );
         if (extensionFlag === 'true') {
             setIsExtensionInstalled(true);
         }
     }, []);
 
-    const startVerification = useCallback((membershipNumber: string, credentials?: { username: string; password: string }, portalUrl?: string) => {
-        setIsVerifying(true);
-        setCccData(null);
+    const startVerification = useCallback(
+        (
+            membershipNumber: string,
+            credentials?: { username: string; password: string },
+            portalUrl?: string,
+        ) => {
+            setIsVerifying(true);
+            setCccData(null);
 
-        // Send verification request to extension via postMessage
-        // The extension's hms-content.js listens for this and stores in chrome.storage
-        window.postMessage({
-            type: 'HMS_NHIS_VERIFY_REQUEST',
-            membershipNumber,
-            credentials: credentials || null,
-        }, '*');
-
-        // Give extension time to store the data, then open portal
-        setTimeout(() => {
-            window.open(portalUrl || 'https://ccc.nhia.gov.gh/', '_blank');
-        }, 300);
-
-        // Also try to communicate with extension directly
-        if (EXTENSION_ID && chrome?.runtime?.sendMessage) {
-            try {
-                chrome.runtime.sendMessage(EXTENSION_ID, {
-                    type: 'NHIS_VERIFY_REQUEST',
+            // Send verification request to extension via postMessage
+            // The extension's hms-content.js listens for this and stores in chrome.storage
+            window.postMessage(
+                {
+                    type: 'HMS_NHIS_VERIFY_REQUEST',
                     membershipNumber,
-                    credentials
-                });
-            } catch {
-                // Extension communication failed, rely on postMessage
+                    credentials: credentials || null,
+                },
+                '*',
+            );
+
+            // Give extension time to store the data, then open portal
+            setTimeout(() => {
+                window.open(portalUrl || 'https://ccc.nhia.gov.gh/', '_blank');
+            }, 300);
+
+            // Also try to communicate with extension directly
+            if (EXTENSION_ID && chrome?.runtime?.sendMessage) {
+                try {
+                    chrome.runtime.sendMessage(EXTENSION_ID, {
+                        type: 'NHIS_VERIFY_REQUEST',
+                        membershipNumber,
+                        credentials,
+                    });
+                } catch {
+                    // Extension communication failed, rely on postMessage
+                }
             }
-        }
-    }, []);
+        },
+        [],
+    );
 
     const clearCccData = useCallback(() => {
         setCccData(null);
@@ -128,6 +150,6 @@ export function useNhisExtension(): UseNhisExtensionReturn {
         isVerifying,
         cccData,
         startVerification,
-        clearCccData
+        clearCccData,
     };
 }

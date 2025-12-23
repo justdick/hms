@@ -43,8 +43,12 @@ export default function ForcedPasswordChangeLayout({
 
                     {/* Title and Description */}
                     <div className="space-y-2 text-center">
-                        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-                        <p className="text-sm text-muted-foreground">{description}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {title}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            {description}
+                        </p>
                     </div>
 
                     {/* Content */}
@@ -54,7 +58,8 @@ export default function ForcedPasswordChangeLayout({
 
                     {/* Footer */}
                     <p className="text-center text-xs text-muted-foreground">
-                        For security reasons, you must change your password before accessing the system.
+                        For security reasons, you must change your password
+                        before accessing the system.
                     </p>
                 </div>
             </div>

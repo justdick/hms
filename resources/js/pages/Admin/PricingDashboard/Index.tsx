@@ -9,7 +9,10 @@ import { BulkEditModal } from './components/BulkEditModal';
 import { ItemHistoryModal } from './components/ItemHistoryModal';
 import { PlanSelector } from './components/PlanSelector';
 import { PricingImportModal } from './components/PricingImportModal';
-import { PricingSummaryCards, type PricingSummary } from './components/PricingSummaryCards';
+import {
+    PricingSummaryCards,
+    type PricingSummary,
+} from './components/PricingSummaryCards';
 import { createPricingColumns } from './pricing-columns';
 import { PricingDataTable } from './pricing-data-table';
 
@@ -28,7 +31,12 @@ export interface PricingItem {
     is_unmapped: boolean;
     nhis_code: string | null;
     coverage_rule_id: number | null;
-    pricing_status: 'priced' | 'unpriced' | 'nhis_mapped' | 'flexible_copay' | 'not_mapped';
+    pricing_status:
+        | 'priced'
+        | 'unpriced'
+        | 'nhis_mapped'
+        | 'flexible_copay'
+        | 'not_mapped';
 }
 
 export interface InsurancePlan {
@@ -160,7 +168,8 @@ export default function PricingDashboardIndex({
                             Unified Pricing Dashboard
                         </h1>
                         <p className="mt-2 text-gray-600 dark:text-gray-400">
-                            Manage cash prices and insurance coverage for all services
+                            Manage cash prices and insurance coverage for all
+                            services
                         </p>
                     </div>
                 </div>
@@ -170,7 +179,10 @@ export default function PricingDashboardIndex({
                     <CardContent className="p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-4">
-                                <Label htmlFor="plan-selector" className="whitespace-nowrap">
+                                <Label
+                                    htmlFor="plan-selector"
+                                    className="whitespace-nowrap"
+                                >
                                     Insurance Plan:
                                 </Label>
                                 <PlanSelector
@@ -182,11 +194,16 @@ export default function PricingDashboardIndex({
                             {selectedPlan && (
                                 <div className="flex items-center gap-2">
                                     {isNhis ? (
-                                        <Badge variant="default" className="bg-green-600">
+                                        <Badge
+                                            variant="default"
+                                            className="bg-green-600"
+                                        >
                                             NHIS Plan
                                         </Badge>
                                     ) : (
-                                        <Badge variant="secondary">Private Insurance</Badge>
+                                        <Badge variant="secondary">
+                                            Private Insurance
+                                        </Badge>
                                     )}
                                 </div>
                             )}

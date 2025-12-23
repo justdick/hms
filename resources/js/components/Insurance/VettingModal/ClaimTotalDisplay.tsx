@@ -25,7 +25,6 @@ interface ClaimTotalDisplayProps {
  * ```
  */
 export function ClaimTotalDisplay({ totals, isNhis }: ClaimTotalDisplayProps) {
-
     return (
         <section aria-labelledby="claim-total-heading">
             <h3

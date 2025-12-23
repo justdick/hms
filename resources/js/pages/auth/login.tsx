@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle, LogIn, User, Lock } from 'lucide-react';
+import { LoaderCircle, Lock, LogIn, User } from 'lucide-react';
 
 interface LoginProps {
     status?: string;
@@ -35,11 +35,14 @@ export default function Login({ status }: LoginProps) {
                     <>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <Label
+                                    htmlFor="username"
+                                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                >
                                     Username
                                 </Label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <Input
                                         id="username"
                                         type="text"
@@ -56,11 +59,14 @@ export default function Login({ status }: LoginProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <Label
+                                    htmlFor="password"
+                                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                                >
                                     Password
                                 </Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <Input
                                         id="password"
                                         type="password"
@@ -81,9 +87,12 @@ export default function Login({ status }: LoginProps) {
                                 id="remember"
                                 name="remember"
                                 tabIndex={3}
-                                className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                className="border-border data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                             />
-                            <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
+                            <Label
+                                htmlFor="remember"
+                                className="cursor-pointer text-sm text-muted-foreground"
+                            >
                                 Keep me signed in
                             </Label>
                         </div>

@@ -138,10 +138,12 @@ export default function LabConfigurationIndex({
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Import Lab Services</DialogTitle>
+                                    <DialogTitle>
+                                        Import Lab Services
+                                    </DialogTitle>
                                     <DialogDescription>
-                                        Upload a CSV or Excel file to bulk import
-                                        lab services.
+                                        Upload a CSV or Excel file to bulk
+                                        import lab services.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleImport}>
@@ -158,7 +160,9 @@ export default function LabConfigurationIndex({
                                             </a>
                                         </Button>
                                         <div className="space-y-2">
-                                            <Label htmlFor="file">Select File</Label>
+                                            <Label htmlFor="file">
+                                                Select File
+                                            </Label>
                                             <Input
                                                 id="file"
                                                 type="file"
@@ -166,7 +170,8 @@ export default function LabConfigurationIndex({
                                                 onChange={(e) =>
                                                     setData(
                                                         'file',
-                                                        e.target.files?.[0] || null,
+                                                        e.target.files?.[0] ||
+                                                            null,
                                                     )
                                                 }
                                             />
@@ -176,7 +181,9 @@ export default function LabConfigurationIndex({
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => setImportModalOpen(false)}
+                                            onClick={() =>
+                                                setImportModalOpen(false)
+                                            }
                                         >
                                             Cancel
                                         </Button>
@@ -184,7 +191,9 @@ export default function LabConfigurationIndex({
                                             type="submit"
                                             disabled={!data.file || processing}
                                         >
-                                            {processing ? 'Importing...' : 'Import'}
+                                            {processing
+                                                ? 'Importing...'
+                                                : 'Import'}
                                         </Button>
                                     </DialogFooter>
                                 </form>

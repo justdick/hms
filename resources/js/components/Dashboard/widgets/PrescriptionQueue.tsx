@@ -9,7 +9,8 @@ import {
     Pill,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,8 +20,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { cn } from '@/lib/utils';
 
 export interface PharmacistMetricsData {
     pendingPrescriptions: number;
@@ -46,7 +46,9 @@ export function PharmacistMetrics({
                 title="Pending Prescriptions"
                 value={metrics.pendingPrescriptions}
                 icon={FileCheck}
-                variant={metrics.pendingPrescriptions > 10 ? 'warning' : 'primary'}
+                variant={
+                    metrics.pendingPrescriptions > 10 ? 'warning' : 'primary'
+                }
                 href={dispensingHref}
             />
             <MetricCard
@@ -128,17 +130,21 @@ export function UrgentPrescriptions({
                                 key={rx.id}
                                 className={cn(
                                     'flex items-center justify-between rounded-lg border p-3',
-                                    rx.is_urgent && 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950'
+                                    rx.is_urgent &&
+                                        'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950',
                                 )}
                             >
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2">
                                         {rx.is_urgent && (
-                                            <Badge variant="destructive" className="text-xs">
+                                            <Badge
+                                                variant="destructive"
+                                                className="text-xs"
+                                            >
                                                 Urgent
                                             </Badge>
                                         )}
-                                        <span className="font-medium text-sm">
+                                        <span className="text-sm font-medium">
                                             {rx.patient_name}
                                         </span>
                                     </div>
@@ -148,7 +154,9 @@ export function UrgentPrescriptions({
                                 </div>
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                     <Clock className="h-3 w-3" />
-                                    <span className="text-xs font-mono">{rx.wait_time}</span>
+                                    <span className="font-mono text-xs">
+                                        {rx.wait_time}
+                                    </span>
                                 </div>
                             </div>
                         ))}

@@ -31,7 +31,11 @@ interface PricingTableProps {
 
 interface EditingCell {
     itemId: number;
-    field: 'cash_price' | 'copay_amount' | 'insurance_tariff' | 'coverage_value';
+    field:
+        | 'cash_price'
+        | 'copay_amount'
+        | 'insurance_tariff'
+        | 'coverage_value';
 }
 
 export function PricingTable({
@@ -56,7 +60,7 @@ export function PricingTable({
 
     const calculatePatientPays = (item: PricingItem): number | null => {
         if (!selectedPlan || isNhis) return null;
-        
+
         const tariff = item.insurance_tariff ?? item.cash_price;
         const coverageValue = item.coverage_value ?? 0;
         const coverageType = item.coverage_type ?? 'percentage';
@@ -69,12 +73,15 @@ export function PricingTable({
         }
     };
 
-    const handleCellClick = (item: PricingItem, field: EditingCell['field']) => {
+    const handleCellClick = (
+        item: PricingItem,
+        field: EditingCell['field'],
+    ) => {
         // Don't allow editing copay for unmapped NHIS items
         if (isNhis && !item.is_mapped && field === 'copay_amount') {
             return;
         }
-        
+
         // Don't allow editing NHIS tariff (read-only)
         if (isNhis && field === 'insurance_tariff') {
             return;
@@ -121,14 +128,19 @@ export function PricingTable({
                 item_code: item.code,
                 copay: numValue,
             };
-        } else if ((field === 'insurance_tariff' || field === 'coverage_value') && selectedPlan) {
+        } else if (
+            (field === 'insurance_tariff' || field === 'coverage_value') &&
+            selectedPlan
+        ) {
             endpoint = '/admin/pricing-dashboard/insurance-coverage';
             data = {
                 plan_id: selectedPlan.id,
                 item_type: item.type,
                 item_id: item.id,
                 item_code: item.code,
-                [field === 'insurance_tariff' ? 'tariff_amount' : 'coverage_value']: numValue,
+                [field === 'insurance_tariff'
+                    ? 'tariff_amount'
+                    : 'coverage_value']: numValue,
             };
         }
 
@@ -157,7 +169,10 @@ export function PricingTable({
         setEditValue('');
     };
 
-    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, item: PricingItem) => {
+    const handleKeyDown = (
+        e: KeyboardEvent<HTMLInputElement>,
+        item: PricingItem,
+    ) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             handleSave(item);
@@ -175,7 +190,9 @@ export function PricingTable({
             onSelectionChange([...selectedItems, item]);
         } else {
             onSelectionChange(
-                selectedItems.filter((i) => !(i.id === item.id && i.type === item.type)),
+                selectedItems.filter(
+                    (i) => !(i.id === item.id && i.type === item.type),
+                ),
             );
         }
     };
@@ -269,7 +286,9 @@ export function PricingTable({
                                         selectedItems.length > 0 &&
                                         selectedItems.length ===
                                             (isNhis
-                                                ? items.filter((i) => i.is_mapped).length
+                                                ? items.filter(
+                                                      (i) => i.is_mapped,
+                                                  ).length
                                                 : items.length)
                                     }
                                     onCheckedChange={handleSelectAll}
@@ -327,7 +346,10 @@ export function PricingTable({
                                     <Checkbox
                                         checked={isSelected(item)}
                                         onCheckedChange={(checked) =>
-                                            handleSelectItem(item, checked === true)
+                                            handleSelectItem(
+                                                item,
+                                                checked === true,
+                                            )
                                         }
                                         disabled={isNhis && !item.is_mapped}
                                     />
@@ -336,12 +358,18 @@ export function PricingTable({
                             <TableCell className="font-mono text-sm">
                                 {item.code || '-'}
                             </TableCell>
-                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell className="font-medium">
+                                {item.name}
+                            </TableCell>
                             <TableCell>
                                 <Badge variant="outline">{item.category}</Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                                {renderEditableCell(item, 'cash_price', item.cash_price)}
+                                {renderEditableCell(
+                                    item,
+                                    'cash_price',
+                                    item.cash_price,
+                                )}
                             </TableCell>
                             {selectedPlan && (
                                 <>
@@ -362,8 +390,10 @@ export function PricingTable({
                                                         </TooltipTrigger>
                                                         <TooltipContent>
                                                             <p>
-                                                                This item needs to be mapped to an
-                                                                NHIS tariff code
+                                                                This item needs
+                                                                to be mapped to
+                                                                an NHIS tariff
+                                                                code
                                                             </p>
                                                         </TooltipContent>
                                                     </Tooltip>
@@ -371,7 +401,9 @@ export function PricingTable({
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {item.is_mapped
-                                                    ? formatCurrency(item.insurance_tariff)
+                                                    ? formatCurrency(
+                                                          item.insurance_tariff,
+                                                      )
                                                     : '-'}
                                             </TableCell>
                                         </>
@@ -403,7 +435,9 @@ export function PricingTable({
                                     </TableCell>
                                     {!isNhis && (
                                         <TableCell className="text-right font-medium text-blue-600 dark:text-blue-400">
-                                            {formatCurrency(calculatePatientPays(item))}
+                                            {formatCurrency(
+                                                calculatePatientPays(item),
+                                            )}
                                         </TableCell>
                                     )}
                                 </>
@@ -415,7 +449,9 @@ export function PricingTable({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => onViewHistory(item)}
+                                                onClick={() =>
+                                                    onViewHistory(item)
+                                                }
                                             >
                                                 <History className="h-4 w-4" />
                                             </Button>
@@ -431,7 +467,9 @@ export function PricingTable({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        router.visit('/admin/nhis-mappings')
+                                                        router.visit(
+                                                            '/admin/nhis-mappings',
+                                                        )
                                                     }
                                                 >
                                                     <ExternalLink className="h-4 w-4" />

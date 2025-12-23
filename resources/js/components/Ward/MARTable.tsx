@@ -76,8 +76,19 @@ interface MARTableProps {
     prescriptions: Prescription[];
 }
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }> = {
-    given: { label: 'Given', variant: 'default', className: 'bg-green-600 hover:bg-green-700' },
+const statusConfig: Record<
+    string,
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+        className?: string;
+    }
+> = {
+    given: {
+        label: 'Given',
+        variant: 'default',
+        className: 'bg-green-600 hover:bg-green-700',
+    },
     held: { label: 'Held', variant: 'secondary' },
     refused: { label: 'Refused', variant: 'destructive' },
     omitted: { label: 'Omitted', variant: 'outline' },
@@ -85,21 +96,22 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 
 export function MARTable({ administrations, prescriptions }: MARTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
-        { id: 'administered_at', desc: true }
+        { id: 'administered_at', desc: true },
     ]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [statusFilter, setStatusFilter] = React.useState<string>('all');
 
     // Helper to get prescription details
     const getPrescription = (prescriptionId: number) => {
-        return prescriptions.find(p => p.id === prescriptionId);
+        return prescriptions.find((p) => p.id === prescriptionId);
     };
 
     // Filter data by status
     const filteredData = React.useMemo(() => {
         if (statusFilter === 'all') return administrations;
-        return administrations.filter(a => a.status === statusFilter);
+        return administrations.filter((a) => a.status === statusFilter);
     }, [administrations, statusFilter]);
 
     const columns: ColumnDef<MedicationAdministration>[] = [
@@ -108,7 +120,9 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             header: ({ column }) => (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
                     className="-ml-4"
                 >
                     Date & Time
@@ -125,7 +139,9 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                         ) : (
                             <div>
                                 <div>{format(date, 'MMM d, yyyy')}</div>
-                                <div className="text-xs text-muted-foreground">{format(date, 'HH:mm')}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    {format(date, 'HH:mm')}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -137,14 +153,22 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             header: 'Medication',
             accessorFn: (row) => {
                 const prescription = getPrescription(row.prescription_id);
-                return prescription?.drug?.name || prescription?.medication_name || 'Unknown';
+                return (
+                    prescription?.drug?.name ||
+                    prescription?.medication_name ||
+                    'Unknown'
+                );
             },
             cell: ({ row }) => {
-                const prescription = getPrescription(row.original.prescription_id);
+                const prescription = getPrescription(
+                    row.original.prescription_id,
+                );
                 return (
                     <div>
                         <div className="font-medium">
-                            {prescription?.drug?.name || prescription?.medication_name || 'Unknown'}
+                            {prescription?.drug?.name ||
+                                prescription?.medication_name ||
+                                'Unknown'}
                         </div>
                         {prescription?.drug?.strength && (
                             <div className="text-xs text-muted-foreground">
@@ -160,7 +184,9 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             header: 'Dosage',
             cell: ({ row }) => {
                 const dosage = row.getValue('dosage_given') as string;
-                return dosage || <span className="text-muted-foreground">-</span>;
+                return (
+                    dosage || <span className="text-muted-foreground">-</span>
+                );
             },
         },
         {
@@ -182,7 +208,10 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                 const status = row.getValue('status') as string;
                 const config = statusConfig[status] || statusConfig.given;
                 return (
-                    <Badge variant={config.variant} className={config.className}>
+                    <Badge
+                        variant={config.variant}
+                        className={config.className}
+                    >
                         {config.label}
                     </Badge>
                 );
@@ -205,9 +234,13 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             header: 'Notes',
             cell: ({ row }) => {
                 const notes = row.getValue('notes') as string;
-                if (!notes) return <span className="text-muted-foreground">-</span>;
+                if (!notes)
+                    return <span className="text-muted-foreground">-</span>;
                 return (
-                    <span className="max-w-[200px] truncate text-sm" title={notes}>
+                    <span
+                        className="max-w-[200px] truncate text-sm"
+                        title={notes}
+                    >
                         {notes}
                     </span>
                 );
@@ -242,7 +275,7 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             {/* Filters */}
             <div className="flex items-center gap-4">
                 <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search medications..."
                         value={globalFilter}
@@ -254,7 +287,10 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Status: {statusFilter === 'all' ? 'All' : statusConfig[statusFilter]?.label}
+                            Status:{' '}
+                            {statusFilter === 'all'
+                                ? 'All'
+                                : statusConfig[statusFilter]?.label}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -291,8 +327,9 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
-                                                  header.getContext()
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext(),
                                               )}
                                     </TableHead>
                                 ))}
@@ -307,7 +344,7 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                                         <TableCell key={cell.id}>
                                             {flexRender(
                                                 cell.column.columnDef.cell,
-                                                cell.getContext()
+                                                cell.getContext(),
                                             )}
                                         </TableCell>
                                     ))}
@@ -315,12 +352,18 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <Pill className="h-8 w-8 text-muted-foreground" />
-                                        <div>No medication administrations found</div>
+                                        <div>
+                                            No medication administrations found
+                                        </div>
                                         <div className="text-sm text-muted-foreground">
-                                            Click "Record Medication" to log administrations
+                                            Click "Record Medication" to log
+                                            administrations
                                         </div>
                                     </div>
                                 </TableCell>
@@ -334,10 +377,15 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
             {filteredData.length > 0 && (
                 <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+                        Showing{' '}
+                        {table.getState().pagination.pageIndex *
+                            table.getState().pagination.pageSize +
+                            1}{' '}
+                        to{' '}
                         {Math.min(
-                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                            filteredData.length
+                            (table.getState().pagination.pageIndex + 1) *
+                                table.getState().pagination.pageSize,
+                            filteredData.length,
                         )}{' '}
                         of {filteredData.length} record(s)
                     </div>

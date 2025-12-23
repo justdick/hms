@@ -14,7 +14,8 @@ const typeLabels: Record<string, string> = {
 const typeColors: Record<string, string> = {
     opd: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     ipd: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-    diagnostic: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
+    diagnostic:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
     support: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
 };
 
@@ -27,7 +28,9 @@ export const columns = (
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Name
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -37,7 +40,9 @@ export const columns = (
             <div>
                 <p className="font-medium">{row.original.name}</p>
                 {row.original.description && (
-                    <p className="text-sm text-muted-foreground">{row.original.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {row.original.description}
+                    </p>
                 )}
             </div>
         ),
@@ -46,7 +51,9 @@ export const columns = (
         accessorKey: 'code',
         header: 'Code',
         cell: ({ row }) => (
-            <code className="rounded bg-muted px-2 py-1 text-sm">{row.original.code}</code>
+            <code className="rounded bg-muted px-2 py-1 text-sm">
+                {row.original.code}
+            </code>
         ),
     },
     {
@@ -78,7 +85,9 @@ export const columns = (
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
                 className="w-full justify-end"
             >
                 Staff
@@ -94,7 +103,9 @@ export const columns = (
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
                 className="w-full justify-end"
             >
                 Check-ins
@@ -110,7 +121,11 @@ export const columns = (
         header: '',
         cell: ({ row }) => (
             <div className="flex justify-end gap-1">
-                <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)}>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(row.original)}
+                >
                     <Edit className="h-4 w-4" />
                 </Button>
                 <Button

@@ -108,7 +108,9 @@ export default function PatientNumbering({
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Format */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="format">Number Format</Label>
+                                    <Label htmlFor="format">
+                                        Number Format
+                                    </Label>
                                     <Select
                                         value={data.patient_number_format}
                                         onValueChange={(value) =>
@@ -123,7 +125,8 @@ export default function PatientNumbering({
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="prefix_year_number">
-                                                Prefix + Year + Number (PAT2025000001)
+                                                Prefix + Year + Number
+                                                (PAT2025000001)
                                             </SelectItem>
                                             <SelectItem value="number_year">
                                                 Number + Year (1495/2022)
@@ -136,12 +139,15 @@ export default function PatientNumbering({
                                         </p>
                                     )}
                                     <p className="text-sm text-muted-foreground">
-                                        Choose the overall structure of patient numbers
+                                        Choose the overall structure of patient
+                                        numbers
                                     </p>
                                 </div>
 
                                 {/* Prefix */}
-                                <div className={`space-y-2 ${data.patient_number_format === 'number_year' ? 'hidden' : ''}`}>
+                                <div
+                                    className={`space-y-2 ${data.patient_number_format === 'number_year' ? 'hidden' : ''}`}
+                                >
                                     <Label htmlFor="prefix">Prefix</Label>
                                     <Input
                                         id="prefix"
@@ -357,11 +363,14 @@ export default function PatientNumbering({
                                             <strong>Breakdown:</strong>
                                         </p>
                                         <ul className="ml-2 list-inside list-disc space-y-1">
-                                            {data.patient_number_format === 'prefix_year_number' && (
+                                            {data.patient_number_format ===
+                                                'prefix_year_number' && (
                                                 <li>
                                                     Prefix:{' '}
                                                     <code className="rounded bg-muted px-1 py-0.5">
-                                                        {data.patient_number_prefix}
+                                                        {
+                                                            data.patient_number_prefix
+                                                        }
                                                     </code>
                                                 </li>
                                             )}

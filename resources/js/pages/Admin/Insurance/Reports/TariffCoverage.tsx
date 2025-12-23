@@ -91,24 +91,33 @@ export default function TariffCoverage({ data, filters }: Props) {
 
     const handleApplyFilters = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/admin/insurance/reports/tariff-coverage', localFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/tariff-coverage',
+            localFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleClearFilters = () => {
         const defaultFilters = { item_type: null };
         setLocalFilters(defaultFilters);
-        router.get('/admin/insurance/reports/tariff-coverage', defaultFilters as any, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/admin/insurance/reports/tariff-coverage',
+            defaultFilters as any,
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleExport = () => {
         const params = new URLSearchParams();
-        if (localFilters.item_type) params.append('item_type', localFilters.item_type);
+        if (localFilters.item_type)
+            params.append('item_type', localFilters.item_type);
         window.location.href = `/admin/insurance/reports/tariff-coverage/export?${params.toString()}`;
     };
 
@@ -122,7 +131,8 @@ export default function TariffCoverage({ data, filters }: Props) {
 
     const getCoverageStatus = (percentage: number) => {
         if (percentage >= 80) return { label: 'Good', color: 'bg-green-500' };
-        if (percentage >= 50) return { label: 'Moderate', color: 'bg-yellow-500' };
+        if (percentage >= 50)
+            return { label: 'Moderate', color: 'bg-yellow-500' };
         return { label: 'Low', color: 'bg-red-500' };
     };
 
@@ -144,7 +154,9 @@ export default function TariffCoverage({ data, filters }: Props) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.visit('/admin/insurance/reports')}
+                            onClick={() =>
+                                router.visit('/admin/insurance/reports')
+                            }
                         >
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back
@@ -155,13 +167,19 @@ export default function TariffCoverage({ data, filters }: Props) {
                                 Tariff Coverage Report
                             </h1>
                             <p className="mt-1 text-gray-600 dark:text-gray-400">
-                                Percentage of hospital items mapped to NHIS tariffs
+                                Percentage of hospital items mapped to NHIS
+                                tariffs
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {hasActiveFilters && <Badge variant="secondary">Filters active</Badge>}
-                        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+                        {hasActiveFilters && (
+                            <Badge variant="secondary">Filters active</Badge>
+                        )}
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
                             <Filter className="mr-2 h-4 w-4" />
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
@@ -176,22 +194,42 @@ export default function TariffCoverage({ data, filters }: Props) {
                 {showFilters && (
                     <Card>
                         <CardContent className="p-6">
-                            <form onSubmit={handleApplyFilters} className="space-y-4">
+                            <form
+                                onSubmit={handleApplyFilters}
+                                className="space-y-4"
+                            >
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div className="space-y-2">
-                                        <Label htmlFor="item_type">Item Type</Label>
+                                        <Label htmlFor="item_type">
+                                            Item Type
+                                        </Label>
                                         <Select
-                                            value={localFilters.item_type || 'all'}
-                                            onValueChange={(value) => handleFilterChange('item_type', value)}
+                                            value={
+                                                localFilters.item_type || 'all'
+                                            }
+                                            onValueChange={(value) =>
+                                                handleFilterChange(
+                                                    'item_type',
+                                                    value,
+                                                )
+                                            }
                                         >
                                             <SelectTrigger id="item_type">
                                                 <SelectValue placeholder="All types" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All types</SelectItem>
-                                                <SelectItem value="drug">Drugs</SelectItem>
-                                                <SelectItem value="lab_service">Lab Services</SelectItem>
-                                                <SelectItem value="procedure">Procedures</SelectItem>
+                                                <SelectItem value="all">
+                                                    All types
+                                                </SelectItem>
+                                                <SelectItem value="drug">
+                                                    Drugs
+                                                </SelectItem>
+                                                <SelectItem value="lab_service">
+                                                    Lab Services
+                                                </SelectItem>
+                                                <SelectItem value="procedure">
+                                                    Procedures
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -199,7 +237,11 @@ export default function TariffCoverage({ data, filters }: Props) {
                                 <div className="flex items-center gap-2">
                                     <Button type="submit">Apply Filters</Button>
                                     {hasActiveFilters && (
-                                        <Button type="button" variant="outline" onClick={handleClearFilters}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleClearFilters}
+                                        >
                                             <X className="mr-2 h-4 w-4" />
                                             Clear Filters
                                         </Button>
@@ -236,7 +278,9 @@ export default function TariffCoverage({ data, filters }: Props) {
                                         strokeWidth="12"
                                         fill="none"
                                         strokeDasharray={`${(data.overall.percentage / 100) * 440} 440`}
-                                        className={getCoverageColor(data.overall.percentage)}
+                                        className={getCoverageColor(
+                                            data.overall.percentage,
+                                        )}
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -245,12 +289,24 @@ export default function TariffCoverage({ data, filters }: Props) {
                                     >
                                         {data.overall.percentage.toFixed(1)}%
                                     </span>
-                                    <span className="text-sm text-gray-500">Coverage</span>
+                                    <span className="text-sm text-gray-500">
+                                        Coverage
+                                    </span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Badge className={getCoverageStatus(data.overall.percentage).color}>
-                                    {getCoverageStatus(data.overall.percentage).label}
+                                <Badge
+                                    className={
+                                        getCoverageStatus(
+                                            data.overall.percentage,
+                                        ).color
+                                    }
+                                >
+                                    {
+                                        getCoverageStatus(
+                                            data.overall.percentage,
+                                        ).label
+                                    }
                                 </Badge>
                             </div>
                             <div className="grid grid-cols-3 gap-4">
@@ -278,70 +334,90 @@ export default function TariffCoverage({ data, filters }: Props) {
 
                 {/* Coverage by Category */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {Object.entries(data.coverage_by_type).map(([category, categoryData]) => {
-                        const config = categoryConfig[category];
-                        if (!config || !categoryData) return null;
+                    {Object.entries(data.coverage_by_type).map(
+                        ([category, categoryData]) => {
+                            const config = categoryConfig[category];
+                            if (!config || !categoryData) return null;
 
-                        return (
-                            <Card key={category}>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <span className={config.color}>{config.icon}</span>
-                                        {config.label}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                Coverage
+                            return (
+                                <Card key={category}>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <span className={config.color}>
+                                                {config.icon}
                                             </span>
-                                            <span
-                                                className={`text-2xl font-bold ${getCoverageColor(categoryData.percentage)}`}
-                                            >
-                                                {categoryData.percentage.toFixed(1)}%
-                                            </span>
-                                        </div>
-                                        <Progress value={categoryData.percentage} className="h-3" />
-                                        <div className="grid grid-cols-3 gap-4 text-center">
-                                            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                                                <p className="text-lg font-bold">{categoryData.total}</p>
-                                                <p className="text-xs text-gray-500">Total</p>
-                                            </div>
-                                            <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                                                <p className="text-lg font-bold text-green-600">
-                                                    {categoryData.mapped}
-                                                </p>
-                                                <p className="text-xs text-gray-500">Mapped</p>
-                                            </div>
-                                            <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                                                <p className="text-lg font-bold text-red-600">
-                                                    {categoryData.unmapped}
-                                                </p>
-                                                <p className="text-xs text-gray-500">Unmapped</p>
-                                            </div>
-                                        </div>
-                                        {categoryData.unmapped > 0 && (
-                                            <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20">
-                                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                                                <span className="text-sm text-yellow-700 dark:text-yellow-400">
-                                                    {categoryData.unmapped} items need NHIS mapping
+                                            {config.label}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    Coverage
+                                                </span>
+                                                <span
+                                                    className={`text-2xl font-bold ${getCoverageColor(categoryData.percentage)}`}
+                                                >
+                                                    {categoryData.percentage.toFixed(
+                                                        1,
+                                                    )}
+                                                    %
                                                 </span>
                                             </div>
-                                        )}
-                                        {categoryData.percentage === 100 && (
-                                            <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                                <span className="text-sm text-green-700 dark:text-green-400">
-                                                    All items are mapped
-                                                </span>
+                                            <Progress
+                                                value={categoryData.percentage}
+                                                className="h-3"
+                                            />
+                                            <div className="grid grid-cols-3 gap-4 text-center">
+                                                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                                                    <p className="text-lg font-bold">
+                                                        {categoryData.total}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        Total
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
+                                                    <p className="text-lg font-bold text-green-600">
+                                                        {categoryData.mapped}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        Mapped
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
+                                                    <p className="text-lg font-bold text-red-600">
+                                                        {categoryData.unmapped}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        Unmapped
+                                                    </p>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+                                            {categoryData.unmapped > 0 && (
+                                                <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20">
+                                                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                                    <span className="text-sm text-yellow-700 dark:text-yellow-400">
+                                                        {categoryData.unmapped}{' '}
+                                                        items need NHIS mapping
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {categoryData.percentage ===
+                                                100 && (
+                                                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+                                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                                    <span className="text-sm text-green-700 dark:text-green-400">
+                                                        All items are mapped
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        },
+                    )}
                 </div>
 
                 {/* Action Items */}
@@ -356,12 +432,18 @@ export default function TariffCoverage({ data, filters }: Props) {
                         <CardContent>
                             <div className="space-y-4">
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    There are {data.overall.unmapped} items that are not mapped to NHIS tariffs.
-                                    These items will show as "Not Covered" during claim vetting.
+                                    There are {data.overall.unmapped} items that
+                                    are not mapped to NHIS tariffs. These items
+                                    will show as "Not Covered" during claim
+                                    vetting.
                                 </p>
                                 <Button
                                     variant="outline"
-                                    onClick={() => router.visit('/admin/nhis-mappings/unmapped')}
+                                    onClick={() =>
+                                        router.visit(
+                                            '/admin/nhis-mappings/unmapped',
+                                        )
+                                    }
                                 >
                                     View Unmapped Items
                                 </Button>

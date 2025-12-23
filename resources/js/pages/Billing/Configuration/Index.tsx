@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
     Bed,
@@ -111,7 +111,13 @@ interface WardBillingTemplate {
     service_name: string;
     service_code: string;
     description: string | null;
-    billing_type: 'one_time' | 'daily' | 'hourly' | 'percentage' | 'quantity_based' | 'event_triggered';
+    billing_type:
+        | 'one_time'
+        | 'daily'
+        | 'hourly'
+        | 'percentage'
+        | 'quantity_based'
+        | 'event_triggered';
     base_amount: number;
     effective_from: string;
     effective_to: string | null;
@@ -139,18 +145,28 @@ export default function BillingConfigurationIndex({
     wardBillingTemplates,
     wards,
 }: Props) {
-    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-    const [editingService, setEditingService] = useState<ServiceChargeRule | null>(null);
-    const [configureServiceType, setConfigureServiceType] = useState<string | null>(null);
-    const [editingConfig, setEditingConfig] = useState<BillingConfiguration | null>(null);
-    const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
+    const [editingDepartment, setEditingDepartment] =
+        useState<Department | null>(null);
+    const [editingService, setEditingService] =
+        useState<ServiceChargeRule | null>(null);
+    const [configureServiceType, setConfigureServiceType] = useState<
+        string | null
+    >(null);
+    const [editingConfig, setEditingConfig] =
+        useState<BillingConfiguration | null>(null);
+    const [selectedDepartments, setSelectedDepartments] = useState<number[]>(
+        [],
+    );
     const [showBulkConfig, setShowBulkConfig] = useState(false);
-    const [editingWardBilling, setEditingWardBilling] = useState<WardBillingTemplate | null>(null);
+    const [editingWardBilling, setEditingWardBilling] =
+        useState<WardBillingTemplate | null>(null);
     const [showCreateWardBilling, setShowCreateWardBilling] = useState(false);
 
     const toggleDepartmentSelection = (deptId: number) => {
         setSelectedDepartments((prev) =>
-            prev.includes(deptId) ? prev.filter((id) => id !== deptId) : [...prev, deptId]
+            prev.includes(deptId)
+                ? prev.filter((id) => id !== deptId)
+                : [...prev, deptId],
         );
     };
 
@@ -172,12 +188,18 @@ export default function BillingConfigurationIndex({
 
     const getStatusBadge = (isActive: boolean) => {
         return isActive ? (
-            <Badge variant="outline" className="border-green-200 bg-green-100 text-green-700">
+            <Badge
+                variant="outline"
+                className="border-green-200 bg-green-100 text-green-700"
+            >
                 <CheckCircle className="mr-1 h-3 w-3" />
                 Active
             </Badge>
         ) : (
-            <Badge variant="outline" className="border-gray-200 bg-gray-100 text-gray-700">
+            <Badge
+                variant="outline"
+                className="border-gray-200 bg-gray-100 text-gray-700"
+            >
                 <XCircle className="mr-1 h-3 w-3" />
                 Inactive
             </Badge>
@@ -196,26 +218,43 @@ export default function BillingConfigurationIndex({
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Billing Configuration</h1>
-                        <p className="text-gray-600">Manage billing rules, department fees, and payment enforcement</p>
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            Billing Configuration
+                        </h1>
+                        <p className="text-gray-600">
+                            Manage billing rules, department fees, and payment
+                            enforcement
+                        </p>
                     </div>
                 </div>
 
                 <Tabs defaultValue="departments" className="space-y-6">
                     <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="departments" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="departments"
+                            className="flex items-center gap-2"
+                        >
                             <Building2 className="h-4 w-4" />
                             Department Billing
                         </TabsTrigger>
-                        <TabsTrigger value="services" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="services"
+                            className="flex items-center gap-2"
+                        >
                             <Shield className="h-4 w-4" />
                             Service Rules
                         </TabsTrigger>
-                        <TabsTrigger value="ward-billing" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="ward-billing"
+                            className="flex items-center gap-2"
+                        >
                             <Bed className="h-4 w-4" />
                             Ward Billing
                         </TabsTrigger>
-                        <TabsTrigger value="system" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="system"
+                            className="flex items-center gap-2"
+                        >
                             <Settings className="h-4 w-4" />
                             System Config
                         </TabsTrigger>
@@ -226,15 +265,23 @@ export default function BillingConfigurationIndex({
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle>Department Billing Configuration</CardTitle>
+                                    <CardTitle>
+                                        Department Billing Configuration
+                                    </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Configure consultation fees and billing rules for each department
+                                        Configure consultation fees and billing
+                                        rules for each department
                                     </p>
                                 </div>
                                 {selectedDepartments.length > 0 && (
-                                    <Button onClick={() => setShowBulkConfig(true)}>
+                                    <Button
+                                        onClick={() => setShowBulkConfig(true)}
+                                    >
                                         <Settings className="mr-2 h-4 w-4" />
-                                        Configure {selectedDepartments.length} Selected
+                                        Configure {
+                                            selectedDepartments.length
+                                        }{' '}
+                                        Selected
                                     </Button>
                                 )}
                             </CardHeader>
@@ -244,15 +291,27 @@ export default function BillingConfigurationIndex({
                                         <TableRow>
                                             <TableHead className="w-12">
                                                 <Checkbox
-                                                    checked={selectedDepartments.length === departments.length && departments.length > 0}
-                                                    onCheckedChange={toggleAllDepartments}
+                                                    checked={
+                                                        selectedDepartments.length ===
+                                                            departments.length &&
+                                                        departments.length > 0
+                                                    }
+                                                    onCheckedChange={
+                                                        toggleAllDepartments
+                                                    }
                                                 />
                                             </TableHead>
                                             <TableHead>Department</TableHead>
-                                            <TableHead>Consultation Fee</TableHead>
+                                            <TableHead>
+                                                Consultation Fee
+                                            </TableHead>
                                             <TableHead>Equipment Fee</TableHead>
-                                            <TableHead>Emergency Surcharge</TableHead>
-                                            <TableHead>Payment Required</TableHead>
+                                            <TableHead>
+                                                Emergency Surcharge
+                                            </TableHead>
+                                            <TableHead>
+                                                Payment Required
+                                            </TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Actions</TableHead>
                                         </TableRow>
@@ -262,38 +321,72 @@ export default function BillingConfigurationIndex({
                                             <TableRow key={dept.id}>
                                                 <TableCell>
                                                     <Checkbox
-                                                        checked={selectedDepartments.includes(dept.id)}
-                                                        onCheckedChange={() => toggleDepartmentSelection(dept.id)}
+                                                        checked={selectedDepartments.includes(
+                                                            dept.id,
+                                                        )}
+                                                        onCheckedChange={() =>
+                                                            toggleDepartmentSelection(
+                                                                dept.id,
+                                                            )
+                                                        }
                                                     />
                                                 </TableCell>
                                                 <TableCell>
                                                     <div>
-                                                        <div className="font-medium">{dept.name}</div>
-                                                        <div className="text-sm text-gray-500">{dept.code}</div>
+                                                        <div className="font-medium">
+                                                            {dept.name}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500">
+                                                            {dept.code}
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="font-medium">
                                                     {dept.billing ? (
-                                                        formatCurrency(dept.billing.consultation_fee)
+                                                        formatCurrency(
+                                                            dept.billing
+                                                                .consultation_fee,
+                                                        )
                                                     ) : (
-                                                        <span className="text-gray-400">Not configured</span>
+                                                        <span className="text-gray-400">
+                                                            Not configured
+                                                        </span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {dept.billing ? formatCurrency(dept.billing.equipment_fee || 0) : '-'}
+                                                    {dept.billing
+                                                        ? formatCurrency(
+                                                              dept.billing
+                                                                  .equipment_fee ||
+                                                                  0,
+                                                          )
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {dept.billing ? formatCurrency(dept.billing.emergency_surcharge || 0) : '-'}
+                                                    {dept.billing
+                                                        ? formatCurrency(
+                                                              dept.billing
+                                                                  .emergency_surcharge ||
+                                                                  0,
+                                                          )
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     {dept.billing ? (
-                                                        dept.billing.payment_required_before_consultation ? (
-                                                            <Badge variant="outline" className="bg-red-100 text-red-700">
+                                                        dept.billing
+                                                            .payment_required_before_consultation ? (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="bg-red-100 text-red-700"
+                                                            >
                                                                 <AlertTriangle className="mr-1 h-3 w-3" />
                                                                 Required
                                                             </Badge>
                                                         ) : (
-                                                            <Badge variant="outline" className="bg-green-100 text-green-700">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="bg-green-100 text-green-700"
+                                                            >
                                                                 <CheckCircle className="mr-1 h-3 w-3" />
                                                                 Optional
                                                             </Badge>
@@ -304,18 +397,32 @@ export default function BillingConfigurationIndex({
                                                 </TableCell>
                                                 <TableCell>
                                                     {dept.billing ? (
-                                                        getStatusBadge(dept.billing.is_active)
+                                                        getStatusBadge(
+                                                            dept.billing
+                                                                .is_active,
+                                                        )
                                                     ) : (
-                                                        <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-yellow-200 bg-yellow-50 text-yellow-700"
+                                                        >
                                                             Not Configured
                                                         </Badge>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Button
-                                                        variant={dept.billing ? 'ghost' : 'outline'}
+                                                        variant={
+                                                            dept.billing
+                                                                ? 'ghost'
+                                                                : 'outline'
+                                                        }
                                                         size="sm"
-                                                        onClick={() => setEditingDepartment(dept)}
+                                                        onClick={() =>
+                                                            setEditingDepartment(
+                                                                dept,
+                                                            )
+                                                        }
                                                     >
                                                         {dept.billing ? (
                                                             <Edit3 className="h-4 w-4" />
@@ -341,7 +448,8 @@ export default function BillingConfigurationIndex({
                             <CardHeader>
                                 <CardTitle>Service Charge Rules</CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    Configure payment requirements for each service type
+                                    Configure payment requirements for each
+                                    service type
                                 </p>
                             </CardHeader>
                             <CardContent>
@@ -349,86 +457,137 @@ export default function BillingConfigurationIndex({
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Service Type</TableHead>
-                                            <TableHead>Payment Before Service</TableHead>
-                                            <TableHead>Block If Unpaid</TableHead>
-                                            <TableHead>Emergency Override</TableHead>
+                                            <TableHead>
+                                                Payment Before Service
+                                            </TableHead>
+                                            <TableHead>
+                                                Block If Unpaid
+                                            </TableHead>
+                                            <TableHead>
+                                                Emergency Override
+                                            </TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {SERVICE_TYPES.map((serviceType) => {
-                                            const rule = serviceRules[serviceType.value]?.[0];
+                                            const rule =
+                                                serviceRules[
+                                                    serviceType.value
+                                                ]?.[0];
                                             return (
-                                                <TableRow key={serviceType.value}>
+                                                <TableRow
+                                                    key={serviceType.value}
+                                                >
                                                     <TableCell>
-                                                        <div className="font-medium">{serviceType.label}</div>
+                                                        <div className="font-medium">
+                                                            {serviceType.label}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         {rule ? (
-                                                            rule.payment_required === 'mandatory' ? (
-                                                                <Badge variant="outline" className="bg-red-100 text-red-700">
+                                                            rule.payment_required ===
+                                                            'mandatory' ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-red-100 text-red-700"
+                                                                >
                                                                     <AlertTriangle className="mr-1 h-3 w-3" />
                                                                     Required
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="outline" className="bg-green-100 text-green-700">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-green-100 text-green-700"
+                                                                >
                                                                     <CheckCircle className="mr-1 h-3 w-3" />
                                                                     Optional
                                                                 </Badge>
                                                             )
                                                         ) : (
-                                                            <span className="text-gray-400">-</span>
+                                                            <span className="text-gray-400">
+                                                                -
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         {rule ? (
                                                             rule.service_blocking_enabled ? (
-                                                                <Badge variant="outline" className="bg-red-100 text-red-700">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-red-100 text-red-700"
+                                                                >
                                                                     Yes
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="outline" className="bg-gray-100 text-gray-700">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-gray-100 text-gray-700"
+                                                                >
                                                                     No
                                                                 </Badge>
                                                             )
                                                         ) : (
-                                                            <span className="text-gray-400">-</span>
+                                                            <span className="text-gray-400">
+                                                                -
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         {rule ? (
                                                             rule.emergency_override_allowed ? (
-                                                                <Badge variant="outline" className="bg-green-100 text-green-700">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-green-100 text-green-700"
+                                                                >
                                                                     Allowed
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="outline" className="bg-gray-100 text-gray-700">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-gray-100 text-gray-700"
+                                                                >
                                                                     No
                                                                 </Badge>
                                                             )
                                                         ) : (
-                                                            <span className="text-gray-400">-</span>
+                                                            <span className="text-gray-400">
+                                                                -
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         {rule ? (
-                                                            getStatusBadge(rule.is_active)
+                                                            getStatusBadge(
+                                                                rule.is_active,
+                                                            )
                                                         ) : (
-                                                            <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="border-yellow-200 bg-yellow-50 text-yellow-700"
+                                                            >
                                                                 Not Configured
                                                             </Badge>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button
-                                                            variant={rule ? 'ghost' : 'outline'}
+                                                            variant={
+                                                                rule
+                                                                    ? 'ghost'
+                                                                    : 'outline'
+                                                            }
                                                             size="sm"
                                                             onClick={() => {
                                                                 if (rule) {
-                                                                    setEditingService(rule);
+                                                                    setEditingService(
+                                                                        rule,
+                                                                    );
                                                                 } else {
-                                                                    setConfigureServiceType(serviceType.value);
+                                                                    setConfigureServiceType(
+                                                                        serviceType.value,
+                                                                    );
                                                                 }
                                                             }}
                                                         >
@@ -456,12 +615,19 @@ export default function BillingConfigurationIndex({
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle>Ward Billing Templates</CardTitle>
+                                    <CardTitle>
+                                        Ward Billing Templates
+                                    </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Configure recurring daily/hourly fees for ward admissions
+                                        Configure recurring daily/hourly fees
+                                        for ward admissions
                                     </p>
                                 </div>
-                                <Button onClick={() => setShowCreateWardBilling(true)}>
+                                <Button
+                                    onClick={() =>
+                                        setShowCreateWardBilling(true)
+                                    }
+                                >
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Template
                                 </Button>
@@ -470,71 +636,125 @@ export default function BillingConfigurationIndex({
                                 {wardBillingTemplates.length === 0 ? (
                                     <div className="py-8 text-center text-gray-500">
                                         <Bed className="mx-auto h-12 w-12 text-gray-300" />
-                                        <p className="mt-2">No ward billing templates configured.</p>
-                                        <p className="text-sm">Add templates to automatically charge daily fees for admissions.</p>
+                                        <p className="mt-2">
+                                            No ward billing templates
+                                            configured.
+                                        </p>
+                                        <p className="text-sm">
+                                            Add templates to automatically
+                                            charge daily fees for admissions.
+                                        </p>
                                     </div>
                                 ) : (
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Service Name</TableHead>
+                                                <TableHead>
+                                                    Service Name
+                                                </TableHead>
                                                 <TableHead>Code</TableHead>
                                                 <TableHead>Type</TableHead>
                                                 <TableHead>Amount</TableHead>
-                                                <TableHead>Effective From</TableHead>
+                                                <TableHead>
+                                                    Effective From
+                                                </TableHead>
                                                 <TableHead>Status</TableHead>
                                                 <TableHead>Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {wardBillingTemplates.map((template) => (
-                                                <TableRow key={template.id}>
-                                                    <TableCell>
-                                                        <div>
-                                                            <div className="font-medium">{template.service_name}</div>
-                                                            {template.description && (
-                                                                <div className="text-sm text-gray-500">{template.description}</div>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-sm">{template.service_code}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline" className="capitalize">
-                                                            {template.billing_type.replace('_', ' ')}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {formatCurrency(template.base_amount)}
-                                                        {template.billing_type === 'daily' && '/day'}
-                                                        {template.billing_type === 'hourly' && '/hr'}
-                                                    </TableCell>
-                                                    <TableCell>{new Date(template.effective_from).toLocaleDateString()}</TableCell>
-                                                    <TableCell>{getStatusBadge(template.is_active)}</TableCell>
-                                                    <TableCell>
-                                                        <div className="flex gap-1">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => setEditingWardBilling(template)}
-                                                            >
-                                                                <Edit3 className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="text-red-600 hover:text-red-700"
-                                                                onClick={() => {
-                                                                    if (confirm('Are you sure you want to delete this template?')) {
-                                                                        router.delete(`/billing/configuration/ward-billing/${template.id}`);
+                                            {wardBillingTemplates.map(
+                                                (template) => (
+                                                    <TableRow key={template.id}>
+                                                        <TableCell>
+                                                            <div>
+                                                                <div className="font-medium">
+                                                                    {
+                                                                        template.service_name
                                                                     }
-                                                                }}
+                                                                </div>
+                                                                {template.description && (
+                                                                    <div className="text-sm text-gray-500">
+                                                                        {
+                                                                            template.description
+                                                                        }
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm">
+                                                            {
+                                                                template.service_code
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="capitalize"
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                {template.billing_type.replace(
+                                                                    '_',
+                                                                    ' ',
+                                                                )}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {formatCurrency(
+                                                                template.base_amount,
+                                                            )}
+                                                            {template.billing_type ===
+                                                                'daily' &&
+                                                                '/day'}
+                                                            {template.billing_type ===
+                                                                'hourly' &&
+                                                                '/hr'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {new Date(
+                                                                template.effective_from,
+                                                            ).toLocaleDateString()}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {getStatusBadge(
+                                                                template.is_active,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex gap-1">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        setEditingWardBilling(
+                                                                            template,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Edit3 className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-red-600 hover:text-red-700"
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            confirm(
+                                                                                'Are you sure you want to delete this template?',
+                                                                            )
+                                                                        ) {
+                                                                            router.delete(
+                                                                                `/billing/configuration/ward-billing/${template.id}`,
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 )}
@@ -544,8 +764,10 @@ export default function BillingConfigurationIndex({
                         <Alert>
                             <Info className="h-4 w-4" />
                             <AlertDescription>
-                                Ward billing templates define recurring charges that are automatically applied to admitted patients.
-                                Daily fees are charged at midnight for each day of stay.
+                                Ward billing templates define recurring charges
+                                that are automatically applied to admitted
+                                patients. Daily fees are charged at midnight for
+                                each day of stay.
                             </AlertDescription>
                         </Alert>
                     </TabsContent>
@@ -560,43 +782,69 @@ export default function BillingConfigurationIndex({
                             </Card>
                         ) : (
                             <div className="grid gap-6 md:grid-cols-2">
-                                {Object.entries(systemConfig).map(([category, configs]) => (
-                                    <Card key={category}>
-                                        <CardHeader>
-                                            <CardTitle className="capitalize">{category.replace(/_/g, ' ')} Settings</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            {configs.map((config) => (
-                                                <div
-                                                    key={config.id}
-                                                    className="flex items-start justify-between rounded-lg border p-3"
-                                                >
-                                                    <div className="space-y-1">
-                                                        <Label className="text-sm font-medium">
-                                                            {config.key.replace(/_/g, ' ')}
-                                                        </Label>
-                                                        {config.description && (
-                                                            <div className="text-sm text-gray-500">{config.description}</div>
-                                                        )}
-                                                        <div className="text-sm">
-                                                            Current:{' '}
-                                                            <span className="font-medium">
-                                                                {typeof config.value === 'boolean'
-                                                                    ? config.value
-                                                                        ? 'Yes'
-                                                                        : 'No'
-                                                                    : String(config.value)}
-                                                            </span>
+                                {Object.entries(systemConfig).map(
+                                    ([category, configs]) => (
+                                        <Card key={category}>
+                                            <CardHeader>
+                                                <CardTitle className="capitalize">
+                                                    {category.replace(
+                                                        /_/g,
+                                                        ' ',
+                                                    )}{' '}
+                                                    Settings
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                                {configs.map((config) => (
+                                                    <div
+                                                        key={config.id}
+                                                        className="flex items-start justify-between rounded-lg border p-3"
+                                                    >
+                                                        <div className="space-y-1">
+                                                            <Label className="text-sm font-medium">
+                                                                {config.key.replace(
+                                                                    /_/g,
+                                                                    ' ',
+                                                                )}
+                                                            </Label>
+                                                            {config.description && (
+                                                                <div className="text-sm text-gray-500">
+                                                                    {
+                                                                        config.description
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                            <div className="text-sm">
+                                                                Current:{' '}
+                                                                <span className="font-medium">
+                                                                    {typeof config.value ===
+                                                                    'boolean'
+                                                                        ? config.value
+                                                                            ? 'Yes'
+                                                                            : 'No'
+                                                                        : String(
+                                                                              config.value,
+                                                                          )}
+                                                                </span>
+                                                            </div>
                                                         </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                setEditingConfig(
+                                                                    config,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Edit3 className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
-                                                    <Button variant="ghost" size="sm" onClick={() => setEditingConfig(config)}>
-                                                        <Edit3 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                                ))}
+                                            </CardContent>
+                                        </Card>
+                                    ),
+                                )}
                             </div>
                         )}
                     </TabsContent>
@@ -616,7 +864,9 @@ export default function BillingConfigurationIndex({
                     setShowBulkConfig(open);
                     if (!open) setSelectedDepartments([]);
                 }}
-                selectedDepartments={departments.filter((d) => selectedDepartments.includes(d.id))}
+                selectedDepartments={departments.filter((d) =>
+                    selectedDepartments.includes(d.id),
+                )}
             />
 
             {/* Configure Service Rule Modal */}
@@ -632,7 +882,10 @@ export default function BillingConfigurationIndex({
             />
 
             {/* Edit System Config Modal */}
-            <EditConfigModal config={editingConfig} onOpenChange={(open) => !open && setEditingConfig(null)} />
+            <EditConfigModal
+                config={editingConfig}
+                onOpenChange={(open) => !open && setEditingConfig(null)}
+            />
 
             {/* Ward Billing Template Modals */}
             <WardBillingTemplateModal
@@ -647,7 +900,6 @@ export default function BillingConfigurationIndex({
     );
 }
 
-
 // Department Billing Modal - handles both create and edit
 function DepartmentBillingModal({
     department,
@@ -657,14 +909,19 @@ function DepartmentBillingModal({
     onOpenChange: (open: boolean) => void;
 }) {
     const isEditing = !!department?.billing;
-    
+
     const form = useForm({
         department_id: department?.id?.toString() || '',
         equipment_fee: department?.billing?.equipment_fee?.toString() || '0',
-        emergency_surcharge: department?.billing?.emergency_surcharge?.toString() || '0',
-        payment_required_before_consultation: department?.billing?.payment_required_before_consultation || false,
-        emergency_override_allowed: department?.billing?.emergency_override_allowed || false,
-        payment_grace_period_minutes: department?.billing?.payment_grace_period_minutes?.toString() || '30',
+        emergency_surcharge:
+            department?.billing?.emergency_surcharge?.toString() || '0',
+        payment_required_before_consultation:
+            department?.billing?.payment_required_before_consultation || false,
+        emergency_override_allowed:
+            department?.billing?.emergency_override_allowed || false,
+        payment_grace_period_minutes:
+            department?.billing?.payment_grace_period_minutes?.toString() ||
+            '30',
         is_active: department?.billing?.is_active ?? true,
     });
 
@@ -673,9 +930,12 @@ function DepartmentBillingModal({
         if (!department) return;
 
         if (isEditing && department.billing) {
-            form.put(`/billing/configuration/department/${department.billing.id}`, {
-                onSuccess: () => onOpenChange(false),
-            });
+            form.put(
+                `/billing/configuration/department/${department.billing.id}`,
+                {
+                    onSuccess: () => onOpenChange(false),
+                },
+            );
         } else {
             form.post('/billing/configuration/department', {
                 onSuccess: () => onOpenChange(false),
@@ -688,10 +948,16 @@ function DepartmentBillingModal({
         form.setData({
             department_id: department.id.toString(),
             equipment_fee: department.billing?.equipment_fee?.toString() || '0',
-            emergency_surcharge: department.billing?.emergency_surcharge?.toString() || '0',
-            payment_required_before_consultation: department.billing?.payment_required_before_consultation || false,
-            emergency_override_allowed: department.billing?.emergency_override_allowed || false,
-            payment_grace_period_minutes: department.billing?.payment_grace_period_minutes?.toString() || '30',
+            emergency_surcharge:
+                department.billing?.emergency_surcharge?.toString() || '0',
+            payment_required_before_consultation:
+                department.billing?.payment_required_before_consultation ||
+                false,
+            emergency_override_allowed:
+                department.billing?.emergency_override_allowed || false,
+            payment_grace_period_minutes:
+                department.billing?.payment_grace_period_minutes?.toString() ||
+                '30',
             is_active: department.billing?.is_active ?? true,
         });
     }
@@ -746,7 +1012,10 @@ function DepartmentBillingModal({
                         </Alert>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="equipment_fee" className="text-right">
+                            <Label
+                                htmlFor="equipment_fee"
+                                className="text-right"
+                            >
                                 Equipment Fee
                             </Label>
                             <Input
@@ -757,12 +1026,20 @@ function DepartmentBillingModal({
                                 placeholder="0.00"
                                 className="col-span-3"
                                 value={form.data.equipment_fee}
-                                onChange={(e) => form.setData('equipment_fee', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'equipment_fee',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="emergency_surcharge" className="text-right">
+                            <Label
+                                htmlFor="emergency_surcharge"
+                                className="text-right"
+                            >
                                 Emergency Surcharge
                             </Label>
                             <Input
@@ -773,12 +1050,20 @@ function DepartmentBillingModal({
                                 placeholder="0.00"
                                 className="col-span-3"
                                 value={form.data.emergency_surcharge}
-                                onChange={(e) => form.setData('emergency_surcharge', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'emergency_surcharge',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="payment_grace_period_minutes" className="text-right">
+                            <Label
+                                htmlFor="payment_grace_period_minutes"
+                                className="text-right"
+                            >
                                 Grace Period (min)
                             </Label>
                             <Input
@@ -788,7 +1073,12 @@ function DepartmentBillingModal({
                                 placeholder="30"
                                 className="col-span-3"
                                 value={form.data.payment_grace_period_minutes}
-                                onChange={(e) => form.setData('payment_grace_period_minutes', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'payment_grace_period_minutes',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
@@ -796,9 +1086,15 @@ function DepartmentBillingModal({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="payment_required_before_consultation"
-                                    checked={form.data.payment_required_before_consultation}
+                                    checked={
+                                        form.data
+                                            .payment_required_before_consultation
+                                    }
                                     onCheckedChange={(checked) =>
-                                        form.setData('payment_required_before_consultation', checked === true)
+                                        form.setData(
+                                            'payment_required_before_consultation',
+                                            checked === true,
+                                        )
                                     }
                                 />
                                 <Label htmlFor="payment_required_before_consultation">
@@ -808,19 +1104,28 @@ function DepartmentBillingModal({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="emergency_override_allowed"
-                                    checked={form.data.emergency_override_allowed}
+                                    checked={
+                                        form.data.emergency_override_allowed
+                                    }
                                     onCheckedChange={(checked) =>
-                                        form.setData('emergency_override_allowed', checked === true)
+                                        form.setData(
+                                            'emergency_override_allowed',
+                                            checked === true,
+                                        )
                                     }
                                 />
-                                <Label htmlFor="emergency_override_allowed">Emergency override allowed</Label>
+                                <Label htmlFor="emergency_override_allowed">
+                                    Emergency override allowed
+                                </Label>
                             </div>
                             {isEditing && (
                                 <div className="flex items-center space-x-2 pt-2">
                                     <Switch
                                         id="is_active"
                                         checked={form.data.is_active}
-                                        onCheckedChange={(checked) => form.setData('is_active', checked)}
+                                        onCheckedChange={(checked) =>
+                                            form.setData('is_active', checked)
+                                        }
                                     />
                                     <Label htmlFor="is_active">Active</Label>
                                 </div>
@@ -828,11 +1133,17 @@ function DepartmentBillingModal({
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             {isEditing ? 'Save Changes' : 'Configure'}
                         </Button>
                     </DialogFooter>
@@ -850,7 +1161,9 @@ function ConfigureServiceRuleModal({
     serviceType: string | null;
     onOpenChange: (open: boolean) => void;
 }) {
-    const serviceLabel = SERVICE_TYPES.find((s) => s.value === serviceType)?.label || serviceType;
+    const serviceLabel =
+        SERVICE_TYPES.find((s) => s.value === serviceType)?.label ||
+        serviceType;
 
     const form = useForm({
         service_type: serviceType || '',
@@ -865,7 +1178,9 @@ function ConfigureServiceRuleModal({
 
     // Update form when serviceType changes
     if (serviceType && form.data.service_type !== serviceType) {
-        const label = SERVICE_TYPES.find((s) => s.value === serviceType)?.label || serviceType;
+        const label =
+            SERVICE_TYPES.find((s) => s.value === serviceType)?.label ||
+            serviceType;
         form.setData({
             ...form.data,
             service_type: serviceType,
@@ -889,28 +1204,40 @@ function ConfigureServiceRuleModal({
                 <DialogHeader>
                     <DialogTitle>Configure {serviceLabel} Service</DialogTitle>
                     <DialogDescription>
-                        Set payment rules for {serviceLabel?.toLowerCase()} services.
+                        Set payment rules for {serviceLabel?.toLowerCase()}{' '}
+                        services.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label className="text-right">Service</Label>
-                            <div className="col-span-3 font-medium capitalize">{serviceLabel}</div>
+                            <div className="col-span-3 font-medium capitalize">
+                                {serviceLabel}
+                            </div>
                         </div>
 
                         <div className="space-y-4 pt-2">
                             <div className="flex items-center justify-between rounded-lg border p-3">
                                 <div>
-                                    <Label>Payment required before service</Label>
+                                    <Label>
+                                        Payment required before service
+                                    </Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Patient must pay before receiving this service
+                                        Patient must pay before receiving this
+                                        service
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={form.data.payment_required === 'mandatory'}
+                                    checked={
+                                        form.data.payment_required ===
+                                        'mandatory'
+                                    }
                                     onCheckedChange={(checked) => {
-                                        form.setData('payment_required', checked ? 'mandatory' : 'optional');
+                                        form.setData(
+                                            'payment_required',
+                                            checked ? 'mandatory' : 'optional',
+                                        );
                                     }}
                                 />
                             </div>
@@ -919,12 +1246,18 @@ function ConfigureServiceRuleModal({
                                 <div>
                                     <Label>Block service if unpaid</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Prevent service delivery until payment is made
+                                        Prevent service delivery until payment
+                                        is made
                                     </p>
                                 </div>
                                 <Switch
                                     checked={form.data.service_blocking_enabled}
-                                    onCheckedChange={(checked) => form.setData('service_blocking_enabled', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'service_blocking_enabled',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -932,12 +1265,20 @@ function ConfigureServiceRuleModal({
                                 <div>
                                     <Label>Allow emergency override</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Allow service in emergencies without payment
+                                        Allow service in emergencies without
+                                        payment
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={form.data.emergency_override_allowed}
-                                    onCheckedChange={(checked) => form.setData('emergency_override_allowed', checked)}
+                                    checked={
+                                        form.data.emergency_override_allowed
+                                    }
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'emergency_override_allowed',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -945,22 +1286,34 @@ function ConfigureServiceRuleModal({
                                 <div>
                                     <Label>Hide results until paid</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Results visible only after payment (e.g., lab results)
+                                        Results visible only after payment
+                                        (e.g., lab results)
                                     </p>
                                 </div>
                                 <Switch
                                     checked={form.data.hide_details_until_paid}
-                                    onCheckedChange={(checked) => form.setData('hide_details_until_paid', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'hide_details_until_paid',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Configure
                         </Button>
                     </DialogFooter>
@@ -969,7 +1322,6 @@ function ConfigureServiceRuleModal({
         </Dialog>
     );
 }
-
 
 // Edit Service Rule Modal Component
 function EditServiceRuleModal({
@@ -983,8 +1335,10 @@ function EditServiceRuleModal({
         charge_timing: serviceRule?.charge_timing || 'before_service',
         payment_required: serviceRule?.payment_required || 'optional',
         payment_timing: serviceRule?.payment_timing || 'immediate',
-        emergency_override_allowed: serviceRule?.emergency_override_allowed || false,
-        service_blocking_enabled: serviceRule?.service_blocking_enabled || false,
+        emergency_override_allowed:
+            serviceRule?.emergency_override_allowed || false,
+        service_blocking_enabled:
+            serviceRule?.service_blocking_enabled || false,
         hide_details_until_paid: serviceRule?.hide_details_until_paid || false,
         is_active: serviceRule?.is_active ?? true,
     });
@@ -1002,7 +1356,9 @@ function EditServiceRuleModal({
         <Dialog open={!!serviceRule} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[450px]">
                 <DialogHeader>
-                    <DialogTitle>Edit {serviceRule?.service_name} Service</DialogTitle>
+                    <DialogTitle>
+                        Edit {serviceRule?.service_name} Service
+                    </DialogTitle>
                     <DialogDescription>
                         Update payment rules for this service type.
                     </DialogDescription>
@@ -1012,15 +1368,24 @@ function EditServiceRuleModal({
                         <div className="space-y-4">
                             <div className="flex items-center justify-between rounded-lg border p-3">
                                 <div>
-                                    <Label>Payment required before service</Label>
+                                    <Label>
+                                        Payment required before service
+                                    </Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Patient must pay before receiving this service
+                                        Patient must pay before receiving this
+                                        service
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={form.data.payment_required === 'mandatory'}
+                                    checked={
+                                        form.data.payment_required ===
+                                        'mandatory'
+                                    }
                                     onCheckedChange={(checked) => {
-                                        form.setData('payment_required', checked ? 'mandatory' : 'optional');
+                                        form.setData(
+                                            'payment_required',
+                                            checked ? 'mandatory' : 'optional',
+                                        );
                                     }}
                                 />
                             </div>
@@ -1029,12 +1394,18 @@ function EditServiceRuleModal({
                                 <div>
                                     <Label>Block service if unpaid</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Prevent service delivery until payment is made
+                                        Prevent service delivery until payment
+                                        is made
                                     </p>
                                 </div>
                                 <Switch
                                     checked={form.data.service_blocking_enabled}
-                                    onCheckedChange={(checked) => form.setData('service_blocking_enabled', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'service_blocking_enabled',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -1042,12 +1413,20 @@ function EditServiceRuleModal({
                                 <div>
                                     <Label>Allow emergency override</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Allow service in emergencies without payment
+                                        Allow service in emergencies without
+                                        payment
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={form.data.emergency_override_allowed}
-                                    onCheckedChange={(checked) => form.setData('emergency_override_allowed', checked)}
+                                    checked={
+                                        form.data.emergency_override_allowed
+                                    }
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'emergency_override_allowed',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -1055,12 +1434,18 @@ function EditServiceRuleModal({
                                 <div>
                                     <Label>Hide results until paid</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Results visible only after payment (e.g., lab results)
+                                        Results visible only after payment
+                                        (e.g., lab results)
                                     </p>
                                 </div>
                                 <Switch
                                     checked={form.data.hide_details_until_paid}
-                                    onCheckedChange={(checked) => form.setData('hide_details_until_paid', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData(
+                                            'hide_details_until_paid',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -1073,17 +1458,25 @@ function EditServiceRuleModal({
                                 </div>
                                 <Switch
                                     checked={form.data.is_active}
-                                    onCheckedChange={(checked) => form.setData('is_active', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData('is_active', checked)
+                                    }
                                 />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Save Changes
                         </Button>
                     </DialogFooter>
@@ -1102,7 +1495,12 @@ function EditConfigModal({
     onOpenChange: (open: boolean) => void;
 }) {
     const form = useForm<{
-        configs: Array<{ key: string; value: string | boolean; category: string; description: string }>;
+        configs: Array<{
+            key: string;
+            value: string | boolean;
+            category: string;
+            description: string;
+        }>;
     }>({
         configs: [
             {
@@ -1135,16 +1533,25 @@ function EditConfigModal({
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         {config?.description && (
-                            <p className="text-sm text-gray-500">{config.description}</p>
+                            <p className="text-sm text-gray-500">
+                                {config.description}
+                            </p>
                         )}
-                        
+
                         {isBooleanValue ? (
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     id="config_value"
-                                    checked={form.data.configs[0].value === true}
+                                    checked={
+                                        form.data.configs[0].value === true
+                                    }
                                     onCheckedChange={(checked) =>
-                                        form.setData('configs', [{ ...form.data.configs[0], value: checked }])
+                                        form.setData('configs', [
+                                            {
+                                                ...form.data.configs[0],
+                                                value: checked,
+                                            },
+                                        ])
                                     }
                                 />
                                 <Label htmlFor="config_value">Enabled</Label>
@@ -1156,18 +1563,29 @@ function EditConfigModal({
                                     id="config_value"
                                     value={String(form.data.configs[0].value)}
                                     onChange={(e) =>
-                                        form.setData('configs', [{ ...form.data.configs[0], value: e.target.value }])
+                                        form.setData('configs', [
+                                            {
+                                                ...form.data.configs[0],
+                                                value: e.target.value,
+                                            },
+                                        ])
                                     }
                                 />
                             </div>
                         )}
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Save
                         </Button>
                     </DialogFooter>
@@ -1197,8 +1615,14 @@ function BulkConfigModal({
     });
 
     // Update department_ids when selectedDepartments changes
-    if (open && form.data.department_ids.length !== selectedDepartments.length) {
-        form.setData('department_ids', selectedDepartments.map((d) => d.id));
+    if (
+        open &&
+        form.data.department_ids.length !== selectedDepartments.length
+    ) {
+        form.setData(
+            'department_ids',
+            selectedDepartments.map((d) => d.id),
+        );
     }
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -1217,14 +1641,18 @@ function BulkConfigModal({
                 <DialogHeader>
                     <DialogTitle>Bulk Configure Departments</DialogTitle>
                     <DialogDescription>
-                        Apply the same billing configuration to {selectedDepartments.length} selected departments.
-                        This will create or update billing settings for all selected departments.
+                        Apply the same billing configuration to{' '}
+                        {selectedDepartments.length} selected departments. This
+                        will create or update billing settings for all selected
+                        departments.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         <div className="rounded-lg border bg-muted/50 p-3">
-                            <Label className="text-sm font-medium">Selected Departments</Label>
+                            <Label className="text-sm font-medium">
+                                Selected Departments
+                            </Label>
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {selectedDepartments.map((dept) => (
                                     <Badge key={dept.id} variant="secondary">
@@ -1238,7 +1666,8 @@ function BulkConfigModal({
                             <Info className="h-4 w-4" />
                             <AlertDescription className="flex items-center justify-between">
                                 <span>
-                                    Consultation fees are managed in the Pricing Dashboard.
+                                    Consultation fees are managed in the Pricing
+                                    Dashboard.
                                 </span>
                                 <Button
                                     variant="link"
@@ -1247,7 +1676,10 @@ function BulkConfigModal({
                                     type="button"
                                     asChild
                                 >
-                                    <Link href="/admin/pricing-dashboard" target="_blank">
+                                    <Link
+                                        href="/admin/pricing-dashboard"
+                                        target="_blank"
+                                    >
                                         Open Pricing Dashboard
                                         <ExternalLink className="ml-1 h-3 w-3" />
                                     </Link>
@@ -1256,7 +1688,10 @@ function BulkConfigModal({
                         </Alert>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="bulk_equipment_fee" className="text-right">
+                            <Label
+                                htmlFor="bulk_equipment_fee"
+                                className="text-right"
+                            >
                                 Equipment Fee
                             </Label>
                             <Input
@@ -1267,12 +1702,20 @@ function BulkConfigModal({
                                 placeholder="0.00"
                                 className="col-span-3"
                                 value={form.data.equipment_fee}
-                                onChange={(e) => form.setData('equipment_fee', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'equipment_fee',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="bulk_emergency_surcharge" className="text-right">
+                            <Label
+                                htmlFor="bulk_emergency_surcharge"
+                                className="text-right"
+                            >
                                 Emergency Surcharge
                             </Label>
                             <Input
@@ -1283,12 +1726,20 @@ function BulkConfigModal({
                                 placeholder="0.00"
                                 className="col-span-3"
                                 value={form.data.emergency_surcharge}
-                                onChange={(e) => form.setData('emergency_surcharge', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'emergency_surcharge',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="bulk_grace_period" className="text-right">
+                            <Label
+                                htmlFor="bulk_grace_period"
+                                className="text-right"
+                            >
                                 Grace Period (min)
                             </Label>
                             <Input
@@ -1298,7 +1749,12 @@ function BulkConfigModal({
                                 placeholder="30"
                                 className="col-span-3"
                                 value={form.data.payment_grace_period_minutes}
-                                onChange={(e) => form.setData('payment_grace_period_minutes', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'payment_grace_period_minutes',
+                                        e.target.value,
+                                    )
+                                }
                             />
                         </div>
 
@@ -1306,9 +1762,15 @@ function BulkConfigModal({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="bulk_payment_required"
-                                    checked={form.data.payment_required_before_consultation}
+                                    checked={
+                                        form.data
+                                            .payment_required_before_consultation
+                                    }
                                     onCheckedChange={(checked) =>
-                                        form.setData('payment_required_before_consultation', checked === true)
+                                        form.setData(
+                                            'payment_required_before_consultation',
+                                            checked === true,
+                                        )
                                     }
                                 />
                                 <Label htmlFor="bulk_payment_required">
@@ -1318,21 +1780,34 @@ function BulkConfigModal({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="bulk_emergency_override"
-                                    checked={form.data.emergency_override_allowed}
+                                    checked={
+                                        form.data.emergency_override_allowed
+                                    }
                                     onCheckedChange={(checked) =>
-                                        form.setData('emergency_override_allowed', checked === true)
+                                        form.setData(
+                                            'emergency_override_allowed',
+                                            checked === true,
+                                        )
                                     }
                                 />
-                                <Label htmlFor="bulk_emergency_override">Emergency override allowed</Label>
+                                <Label htmlFor="bulk_emergency_override">
+                                    Emergency override allowed
+                                </Label>
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Configure {selectedDepartments.length} Departments
                         </Button>
                     </DialogFooter>
@@ -1355,7 +1830,8 @@ function WardBillingTemplateModal({
         description: template?.description || '',
         billing_type: template?.billing_type || 'daily',
         base_amount: template?.base_amount?.toString() || '0',
-        effective_from: template?.effective_from || new Date().toISOString().split('T')[0],
+        effective_from:
+            template?.effective_from || new Date().toISOString().split('T')[0],
         effective_to: template?.effective_to || '',
         is_active: template?.is_active ?? true,
     });
@@ -1394,47 +1870,75 @@ function WardBillingTemplateModal({
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_service_name" className="text-right">
+                            <Label
+                                htmlFor="edit_service_name"
+                                className="text-right"
+                            >
                                 Service Name
                             </Label>
                             <Input
                                 id="edit_service_name"
                                 value={form.data.service_name}
-                                onChange={(e) => form.setData('service_name', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('service_name', e.target.value)
+                                }
                                 className="col-span-3"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_description" className="text-right">
+                            <Label
+                                htmlFor="edit_description"
+                                className="text-right"
+                            >
                                 Description
                             </Label>
                             <Input
                                 id="edit_description"
                                 value={form.data.description}
-                                onChange={(e) => form.setData('description', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('description', e.target.value)
+                                }
                                 className="col-span-3"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_billing_type" className="text-right">
+                            <Label
+                                htmlFor="edit_billing_type"
+                                className="text-right"
+                            >
                                 Billing Type
                             </Label>
                             <Select
                                 value={form.data.billing_type}
-                                onValueChange={(value) => form.setData('billing_type', value as 'daily' | 'hourly' | 'one_time')}
+                                onValueChange={(value) =>
+                                    form.setData(
+                                        'billing_type',
+                                        value as
+                                            | 'daily'
+                                            | 'hourly'
+                                            | 'one_time',
+                                    )
+                                }
                             >
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="daily">Daily</SelectItem>
-                                    <SelectItem value="hourly">Hourly</SelectItem>
-                                    <SelectItem value="one_time">One Time</SelectItem>
+                                    <SelectItem value="hourly">
+                                        Hourly
+                                    </SelectItem>
+                                    <SelectItem value="one_time">
+                                        One Time
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_base_amount" className="text-right">
+                            <Label
+                                htmlFor="edit_base_amount"
+                                className="text-right"
+                            >
                                 Amount (GHS)
                             </Label>
                             <Input
@@ -1443,31 +1947,46 @@ function WardBillingTemplateModal({
                                 step="0.01"
                                 min="0"
                                 value={form.data.base_amount}
-                                onChange={(e) => form.setData('base_amount', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('base_amount', e.target.value)
+                                }
                                 className="col-span-3"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_effective_from" className="text-right">
+                            <Label
+                                htmlFor="edit_effective_from"
+                                className="text-right"
+                            >
                                 Effective From
                             </Label>
                             <Input
                                 id="edit_effective_from"
                                 type="date"
                                 value={form.data.effective_from}
-                                onChange={(e) => form.setData('effective_from', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'effective_from',
+                                        e.target.value,
+                                    )
+                                }
                                 className="col-span-3"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="edit_effective_to" className="text-right">
+                            <Label
+                                htmlFor="edit_effective_to"
+                                className="text-right"
+                            >
                                 Effective To
                             </Label>
                             <Input
                                 id="edit_effective_to"
                                 type="date"
                                 value={form.data.effective_to}
-                                onChange={(e) => form.setData('effective_to', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('effective_to', e.target.value)
+                                }
                                 className="col-span-3"
                                 placeholder="Leave empty for no end date"
                             />
@@ -1478,18 +1997,26 @@ function WardBillingTemplateModal({
                                 <Switch
                                     id="edit_is_active"
                                     checked={form.data.is_active}
-                                    onCheckedChange={(checked) => form.setData('is_active', checked)}
+                                    onCheckedChange={(checked) =>
+                                        form.setData('is_active', checked)
+                                    }
                                 />
                                 <Label htmlFor="edit_is_active">Active</Label>
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Save Changes
                         </Button>
                     </DialogFooter>
@@ -1539,33 +2066,52 @@ function CreateWardBillingTemplateModal({
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="service_name" className="text-right">
+                            <Label
+                                htmlFor="service_name"
+                                className="text-right"
+                            >
                                 Service Name
                             </Label>
                             <Input
                                 id="service_name"
                                 value={form.data.service_name}
-                                onChange={(e) => form.setData('service_name', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('service_name', e.target.value)
+                                }
                                 className="col-span-3"
                                 placeholder="e.g., Daily Ward Fee"
                             />
                             {form.errors.service_name && (
-                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.service_name}</p>
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">
+                                    {form.errors.service_name}
+                                </p>
                             )}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="service_code" className="text-right">
+                            <Label
+                                htmlFor="service_code"
+                                className="text-right"
+                            >
                                 Service Code
                             </Label>
                             <Input
                                 id="service_code"
                                 value={form.data.service_code}
-                                onChange={(e) => form.setData('service_code', e.target.value.toUpperCase().replace(/\s+/g, '_'))}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'service_code',
+                                        e.target.value
+                                            .toUpperCase()
+                                            .replace(/\s+/g, '_'),
+                                    )
+                                }
                                 className="col-span-3 font-mono"
                                 placeholder="e.g., DAILY_WARD_FEE"
                             />
                             {form.errors.service_code && (
-                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.service_code}</p>
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">
+                                    {form.errors.service_code}
+                                </p>
                             )}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -1575,26 +2121,39 @@ function CreateWardBillingTemplateModal({
                             <Input
                                 id="description"
                                 value={form.data.description}
-                                onChange={(e) => form.setData('description', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('description', e.target.value)
+                                }
                                 className="col-span-3"
                                 placeholder="Optional description"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="billing_type" className="text-right">
+                            <Label
+                                htmlFor="billing_type"
+                                className="text-right"
+                            >
                                 Billing Type
                             </Label>
                             <Select
                                 value={form.data.billing_type}
-                                onValueChange={(value) => form.setData('billing_type', value)}
+                                onValueChange={(value) =>
+                                    form.setData('billing_type', value)
+                                }
                             >
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="daily">Daily (charged every day)</SelectItem>
-                                    <SelectItem value="hourly">Hourly (charged per hour)</SelectItem>
-                                    <SelectItem value="one_time">One Time (charged once on admission)</SelectItem>
+                                    <SelectItem value="daily">
+                                        Daily (charged every day)
+                                    </SelectItem>
+                                    <SelectItem value="hourly">
+                                        Hourly (charged per hour)
+                                    </SelectItem>
+                                    <SelectItem value="one_time">
+                                        One Time (charged once on admission)
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -1608,38 +2167,57 @@ function CreateWardBillingTemplateModal({
                                 step="0.01"
                                 min="0"
                                 value={form.data.base_amount}
-                                onChange={(e) => form.setData('base_amount', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('base_amount', e.target.value)
+                                }
                                 className="col-span-3"
                                 placeholder="0.00"
                             />
                             {form.errors.base_amount && (
-                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.base_amount}</p>
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">
+                                    {form.errors.base_amount}
+                                </p>
                             )}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="effective_from" className="text-right">
+                            <Label
+                                htmlFor="effective_from"
+                                className="text-right"
+                            >
                                 Effective From
                             </Label>
                             <Input
                                 id="effective_from"
                                 type="date"
                                 value={form.data.effective_from}
-                                onChange={(e) => form.setData('effective_from', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'effective_from',
+                                        e.target.value,
+                                    )
+                                }
                                 className="col-span-3"
                             />
                             {form.errors.effective_from && (
-                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.effective_from}</p>
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">
+                                    {form.errors.effective_from}
+                                </p>
                             )}
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="effective_to" className="text-right">
+                            <Label
+                                htmlFor="effective_to"
+                                className="text-right"
+                            >
                                 Effective To
                             </Label>
                             <Input
                                 id="effective_to"
                                 type="date"
                                 value={form.data.effective_to}
-                                onChange={(e) => form.setData('effective_to', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('effective_to', e.target.value)
+                                }
                                 className="col-span-3"
                             />
                             <p className="col-span-3 col-start-2 text-xs text-gray-500">
@@ -1648,11 +2226,17 @@ function CreateWardBillingTemplateModal({
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {form.processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             Create Template
                         </Button>
                     </DialogFooter>

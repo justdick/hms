@@ -86,8 +86,10 @@ export function BatchesDataTable<TData, TValue>({
     filters,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [search, setSearch] = React.useState(filters.search || '');
 
     const table = useReactTable({
@@ -147,8 +149,12 @@ export function BatchesDataTable<TData, TValue>({
         );
     };
 
-    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -158,7 +164,9 @@ export function BatchesDataTable<TData, TValue>({
                     <Input
                         placeholder="Search by batch number, name..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -229,7 +237,8 @@ export function BatchesDataTable<TData, TValue>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
+                                                  header.column.columnDef
+                                                      .header,
                                                   header.getContext(),
                                               )}
                                     </TableHead>
@@ -280,7 +289,8 @@ export function BatchesDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.from && pagination.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of {pagination.total} batch(es)
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} batch(es)
                         </>
                     ) : (
                         <>No results</>

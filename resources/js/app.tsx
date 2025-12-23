@@ -28,8 +28,9 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        const initialTheme = (props.initialPage.props as { theme?: ThemeConfig })
-            .theme;
+        const initialTheme = (
+            props.initialPage.props as { theme?: ThemeConfig }
+        ).theme;
 
         root.render(
             <ThemeProvider initialTheme={initialTheme}>

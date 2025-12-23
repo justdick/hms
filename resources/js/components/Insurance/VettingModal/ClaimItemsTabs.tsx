@@ -64,7 +64,9 @@ export function ClaimItemsTabs({
     onItemsChange,
 }: ClaimItemsTabsProps) {
     const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [addingCategory, setAddingCategory] = useState<ItemCategory | null>(null);
+    const [addingCategory, setAddingCategory] = useState<ItemCategory | null>(
+        null,
+    );
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<NhisTariffOption[]>([]);
@@ -116,8 +118,11 @@ export function ClaimItemsTabs({
 
             try {
                 // Use GDRG tariffs for investigations and procedures, NHIS for prescriptions
-                const useGdrg = category === 'investigations' || category === 'procedures';
-                const baseUrl = useGdrg ? '/api/gdrg-tariffs/search' : '/api/nhis-tariffs/search';
+                const useGdrg =
+                    category === 'investigations' || category === 'procedures';
+                const baseUrl = useGdrg
+                    ? '/api/gdrg-tariffs/search'
+                    : '/api/nhis-tariffs/search';
                 const url = `${baseUrl}?search=${encodeURIComponent(query)}`;
 
                 const response = await fetch(url, {
@@ -130,17 +135,28 @@ export function ClaimItemsTabs({
                 if (response.ok) {
                     const data = await response.json();
                     // Handle different response formats and map GDRG to common format
-                    let results = data.tariffs?.data || data.tariffs || data.data || [];
+                    let results =
+                        data.tariffs?.data || data.tariffs || data.data || [];
 
                     // Map GDRG tariffs to NhisTariffOption format
                     if (useGdrg && results.length > 0) {
-                        results = results.map((t: { id: number; code: string; name: string; tariff_price: number }) => ({
-                            id: t.id,
-                            nhis_code: t.code,
-                            name: t.name,
-                            category: category === 'investigations' ? 'lab' : 'procedure',
-                            price: t.tariff_price,
-                        }));
+                        results = results.map(
+                            (t: {
+                                id: number;
+                                code: string;
+                                name: string;
+                                tariff_price: number;
+                            }) => ({
+                                id: t.id,
+                                nhis_code: t.code,
+                                name: t.name,
+                                category:
+                                    category === 'investigations'
+                                        ? 'lab'
+                                        : 'procedure',
+                                price: t.tariff_price,
+                            }),
+                        );
                     }
 
                     setSearchResults(results);
@@ -154,12 +170,16 @@ export function ClaimItemsTabs({
         [],
     );
 
-    const handleAddItem = async (tariff: NhisTariffOption, category: ItemCategory) => {
+    const handleAddItem = async (
+        tariff: NhisTariffOption,
+        category: ItemCategory,
+    ) => {
         setAddingItem(true);
 
         try {
             // Use gdrg_tariff_id for investigations and procedures, nhis_tariff_id for prescriptions
-            const useGdrg = category === 'investigations' || category === 'procedures';
+            const useGdrg =
+                category === 'investigations' || category === 'procedures';
             const payload = useGdrg
                 ? { gdrg_tariff_id: tariff.id, quantity: 1 }
                 : { nhis_tariff_id: tariff.id, quantity: 1 };
@@ -264,7 +284,10 @@ export function ClaimItemsTabs({
                 }}
             >
                 <PopoverTrigger asChild>
-                    <Button size="sm" className="h-7 bg-blue-600 text-xs hover:bg-blue-700">
+                    <Button
+                        size="sm"
+                        className="h-7 bg-blue-600 text-xs hover:bg-blue-700"
+                    >
                         <Plus className="mr-1 h-3 w-3" />
                         Add
                     </Button>
@@ -296,7 +319,9 @@ export function ClaimItemsTabs({
                                         <CommandItem
                                             key={tariff.id}
                                             value={tariff.nhis_code}
-                                            onSelect={() => handleAddItem(tariff, category)}
+                                            onSelect={() =>
+                                                handleAddItem(tariff, category)
+                                            }
                                             disabled={addingItem}
                                         >
                                             <div className="flex w-full items-center justify-between">
@@ -309,7 +334,9 @@ export function ClaimItemsTabs({
                                                     </span>
                                                 </div>
                                                 <span className="font-medium text-green-600">
-                                                    {formatCurrency(tariff.price)}
+                                                    {formatCurrency(
+                                                        tariff.price,
+                                                    )}
                                                 </span>
                                             </div>
                                         </CommandItem>
@@ -347,14 +374,22 @@ export function ClaimItemsTabs({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[40%]">Item</TableHead>
+                                    <TableHead className="w-[40%]">
+                                        Item
+                                    </TableHead>
                                     {isNhis && <TableHead>NHIS Code</TableHead>}
-                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">
+                                        Qty
+                                    </TableHead>
                                     <TableHead className="text-right">
                                         {isNhis ? 'NHIS Price' : 'Unit Price'}
                                     </TableHead>
-                                    <TableHead className="text-right">Subtotal</TableHead>
-                                    {!disabled && <TableHead className="w-[60px]"></TableHead>}
+                                    <TableHead className="text-right">
+                                        Subtotal
+                                    </TableHead>
+                                    {!disabled && (
+                                        <TableHead className="w-[60px]"></TableHead>
+                                    )}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -369,7 +404,9 @@ export function ClaimItemsTabs({
                                     >
                                         <TableCell>
                                             <div>
-                                                <p className="font-medium">{item.name}</p>
+                                                <p className="font-medium">
+                                                    {item.name}
+                                                </p>
                                                 {item.code && (
                                                     <p className="text-xs text-gray-500">
                                                         Code: {item.code}
@@ -399,15 +436,20 @@ export function ClaimItemsTabs({
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {isNhis
-                                                ? formatCurrency(item.nhis_price)
-                                                : formatCurrency(item.unit_price)}
+                                                ? formatCurrency(
+                                                      item.nhis_price,
+                                                  )
+                                                : formatCurrency(
+                                                      item.unit_price,
+                                                  )}
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
                                             {item.is_covered
                                                 ? formatCurrency(
                                                       (isNhis
                                                           ? item.nhis_price || 0
-                                                          : item.unit_price) * item.quantity,
+                                                          : item.unit_price) *
+                                                          item.quantity,
                                                   )
                                                 : '-'}
                                         </TableCell>
@@ -417,9 +459,14 @@ export function ClaimItemsTabs({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() =>
-                                                        handleDeleteItem(item.id, category)
+                                                        handleDeleteItem(
+                                                            item.id,
+                                                            category,
+                                                        )
                                                     }
-                                                    disabled={deletingId === item.id}
+                                                    disabled={
+                                                        deletingId === item.id
+                                                    }
                                                     className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
                                                     aria-label={`Remove ${item.name}`}
                                                 >
@@ -463,7 +510,8 @@ export function ClaimItemsTabs({
                 </div>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Changes to items only affect this claim, not the original consultation.
+                    Changes to items only affect this claim, not the original
+                    consultation.
                 </p>
             </div>
         );

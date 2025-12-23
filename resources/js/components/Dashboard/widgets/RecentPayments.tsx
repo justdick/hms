@@ -2,14 +2,13 @@ import { Link } from '@inertiajs/react';
 import {
     ArrowRight,
     Banknote,
-    CheckCircle2,
     CreditCard,
-    DollarSign,
     Receipt,
     TrendingUp,
 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
+import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -18,8 +17,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { cn } from '@/lib/utils';
 
 export interface CashierMetricsData {
@@ -113,9 +110,7 @@ export function RecentPayments({
                         <CardTitle className="text-base font-semibold">
                             Recent Payments
                         </CardTitle>
-                        <CardDescription>
-                            Latest transactions
-                        </CardDescription>
+                        <CardDescription>Latest transactions</CardDescription>
                     </div>
                 </div>
                 {viewAllHref && (
@@ -145,7 +140,7 @@ export function RecentPayments({
                                         {methodIcons[payment.method] || '💰'}
                                     </span>
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-sm">
+                                        <span className="text-sm font-medium">
                                             {payment.patient_name}
                                         </span>
                                         <span className="text-xs text-muted-foreground">

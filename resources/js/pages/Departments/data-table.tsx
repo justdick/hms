@@ -72,7 +72,8 @@ export function DataTable<TData, TValue>({
     filters,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
     const [search, setSearch] = React.useState(filters?.search || '');
 
     const currentType = filters?.type || '';
@@ -156,7 +157,9 @@ export function DataTable<TData, TValue>({
                     <Input
                         placeholder="Search departments..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -180,7 +183,10 @@ export function DataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Type{currentType ? `: ${types[currentType] || currentType}` : ''}
+                            Type
+                            {currentType
+                                ? `: ${types[currentType] || currentType}`
+                                : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -202,7 +208,10 @@ export function DataTable<TData, TValue>({
                                 key={value}
                                 checked={currentType === value}
                                 onCheckedChange={(checked) => {
-                                    handleFilterChange('type', checked ? value : undefined);
+                                    handleFilterChange(
+                                        'type',
+                                        checked ? value : undefined,
+                                    );
                                 }}
                             >
                                 {label}
@@ -215,7 +224,10 @@ export function DataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
-                            Status{currentStatus ? `: ${currentStatus === 'active' ? 'Active' : 'Inactive'}` : ''}
+                            Status
+                            {currentStatus
+                                ? `: ${currentStatus === 'active' ? 'Active' : 'Inactive'}`
+                                : ''}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -235,7 +247,10 @@ export function DataTable<TData, TValue>({
                         <DropdownMenuCheckboxItem
                             checked={currentStatus === 'active'}
                             onCheckedChange={(checked) => {
-                                handleFilterChange('status', checked ? 'active' : undefined);
+                                handleFilterChange(
+                                    'status',
+                                    checked ? 'active' : undefined,
+                                );
                             }}
                         >
                             Active Only
@@ -243,7 +258,10 @@ export function DataTable<TData, TValue>({
                         <DropdownMenuCheckboxItem
                             checked={currentStatus === 'inactive'}
                             onCheckedChange={(checked) => {
-                                handleFilterChange('status', checked ? 'inactive' : undefined);
+                                handleFilterChange(
+                                    'status',
+                                    checked ? 'inactive' : undefined,
+                                );
                             }}
                         >
                             Inactive Only
@@ -262,7 +280,8 @@ export function DataTable<TData, TValue>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
+                                                  header.column.columnDef
+                                                      .header,
                                                   header.getContext(),
                                               )}
                                     </TableHead>
@@ -275,7 +294,9 @@ export function DataTable<TData, TValue>({
                             table.getRowModel().rows.map((row, index) => (
                                 <TableRow
                                     key={row.id}
-                                    className={index % 2 === 0 ? 'bg-muted/30' : ''}
+                                    className={
+                                        index % 2 === 0 ? 'bg-muted/30' : ''
+                                    }
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -289,7 +310,10 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     No departments found.
                                 </TableCell>
                             </TableRow>

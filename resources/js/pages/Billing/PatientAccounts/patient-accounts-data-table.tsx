@@ -71,8 +71,10 @@ export function PatientAccountsDataTable<TData, TValue>({
     filterValue = '',
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [search, setSearch] = React.useState(searchValue);
 
     const table = useReactTable({
@@ -124,8 +126,12 @@ export function PatientAccountsDataTable<TData, TValue>({
         }
     };
 
-    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -135,7 +141,9 @@ export function PatientAccountsDataTable<TData, TValue>({
                     <Input
                         placeholder="Search by patient name or number..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -145,7 +153,10 @@ export function PatientAccountsDataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <Filter className="mr-2 h-4 w-4" />
-                            {filterValue && typeof filterValue === 'string' ? filterValue.charAt(0).toUpperCase() + filterValue.slice(1) : 'All'}
+                            {filterValue && typeof filterValue === 'string'
+                                ? filterValue.charAt(0).toUpperCase() +
+                                  filterValue.slice(1)
+                                : 'All'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -160,7 +171,9 @@ export function PatientAccountsDataTable<TData, TValue>({
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuCheckboxItem
                             checked={filterValue === 'prepaid'}
-                            onCheckedChange={() => handleFilterChange('prepaid')}
+                            onCheckedChange={() =>
+                                handleFilterChange('prepaid')
+                            }
                         >
                             Prepaid (Positive Balance)
                         </DropdownMenuCheckboxItem>
@@ -195,7 +208,9 @@ export function PatientAccountsDataTable<TData, TValue>({
                                     key={column.id}
                                     className="capitalize"
                                     checked={column.getIsVisible()}
-                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                    onCheckedChange={(value) =>
+                                        column.toggleVisibility(!!value)
+                                    }
                                 >
                                     {column.id.replace('_', ' ')}
                                 </DropdownMenuCheckboxItem>
@@ -224,7 +239,11 @@ export function PatientAccountsDataTable<TData, TValue>({
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
+                                            : flexRender(
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext(),
+                                              )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -233,22 +252,32 @@ export function PatientAccountsDataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-muted/50">
+                                <TableRow
+                                    key={row.id}
+                                    className="hover:bg-muted/50"
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <Wallet className="h-8 w-8 text-muted-foreground" />
                                         <div>No accounts found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            Create a deposit to set up a patient account.
+                                            Create a deposit to set up a patient
+                                            account.
                                         </div>
                                     </div>
                                 </TableCell>
@@ -263,7 +292,8 @@ export function PatientAccountsDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.from && pagination.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of {pagination.total} account(s)
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} account(s)
                         </>
                     ) : (
                         <>Showing {pagination.total} account(s)</>
@@ -279,7 +309,11 @@ export function PatientAccountsDataTable<TData, TValue>({
                         Previous
                     </Button>
                     {pagination.links
-                        .filter((link) => !link.label.includes('Previous') && !link.label.includes('Next'))
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
                         .map((link, index) => (
                             <Button
                                 key={index}

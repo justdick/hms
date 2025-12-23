@@ -1,5 +1,13 @@
 import { cn } from '@/lib/utils';
-import { AlertCircle, AlertTriangle, CheckCircle2, Clock, Pill, Calendar, Package } from 'lucide-react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    Calendar,
+    CheckCircle2,
+    Clock,
+    Package,
+    Pill,
+} from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -18,7 +26,15 @@ export interface ParsedPrescription {
     duration: string | null;
     durationDays: number | null;
     quantityToDispense: number | null;
-    scheduleType: 'standard' | 'split_dose' | 'custom_interval' | 'taper' | 'stat' | 'prn' | 'topical' | 'interval';
+    scheduleType:
+        | 'standard'
+        | 'split_dose'
+        | 'custom_interval'
+        | 'taper'
+        | 'stat'
+        | 'prn'
+        | 'topical'
+        | 'interval';
     schedulePattern?: {
         type?: string;
         pattern?: { morning: number; noon: number; evening: number };
@@ -63,7 +79,9 @@ export function InterpretationPanel({
 
     const hasErrors = result.errors.length > 0;
     const hasWarnings = result.warnings.length > 0;
-    const isPartiallyValid = !result.isValid && (result.doseQuantity || result.frequency || result.duration);
+    const isPartiallyValid =
+        !result.isValid &&
+        (result.doseQuantity || result.frequency || result.duration);
 
     // Determine border and background colors based on state
     const borderColor = result.isValid
@@ -113,11 +131,18 @@ export function InterpretationPanel({
                             <div className="flex items-start gap-2">
                                 <Pill className="mt-0.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Dose</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Dose
+                                    </p>
                                     <p className="font-medium text-gray-900 dark:text-gray-100">
                                         {result.doseQuantity}
-                                        {drug && drug.unit_type === 'piece' && ` ${drug.form}(s)`}
-                                        {drug && (drug.unit_type === 'bottle' || drug.unit_type === 'vial') && ' ml'}
+                                        {drug &&
+                                            drug.unit_type === 'piece' &&
+                                            ` ${drug.form}(s)`}
+                                        {drug &&
+                                            (drug.unit_type === 'bottle' ||
+                                                drug.unit_type === 'vial') &&
+                                            ' ml'}
                                     </p>
                                 </div>
                             </div>
@@ -126,7 +151,9 @@ export function InterpretationPanel({
                             <div className="flex items-start gap-2">
                                 <Clock className="mt-0.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Frequency</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Frequency
+                                    </p>
                                     <p className="font-medium text-gray-900 dark:text-gray-100">
                                         {result.frequency}
                                     </p>
@@ -137,7 +164,9 @@ export function InterpretationPanel({
                             <div className="flex items-start gap-2">
                                 <Calendar className="mt-0.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Duration
+                                    </p>
                                     <p className="font-medium text-gray-900 dark:text-gray-100">
                                         {result.duration}
                                     </p>
@@ -148,10 +177,16 @@ export function InterpretationPanel({
                             <div className="flex items-start gap-2">
                                 <Package className="mt-0.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Quantity</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Quantity
+                                    </p>
                                     <p className="font-medium text-gray-900 dark:text-gray-100">
                                         {result.quantityToDispense}
-                                        {drug && getUnitLabel(drug, result.quantityToDispense)}
+                                        {drug &&
+                                            getUnitLabel(
+                                                drug,
+                                                result.quantityToDispense,
+                                            )}
                                     </p>
                                 </div>
                             </div>
@@ -165,7 +200,10 @@ export function InterpretationPanel({
                     {hasWarnings && (
                         <div className="mt-2 space-y-1">
                             {result.warnings.map((warning, index) => (
-                                <p key={index} className="flex items-center gap-1.5 text-xs text-yellow-700 dark:text-yellow-400">
+                                <p
+                                    key={index}
+                                    className="flex items-center gap-1.5 text-xs text-yellow-700 dark:text-yellow-400"
+                                >
                                     <AlertTriangle className="h-3 w-3" />
                                     {warning}
                                 </p>
@@ -181,7 +219,9 @@ export function InterpretationPanel({
                     {/* Show what was recognized */}
                     {isPartiallyValid && (
                         <div className="space-y-2">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Recognized:</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Recognized:
+                            </p>
                             <div className="flex flex-wrap gap-2">
                                 {result.doseQuantity && (
                                     <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
@@ -206,7 +246,10 @@ export function InterpretationPanel({
                     {hasErrors && (
                         <div className="space-y-1">
                             {result.errors.map((error, index) => (
-                                <p key={index} className="text-sm text-red-700 dark:text-red-400">
+                                <p
+                                    key={index}
+                                    className="text-sm text-red-700 dark:text-red-400"
+                                >
                                     {error}
                                 </p>
                             ))}
@@ -231,11 +274,14 @@ export function InterpretationPanel({
 
 function getUnitLabel(drug: Drug, quantity: number): string {
     if (drug.unit_type === 'piece') {
-        if (drug.form === 'tablet') return quantity === 1 ? ' tablet' : ' tablets';
-        if (drug.form === 'capsule') return quantity === 1 ? ' capsule' : ' capsules';
+        if (drug.form === 'tablet')
+            return quantity === 1 ? ' tablet' : ' tablets';
+        if (drug.form === 'capsule')
+            return quantity === 1 ? ' capsule' : ' capsules';
         return ' pieces';
     }
-    if (drug.unit_type === 'bottle') return quantity === 1 ? ' bottle' : ' bottles';
+    if (drug.unit_type === 'bottle')
+        return quantity === 1 ? ' bottle' : ' bottles';
     if (drug.unit_type === 'vial') return quantity === 1 ? ' vial' : ' vials';
     if (drug.unit_type === 'tube') return quantity === 1 ? ' tube' : ' tubes';
     return '';
@@ -250,7 +296,9 @@ function renderScheduleDetails(result: ParsedPrescription): React.ReactNode {
         const { morning, noon, evening } = schedulePattern.pattern;
         return (
             <div className="rounded bg-green-100 p-2 dark:bg-green-900/30">
-                <p className="text-xs font-medium text-green-800 dark:text-green-300">Split Dose Schedule</p>
+                <p className="text-xs font-medium text-green-800 dark:text-green-300">
+                    Split Dose Schedule
+                </p>
                 <p className="text-sm text-green-700 dark:text-green-400">
                     Morning: {morning} | Noon: {noon} | Evening: {evening}
                 </p>
@@ -261,13 +309,16 @@ function renderScheduleDetails(result: ParsedPrescription): React.ReactNode {
     if (scheduleType === 'custom_interval' && schedulePattern.intervals_hours) {
         return (
             <div className="rounded bg-green-100 p-2 dark:bg-green-900/30">
-                <p className="text-xs font-medium text-green-800 dark:text-green-300">Custom Interval Schedule</p>
+                <p className="text-xs font-medium text-green-800 dark:text-green-300">
+                    Custom Interval Schedule
+                </p>
                 <p className="text-sm text-green-700 dark:text-green-400">
                     At hours: {schedulePattern.intervals_hours.join('h, ')}h
                 </p>
                 {schedulePattern.dose_per_interval && (
                     <p className="text-xs text-green-600 dark:text-green-500">
-                        {schedulePattern.dose_per_interval} dose(s) at each interval
+                        {schedulePattern.dose_per_interval} dose(s) at each
+                        interval
                     </p>
                 )}
             </div>
@@ -277,7 +328,9 @@ function renderScheduleDetails(result: ParsedPrescription): React.ReactNode {
     if (scheduleType === 'taper' && schedulePattern.doses) {
         return (
             <div className="rounded bg-green-100 p-2 dark:bg-green-900/30">
-                <p className="text-xs font-medium text-green-800 dark:text-green-300">Taper Schedule</p>
+                <p className="text-xs font-medium text-green-800 dark:text-green-300">
+                    Taper Schedule
+                </p>
                 <div className="mt-1 flex flex-wrap gap-1">
                     {schedulePattern.doses.map((dose, index) => (
                         <span

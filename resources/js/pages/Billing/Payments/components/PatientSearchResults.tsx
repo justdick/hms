@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { CreditCard, ShieldCheck } from 'lucide-react';
 
 interface Patient {

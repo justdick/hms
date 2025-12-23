@@ -9,7 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -55,13 +54,13 @@ const paymentMethodIcons: Record<string, React.ReactNode> = {
 
 /**
  * PaymentModal Component
- * 
+ *
  * Focused payment workflow modal with:
  * - Selected charges summary
  * - Payment method selection
  * - Change calculator for cash
  * - Success state with print option
- * 
+ *
  * Requirements: 11.7
  */
 export function PaymentModal({
@@ -84,11 +83,13 @@ export function PaymentModal({
     // Calculate totals
     const totalAmount = charges.reduce((sum, c) => sum + c.amount, 0);
     const totalPatientOwes = charges.reduce(
-        (sum, c) => sum + (c.is_insurance_claim ? c.patient_copay_amount : c.amount),
+        (sum, c) =>
+            sum + (c.is_insurance_claim ? c.patient_copay_amount : c.amount),
         0,
     );
     const totalInsuranceCovered = charges.reduce(
-        (sum, c) => sum + (c.is_insurance_claim ? c.insurance_covered_amount : 0),
+        (sum, c) =>
+            sum + (c.is_insurance_claim ? c.insurance_covered_amount : 0),
         0,
     );
 
@@ -166,9 +167,12 @@ export function PaymentModal({
                         {step === 'success' && 'Payment Successful'}
                     </DialogTitle>
                     <DialogDescription>
-                        {step === 'summary' && `Review charges for ${patientName}`}
-                        {step === 'payment' && 'Select payment method and complete transaction'}
-                        {step === 'success' && 'Payment has been processed successfully'}
+                        {step === 'summary' &&
+                            `Review charges for ${patientName}`}
+                        {step === 'payment' &&
+                            'Select payment method and complete transaction'}
+                        {step === 'success' &&
+                            'Payment has been processed successfully'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -179,7 +183,9 @@ export function PaymentModal({
                             {/* Patient Info */}
                             <div className="rounded-lg bg-muted/30 p-3">
                                 <p className="font-medium">{patientName}</p>
-                                <p className="text-sm text-muted-foreground">{patientNumber}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {patientNumber}
+                                </p>
                             </div>
 
                             {/* Charges List */}
@@ -190,24 +196,38 @@ export function PaymentModal({
                                         className="flex items-center justify-between rounded-lg border p-3"
                                     >
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium">{charge.description}</p>
-                                            <Badge variant="outline" className="mt-1 text-xs">
-                                                {formatServiceType(charge.service_type)}
+                                            <p className="text-sm font-medium">
+                                                {charge.description}
+                                            </p>
+                                            <Badge
+                                                variant="outline"
+                                                className="mt-1 text-xs"
+                                            >
+                                                {formatServiceType(
+                                                    charge.service_type,
+                                                )}
                                             </Badge>
                                         </div>
                                         <div className="text-right">
                                             {charge.is_insurance_claim ? (
                                                 <div>
                                                     <p className="text-sm font-semibold text-orange-600">
-                                                        {formatCurrency(charge.patient_copay_amount)}
+                                                        {formatCurrency(
+                                                            charge.patient_copay_amount,
+                                                        )}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        of {formatCurrency(charge.amount)}
+                                                        of{' '}
+                                                        {formatCurrency(
+                                                            charge.amount,
+                                                        )}
                                                     </p>
                                                 </div>
                                             ) : (
                                                 <p className="text-sm font-semibold">
-                                                    {formatCurrency(charge.amount)}
+                                                    {formatCurrency(
+                                                        charge.amount,
+                                                    )}
                                                 </p>
                                             )}
                                         </div>
@@ -218,17 +238,26 @@ export function PaymentModal({
                             {/* Totals */}
                             <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Total Charges:</span>
+                                    <span className="text-muted-foreground">
+                                        Total Charges:
+                                    </span>
                                     <span>{formatCurrency(totalAmount)}</span>
                                 </div>
                                 {totalInsuranceCovered > 0 && (
                                     <div className="flex justify-between text-sm text-green-600">
                                         <span>Insurance Covers:</span>
-                                        <span>-{formatCurrency(totalInsuranceCovered)}</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                totalInsuranceCovered,
+                                            )}
+                                        </span>
                                     </div>
                                 )}
                                 <div className="flex justify-between border-t pt-2 font-semibold">
-                                    <span className="text-orange-600">Patient Owes:</span>
+                                    <span className="text-orange-600">
+                                        Patient Owes:
+                                    </span>
                                     <span className="text-lg text-orange-600">
                                         {formatCurrency(totalPatientOwes)}
                                     </span>
@@ -242,7 +271,9 @@ export function PaymentModal({
                         <div className="space-y-4">
                             {/* Amount to Collect */}
                             <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-center dark:border-orange-800 dark:bg-orange-950/30">
-                                <p className="text-sm text-muted-foreground">Amount to Collect</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Amount to Collect
+                                </p>
                                 <p className="text-3xl font-bold text-orange-600">
                                     {formatCurrency(totalPatientOwes)}
                                 </p>
@@ -251,7 +282,10 @@ export function PaymentModal({
                             {/* Payment Method Selection */}
                             <div className="space-y-2">
                                 <Label>Payment Method</Label>
-                                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <Select
+                                    value={paymentMethod}
+                                    onValueChange={setPaymentMethod}
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
@@ -297,7 +331,9 @@ export function PaymentModal({
 
                             {/* Notes */}
                             <div className="space-y-2">
-                                <Label htmlFor="payment-notes">Notes (Optional)</Label>
+                                <Label htmlFor="payment-notes">
+                                    Notes (Optional)
+                                </Label>
                                 <Textarea
                                     id="payment-notes"
                                     value={notes}
@@ -323,14 +359,18 @@ export function PaymentModal({
                                 <CheckCircle2 className="h-10 w-10 text-green-600" />
                             </div>
                             <div>
-                                <p className="text-lg font-semibold">Payment Processed!</p>
+                                <p className="text-lg font-semibold">
+                                    Payment Processed!
+                                </p>
                                 <p className="text-sm text-muted-foreground">
-                                    {formatCurrency(totalPatientOwes)} received from {patientName}
+                                    {formatCurrency(totalPatientOwes)} received
+                                    from {patientName}
                                 </p>
                             </div>
                             <div className="rounded-lg bg-muted/30 p-4">
                                 <p className="text-sm text-muted-foreground">
-                                    {charges.length} charge{charges.length !== 1 ? 's' : ''} paid via{' '}
+                                    {charges.length} charge
+                                    {charges.length !== 1 ? 's' : ''} paid via{' '}
                                     {paymentMethod.replace('_', ' ')}
                                 </p>
                             </div>
@@ -352,12 +392,19 @@ export function PaymentModal({
 
                     {step === 'payment' && (
                         <>
-                            <Button variant="outline" onClick={() => setStep('summary')}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setStep('summary')}
+                            >
                                 Back
                             </Button>
                             <Button
                                 onClick={handleProcessPayment}
-                                disabled={isProcessing || (paymentMethod === 'cash' && amountTendered < totalPatientOwes)}
+                                disabled={
+                                    isProcessing ||
+                                    (paymentMethod === 'cash' &&
+                                        amountTendered < totalPatientOwes)
+                                }
                             >
                                 {isProcessing ? (
                                     <>

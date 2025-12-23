@@ -420,7 +420,11 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                 <Button
                                     className="w-full"
                                     variant="outline"
-                                    onClick={() => router.post(`/admin/insurance/batches/${batch.id}/unfinalize`)}
+                                    onClick={() =>
+                                        router.post(
+                                            `/admin/insurance/batches/${batch.id}/unfinalize`,
+                                        )
+                                    }
                                 >
                                     <Unlock className="mr-2 h-4 w-4" />
                                     Unfinalize Batch

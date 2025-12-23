@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, FileSearch, Send } from 'lucide-react';
+import { CheckCircle, FileSearch, Send } from 'lucide-react';
 
 import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { MetricCard } from '@/components/Dashboard/MetricCard';
@@ -39,7 +39,9 @@ export function ClaimsMetrics({
                 title="Pending Vetting"
                 value={metrics.claimsPendingVetting}
                 icon={FileSearch}
-                variant={metrics.claimsPendingVetting > 20 ? 'warning' : 'default'}
+                variant={
+                    metrics.claimsPendingVetting > 20 ? 'warning' : 'default'
+                }
                 href={vettingHref}
             />
             <MetricCard

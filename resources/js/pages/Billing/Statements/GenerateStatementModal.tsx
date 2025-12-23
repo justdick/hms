@@ -10,7 +10,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Download, FileText, Loader2, Printer, Search, User } from 'lucide-react';
+import {
+    AlertTriangle,
+    Download,
+    FileText,
+    Loader2,
+    Printer,
+    Search,
+    User,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Patient {
@@ -81,7 +89,7 @@ export default function GenerateStatementModal({
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                }
+                },
             );
 
             if (!response.ok) {
@@ -146,18 +154,23 @@ export default function GenerateStatementModal({
                         'Content-Type': 'application/json',
                         Accept: 'application/pdf',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
                     },
                     body: JSON.stringify({
                         start_date: startDate,
                         end_date: endDate,
                     }),
-                }
+                },
             );
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to generate statement');
+                throw new Error(
+                    errorData.message || 'Failed to generate statement',
+                );
             }
 
             // Get the blob and create download link
@@ -173,7 +186,11 @@ export default function GenerateStatementModal({
 
             onOpenChange(false);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to generate statement');
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to generate statement',
+            );
         } finally {
             setIsGenerating(false);
         }
@@ -202,18 +219,23 @@ export default function GenerateStatementModal({
                         'Content-Type': 'application/json',
                         Accept: 'application/pdf',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
                     },
                     body: JSON.stringify({
                         start_date: startDate,
                         end_date: endDate,
                     }),
-                }
+                },
             );
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to generate statement');
+                throw new Error(
+                    errorData.message || 'Failed to generate statement',
+                );
             }
 
             // Get the blob and open in new window for printing
@@ -228,7 +250,11 @@ export default function GenerateStatementModal({
 
             onOpenChange(false);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to generate statement');
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to generate statement',
+            );
         } finally {
             setIsGenerating(false);
         }
@@ -243,7 +269,8 @@ export default function GenerateStatementModal({
                         Generate Patient Statement
                     </DialogTitle>
                     <DialogDescription>
-                        Generate a PDF statement showing all charges and payments for a patient
+                        Generate a PDF statement showing all charges and
+                        payments for a patient
                     </DialogDescription>
                 </DialogHeader>
 
@@ -266,10 +293,13 @@ export default function GenerateStatementModal({
                                         <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div>
-                                        <p className="font-medium">{patient.full_name}</p>
+                                        <p className="font-medium">
+                                            {patient.full_name}
+                                        </p>
                                         <p className="text-sm text-muted-foreground">
                                             {patient.patient_number}
-                                            {patient.phone_number && ` • ${patient.phone_number}`}
+                                            {patient.phone_number &&
+                                                ` • ${patient.phone_number}`}
                                         </p>
                                     </div>
                                 </div>
@@ -285,16 +315,18 @@ export default function GenerateStatementModal({
                         ) : (
                             <div className="space-y-2">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
                                         type="text"
                                         placeholder="Search by name or patient number..."
                                         value={patientSearch}
-                                        onChange={(e) => setPatientSearch(e.target.value)}
+                                        onChange={(e) =>
+                                            setPatientSearch(e.target.value)
+                                        }
                                         className="pl-9"
                                     />
                                     {isSearching && (
-                                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />
+                                        <Loader2 className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />
                                     )}
                                 </div>
 
@@ -306,13 +338,17 @@ export default function GenerateStatementModal({
                                                 key={p.id}
                                                 type="button"
                                                 className="flex w-full items-center gap-3 p-3 text-left hover:bg-muted/50"
-                                                onClick={() => handleSelectPatient(p)}
+                                                onClick={() =>
+                                                    handleSelectPatient(p)
+                                                }
                                             >
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
                                                     <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">{p.full_name}</p>
+                                                    <p className="font-medium">
+                                                        {p.full_name}
+                                                    </p>
                                                     <p className="text-sm text-muted-foreground">
                                                         {p.patient_number}
                                                     </p>
@@ -322,11 +358,14 @@ export default function GenerateStatementModal({
                                     </div>
                                 )}
 
-                                {patientSearch.length >= 2 && !isSearching && searchResults.length === 0 && (
-                                    <p className="text-sm text-muted-foreground">
-                                        No patients found matching "{patientSearch}"
-                                    </p>
-                                )}
+                                {patientSearch.length >= 2 &&
+                                    !isSearching &&
+                                    searchResults.length === 0 && (
+                                        <p className="text-sm text-muted-foreground">
+                                            No patients found matching "
+                                            {patientSearch}"
+                                        </p>
+                                    )}
                             </div>
                         )}
                     </div>
@@ -366,7 +405,9 @@ export default function GenerateStatementModal({
                                 const today = new Date();
                                 const thirtyDaysAgo = new Date();
                                 thirtyDaysAgo.setDate(today.getDate() - 30);
-                                setStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
+                                setStartDate(
+                                    thirtyDaysAgo.toISOString().split('T')[0],
+                                );
                                 setEndDate(today.toISOString().split('T')[0]);
                             }}
                         >
@@ -380,7 +421,9 @@ export default function GenerateStatementModal({
                                 const today = new Date();
                                 const ninetyDaysAgo = new Date();
                                 ninetyDaysAgo.setDate(today.getDate() - 90);
-                                setStartDate(ninetyDaysAgo.toISOString().split('T')[0]);
+                                setStartDate(
+                                    ninetyDaysAgo.toISOString().split('T')[0],
+                                );
                                 setEndDate(today.toISOString().split('T')[0]);
                             }}
                         >
@@ -392,8 +435,14 @@ export default function GenerateStatementModal({
                             size="sm"
                             onClick={() => {
                                 const today = new Date();
-                                const startOfYear = new Date(today.getFullYear(), 0, 1);
-                                setStartDate(startOfYear.toISOString().split('T')[0]);
+                                const startOfYear = new Date(
+                                    today.getFullYear(),
+                                    0,
+                                    1,
+                                );
+                                setStartDate(
+                                    startOfYear.toISOString().split('T')[0],
+                                );
                                 setEndDate(today.toISOString().split('T')[0]);
                             }}
                         >
@@ -413,7 +462,9 @@ export default function GenerateStatementModal({
                     <Button
                         variant="outline"
                         onClick={handlePrint}
-                        disabled={isGenerating || !patient || !startDate || !endDate}
+                        disabled={
+                            isGenerating || !patient || !startDate || !endDate
+                        }
                     >
                         {isGenerating ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -424,7 +475,9 @@ export default function GenerateStatementModal({
                     </Button>
                     <Button
                         onClick={handleDownload}
-                        disabled={isGenerating || !patient || !startDate || !endDate}
+                        disabled={
+                            isGenerating || !patient || !startDate || !endDate
+                        }
                     >
                         {isGenerating ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

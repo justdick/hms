@@ -9,7 +9,10 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
-import { type BreadcrumbItem as BreadcrumbItemType, type SharedData } from '@/types';
+import {
+    type BreadcrumbItem as BreadcrumbItemType,
+    type SharedData,
+} from '@/types';
 import { usePage } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 
@@ -34,7 +37,10 @@ export function AppSidebarHeader({
                         <DropdownMenuTrigger asChild>
                             <button className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent focus:outline-none">
                                 <Avatar className="h-8 w-8">
-                                    <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
+                                    <AvatarImage
+                                        src={auth.user.avatar}
+                                        alt={auth.user.name}
+                                    />
                                     <AvatarFallback className="bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                                         {getInitials(auth.user.name)}
                                     </AvatarFallback>

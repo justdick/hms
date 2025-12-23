@@ -106,7 +106,10 @@ function isDateExpired(dateStr: string): boolean {
  * NHIS returns names like "DICKSON KWAME OWUSU" or "OWUSU, DICKSON KWAME"
  * Middle names go with first name: "DICKSON KWAME" + "OWUSU"
  */
-function parseNhisName(fullName: string | null | undefined): { firstName: string; lastName: string } {
+function parseNhisName(fullName: string | null | undefined): {
+    firstName: string;
+    lastName: string;
+} {
     if (!fullName) return { firstName: '', lastName: '' };
 
     const name = fullName.trim();
@@ -116,7 +119,7 @@ function parseNhisName(fullName: string | null | undefined): { firstName: string
         const parts = name.split(',').map((p) => p.trim());
         return {
             firstName: parts[1] || '', // Everything after comma is first + middle names
-            lastName: parts[0] || '',  // Before comma is last name
+            lastName: parts[0] || '', // Before comma is last name
         };
     }
 
@@ -137,7 +140,7 @@ function parseNhisName(fullName: string | null | undefined): { firstName: string
     // 3+ parts: last word is surname, everything else is first name (including middle names)
     return {
         firstName: parts.slice(0, -1).join(' '), // All but last = first + middle names
-        lastName: parts[parts.length - 1],       // Last word = surname
+        lastName: parts[parts.length - 1], // Last word = surname
     };
 }
 
@@ -164,7 +167,8 @@ export default function PatientRegistrationForm({
     const page = usePage<{ patient?: Patient }>();
 
     // NHIS Extension hook
-    const { isVerifying, cccData, startVerification, clearCccData } = useNhisExtension();
+    const { isVerifying, cccData, startVerification, clearCccData } =
+        useNhisExtension();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: '',
@@ -190,12 +194,15 @@ export default function PatientRegistrationForm({
     });
 
     // Get selected plan details
-    const selectedPlan = insurancePlans.find((p) => p.id.toString() === data.insurance_plan_id);
+    const selectedPlan = insurancePlans.find(
+        (p) => p.id.toString() === data.insurance_plan_id,
+    );
     const isNhisPlan = selectedPlan?.provider?.is_nhis ?? false;
     const verificationMode = nhisSettings?.verification_mode ?? 'manual';
 
     // Check if NHIS lookup shows INACTIVE or expired coverage
-    const isNhisInactive = cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
+    const isNhisInactive =
+        cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
     const nhisEndDate = parseNhisDate(cccData?.coverageEnd);
     const isNhisExpired = nhisEndDate ? isDateExpired(nhisEndDate) : false;
     const isNhisUnusable = isNhisInactive || isNhisExpired;
@@ -277,7 +284,11 @@ export default function PatientRegistrationForm({
         navigator.clipboard.writeText(data.membership_id).catch(() => {});
 
         // Start verification
-        startVerification(data.membership_id, nhisSettings?.credentials || undefined, nhisSettings?.nhia_portal_url);
+        startVerification(
+            data.membership_id,
+            nhisSettings?.credentials || undefined,
+            nhisSettings?.nhia_portal_url,
+        );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -315,7 +326,10 @@ export default function PatientRegistrationForm({
                                 setData('has_insurance', checked === true);
                             }}
                         />
-                        <Label htmlFor="has_insurance" className="flex items-center gap-2 text-base font-medium">
+                        <Label
+                            htmlFor="has_insurance"
+                            className="flex items-center gap-2 text-base font-medium"
+                        >
                             <Shield className="h-4 w-4 text-primary" />
                             Patient has insurance coverage
                         </Label>
@@ -325,66 +339,102 @@ export default function PatientRegistrationForm({
                         <div className="space-y-4 pl-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="insurance_plan_id">Insurance Plan *</Label>
+                                    <Label htmlFor="insurance_plan_id">
+                                        Insurance Plan *
+                                    </Label>
                                     <Select
                                         value={data.insurance_plan_id}
-                                        onValueChange={(value) => setData('insurance_plan_id', value)}
+                                        onValueChange={(value) =>
+                                            setData('insurance_plan_id', value)
+                                        }
                                     >
                                         <SelectTrigger
                                             id="insurance_plan_id"
-                                            className={errors.insurance_plan_id ? 'border-destructive' : ''}
+                                            className={
+                                                errors.insurance_plan_id
+                                                    ? 'border-destructive'
+                                                    : ''
+                                            }
                                         >
                                             <SelectValue placeholder="Select insurance plan" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {insurancePlans.map((plan) => (
-                                                <SelectItem key={plan.id} value={plan.id.toString()}>
-                                                    {plan.provider.name} - {plan.plan_name}
+                                                <SelectItem
+                                                    key={plan.id}
+                                                    value={plan.id.toString()}
+                                                >
+                                                    {plan.provider.name} -{' '}
+                                                    {plan.plan_name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.insurance_plan_id && (
-                                        <p className="text-sm text-destructive">{errors.insurance_plan_id}</p>
+                                        <p className="text-sm text-destructive">
+                                            {errors.insurance_plan_id}
+                                        </p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="membership_id">Membership ID *</Label>
+                                    <Label htmlFor="membership_id">
+                                        Membership ID *
+                                    </Label>
                                     <div className="flex gap-2">
                                         <Input
                                             id="membership_id"
                                             value={data.membership_id}
-                                            onChange={(e) => setData('membership_id', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'membership_id',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Enter membership ID"
-                                            className={errors.membership_id ? 'border-destructive' : ''}
+                                            className={
+                                                errors.membership_id
+                                                    ? 'border-destructive'
+                                                    : ''
+                                            }
                                         />
-                                        {isNhisPlan && verificationMode === 'extension' && (
-                                            <Button
-                                                type="button"
-                                                variant="default"
-                                                size="icon"
-                                                onClick={handleLookupNhis}
-                                                disabled={isVerifying || !data.membership_id.trim()}
-                                                title="Lookup from NHIS - auto-fills patient details"
-                                                className="shrink-0 bg-blue-600 hover:bg-blue-700"
-                                            >
-                                                {isVerifying ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <ExternalLink className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        )}
+                                        {isNhisPlan &&
+                                            verificationMode ===
+                                                'extension' && (
+                                                <Button
+                                                    type="button"
+                                                    variant="default"
+                                                    size="icon"
+                                                    onClick={handleLookupNhis}
+                                                    disabled={
+                                                        isVerifying ||
+                                                        !data.membership_id.trim()
+                                                    }
+                                                    title="Lookup from NHIS - auto-fills patient details"
+                                                    className="shrink-0 bg-blue-600 hover:bg-blue-700"
+                                                >
+                                                    {isVerifying ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <ExternalLink className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            )}
                                     </div>
                                     {errors.membership_id && (
-                                        <p className="text-sm text-destructive">{errors.membership_id}</p>
-                                    )}
-                                    {isNhisPlan && verificationMode === 'extension' && !cccData && (
-                                        <p className="text-xs text-muted-foreground">
-                                            💡 Click lookup to auto-fill patient name, DOB, and coverage dates
+                                        <p className="text-sm text-destructive">
+                                            {errors.membership_id}
                                         </p>
                                     )}
+                                    {isNhisPlan &&
+                                        verificationMode === 'extension' &&
+                                        !cccData && (
+                                            <p className="text-xs text-muted-foreground">
+                                                💡 Click lookup to auto-fill
+                                                patient name, DOB, and coverage
+                                                dates
+                                            </p>
+                                        )}
                                 </div>
                             </div>
 
@@ -413,7 +463,10 @@ export default function PatientRegistrationForm({
                                         ) : (
                                             <CheckCircle2 className="h-3 w-3" />
                                         )}
-                                        <span className="font-medium">NHIS: {cccData.memberName || 'Member'}</span>
+                                        <span className="font-medium">
+                                            NHIS:{' '}
+                                            {cccData.memberName || 'Member'}
+                                        </span>
                                     </div>
                                     <p
                                         className={`${
@@ -425,33 +478,51 @@ export default function PatientRegistrationForm({
                                         }`}
                                     >
                                         {cccData.status}
-                                        {cccData.dob && ` • DOB: ${cccData.dob}`}
-                                        {cccData.gender && ` • ${cccData.gender}`}
+                                        {cccData.dob &&
+                                            ` • DOB: ${cccData.dob}`}
+                                        {cccData.gender &&
+                                            ` • ${cccData.gender}`}
                                         {cccData.coverageStart &&
                                             cccData.coverageEnd &&
                                             ` • ${cccData.coverageStart} to ${cccData.coverageEnd}`}
                                         {isNhisInactive && ' (INACTIVE)'}
-                                        {!isNhisInactive && isNhisExpired && ' (EXPIRED)'}
+                                        {!isNhisInactive &&
+                                            isNhisExpired &&
+                                            ' (EXPIRED)'}
                                     </p>
                                 </div>
                             )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="policy_number">Policy Number</Label>
+                                    <Label htmlFor="policy_number">
+                                        Policy Number
+                                    </Label>
                                     <Input
                                         id="policy_number"
                                         value={data.policy_number}
-                                        onChange={(e) => setData('policy_number', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'policy_number',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="Optional"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="card_number">Card Number</Label>
+                                    <Label htmlFor="card_number">
+                                        Card Number
+                                    </Label>
                                     <Input
                                         id="card_number"
                                         value={data.card_number}
-                                        onChange={(e) => setData('card_number', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'card_number',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="Optional"
                                     />
                                 </div>
@@ -459,31 +530,48 @@ export default function PatientRegistrationForm({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="coverage_start_date">Coverage Start Date *</Label>
+                                    <Label htmlFor="coverage_start_date">
+                                        Coverage Start Date *
+                                    </Label>
                                     <Input
                                         id="coverage_start_date"
                                         type="date"
                                         value={data.coverage_start_date}
-                                        onChange={(e) => setData('coverage_start_date', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'coverage_start_date',
+                                                e.target.value,
+                                            )
+                                        }
                                         className={
                                             errors.coverage_start_date
                                                 ? 'border-destructive'
-                                                : cccData && data.coverage_start_date
+                                                : cccData &&
+                                                    data.coverage_start_date
                                                   ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
                                                   : ''
                                         }
                                     />
                                     {errors.coverage_start_date && (
-                                        <p className="text-sm text-destructive">{errors.coverage_start_date}</p>
+                                        <p className="text-sm text-destructive">
+                                            {errors.coverage_start_date}
+                                        </p>
                                     )}
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="coverage_end_date">Coverage End Date</Label>
+                                    <Label htmlFor="coverage_end_date">
+                                        Coverage End Date
+                                    </Label>
                                     <Input
                                         id="coverage_end_date"
                                         type="date"
                                         value={data.coverage_end_date}
-                                        onChange={(e) => setData('coverage_end_date', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'coverage_end_date',
+                                                e.target.value,
+                                            )
+                                        }
                                         className={
                                             cccData && data.coverage_end_date
                                                 ? isNhisExpired
@@ -500,9 +588,17 @@ export default function PatientRegistrationForm({
                                     <Checkbox
                                         id="is_dependent"
                                         checked={data.is_dependent}
-                                        onCheckedChange={(checked) => setData('is_dependent', checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setData(
+                                                'is_dependent',
+                                                checked === true,
+                                            )
+                                        }
                                     />
-                                    <Label htmlFor="is_dependent" className="font-medium">
+                                    <Label
+                                        htmlFor="is_dependent"
+                                        className="font-medium"
+                                    >
                                         Patient is a dependent
                                     </Label>
                                 </div>
@@ -510,39 +606,81 @@ export default function PatientRegistrationForm({
                                 {data.is_dependent && (
                                     <div className="grid grid-cols-2 gap-4 pl-6">
                                         <div className="space-y-2">
-                                            <Label htmlFor="principal_member_name">Principal Member Name *</Label>
+                                            <Label htmlFor="principal_member_name">
+                                                Principal Member Name *
+                                            </Label>
                                             <Input
                                                 id="principal_member_name"
-                                                value={data.principal_member_name}
-                                                onChange={(e) => setData('principal_member_name', e.target.value)}
+                                                value={
+                                                    data.principal_member_name
+                                                }
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'principal_member_name',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 placeholder="Full name of principal member"
-                                                className={errors.principal_member_name ? 'border-destructive' : ''}
+                                                className={
+                                                    errors.principal_member_name
+                                                        ? 'border-destructive'
+                                                        : ''
+                                                }
                                             />
                                             {errors.principal_member_name && (
-                                                <p className="text-sm text-destructive">{errors.principal_member_name}</p>
+                                                <p className="text-sm text-destructive">
+                                                    {
+                                                        errors.principal_member_name
+                                                    }
+                                                </p>
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="relationship_to_principal">Relationship *</Label>
+                                            <Label htmlFor="relationship_to_principal">
+                                                Relationship *
+                                            </Label>
                                             <Select
-                                                value={data.relationship_to_principal}
-                                                onValueChange={(value) => setData('relationship_to_principal', value)}
+                                                value={
+                                                    data.relationship_to_principal
+                                                }
+                                                onValueChange={(value) =>
+                                                    setData(
+                                                        'relationship_to_principal',
+                                                        value,
+                                                    )
+                                                }
                                             >
                                                 <SelectTrigger
                                                     id="relationship_to_principal"
-                                                    className={errors.relationship_to_principal ? 'border-destructive' : ''}
+                                                    className={
+                                                        errors.relationship_to_principal
+                                                            ? 'border-destructive'
+                                                            : ''
+                                                    }
                                                 >
                                                     <SelectValue placeholder="Select relationship" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="spouse">Spouse</SelectItem>
-                                                    <SelectItem value="child">Child</SelectItem>
-                                                    <SelectItem value="parent">Parent</SelectItem>
-                                                    <SelectItem value="other">Other</SelectItem>
+                                                    <SelectItem value="spouse">
+                                                        Spouse
+                                                    </SelectItem>
+                                                    <SelectItem value="child">
+                                                        Child
+                                                    </SelectItem>
+                                                    <SelectItem value="parent">
+                                                        Parent
+                                                    </SelectItem>
+                                                    <SelectItem value="other">
+                                                        Other
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             {errors.relationship_to_principal && (
-                                                <p className="text-sm text-destructive">{errors.relationship_to_principal}</p>
+                                                <p className="text-sm text-destructive">
+                                                    {
+                                                        errors.relationship_to_principal
+                                                    }
+                                                </p>
                                             )}
                                         </div>
                                     </div>
@@ -562,9 +700,17 @@ export default function PatientRegistrationForm({
                         value={data.first_name}
                         onChange={(e) => setData('first_name', e.target.value)}
                         required
-                        className={cccData && data.first_name ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''}
+                        className={
+                            cccData && data.first_name
+                                ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                : ''
+                        }
                     />
-                    {errors.first_name && <p className="text-sm text-destructive">{errors.first_name}</p>}
+                    {errors.first_name && (
+                        <p className="text-sm text-destructive">
+                            {errors.first_name}
+                        </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="last_name">Last Name *</Label>
@@ -573,9 +719,17 @@ export default function PatientRegistrationForm({
                         value={data.last_name}
                         onChange={(e) => setData('last_name', e.target.value)}
                         required
-                        className={cccData && data.last_name ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''}
+                        className={
+                            cccData && data.last_name
+                                ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                : ''
+                        }
                     />
-                    {errors.last_name && <p className="text-sm text-destructive">{errors.last_name}</p>}
+                    {errors.last_name && (
+                        <p className="text-sm text-destructive">
+                            {errors.last_name}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -587,7 +741,9 @@ export default function PatientRegistrationForm({
                         value={data.gender}
                         onChange={(e) => setData('gender', e.target.value)}
                         className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background ${
-                            cccData && data.gender ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''
+                            cccData && data.gender
+                                ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                : ''
                         }`}
                         required
                     >
@@ -595,7 +751,11 @@ export default function PatientRegistrationForm({
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
-                    {errors.gender && <p className="text-sm text-destructive">{errors.gender}</p>}
+                    {errors.gender && (
+                        <p className="text-sm text-destructive">
+                            {errors.gender}
+                        </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="date_of_birth">Date of Birth *</Label>
@@ -603,11 +763,21 @@ export default function PatientRegistrationForm({
                         id="date_of_birth"
                         type="date"
                         value={data.date_of_birth}
-                        onChange={(e) => setData('date_of_birth', e.target.value)}
+                        onChange={(e) =>
+                            setData('date_of_birth', e.target.value)
+                        }
                         required
-                        className={cccData && data.date_of_birth ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''}
+                        className={
+                            cccData && data.date_of_birth
+                                ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                : ''
+                        }
                     />
-                    {errors.date_of_birth && <p className="text-sm text-destructive">{errors.date_of_birth}</p>}
+                    {errors.date_of_birth && (
+                        <p className="text-sm text-destructive">
+                            {errors.date_of_birth}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -617,7 +787,9 @@ export default function PatientRegistrationForm({
                     <Input
                         id="phone_number"
                         value={data.phone_number}
-                        onChange={(e) => setData('phone_number', e.target.value)}
+                        onChange={(e) =>
+                            setData('phone_number', e.target.value)
+                        }
                         placeholder="+255..."
                     />
                 </div>
@@ -633,24 +805,36 @@ export default function PatientRegistrationForm({
 
             <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>
-                <Input id="address" value={data.address} onChange={(e) => setData('address', e.target.value)} />
+                <Input
+                    id="address"
+                    value={data.address}
+                    onChange={(e) => setData('address', e.target.value)}
+                />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
+                    <Label htmlFor="emergency_contact_name">
+                        Emergency Contact Name
+                    </Label>
                     <Input
                         id="emergency_contact_name"
                         value={data.emergency_contact_name}
-                        onChange={(e) => setData('emergency_contact_name', e.target.value)}
+                        onChange={(e) =>
+                            setData('emergency_contact_name', e.target.value)
+                        }
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="emergency_contact_phone">Emergency Contact Phone</Label>
+                    <Label htmlFor="emergency_contact_phone">
+                        Emergency Contact Phone
+                    </Label>
                     <Input
                         id="emergency_contact_phone"
                         value={data.emergency_contact_phone}
-                        onChange={(e) => setData('emergency_contact_phone', e.target.value)}
+                        onChange={(e) =>
+                            setData('emergency_contact_phone', e.target.value)
+                        }
                     />
                 </div>
             </div>
@@ -662,7 +846,9 @@ export default function PatientRegistrationForm({
                     </Button>
                 )}
                 <Button type="submit" disabled={processing}>
-                    {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {processing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Register
                 </Button>
             </div>

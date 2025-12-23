@@ -66,19 +66,19 @@ interface InsuranceDialogProps {
  */
 function parseNhisDate(dateStr: string | null | undefined): Date | null {
     if (!dateStr) return null;
-    
+
     // Try DD-MM-YYYY format first (common NHIS format)
     const ddmmyyyy = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
     if (ddmmyyyy) {
         return new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`);
     }
-    
+
     // Try YYYY-MM-DD format
     const yyyymmdd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (yyyymmdd) {
         return new Date(dateStr);
     }
-    
+
     // Fallback to Date parsing
     const parsed = new Date(dateStr);
     return isNaN(parsed.getTime()) ? null : parsed;
@@ -107,7 +107,7 @@ function isDateExpired(date: Date | null): boolean {
 function datesAreDifferent(date1: Date | null, date2: string | null): boolean {
     if (!date1 && !date2) return false;
     if (!date1 || !date2) return true;
-    
+
     const d1 = formatDateForBackend(date1);
     const d2 = date2.split('T')[0]; // Handle ISO format
     return d1 !== d2;
@@ -124,33 +124,41 @@ export default function InsuranceDialog({
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
     const [isSyncingDates, setIsSyncingDates] = useState(false);
-    
+
     // NHIS Extension hook
-    const { isVerifying, cccData, startVerification, clearCccData } = useNhisExtension();
+    const { isVerifying, cccData, startVerification, clearCccData } =
+        useNhisExtension();
 
     // Check if this is an NHIS provider
     const isNhisProvider = insurance.plan.provider.is_nhis ?? false;
-    
+
     // Parse dates from NHIS verification
     const nhisStartDate = parseNhisDate(cccData?.coverageStart);
     const nhisEndDate = parseNhisDate(cccData?.coverageEnd);
-    
+
     // Check if NHIS says coverage is INACTIVE or expired
-    const isInactiveFromNhis = cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
+    const isInactiveFromNhis =
+        cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
     const isExpiredFromNhis = nhisEndDate ? isDateExpired(nhisEndDate) : false;
-    
+
     // Membership is unusable if INACTIVE or expired
     const isNhisUnusable = isInactiveFromNhis || isExpiredFromNhis;
-    
+
     // Use stored expiry status if no NHIS data, otherwise use NHIS data
-    const isExpired = cccData ? isNhisUnusable : (insurance.is_expired ?? false);
+    const isExpired = cccData
+        ? isNhisUnusable
+        : (insurance.is_expired ?? false);
     const canUseInsurance = !isExpired;
-    
+
     // Check if dates need syncing (even for INACTIVE, we want to update dates)
-    const startDateChanged = nhisStartDate && datesAreDifferent(nhisStartDate, insurance.coverage_start_date);
-    const endDateChanged = nhisEndDate && datesAreDifferent(nhisEndDate, insurance.coverage_end_date);
+    const startDateChanged =
+        nhisStartDate &&
+        datesAreDifferent(nhisStartDate, insurance.coverage_start_date);
+    const endDateChanged =
+        nhisEndDate &&
+        datesAreDifferent(nhisEndDate, insurance.coverage_end_date);
     const needsDateSync = startDateChanged || endDateChanged;
-    
+
     // Determine verification mode
     const verificationMode = nhisSettings?.verification_mode ?? 'manual';
     const isExtensionMode = verificationMode === 'extension' && isNhisProvider;
@@ -165,7 +173,13 @@ export default function InsuranceDialog({
 
     // Auto-sync dates when they differ (even for INACTIVE memberships)
     useEffect(() => {
-        if (cccData && needsDateSync && nhisStartDate && nhisEndDate && !isSyncingDates) {
+        if (
+            cccData &&
+            needsDateSync &&
+            nhisStartDate &&
+            nhisEndDate &&
+            !isSyncingDates
+        ) {
             syncInsuranceDates();
         }
     }, [cccData, needsDateSync]);
@@ -182,9 +196,9 @@ export default function InsuranceDialog({
 
     const syncInsuranceDates = () => {
         if (!nhisStartDate || !nhisEndDate) return;
-        
+
         setIsSyncingDates(true);
-        
+
         router.patch(
             `/patient-insurance/${insurance.id}/sync-dates`,
             {
@@ -204,7 +218,7 @@ export default function InsuranceDialog({
                     toast.error('Failed to update insurance dates');
                     setIsSyncingDates(false);
                 },
-            }
+            },
         );
     };
 
@@ -213,14 +227,18 @@ export default function InsuranceDialog({
             setError('No NHIS membership number found');
             return;
         }
-        
+
         // Copy membership number to clipboard for manual paste
         navigator.clipboard.writeText(insurance.membership_id).catch(() => {
             // Clipboard API might fail, continue anyway
         });
-        
+
         // Start verification (opens portal, extension will auto-fill and login)
-        startVerification(insurance.membership_id, nhisSettings?.credentials || undefined, nhisSettings?.nhia_portal_url);
+        startVerification(
+            insurance.membership_id,
+            nhisSettings?.credentials || undefined,
+            nhisSettings?.nhia_portal_url,
+        );
     };
 
     const handleUseInsurance = () => {
@@ -253,7 +271,7 @@ export default function InsuranceDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleModalClose}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-base">
                         <Shield className="h-4 w-4 text-primary" />
@@ -264,28 +282,44 @@ export default function InsuranceDialog({
                 <div className="space-y-4">
                     {/* Insurance Information Display */}
                     <div className="rounded-lg border bg-muted/50 p-3">
-                        <h3 className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
                             <Building2 className="h-4 w-4" />
                             Insurance Details
                         </h3>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                             <div>
-                                <span className="text-muted-foreground">Provider: </span>
-                                <span className="font-medium">{insurance.plan.provider.name}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">Plan: </span>
-                                <span className="font-medium">{insurance.plan.plan_name}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">ID: </span>
-                                <span className="font-medium font-mono">{insurance.membership_id}</span>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">Coverage End: </span>
+                                <span className="text-muted-foreground">
+                                    Provider:{' '}
+                                </span>
                                 <span className="font-medium">
-                                    {insurance.coverage_end_date 
-                                        ? new Date(insurance.coverage_end_date).toLocaleDateString()
+                                    {insurance.plan.provider.name}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground">
+                                    Plan:{' '}
+                                </span>
+                                <span className="font-medium">
+                                    {insurance.plan.plan_name}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground">
+                                    ID:{' '}
+                                </span>
+                                <span className="font-mono font-medium">
+                                    {insurance.membership_id}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-muted-foreground">
+                                    Coverage End:{' '}
+                                </span>
+                                <span className="font-medium">
+                                    {insurance.coverage_end_date
+                                        ? new Date(
+                                              insurance.coverage_end_date,
+                                          ).toLocaleDateString()
                                         : 'N/A'}
                                 </span>
                             </div>
@@ -296,17 +330,21 @@ export default function InsuranceDialog({
                     {!cccData && isExpired && (
                         <div className="rounded-lg border border-amber-500/50 bg-amber-50 p-2 dark:bg-amber-950/20">
                             <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                                ⚠️ Coverage expired - please renew to use insurance
+                                ⚠️ Coverage expired - please renew to use
+                                insurance
                             </p>
                         </div>
                     )}
 
                     {/* CCC Verification Section */}
-                    <div className={`rounded-lg border p-3 space-y-3 ${!canUseInsurance ? 'bg-muted opacity-60' : 'bg-primary/5'}`}>
+                    <div
+                        className={`space-y-3 rounded-lg border p-3 ${!canUseInsurance ? 'bg-muted opacity-60' : 'bg-primary/5'}`}
+                    >
                         <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4 text-primary" />
                             <h4 className="text-sm font-medium">
-                                Use {isNhisProvider ? 'NHIS' : 'Insurance'} for this Visit
+                                Use {isNhisProvider ? 'NHIS' : 'Insurance'} for
+                                this Visit
                             </h4>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -338,62 +376,80 @@ export default function InsuranceDialog({
                                         </>
                                     )}
                                 </Button>
-                                
+
                                 {/* Verification Result */}
                                 {cccData && (
-                                    <div className={`rounded-md p-2 ${
-                                        isNhisUnusable 
-                                            ? 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800' 
-                                            : 'bg-green-50 dark:bg-green-950/20'
-                                    }`}>
-                                        <div className={`flex items-center gap-2 ${
-                                            isNhisUnusable 
-                                                ? 'text-red-700 dark:text-red-400' 
-                                                : 'text-green-700 dark:text-green-400'
-                                        }`}>
+                                    <div
+                                        className={`rounded-md p-2 ${
+                                            isNhisUnusable
+                                                ? 'border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20'
+                                                : 'bg-green-50 dark:bg-green-950/20'
+                                        }`}
+                                    >
+                                        <div
+                                            className={`flex items-center gap-2 ${
+                                                isNhisUnusable
+                                                    ? 'text-red-700 dark:text-red-400'
+                                                    : 'text-green-700 dark:text-green-400'
+                                            }`}
+                                        >
                                             {isNhisUnusable ? (
                                                 <AlertTriangle className="h-3 w-3" />
                                             ) : (
                                                 <CheckCircle2 className="h-3 w-3" />
                                             )}
                                             <span className="text-xs font-medium">
-                                                {isInactiveFromNhis 
-                                                    ? 'INACTIVE' 
-                                                    : isExpiredFromNhis 
-                                                        ? 'EXPIRED' 
-                                                        : 'Verified'}: {cccData.memberName || 'Member'}
+                                                {isInactiveFromNhis
+                                                    ? 'INACTIVE'
+                                                    : isExpiredFromNhis
+                                                      ? 'EXPIRED'
+                                                      : 'Verified'}
+                                                :{' '}
+                                                {cccData.memberName || 'Member'}
                                             </span>
                                         </div>
-                                        <p className={`text-xs ${
-                                            isNhisUnusable 
-                                                ? 'text-red-600 dark:text-red-500' 
-                                                : 'text-green-600 dark:text-green-500'
-                                        }`}>
-                                            {cccData.status}{cccData.coverageStart && cccData.coverageEnd ? ` • ${cccData.coverageStart} to ${cccData.coverageEnd}` : ''}
+                                        <p
+                                            className={`text-xs ${
+                                                isNhisUnusable
+                                                    ? 'text-red-600 dark:text-red-500'
+                                                    : 'text-green-600 dark:text-green-500'
+                                            }`}
+                                        >
+                                            {cccData.status}
+                                            {cccData.coverageStart &&
+                                            cccData.coverageEnd
+                                                ? ` • ${cccData.coverageStart} to ${cccData.coverageEnd}`
+                                                : ''}
                                         </p>
-                                        
+
                                         {/* Date sync indicator */}
                                         {needsDateSync && (
-                                            <div className="flex items-center gap-1 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                            <div className="mt-1 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
                                                 {isSyncingDates ? (
                                                     <>
                                                         <Loader2 className="h-3 w-3 animate-spin" />
-                                                        <span>Updating dates...</span>
+                                                        <span>
+                                                            Updating dates...
+                                                        </span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <RefreshCw className="h-3 w-3" />
-                                                        <span>Dates updated from NHIS</span>
+                                                        <span>
+                                                            Dates updated from
+                                                            NHIS
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {/* INACTIVE or Expired warning message */}
                                         {isNhisUnusable && (
-                                            <p className="text-xs font-medium text-red-700 dark:text-red-400 mt-2">
-                                                ⚠️ {isInactiveFromNhis 
-                                                    ? 'Membership is INACTIVE. Patient must renew NHIS membership to use insurance.' 
+                                            <p className="mt-2 text-xs font-medium text-red-700 dark:text-red-400">
+                                                ⚠️{' '}
+                                                {isInactiveFromNhis
+                                                    ? 'Membership is INACTIVE. Patient must renew NHIS membership to use insurance.'
                                                     : 'Coverage has expired. Patient must renew NHIS membership to use insurance.'}
                                             </p>
                                         )}
@@ -404,13 +460,20 @@ export default function InsuranceDialog({
 
                         {/* CCC Input Field */}
                         <div className="space-y-1">
-                            <Label htmlFor="claim_check_code" className="text-xs">
+                            <Label
+                                htmlFor="claim_check_code"
+                                className="text-xs"
+                            >
                                 Claim Check Code (CCC) *
                             </Label>
                             <Input
                                 id="claim_check_code"
                                 type="text"
-                                placeholder={isExtensionMode ? 'Auto-fills after verification...' : 'Enter CCC...'}
+                                placeholder={
+                                    isExtensionMode
+                                        ? 'Auto-fills after verification...'
+                                        : 'Enter CCC...'
+                                }
                                 value={claimCheckCode}
                                 onChange={(e) => {
                                     setClaimCheckCode(e.target.value);
@@ -426,24 +489,31 @@ export default function InsuranceDialog({
                                           : ''
                                 }`}
                             />
-                            {error && <p className="text-xs text-destructive">{error}</p>}
+                            {error && (
+                                <p className="text-xs text-destructive">
+                                    {error}
+                                </p>
+                            )}
                         </div>
 
                         <Button
                             onClick={handleUseInsurance}
                             size="sm"
                             className="w-full"
-                            disabled={!canUseInsurance || !claimCheckCode.trim()}
+                            disabled={
+                                !canUseInsurance || !claimCheckCode.trim()
+                            }
                         >
                             <Shield className="mr-2 h-3 w-3" />
-                            Check-in with {isNhisProvider ? 'NHIS' : 'Insurance'}
+                            Check-in with{' '}
+                            {isNhisProvider ? 'NHIS' : 'Insurance'}
                         </Button>
                     </div>
 
                     {/* Cash Payment Option */}
                     <div className="rounded-lg border p-3">
                         <h4 className="text-sm font-medium">Or Pay Cash</h4>
-                        <p className="text-xs text-muted-foreground mb-2">
+                        <p className="mb-2 text-xs text-muted-foreground">
                             Patient pays out-of-pocket instead.
                         </p>
                         <Button
@@ -458,7 +528,11 @@ export default function InsuranceDialog({
 
                     {/* Cancel Option */}
                     <div className="flex justify-end">
-                        <Button onClick={handleModalClose} variant="ghost" size="sm">
+                        <Button
+                            onClick={handleModalClose}
+                            variant="ghost"
+                            size="sm"
+                        >
                             Cancel
                         </Button>
                     </div>

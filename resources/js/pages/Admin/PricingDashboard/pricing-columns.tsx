@@ -11,14 +11,7 @@ import {
 } from '@/components/ui/tooltip';
 import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import {
-    AlertCircle,
-    ArrowUpDown,
-    Check,
-    ExternalLink,
-    History,
-    X,
-} from 'lucide-react';
+import { ArrowUpDown, Check, ExternalLink, History, X } from 'lucide-react';
 import { KeyboardEvent, useRef, useState } from 'react';
 import { PricingStatusBadge } from './components/PricingStatusBadge';
 import type { InsurancePlan, PricingItem } from './Index';
@@ -26,7 +19,11 @@ import type { InsurancePlan, PricingItem } from './Index';
 interface EditingCell {
     itemId: number;
     itemType: string;
-    field: 'cash_price' | 'copay_amount' | 'insurance_tariff' | 'coverage_value';
+    field:
+        | 'cash_price'
+        | 'copay_amount'
+        | 'insurance_tariff'
+        | 'coverage_value';
 }
 
 // Shared state for editing cells
@@ -121,14 +118,19 @@ function EditableCell({
                     copay: numValue,
                 };
             }
-        } else if ((field === 'insurance_tariff' || field === 'coverage_value') && selectedPlan) {
+        } else if (
+            (field === 'insurance_tariff' || field === 'coverage_value') &&
+            selectedPlan
+        ) {
             endpoint = '/admin/pricing-dashboard/insurance-coverage';
             data = {
                 plan_id: selectedPlan.id,
                 item_type: item.type,
                 item_id: item.id,
                 item_code: item.code,
-                [field === 'insurance_tariff' ? 'tariff_amount' : 'coverage_value']: numValue,
+                [field === 'insurance_tariff'
+                    ? 'tariff_amount'
+                    : 'coverage_value']: numValue,
             };
         }
 
@@ -213,14 +215,16 @@ export function createPricingColumns(
             onSelectionChange([...selectedItems, item]);
         } else {
             onSelectionChange(
-                selectedItems.filter((i) => !(i.id === item.id && i.type === item.type)),
+                selectedItems.filter(
+                    (i) => !(i.id === item.id && i.type === item.type),
+                ),
             );
         }
     };
 
     const calculatePatientPays = (item: PricingItem): number | null => {
         if (!selectedPlan || isNhis) return null;
-        
+
         const tariff = item.insurance_tariff ?? item.cash_price ?? 0;
         const coverageValue = item.coverage_value ?? 0;
         const coverageType = item.coverage_type ?? 'percentage';
@@ -249,7 +253,11 @@ export function createPricingColumns(
                     }
                     onCheckedChange={(value) => {
                         if (value) {
-                            onSelectionChange(table.getFilteredRowModel().rows.map(row => row.original));
+                            onSelectionChange(
+                                table
+                                    .getFilteredRowModel()
+                                    .rows.map((row) => row.original),
+                            );
                         } else {
                             onSelectionChange([]);
                         }
@@ -277,14 +285,18 @@ export function createPricingColumns(
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Code
                 <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
         ),
         cell: ({ row }) => (
-            <span className="font-mono text-sm">{row.original.code || '-'}</span>
+            <span className="font-mono text-sm">
+                {row.original.code || '-'}
+            </span>
         ),
     });
 
@@ -294,7 +306,9 @@ export function createPricingColumns(
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
             >
                 Name
                 <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -324,8 +338,13 @@ export function createPricingColumns(
         cell: ({ row }) => {
             const item = row.original;
             // Determine status based on item properties
-            let status: 'priced' | 'unpriced' | 'nhis_mapped' | 'flexible_copay' | 'not_mapped';
-            
+            let status:
+                | 'priced'
+                | 'unpriced'
+                | 'nhis_mapped'
+                | 'flexible_copay'
+                | 'not_mapped';
+
             if (item.cash_price === null || item.cash_price <= 0) {
                 status = 'unpriced';
             } else if (selectedPlan && isNhis) {
@@ -339,7 +358,7 @@ export function createPricingColumns(
             } else {
                 status = 'priced';
             }
-            
+
             return <PricingStatusBadge status={status} />;
         },
     });
@@ -350,7 +369,9 @@ export function createPricingColumns(
         header: ({ column }) => (
             <Button
                 variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                onClick={() =>
+                    column.toggleSorting(column.getIsSorted() === 'asc')
+                }
                 className="w-full justify-end"
             >
                 Cash Price
@@ -379,17 +400,27 @@ export function createPricingColumns(
                 cell: ({ row }) => {
                     const item = row.original;
                     if (item.is_mapped) {
-                        return <span className="font-mono text-sm">{item.nhis_code}</span>;
+                        return (
+                            <span className="font-mono text-sm">
+                                {item.nhis_code}
+                            </span>
+                        );
                     }
                     return (
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Badge variant="destructive" className="cursor-help">
+                                <Badge
+                                    variant="destructive"
+                                    className="cursor-help"
+                                >
                                     Not Mapped
                                 </Badge>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>This item needs to be mapped to an NHIS tariff code</p>
+                                <p>
+                                    This item needs to be mapped to an NHIS
+                                    tariff code
+                                </p>
                             </TooltipContent>
                         </Tooltip>
                     );
@@ -412,7 +443,9 @@ export function createPricingColumns(
             // Insurance Tariff column (editable)
             columns.push({
                 id: 'insurance_tariff',
-                header: () => <div className="text-right">Insurance Tariff</div>,
+                header: () => (
+                    <div className="text-right">Insurance Tariff</div>
+                ),
                 cell: ({ row }) => (
                     <div className="text-right">
                         <EditableCell
@@ -451,7 +484,7 @@ export function createPricingColumns(
                 // For NHIS: allow editing copay for both mapped items AND unmapped items (flexible copay)
                 // Unmapped items use the flexible copay endpoint
                 const isUnmappedNhisItem = isNhis && !item.is_mapped;
-                
+
                 return (
                     <div className="text-right">
                         <EditableCell
@@ -510,7 +543,9 @@ export function createPricingColumns(
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => router.visit('/admin/nhis-mappings')}
+                                    onClick={() =>
+                                        router.visit('/admin/nhis-mappings')
+                                    }
                                 >
                                     <ExternalLink className="h-4 w-4" />
                                 </Button>

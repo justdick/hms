@@ -99,8 +99,10 @@ export function NhisMappingsDataTable<TData, TValue>({
     itemTypes,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [search, setSearch] = React.useState(searchValue);
 
@@ -132,7 +134,10 @@ export function NhisMappingsDataTable<TData, TValue>({
     const debouncedSearch = useDebouncedCallback((value: string) => {
         router.get(
             window.location.pathname,
-            { search: value || undefined, item_type: itemTypeFilter || undefined },
+            {
+                search: value || undefined,
+                item_type: itemTypeFilter || undefined,
+            },
             { preserveState: true, preserveScroll: true },
         );
     }, 300);
@@ -159,7 +164,11 @@ export function NhisMappingsDataTable<TData, TValue>({
     const handlePerPageChange = (perPage: string) => {
         router.get(
             window.location.pathname,
-            { per_page: perPage, search: search || undefined, item_type: itemTypeFilter || undefined },
+            {
+                per_page: perPage,
+                search: search || undefined,
+                item_type: itemTypeFilter || undefined,
+            },
             { preserveState: true, preserveScroll: true },
         );
     };
@@ -177,7 +186,9 @@ export function NhisMappingsDataTable<TData, TValue>({
                     <Input
                         placeholder="Search by item code, NHIS code, name..."
                         value={search}
-                        onChange={(event) => handleSearchChange(event.target.value)}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
+                        }
                         className="pl-10"
                     />
                 </div>
@@ -202,12 +213,17 @@ export function NhisMappingsDataTable<TData, TValue>({
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="border-dashed">
                             <Filter className="mr-2 h-4 w-4" />
-                            {itemTypeFilter ? itemTypeLabels[itemTypeFilter] || itemTypeFilter : 'Item Type'}
+                            {itemTypeFilter
+                                ? itemTypeLabels[itemTypeFilter] ||
+                                  itemTypeFilter
+                                : 'Item Type'}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                        <DropdownMenuLabel>Filter by Item Type</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                            Filter by Item Type
+                        </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             checked={!itemTypeFilter}
@@ -219,7 +235,9 @@ export function NhisMappingsDataTable<TData, TValue>({
                             <DropdownMenuCheckboxItem
                                 key={type}
                                 checked={itemTypeFilter === type}
-                                onCheckedChange={() => handleItemTypeFilter(type)}
+                                onCheckedChange={() =>
+                                    handleItemTypeFilter(type)
+                                }
                             >
                                 {itemTypeLabels[type] || type}
                             </DropdownMenuCheckboxItem>
@@ -244,7 +262,9 @@ export function NhisMappingsDataTable<TData, TValue>({
                                         key={column.id}
                                         className="capitalize"
                                         checked={column.getIsVisible()}
-                                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
                                     >
                                         {column.id.replace(/_/g, ' ')}
                                     </DropdownMenuCheckboxItem>
@@ -289,7 +309,8 @@ export function NhisMappingsDataTable<TData, TValue>({
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
-                                                      header.column.columnDef.header,
+                                                      header.column.columnDef
+                                                          .header,
                                                       header.getContext(),
                                                   )}
                                         </TableHead>
@@ -303,7 +324,9 @@ export function NhisMappingsDataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                     className="hover:bg-muted/50"
                                 >
                                     {row.getVisibleCells().map((cell) => (
@@ -318,7 +341,10 @@ export function NhisMappingsDataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <Link2Off className="h-8 w-8 text-muted-foreground" />
                                         <div>No mappings found.</div>
@@ -328,12 +354,19 @@ export function NhisMappingsDataTable<TData, TValue>({
                                                 : 'Get started by adding your first NHIS mapping.'}
                                         </div>
                                         {!search && !itemTypeFilter && (
-                                            <div className="flex gap-2 mt-2">
-                                                <Button variant="outline" size="sm" onClick={onImportClick}>
+                                            <div className="mt-2 flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={onImportClick}
+                                                >
                                                     <Upload className="mr-2 h-4 w-4" />
                                                     Import
                                                 </Button>
-                                                <Button size="sm" onClick={onAddClick}>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={onAddClick}
+                                                >
                                                     <Plus className="mr-2 h-4 w-4" />
                                                     Add Mapping
                                                 </Button>
@@ -352,8 +385,9 @@ export function NhisMappingsDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.meta?.from && pagination.meta?.to ? (
                         <>
-                            Showing {pagination.meta.from} to {pagination.meta.to} of{' '}
-                            {pagination.meta.total} mapping(s)
+                            Showing {pagination.meta.from} to{' '}
+                            {pagination.meta.to} of {pagination.meta.total}{' '}
+                            mapping(s)
                         </>
                     ) : (
                         <>No results</>
@@ -371,7 +405,8 @@ export function NhisMappingsDataTable<TData, TValue>({
                     {pageLinks
                         .filter(
                             (link) =>
-                                !link.label.includes('Previous') && !link.label.includes('Next'),
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
                         )
                         .map((link, index) => (
                             <Button

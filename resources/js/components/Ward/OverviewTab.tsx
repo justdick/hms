@@ -220,8 +220,8 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
     // Calculate today's medication administrations
     const todayMedications = useMemo(() => {
         return (
-            admission.medication_administrations?.filter(
-                (med) => isToday(new Date(med.administered_at)),
+            admission.medication_administrations?.filter((med) =>
+                isToday(new Date(med.administered_at)),
             ) || []
         );
     }, [admission]);

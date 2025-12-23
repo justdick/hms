@@ -64,7 +64,7 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                 if (prev >= 90) return prev;
                 const increment = Math.random() * 15;
                 const newProgress = Math.min(prev + increment, 90);
-                
+
                 // Update status message based on progress
                 if (newProgress > 30 && newProgress <= 50) {
                     setStatusMessage('Decompressing backup file...');
@@ -73,7 +73,7 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                 } else if (newProgress > 70) {
                     setStatusMessage('Finalizing restore...');
                 }
-                
+
                 return newProgress;
             });
         }, 500);
@@ -87,7 +87,7 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                     setProgress(100);
                     setStatus('success');
                     setStatusMessage('Database restored successfully!');
-                    
+
                     // Force full page reload after short delay to show success
                     setTimeout(() => {
                         window.location.href = '/admin/backups';
@@ -99,7 +99,7 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                     setErrorMessage(
                         typeof errors === 'object' && errors !== null
                             ? Object.values(errors).flat().join(', ')
-                            : 'Restore failed. Please try again.'
+                            : 'Restore failed. Please try again.',
                     );
                 },
                 onFinish: () => {
@@ -132,7 +132,9 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                         ) : (
                             <AlertTriangle className="h-5 w-5" />
                         )}
-                        {status === 'success' ? 'Restore Complete' : 'Confirm Database Restore'}
+                        {status === 'success'
+                            ? 'Restore Complete'
+                            : 'Confirm Database Restore'}
                     </DialogTitle>
                     <DialogDescription>
                         {status === 'success'
@@ -153,7 +155,13 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                                     ) : (
                                         <CheckCircle className="h-4 w-4 text-green-600" />
                                     )}
-                                    <span className={status === 'success' ? 'text-green-600 font-medium' : 'text-gray-600'}>
+                                    <span
+                                        className={
+                                            status === 'success'
+                                                ? 'font-medium text-green-600'
+                                                : 'text-gray-600'
+                                        }
+                                    >
                                         {statusMessage}
                                     </span>
                                 </div>
@@ -166,7 +174,9 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                                 <div className="flex items-start gap-3">
                                     <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
                                     <div className="text-sm text-red-800 dark:text-red-200">
-                                        <p className="font-semibold">Restore Failed</p>
+                                        <p className="font-semibold">
+                                            Restore Failed
+                                        </p>
                                         <p className="mt-1">{errorMessage}</p>
                                     </div>
                                 </div>
@@ -179,11 +189,23 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                                 <div className="flex items-start gap-3">
                                     <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
                                     <div className="text-sm text-amber-800 dark:text-amber-200">
-                                        <p className="font-semibold">Warning: This action cannot be undone!</p>
+                                        <p className="font-semibold">
+                                            Warning: This action cannot be
+                                            undone!
+                                        </p>
                                         <ul className="mt-2 list-inside list-disc space-y-1">
-                                            <li>All current data will be replaced</li>
-                                            <li>A pre-restore backup will be created automatically</li>
-                                            <li>Users may experience brief downtime</li>
+                                            <li>
+                                                All current data will be
+                                                replaced
+                                            </li>
+                                            <li>
+                                                A pre-restore backup will be
+                                                created automatically
+                                            </li>
+                                            <li>
+                                                Users may experience brief
+                                                downtime
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -199,7 +221,8 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                                         {backup.filename}
                                     </p>
                                     <p className="text-sm text-gray-500">
-                                        {formatFileSize(backup.file_size)} • Created {formatDate(backup.created_at)}
+                                        {formatFileSize(backup.file_size)} •
+                                        Created {formatDate(backup.created_at)}
                                     </p>
                                 </div>
                             </div>
@@ -209,12 +232,18 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                         {(status === 'idle' || status === 'error') && (
                             <div className="space-y-2">
                                 <Label htmlFor="confirm">
-                                    Type <span className="font-mono font-bold">RESTORE</span> to confirm
+                                    Type{' '}
+                                    <span className="font-mono font-bold">
+                                        RESTORE
+                                    </span>{' '}
+                                    to confirm
                                 </Label>
                                 <Input
                                     id="confirm"
                                     value={confirmText}
-                                    onChange={(e) => setConfirmText(e.target.value)}
+                                    onChange={(e) =>
+                                        setConfirmText(e.target.value)
+                                    }
                                     placeholder="Type RESTORE"
                                     disabled={isRestoring}
                                 />
@@ -225,7 +254,11 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
 
                 <DialogFooter className="gap-2 sm:gap-0">
                     {status !== 'success' && (
-                        <Button variant="outline" onClick={handleClose} disabled={isRestoring}>
+                        <Button
+                            variant="outline"
+                            onClick={handleClose}
+                            disabled={isRestoring}
+                        >
                             Cancel
                         </Button>
                     )}
@@ -235,7 +268,9 @@ export default function RestoreConfirmationModal({ backup, onClose }: Props) {
                             onClick={handleRestore}
                             disabled={!isConfirmed || isRestoring}
                         >
-                            {status === 'error' ? 'Retry Restore' : 'Restore Database'}
+                            {status === 'error'
+                                ? 'Retry Restore'
+                                : 'Restore Database'}
                         </Button>
                     )}
                     {status === 'restoring' && (

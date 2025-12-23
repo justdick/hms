@@ -63,7 +63,8 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
             : 0;
     const previousAvg =
         previousDays.length > 0
-            ? previousDays.reduce((s, d) => s + d.revenue, 0) / previousDays.length
+            ? previousDays.reduce((s, d) => s + d.revenue, 0) /
+              previousDays.length
             : 0;
     const trendPercent =
         previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 0;
@@ -92,7 +93,7 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
                                         'font-medium',
                                         trendPercent > 0
                                             ? 'text-emerald-500'
-                                            : 'text-red-500'
+                                            : 'text-red-500',
                                     )}
                                 >
                                     {trendPercent > 0 ? '+' : ''}
@@ -112,7 +113,10 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
                         No revenue data
                     </div>
                 ) : (
-                    <ChartContainer config={chartConfig} className="h-[220px] w-full">
+                    <ChartContainer
+                        config={chartConfig}
+                        className="h-[220px] w-full"
+                    >
                         <BarChart
                             data={data}
                             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -161,8 +165,11 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
                                 content={
                                     <ChartTooltipContent
                                         labelFormatter={(_, payload) => {
-                                            if (payload?.[0]?.payload?.fullDate) {
-                                                return payload[0].payload.fullDate;
+                                            if (
+                                                payload?.[0]?.payload?.fullDate
+                                            ) {
+                                                return payload[0].payload
+                                                    .fullDate;
                                             }
                                             return '';
                                         }}

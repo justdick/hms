@@ -78,7 +78,11 @@ export default function InsurancePlanShow({ plan: planWrapper }: Props) {
                                     <FileText className="h-8 w-8" />
                                     {plan.plan_name}
                                 </h1>
-                                <Badge variant={plan.is_active ? 'default' : 'secondary'}>
+                                <Badge
+                                    variant={
+                                        plan.is_active ? 'default' : 'secondary'
+                                    }
+                                >
                                     {plan.is_active ? 'Active' : 'Inactive'}
                                 </Badge>
                             </div>
@@ -137,61 +141,92 @@ export default function InsurancePlanShow({ plan: planWrapper }: Props) {
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                             <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Annual Limit</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Annual Limit
+                                </p>
                                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                    {plan.annual_limit ? parseFloat(plan.annual_limit).toLocaleString() : 'Unlimited'}
+                                    {plan.annual_limit
+                                        ? parseFloat(
+                                              plan.annual_limit,
+                                          ).toLocaleString()
+                                        : 'Unlimited'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Visit Limit</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Visit Limit
+                                </p>
                                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
                                     {plan.visit_limit || 'Unlimited'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Default Co-pay</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Default Co-pay
+                                </p>
                                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                    {plan.default_copay_percentage ? `${plan.default_copay_percentage}%` : 'N/A'}
+                                    {plan.default_copay_percentage
+                                        ? `${plan.default_copay_percentage}%`
+                                        : 'N/A'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Requires Referral</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Requires Referral
+                                </p>
                                 <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
                                     {plan.requires_referral ? (
                                         <span className="flex items-center gap-1">
-                                            <CheckCircle2 className="h-4 w-4 text-green-600" /> Yes
+                                            <CheckCircle2 className="h-4 w-4 text-green-600" />{' '}
+                                            Yes
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-1">
-                                            <XCircle className="h-4 w-4 text-gray-400" /> No
+                                            <XCircle className="h-4 w-4 text-gray-400" />{' '}
+                                            No
                                         </span>
                                     )}
                                 </p>
                             </div>
                             {plan.effective_from && (
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Effective From</p>
-                                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100">{plan.effective_from}</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Effective From
+                                    </p>
+                                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                                        {plan.effective_from}
+                                    </p>
                                 </div>
                             )}
                             {plan.effective_to && (
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Effective To</p>
-                                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100">{plan.effective_to}</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Effective To
+                                    </p>
+                                    <p className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                                        {plan.effective_to}
+                                    </p>
                                 </div>
                             )}
                         </div>
                         {plan.description && (
                             <div className="mt-4 border-t pt-4 dark:border-gray-700">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Description</p>
-                                <p className="mt-1 text-base text-gray-900 dark:text-gray-100">{plan.description}</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Description
+                                </p>
+                                <p className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                                    {plan.description}
+                                </p>
                             </div>
                         )}
                     </CardContent>
                 </Card>
 
                 {/* Category Defaults */}
-                {(plan.consultation_default || plan.drugs_default || plan.labs_default || plan.procedures_default) && (
+                {(plan.consultation_default ||
+                    plan.drugs_default ||
+                    plan.labs_default ||
+                    plan.procedures_default) && (
                     <Card>
                         <CardHeader>
                             <CardTitle>Category Default Coverage</CardTitle>
@@ -199,27 +234,43 @@ export default function InsurancePlanShow({ plan: planWrapper }: Props) {
                         <CardContent>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                                 <div className="rounded-lg border p-4 text-center dark:border-gray-700">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Consultations</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Consultations
+                                    </p>
                                     <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {plan.consultation_default ? `${plan.consultation_default}%` : 'N/A'}
+                                        {plan.consultation_default
+                                            ? `${plan.consultation_default}%`
+                                            : 'N/A'}
                                     </p>
                                 </div>
                                 <div className="rounded-lg border p-4 text-center dark:border-gray-700">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Drugs</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Drugs
+                                    </p>
                                     <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {plan.drugs_default ? `${plan.drugs_default}%` : 'N/A'}
+                                        {plan.drugs_default
+                                            ? `${plan.drugs_default}%`
+                                            : 'N/A'}
                                     </p>
                                 </div>
                                 <div className="rounded-lg border p-4 text-center dark:border-gray-700">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Labs</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Labs
+                                    </p>
                                     <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {plan.labs_default ? `${plan.labs_default}%` : 'N/A'}
+                                        {plan.labs_default
+                                            ? `${plan.labs_default}%`
+                                            : 'N/A'}
                                     </p>
                                 </div>
                                 <div className="rounded-lg border p-4 text-center dark:border-gray-700">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Procedures</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Procedures
+                                    </p>
                                     <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {plan.procedures_default ? `${plan.procedures_default}%` : 'N/A'}
+                                        {plan.procedures_default
+                                            ? `${plan.procedures_default}%`
+                                            : 'N/A'}
                                     </p>
                                 </div>
                             </div>
@@ -234,9 +285,11 @@ export default function InsurancePlanShow({ plan: planWrapper }: Props) {
                     </CardHeader>
                     <CardContent>
                         <p className="mb-4 text-gray-600 dark:text-gray-400">
-                            All pricing, coverage rules, and tariffs for this plan are managed through the centralized
-                            Pricing Dashboard. This provides a unified view of all service pricing and insurance
-                            coverage configuration.
+                            All pricing, coverage rules, and tariffs for this
+                            plan are managed through the centralized Pricing
+                            Dashboard. This provides a unified view of all
+                            service pricing and insurance coverage
+                            configuration.
                         </p>
                         <Link href={`/admin/pricing-dashboard?plan=${plan.id}`}>
                             <Button>

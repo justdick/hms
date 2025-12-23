@@ -105,7 +105,10 @@ export default function InsuranceProvidersIndex({ providers }: Props) {
                     />
                     <StatCard
                         label="Total Plans"
-                        value={providers.data.reduce((sum, p) => sum + (p.plans_count || 0), 0)}
+                        value={providers.data.reduce(
+                            (sum, p) => sum + (p.plans_count || 0),
+                            0,
+                        )}
                         icon={<Shield className="h-5 w-5" />}
                     />
                 </div>

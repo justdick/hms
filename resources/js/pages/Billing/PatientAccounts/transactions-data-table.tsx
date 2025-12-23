@@ -56,8 +56,12 @@ export function TransactionsDataTable<TData, TValue>({
         }
     };
 
-    const prevLink = pagination?.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination?.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination?.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination?.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
@@ -70,7 +74,11 @@ export function TransactionsDataTable<TData, TValue>({
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
+                                            : flexRender(
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext(),
+                                              )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -79,17 +87,26 @@ export function TransactionsDataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-muted/50">
+                                <TableRow
+                                    key={row.id}
+                                    className="hover:bg-muted/50"
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <Receipt className="h-8 w-8 text-muted-foreground" />
                                         <div>No transactions yet</div>
@@ -113,7 +130,11 @@ export function TransactionsDataTable<TData, TValue>({
                         Previous
                     </Button>
                     {pagination.links
-                        .filter((link) => !link.label.includes('Previous') && !link.label.includes('Next'))
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
                         .map((link, index) => (
                             <Button
                                 key={index}

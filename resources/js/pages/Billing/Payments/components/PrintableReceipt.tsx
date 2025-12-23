@@ -47,154 +47,152 @@ interface PrintableReceiptProps {
  * PrintableReceipt component styled for 80mm thermal paper.
  * Width: 80mm = ~302px at 96dpi, but we use 72mm printable area = ~272px
  */
-export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps>(
-    ({ receipt, formatCurrency }, ref) => {
-        const charges = receipt.charges || (receipt.charge ? [receipt.charge] : []);
-        const totals = receipt.totals || {
-            amount: receipt.charge?.amount || 0,
-            paid: receipt.charge?.paid_amount || 0,
-            insurance_covered: receipt.charge?.insurance_covered_amount || 0,
-            patient_copay: receipt.charge?.patient_copay_amount || 0,
-        };
+export const PrintableReceipt = forwardRef<
+    HTMLDivElement,
+    PrintableReceiptProps
+>(({ receipt, formatCurrency }, ref) => {
+    const charges = receipt.charges || (receipt.charge ? [receipt.charge] : []);
+    const totals = receipt.totals || {
+        amount: receipt.charge?.amount || 0,
+        paid: receipt.charge?.paid_amount || 0,
+        insurance_covered: receipt.charge?.insurance_covered_amount || 0,
+        patient_copay: receipt.charge?.patient_copay_amount || 0,
+    };
 
-        return (
-            <div
-                ref={ref}
-                className="receipt-container bg-white text-black"
-                style={{
-                    width: '72mm',
-                    fontFamily: 'monospace',
-                    fontSize: '12px',
-                    lineHeight: '1.4',
-                    padding: '4mm',
-                }}
-            >
-                {/* Header */}
-                <div className="text-center mb-2">
-                    <div
-                        className="font-bold"
-                        style={{ fontSize: '14px' }}
-                    >
-                        {receipt.hospital.name}
+    return (
+        <div
+            ref={ref}
+            className="receipt-container bg-white text-black"
+            style={{
+                width: '72mm',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                lineHeight: '1.4',
+                padding: '4mm',
+            }}
+        >
+            {/* Header */}
+            <div className="mb-2 text-center">
+                <div className="font-bold" style={{ fontSize: '14px' }}>
+                    {receipt.hospital.name}
+                </div>
+                {receipt.hospital.address && (
+                    <div style={{ fontSize: '10px' }}>
+                        {receipt.hospital.address}
                     </div>
-                    {receipt.hospital.address && (
-                        <div style={{ fontSize: '10px' }}>
-                            {receipt.hospital.address}
+                )}
+                {receipt.hospital.phone && (
+                    <div style={{ fontSize: '10px' }}>
+                        Tel: {receipt.hospital.phone}
+                    </div>
+                )}
+            </div>
+
+            {/* Separator */}
+            <div className="my-1 text-center">{'='.repeat(32)}</div>
+
+            {/* Receipt Info */}
+            <div className="mb-2">
+                <div>Receipt: {receipt.receipt_number}</div>
+                <div>Date: {receipt.datetime}</div>
+            </div>
+
+            {/* Separator */}
+            <div className="my-1 text-center">{'-'.repeat(32)}</div>
+
+            {/* Patient Info */}
+            <div className="mb-2">
+                <div>Patient: {receipt.patient.name}</div>
+                <div>Patient #: {receipt.patient.patient_number}</div>
+            </div>
+
+            {/* Separator */}
+            <div className="my-1 text-center">{'-'.repeat(32)}</div>
+
+            {/* Charges */}
+            <div className="mb-2">
+                <div className="mb-1 font-bold">Items:</div>
+                {charges.map((charge, index) => (
+                    <div key={charge.id || index} className="mb-1">
+                        <div className="truncate" style={{ maxWidth: '100%' }}>
+                            {charge.description}
                         </div>
-                    )}
-                    {receipt.hospital.phone && (
-                        <div style={{ fontSize: '10px' }}>
-                            Tel: {receipt.hospital.phone}
+                        <div className="flex justify-between">
+                            <span>Amount:</span>
+                            <span>{formatCurrency(charge.amount)}</span>
                         </div>
-                    )}
-                </div>
-
-                {/* Separator */}
-                <div className="text-center my-1">
-                    {'='.repeat(32)}
-                </div>
-
-                {/* Receipt Info */}
-                <div className="mb-2">
-                    <div>Receipt: {receipt.receipt_number}</div>
-                    <div>Date: {receipt.datetime}</div>
-                </div>
-
-                {/* Separator */}
-                <div className="text-center my-1">
-                    {'-'.repeat(32)}
-                </div>
-
-                {/* Patient Info */}
-                <div className="mb-2">
-                    <div>Patient: {receipt.patient.name}</div>
-                    <div>Patient #: {receipt.patient.patient_number}</div>
-                </div>
-
-                {/* Separator */}
-                <div className="text-center my-1">
-                    {'-'.repeat(32)}
-                </div>
-
-                {/* Charges */}
-                <div className="mb-2">
-                    <div className="font-bold mb-1">Items:</div>
-                    {charges.map((charge, index) => (
-                        <div key={charge.id || index} className="mb-1">
-                            <div className="truncate" style={{ maxWidth: '100%' }}>
-                                {charge.description}
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Amount:</span>
-                                <span>{formatCurrency(charge.amount)}</span>
-                            </div>
-                            {charge.is_insurance_claim && charge.insurance_covered_amount > 0 && (
+                        {charge.is_insurance_claim &&
+                            charge.insurance_covered_amount > 0 && (
                                 <>
                                     <div className="flex justify-between text-xs">
                                         <span>Insurance:</span>
-                                        <span>-{formatCurrency(charge.insurance_covered_amount)}</span>
+                                        <span>
+                                            -
+                                            {formatCurrency(
+                                                charge.insurance_covered_amount,
+                                            )}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between text-xs">
                                         <span>Copay:</span>
-                                        <span>{formatCurrency(charge.patient_copay_amount)}</span>
+                                        <span>
+                                            {formatCurrency(
+                                                charge.patient_copay_amount,
+                                            )}
+                                        </span>
                                     </div>
                                 </>
                             )}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Separator */}
-                <div className="text-center my-1">
-                    {'-'.repeat(32)}
-                </div>
-
-                {/* Totals */}
-                <div className="mb-2">
-                    {charges.length > 1 && (
-                        <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>{formatCurrency(totals.amount)}</span>
-                        </div>
-                    )}
-                    {totals.insurance_covered > 0 && (
-                        <div className="flex justify-between">
-                            <span>Insurance:</span>
-                            <span>-{formatCurrency(totals.insurance_covered)}</span>
-                        </div>
-                    )}
-                    <div className="flex justify-between font-bold" style={{ fontSize: '14px' }}>
-                        <span>Amount Paid:</span>
-                        <span>{formatCurrency(totals.paid)}</span>
                     </div>
-                </div>
+                ))}
+            </div>
 
-                {/* Separator */}
-                <div className="text-center my-1">
-                    {'-'.repeat(32)}
-                </div>
+            {/* Separator */}
+            <div className="my-1 text-center">{'-'.repeat(32)}</div>
 
-                {/* Cashier */}
-                <div className="mb-2">
-                    <div>Cashier: {receipt.cashier.name}</div>
+            {/* Totals */}
+            <div className="mb-2">
+                {charges.length > 1 && (
+                    <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{formatCurrency(totals.amount)}</span>
+                    </div>
+                )}
+                {totals.insurance_covered > 0 && (
+                    <div className="flex justify-between">
+                        <span>Insurance:</span>
+                        <span>-{formatCurrency(totals.insurance_covered)}</span>
+                    </div>
+                )}
+                <div
+                    className="flex justify-between font-bold"
+                    style={{ fontSize: '14px' }}
+                >
+                    <span>Amount Paid:</span>
+                    <span>{formatCurrency(totals.paid)}</span>
                 </div>
+            </div>
 
-                {/* Footer */}
-                <div className="text-center my-1">
-                    {'-'.repeat(32)}
-                </div>
-                <div className="text-center" style={{ fontSize: '10px' }}>
-                    <div>Thank you!</div>
-                    <div>Please keep this receipt</div>
-                </div>
+            {/* Separator */}
+            <div className="my-1 text-center">{'-'.repeat(32)}</div>
 
-                {/* Final Separator */}
-                <div className="text-center mt-1">
-                    {'='.repeat(32)}
-                </div>
+            {/* Cashier */}
+            <div className="mb-2">
+                <div>Cashier: {receipt.cashier.name}</div>
+            </div>
 
-                {/* Print Styles */}
-                <style>{`
+            {/* Footer */}
+            <div className="my-1 text-center">{'-'.repeat(32)}</div>
+            <div className="text-center" style={{ fontSize: '10px' }}>
+                <div>Thank you!</div>
+                <div>Please keep this receipt</div>
+            </div>
+
+            {/* Final Separator */}
+            <div className="mt-1 text-center">{'='.repeat(32)}</div>
+
+            {/* Print Styles */}
+            <style>{`
                     @media print {
                         @page {
                             size: 80mm auto;
@@ -211,10 +209,9 @@ export const PrintableReceipt = forwardRef<HTMLDivElement, PrintableReceiptProps
                         }
                     }
                 `}</style>
-            </div>
-        );
-    }
-);
+        </div>
+    );
+});
 
 PrintableReceipt.displayName = 'PrintableReceipt';
 

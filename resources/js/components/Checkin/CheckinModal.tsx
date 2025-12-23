@@ -132,7 +132,7 @@ export default function CheckinModal({
             if (data.has_insurance) {
                 setInsuranceInfo(data.insurance);
             }
-            
+
             if (data.nhis_settings) {
                 setNhisSettings(data.nhis_settings);
             }
@@ -237,20 +237,36 @@ export default function CheckinModal({
                                     </h3>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-muted-foreground">Name:</span>
-                                            <span className="font-medium">{patient.full_name}</span>
+                                            <span className="text-muted-foreground">
+                                                Name:
+                                            </span>
+                                            <span className="font-medium">
+                                                {patient.full_name}
+                                            </span>
                                         </div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-muted-foreground">Patient #:</span>
-                                            <span className="font-medium">{patient.patient_number}</span>
+                                            <span className="text-muted-foreground">
+                                                Patient #:
+                                            </span>
+                                            <span className="font-medium">
+                                                {patient.patient_number}
+                                            </span>
                                         </div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-muted-foreground">Age/Gender:</span>
-                                            <span className="font-medium">{patient.age}y, {patient.gender}</span>
+                                            <span className="text-muted-foreground">
+                                                Age/Gender:
+                                            </span>
+                                            <span className="font-medium">
+                                                {patient.age}y, {patient.gender}
+                                            </span>
                                         </div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-muted-foreground">Phone:</span>
-                                            <span className="font-medium">{patient.phone_number || 'N/A'}</span>
+                                            <span className="text-muted-foreground">
+                                                Phone:
+                                            </span>
+                                            <span className="font-medium">
+                                                {patient.phone_number || 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -278,23 +294,32 @@ export default function CheckinModal({
                                                     : 'text-primary'
                                             }`}
                                         >
-                                            {insuranceInfo.is_expired ? '⚠️' : '✓'}{' '}
-                                            {insuranceInfo.plan.provider.name} - {insuranceInfo.plan.plan_name}
+                                            {insuranceInfo.is_expired
+                                                ? '⚠️'
+                                                : '✓'}{' '}
+                                            {insuranceInfo.plan.provider.name} -{' '}
+                                            {insuranceInfo.plan.plan_name}
                                             <span className="ml-2 font-normal text-muted-foreground">
                                                 ({insuranceInfo.membership_id})
                                             </span>
                                             {insuranceInfo.coverage_end_date && (
                                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                                    Exp: {new Date(insuranceInfo.coverage_end_date).toLocaleDateString()}
+                                                    Exp:{' '}
+                                                    {new Date(
+                                                        insuranceInfo.coverage_end_date,
+                                                    ).toLocaleDateString()}
                                                     {insuranceInfo.is_expired && (
-                                                        <span className="ml-1 text-amber-600 dark:text-amber-500">(EXPIRED)</span>
+                                                        <span className="ml-1 text-amber-600 dark:text-amber-500">
+                                                            (EXPIRED)
+                                                        </span>
                                                     )}
                                                 </span>
                                             )}
                                         </p>
                                         {insuranceInfo.is_expired && (
                                             <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                                                Insurance expired - cash payment only
+                                                Insurance expired - cash payment
+                                                only
                                             </p>
                                         )}
                                     </div>
@@ -308,7 +333,10 @@ export default function CheckinModal({
                                     </h3>
 
                                     <div className="space-y-1">
-                                        <Label htmlFor="department_id" className="text-sm">
+                                        <Label
+                                            htmlFor="department_id"
+                                            className="text-sm"
+                                        >
                                             Clinic/Department *
                                         </Label>
                                         {departments.length === 0 ? (
@@ -320,43 +348,70 @@ export default function CheckinModal({
                                                 id="department_id"
                                                 value={selectedDepartment}
                                                 onChange={(e) =>
-                                                    setSelectedDepartment(e.target.value)
+                                                    setSelectedDepartment(
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 required
                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                <option value="">Choose a clinic...</option>
-                                                {departments.map((department) => (
-                                                    <option key={department.id} value={department.id}>
-                                                        {department.name} - {department.description}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Choose a clinic...
+                                                </option>
+                                                {departments.map(
+                                                    (department) => (
+                                                        <option
+                                                            key={department.id}
+                                                            value={
+                                                                department.id
+                                                            }
+                                                        >
+                                                            {department.name} -{' '}
+                                                            {
+                                                                department.description
+                                                            }
+                                                        </option>
+                                                    ),
+                                                )}
                                             </select>
                                         )}
                                     </div>
 
                                     <div className="space-y-1">
-                                        <Label htmlFor="service_date" className="text-sm">
+                                        <Label
+                                            htmlFor="service_date"
+                                            className="text-sm"
+                                        >
                                             Service Date
                                         </Label>
                                         <input
                                             type="date"
                                             id="service_date"
                                             value={serviceDate || today}
-                                            onChange={(e) => setServiceDate(e.target.value)}
+                                            onChange={(e) =>
+                                                setServiceDate(e.target.value)
+                                            }
                                             max={today}
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <Label htmlFor="notes" className="text-sm">
-                                            Notes <span className="text-xs text-muted-foreground">(optional)</span>
+                                        <Label
+                                            htmlFor="notes"
+                                            className="text-sm"
+                                        >
+                                            Notes{' '}
+                                            <span className="text-xs text-muted-foreground">
+                                                (optional)
+                                            </span>
                                         </Label>
                                         <textarea
                                             id="notes"
                                             value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
+                                            onChange={(e) =>
+                                                setNotes(e.target.value)
+                                            }
                                             placeholder="Additional notes..."
                                             rows={2}
                                             className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
@@ -366,7 +421,12 @@ export default function CheckinModal({
 
                                 {/* Action Buttons */}
                                 <div className="flex justify-end gap-2 pt-2">
-                                    <Button type="button" variant="outline" size="sm" onClick={handleModalClose}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleModalClose}
+                                    >
                                         Cancel
                                     </Button>
                                     <Button
@@ -374,14 +434,23 @@ export default function CheckinModal({
                                         size="sm"
                                         onClick={() => {
                                             if (!selectedDepartment) {
-                                                toast.error('Please select a department');
+                                                toast.error(
+                                                    'Please select a department',
+                                                );
                                                 return;
                                             }
-                                            handleDepartmentSelected(selectedDepartment);
+                                            handleDepartmentSelected(
+                                                selectedDepartment,
+                                            );
                                         }}
-                                        disabled={checkingInsurance || departments.length === 0}
+                                        disabled={
+                                            checkingInsurance ||
+                                            departments.length === 0
+                                        }
                                     >
-                                        {checkingInsurance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {checkingInsurance && (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        )}
                                         Check-in
                                     </Button>
                                 </div>

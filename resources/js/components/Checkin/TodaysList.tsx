@@ -209,10 +209,13 @@ export default function TodaysList({
     };
 
     const getStatusBadge = (status: string) => {
-        const statusConfig: Record<string, { label: string; className: string }> = {
-            checked_in: { 
-                label: 'Checked In', 
-                className: 'bg-blue-100 text-blue-700 border-blue-200' 
+        const statusConfig: Record<
+            string,
+            { label: string; className: string }
+        > = {
+            checked_in: {
+                label: 'Checked In',
+                className: 'bg-blue-100 text-blue-700 border-blue-200',
             },
             vitals_taken: {
                 label: 'Vitals Taken',
@@ -226,19 +229,21 @@ export default function TodaysList({
                 label: 'In Consultation',
                 className: 'bg-purple-100 text-purple-700 border-purple-200',
             },
-            completed: { 
-                label: 'Completed', 
-                className: 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+            completed: {
+                label: 'Completed',
+                className: 'bg-emerald-100 text-emerald-700 border-emerald-200',
             },
-            cancelled: { 
-                label: 'Cancelled', 
-                className: 'bg-gray-100 text-gray-500 border-gray-200' 
+            cancelled: {
+                label: 'Cancelled',
+                className: 'bg-gray-100 text-gray-500 border-gray-200',
             },
         };
 
         const config = statusConfig[status] || statusConfig.checked_in;
         return (
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${config.className}`}>
+            <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${config.className}`}
+            >
                 {config.label}
             </span>
         );
@@ -466,7 +471,8 @@ export default function TodaysList({
                                         ) : (
                                             <>
                                                 <span>
-                                                    {checkin.department?.name ?? 'N/A'}
+                                                    {checkin.department?.name ??
+                                                        'N/A'}
                                                 </span>
                                                 {checkin.status ===
                                                     'checked_in' &&
@@ -564,29 +570,33 @@ export default function TodaysList({
                                             Record Vitals
                                         </Button>
                                     )}
-                                    {canEditVitals && checkin.vital_signs && checkin.vital_signs.length > 0 && onEditVitals && (
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={() =>
-                                                onEditVitals(checkin)
-                                            }
-                                        >
-                                            Edit Vitals
-                                        </Button>
-                                    )}
-                                    {canCancelCheckin && canCancel(checkin.status) && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                                handleCancelClick(checkin)
-                                            }
-                                            className="text-destructive hover:bg-destructive/10"
-                                        >
-                                            Cancel
-                                        </Button>
-                                    )}
+                                    {canEditVitals &&
+                                        checkin.vital_signs &&
+                                        checkin.vital_signs.length > 0 &&
+                                        onEditVitals && (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() =>
+                                                    onEditVitals(checkin)
+                                                }
+                                            >
+                                                Edit Vitals
+                                            </Button>
+                                        )}
+                                    {canCancelCheckin &&
+                                        canCancel(checkin.status) && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    handleCancelClick(checkin)
+                                                }
+                                                className="text-destructive hover:bg-destructive/10"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        )}
                                 </div>
                             </div>
                         </div>

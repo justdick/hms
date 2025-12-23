@@ -30,7 +30,6 @@ import {
     Trash2,
     Upload,
     User,
-    X,
 } from 'lucide-react';
 import * as React from 'react';
 import { ImageUploadZone } from './ImageUploadZone';
@@ -99,23 +98,42 @@ interface Props {
     context: Context | null;
 }
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusConfig: Record<
+    string,
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }
+> = {
     ordered: { label: 'Ordered', variant: 'secondary' },
     in_progress: { label: 'In Progress', variant: 'default' },
     completed: { label: 'Completed', variant: 'outline' },
 };
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
-    stat: { label: 'STAT', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-bold' },
-    urgent: { label: 'URGENT', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 font-semibold' },
-    routine: { label: 'Routine', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
+    stat: {
+        label: 'STAT',
+        className:
+            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-bold',
+    },
+    urgent: {
+        label: 'URGENT',
+        className:
+            'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 font-semibold',
+    },
+    routine: {
+        label: 'Routine',
+        className:
+            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+    },
 };
 
 export default function RadiologyShow({ labOrder, patient, context }: Props) {
     const [showCompleteDialog, setShowCompleteDialog] = React.useState(false);
     const [showUploadDialog, setShowUploadDialog] = React.useState(false);
     const [showImageViewer, setShowImageViewer] = React.useState(false);
-    const [selectedImage, setSelectedImage] = React.useState<ImagingAttachment | null>(null);
+    const [selectedImage, setSelectedImage] =
+        React.useState<ImagingAttachment | null>(null);
     const [reportFindings, setReportFindings] = React.useState('');
     const [reportImpression, setReportImpression] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
@@ -125,7 +143,10 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
         const birth = new Date(dateOfBirth);
         let age = today.getFullYear() - birth.getFullYear();
         const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birth.getDate())
+        ) {
             age--;
         }
         return age;
@@ -141,9 +162,13 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
 
     const handleMarkInProgress = () => {
         setIsProcessing(true);
-        router.patch(`/radiology/orders/${labOrder.id}/in-progress`, {}, {
-            onFinish: () => setIsProcessing(false),
-        });
+        router.patch(
+            `/radiology/orders/${labOrder.id}/in-progress`,
+            {},
+            {
+                onFinish: () => setIsProcessing(false),
+            },
+        );
     };
 
     const handleComplete = () => {
@@ -153,17 +178,21 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
 
         setIsProcessing(true);
         const resultNotes = `**FINDINGS:**\n${reportFindings}\n\n**IMPRESSION:**\n${reportImpression}`;
-        
-        router.patch(`/radiology/orders/${labOrder.id}/complete`, {
-            result_notes: resultNotes,
-        }, {
-            onSuccess: () => {
-                setShowCompleteDialog(false);
-                setReportFindings('');
-                setReportImpression('');
+
+        router.patch(
+            `/radiology/orders/${labOrder.id}/complete`,
+            {
+                result_notes: resultNotes,
             },
-            onFinish: () => setIsProcessing(false),
-        });
+            {
+                onSuccess: () => {
+                    setShowCompleteDialog(false);
+                    setReportFindings('');
+                    setReportImpression('');
+                },
+                onFinish: () => setIsProcessing(false),
+            },
+        );
     };
 
     const handleDeleteAttachment = (attachmentId: number) => {
@@ -182,27 +211,38 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
     };
 
     const canMarkInProgress = labOrder.status === 'ordered';
-    const canUploadImages = ['ordered', 'in_progress'].includes(labOrder.status);
+    const canUploadImages = ['ordered', 'in_progress'].includes(
+        labOrder.status,
+    );
     const canComplete = ['ordered', 'in_progress'].includes(labOrder.status);
     const isCompleted = labOrder.status === 'completed';
 
     // Parse existing report if completed
     React.useEffect(() => {
         if (labOrder.result_notes) {
-            const findingsMatch = labOrder.result_notes.match(/\*\*FINDINGS:\*\*\n([\s\S]*?)(?=\n\n\*\*IMPRESSION:|$)/);
-            const impressionMatch = labOrder.result_notes.match(/\*\*IMPRESSION:\*\*\n([\s\S]*?)$/);
-            
+            const findingsMatch = labOrder.result_notes.match(
+                /\*\*FINDINGS:\*\*\n([\s\S]*?)(?=\n\n\*\*IMPRESSION:|$)/,
+            );
+            const impressionMatch = labOrder.result_notes.match(
+                /\*\*IMPRESSION:\*\*\n([\s\S]*?)$/,
+            );
+
             if (findingsMatch) setReportFindings(findingsMatch[1].trim());
             if (impressionMatch) setReportImpression(impressionMatch[1].trim());
         }
     }, [labOrder.result_notes]);
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'Investigations', href: '#' },
-            { title: 'Radiology', href: '/radiology' },
-            { title: `Order #${labOrder.id}`, href: `/radiology/orders/${labOrder.id}` },
-        ]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Investigations', href: '#' },
+                { title: 'Radiology', href: '/radiology' },
+                {
+                    title: `Order #${labOrder.id}`,
+                    href: `/radiology/orders/${labOrder.id}`,
+                },
+            ]}
+        >
             <Head title={`Imaging Order #${labOrder.id}`} />
 
             <div className="space-y-6">
@@ -227,12 +267,23 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${priorityConfig[labOrder.priority]?.className || ''}`}>
-                            {labOrder.priority === 'stat' && <AlertCircle className="mr-1 h-3 w-3" />}
-                            {priorityConfig[labOrder.priority]?.label || labOrder.priority}
+                        <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs ${priorityConfig[labOrder.priority]?.className || ''}`}
+                        >
+                            {labOrder.priority === 'stat' && (
+                                <AlertCircle className="mr-1 h-3 w-3" />
+                            )}
+                            {priorityConfig[labOrder.priority]?.label ||
+                                labOrder.priority}
                         </span>
-                        <Badge variant={statusConfig[labOrder.status]?.variant || 'secondary'}>
-                            {statusConfig[labOrder.status]?.label || labOrder.status}
+                        <Badge
+                            variant={
+                                statusConfig[labOrder.status]?.variant ||
+                                'secondary'
+                            }
+                        >
+                            {statusConfig[labOrder.status]?.label ||
+                                labOrder.status}
                         </Badge>
                     </div>
                 </div>
@@ -281,36 +332,57 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                             {patient ? (
                                 <>
                                     <div>
-                                        <Label className="text-sm font-medium">Name</Label>
+                                        <Label className="text-sm font-medium">
+                                            Name
+                                        </Label>
                                         <p className="text-sm">
-                                            {patient.first_name} {patient.last_name}
+                                            {patient.first_name}{' '}
+                                            {patient.last_name}
                                         </p>
                                     </div>
                                     <div>
-                                        <Label className="text-sm font-medium">Patient Number</Label>
-                                        <p className="text-sm font-mono">{patient.patient_number}</p>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium">Age & Gender</Label>
-                                        <p className="text-sm">
-                                            {calculateAge(patient.date_of_birth)} years old, {patient.gender}
+                                        <Label className="text-sm font-medium">
+                                            Patient Number
+                                        </Label>
+                                        <p className="font-mono text-sm">
+                                            {patient.patient_number}
                                         </p>
                                     </div>
                                     <div>
-                                        <Label className="text-sm font-medium">Date of Birth</Label>
+                                        <Label className="text-sm font-medium">
+                                            Age & Gender
+                                        </Label>
                                         <p className="text-sm">
-                                            {format(new Date(patient.date_of_birth), 'PPP')}
+                                            {calculateAge(
+                                                patient.date_of_birth,
+                                            )}{' '}
+                                            years old, {patient.gender}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium">
+                                            Date of Birth
+                                        </Label>
+                                        <p className="text-sm">
+                                            {format(
+                                                new Date(patient.date_of_birth),
+                                                'PPP',
+                                            )}
                                         </p>
                                     </div>
                                     {patient.phone_number && (
                                         <div className="flex items-center gap-1">
                                             <Phone className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-sm">{patient.phone_number}</span>
+                                            <span className="text-sm">
+                                                {patient.phone_number}
+                                            </span>
                                         </div>
                                     )}
                                 </>
                             ) : (
-                                <p className="text-muted-foreground">Patient information not available</p>
+                                <p className="text-muted-foreground">
+                                    Patient information not available
+                                </p>
                             )}
                         </CardContent>
                     </Card>
@@ -325,26 +397,42 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div>
-                                <Label className="text-sm font-medium">Study Type</Label>
-                                <p className="text-sm font-medium">{labOrder.lab_service.name}</p>
-                                <p className="text-xs text-muted-foreground">Code: {labOrder.lab_service.code}</p>
+                                <Label className="text-sm font-medium">
+                                    Study Type
+                                </Label>
+                                <p className="text-sm font-medium">
+                                    {labOrder.lab_service.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Code: {labOrder.lab_service.code}
+                                </p>
                             </div>
                             {labOrder.lab_service.modality && (
                                 <div>
-                                    <Label className="text-sm font-medium">Modality</Label>
+                                    <Label className="text-sm font-medium">
+                                        Modality
+                                    </Label>
                                     <p className="text-sm">
-                                        <Badge variant="outline">{labOrder.lab_service.modality}</Badge>
+                                        <Badge variant="outline">
+                                            {labOrder.lab_service.modality}
+                                        </Badge>
                                     </p>
                                 </div>
                             )}
                             <div>
-                                <Label className="text-sm font-medium">Category</Label>
-                                <p className="text-sm">{labOrder.lab_service.category}</p>
+                                <Label className="text-sm font-medium">
+                                    Category
+                                </Label>
+                                <p className="text-sm">
+                                    {labOrder.lab_service.category}
+                                </p>
                             </div>
                             {labOrder.clinical_notes && (
                                 <div>
-                                    <Label className="text-sm font-medium">Clinical Indication</Label>
-                                    <p className="text-sm rounded border bg-muted/50 p-2">
+                                    <Label className="text-sm font-medium">
+                                        Clinical Indication
+                                    </Label>
+                                    <p className="rounded border bg-muted/50 p-2 text-sm">
                                         {labOrder.clinical_notes}
                                     </p>
                                 </div>
@@ -362,29 +450,49 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div>
-                                <Label className="text-sm font-medium">Ordered By</Label>
-                                <p className="text-sm">{labOrder.ordered_by.name}</p>
+                                <Label className="text-sm font-medium">
+                                    Ordered By
+                                </Label>
+                                <p className="text-sm">
+                                    {labOrder.ordered_by.name}
+                                </p>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm">
-                                    Ordered: {format(new Date(labOrder.ordered_at), 'PPpp')}
+                                    Ordered:{' '}
+                                    {format(
+                                        new Date(labOrder.ordered_at),
+                                        'PPpp',
+                                    )}
                                 </span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm">
-                                    {formatDistanceToNow(new Date(labOrder.ordered_at), { addSuffix: true })}
+                                    {formatDistanceToNow(
+                                        new Date(labOrder.ordered_at),
+                                        { addSuffix: true },
+                                    )}
                                 </span>
                             </div>
                             {context && (
                                 <div>
-                                    <Label className="text-sm font-medium">Context</Label>
+                                    <Label className="text-sm font-medium">
+                                        Context
+                                    </Label>
                                     <p className="text-sm">
                                         {context.type === 'consultation' ? (
-                                            <>Consultation - {context.department}</>
+                                            <>
+                                                Consultation -{' '}
+                                                {context.department}
+                                            </>
                                         ) : (
-                                            <>Ward Round Day {context.day_number} - {context.ward}</>
+                                            <>
+                                                Ward Round Day{' '}
+                                                {context.day_number} -{' '}
+                                                {context.ward}
+                                            </>
                                         )}
                                     </p>
                                     {context.doctor && (
@@ -398,7 +506,13 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                 <div className="flex items-center gap-1">
                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                     <span className="text-sm">
-                                        Completed: {format(new Date(labOrder.result_entered_at), 'PPpp')}
+                                        Completed:{' '}
+                                        {format(
+                                            new Date(
+                                                labOrder.result_entered_at,
+                                            ),
+                                            'PPpp',
+                                        )}
                                     </span>
                                 </div>
                             )}
@@ -415,7 +529,12 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm">{labOrder.lab_service.preparation_instructions}</p>
+                                <p className="text-sm">
+                                    {
+                                        labOrder.lab_service
+                                            .preparation_instructions
+                                    }
+                                </p>
                             </CardContent>
                         </Card>
                     )}
@@ -432,67 +551,96 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                     <CardContent>
                         {labOrder.imaging_attachments.length > 0 ? (
                             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                {labOrder.imaging_attachments.map((attachment) => (
-                                    <div
-                                        key={attachment.id}
-                                        className="group relative rounded-lg border bg-muted/30 p-2"
-                                    >
+                                {labOrder.imaging_attachments.map(
+                                    (attachment) => (
                                         <div
-                                            className="aspect-square cursor-pointer overflow-hidden rounded-md bg-muted"
-                                            onClick={() => openImageViewer(attachment)}
+                                            key={attachment.id}
+                                            className="group relative rounded-lg border bg-muted/30 p-2"
                                         >
-                                            {attachment.file_type.startsWith('image/') ? (
-                                                <img
-                                                    src={attachment.url}
-                                                    alt={attachment.description || attachment.file_name}
-                                                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <FileText className="h-12 w-12 text-muted-foreground" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="mt-2 space-y-1">
-                                            <p className="truncate text-sm font-medium" title={attachment.file_name}>
-                                                {attachment.description || attachment.file_name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {formatFileSize(attachment.file_size)}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                By {attachment.uploaded_by.name}
-                                            </p>
-                                            {attachment.is_external && (
-                                                <Badge variant="outline" className="text-xs">
-                                                    External
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        <div className="absolute top-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8"
-                                                asChild
+                                            <div
+                                                className="aspect-square cursor-pointer overflow-hidden rounded-md bg-muted"
+                                                onClick={() =>
+                                                    openImageViewer(attachment)
+                                                }
                                             >
-                                                <a href={`/radiology/attachments/${attachment.id}/download`} download>
-                                                    <Download className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                            {canUploadImages && (
+                                                {attachment.file_type.startsWith(
+                                                    'image/',
+                                                ) ? (
+                                                    <img
+                                                        src={attachment.url}
+                                                        alt={
+                                                            attachment.description ||
+                                                            attachment.file_name
+                                                        }
+                                                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center">
+                                                        <FileText className="h-12 w-12 text-muted-foreground" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 space-y-1">
+                                                <p
+                                                    className="truncate text-sm font-medium"
+                                                    title={attachment.file_name}
+                                                >
+                                                    {attachment.description ||
+                                                        attachment.file_name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatFileSize(
+                                                        attachment.file_size,
+                                                    )}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    By{' '}
+                                                    {
+                                                        attachment.uploaded_by
+                                                            .name
+                                                    }
+                                                </p>
+                                                {attachment.is_external && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="text-xs"
+                                                    >
+                                                        External
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div className="absolute top-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <Button
                                                     size="icon"
-                                                    variant="destructive"
+                                                    variant="secondary"
                                                     className="h-8 w-8"
-                                                    onClick={() => handleDeleteAttachment(attachment.id)}
+                                                    asChild
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <a
+                                                        href={`/radiology/attachments/${attachment.id}/download`}
+                                                        download
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                    </a>
                                                 </Button>
-                                            )}
+                                                {canUploadImages && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="destructive"
+                                                        className="h-8 w-8"
+                                                        onClick={() =>
+                                                            handleDeleteAttachment(
+                                                                attachment.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ),
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -504,7 +652,9 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                     <Button
                                         variant="outline"
                                         className="mt-4"
-                                        onClick={() => setShowUploadDialog(true)}
+                                        onClick={() =>
+                                            setShowUploadDialog(true)
+                                        }
                                     >
                                         <Upload className="mr-2 h-4 w-4" />
                                         Upload Images
@@ -526,16 +676,21 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <Label className="text-sm font-medium">Findings</Label>
+                                <Label className="text-sm font-medium">
+                                    Findings
+                                </Label>
                                 <div className="mt-1 rounded-md bg-muted p-3 text-sm whitespace-pre-wrap">
                                     {reportFindings || 'No findings recorded'}
                                 </div>
                             </div>
                             <Separator />
                             <div>
-                                <Label className="text-sm font-medium">Impression</Label>
+                                <Label className="text-sm font-medium">
+                                    Impression
+                                </Label>
                                 <div className="mt-1 rounded-md bg-muted p-3 text-sm whitespace-pre-wrap">
-                                    {reportImpression || 'No impression recorded'}
+                                    {reportImpression ||
+                                        'No impression recorded'}
                                 </div>
                             </div>
                         </CardContent>
@@ -549,7 +704,8 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                     <DialogHeader>
                         <DialogTitle>Upload Images</DialogTitle>
                         <DialogDescription>
-                            Upload imaging files for this study. Supported formats: JPEG, PNG, PDF (max 50MB each).
+                            Upload imaging files for this study. Supported
+                            formats: JPEG, PNG, PDF (max 50MB each).
                         </DialogDescription>
                     </DialogHeader>
                     <ImageUploadZone
@@ -563,12 +719,16 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
             </Dialog>
 
             {/* Complete Dialog */}
-            <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+            <Dialog
+                open={showCompleteDialog}
+                onOpenChange={setShowCompleteDialog}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Complete Imaging Study</DialogTitle>
                         <DialogDescription>
-                            Enter the radiologist report to complete this imaging study.
+                            Enter the radiologist report to complete this
+                            imaging study.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -578,7 +738,9 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                 id="findings"
                                 placeholder="Describe the imaging findings..."
                                 value={reportFindings}
-                                onChange={(e) => setReportFindings(e.target.value)}
+                                onChange={(e) =>
+                                    setReportFindings(e.target.value)
+                                }
                                 rows={6}
                                 className="mt-1"
                             />
@@ -589,7 +751,9 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                 id="impression"
                                 placeholder="Provide the clinical impression..."
                                 value={reportImpression}
-                                onChange={(e) => setReportImpression(e.target.value)}
+                                onChange={(e) =>
+                                    setReportImpression(e.target.value)
+                                }
                                 rows={4}
                                 className="mt-1"
                             />
@@ -604,7 +768,11 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         </Button>
                         <Button
                             onClick={handleComplete}
-                            disabled={isProcessing || (!reportFindings.trim() && !reportImpression.trim())}
+                            disabled={
+                                isProcessing ||
+                                (!reportFindings.trim() &&
+                                    !reportImpression.trim())
+                            }
                         >
                             {isProcessing ? 'Completing...' : 'Complete Study'}
                         </Button>
@@ -617,28 +785,40 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                 <DialogContent className="max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>
-                            {selectedImage?.description || selectedImage?.file_name}
+                            {selectedImage?.description ||
+                                selectedImage?.file_name}
                         </DialogTitle>
                     </DialogHeader>
                     {selectedImage && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-center bg-black rounded-lg overflow-hidden max-h-[70vh]">
-                                {selectedImage.file_type.startsWith('image/') ? (
+                            <div className="flex max-h-[70vh] items-center justify-center overflow-hidden rounded-lg bg-black">
+                                {selectedImage.file_type.startsWith(
+                                    'image/',
+                                ) ? (
                                     <img
                                         src={selectedImage.url}
-                                        alt={selectedImage.description || selectedImage.file_name}
+                                        alt={
+                                            selectedImage.description ||
+                                            selectedImage.file_name
+                                        }
                                         className="max-h-[70vh] object-contain"
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-12">
                                         <FileText className="h-16 w-16 text-white" />
-                                        <p className="mt-2 text-white">PDF Document</p>
+                                        <p className="mt-2 text-white">
+                                            PDF Document
+                                        </p>
                                         <Button
                                             variant="secondary"
                                             className="mt-4"
                                             asChild
                                         >
-                                            <a href={selectedImage.url} target="_blank" rel="noopener noreferrer">
+                                            <a
+                                                href={selectedImage.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
                                                 Open PDF
                                             </a>
                                         </Button>
@@ -647,12 +827,23 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                             </div>
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <div>
-                                    <p>Uploaded by {selectedImage.uploaded_by.name}</p>
-                                    <p>{format(new Date(selectedImage.uploaded_at), 'PPpp')}</p>
+                                    <p>
+                                        Uploaded by{' '}
+                                        {selectedImage.uploaded_by.name}
+                                    </p>
+                                    <p>
+                                        {format(
+                                            new Date(selectedImage.uploaded_at),
+                                            'PPpp',
+                                        )}
+                                    </p>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button variant="outline" size="sm" asChild>
-                                        <a href={`/radiology/attachments/${selectedImage.id}/download`} download>
+                                        <a
+                                            href={`/radiology/attachments/${selectedImage.id}/download`}
+                                            download
+                                        >
                                             <Download className="mr-2 h-4 w-4" />
                                             Download
                                         </a>

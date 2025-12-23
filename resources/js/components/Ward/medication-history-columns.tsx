@@ -8,12 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import {
-    ArrowUpDown,
-    MoreVertical,
-    Pill,
-    XCircle,
-} from 'lucide-react';
+import { ArrowUpDown, MoreVertical, Pill, XCircle } from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -179,7 +174,9 @@ export const medicationHistoryColumns = (
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                            onClick={() => actions.onDiscontinue(prescription.id)}
+                            onClick={() =>
+                                actions.onDiscontinue(prescription.id)
+                            }
                             className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                         >
                             <XCircle className="mr-2 h-4 w-4" />

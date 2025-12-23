@@ -83,7 +83,9 @@ export function RefillPrescriptionModal({
                     consultationId: consultId,
                     date: prescription.consultation.started_at,
                     doctorName: prescription.consultation.doctor.name,
-                    departmentName: prescription.consultation.patient_checkin.department.name,
+                    departmentName:
+                        prescription.consultation.patient_checkin.department
+                            .name,
                     prescriptions: [],
                 });
             }
@@ -92,7 +94,10 @@ export function RefillPrescriptionModal({
 
         // Sort by date descending and take last 5 visits
         return Array.from(visitMap.values())
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .sort(
+                (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime(),
+            )
             .slice(0, 5);
     }, [previousPrescriptions]);
 
@@ -108,18 +113,24 @@ export function RefillPrescriptionModal({
         setSelectedIds((prev) =>
             prev.includes(prescriptionId)
                 ? prev.filter((id) => id !== prescriptionId)
-                : [...prev, prescriptionId]
+                : [...prev, prescriptionId],
         );
     };
 
     const handleToggleVisit = (visit: GroupedVisit) => {
         const visitPrescriptionIds = visit.prescriptions.map((p) => p.id);
-        const allSelected = visitPrescriptionIds.every((id) => selectedIds.includes(id));
+        const allSelected = visitPrescriptionIds.every((id) =>
+            selectedIds.includes(id),
+        );
 
         if (allSelected) {
-            setSelectedIds((prev) => prev.filter((id) => !visitPrescriptionIds.includes(id)));
+            setSelectedIds((prev) =>
+                prev.filter((id) => !visitPrescriptionIds.includes(id)),
+            );
         } else {
-            setSelectedIds((prev) => [...new Set([...prev, ...visitPrescriptionIds])]);
+            setSelectedIds((prev) => [
+                ...new Set([...prev, ...visitPrescriptionIds]),
+            ]);
         }
     };
 
@@ -139,7 +150,7 @@ export function RefillPrescriptionModal({
                 onFinish: () => {
                     setIsSubmitting(false);
                 },
-            }
+            },
         );
     };
 
@@ -157,7 +168,8 @@ export function RefillPrescriptionModal({
                         Refill from Previous Prescriptions
                     </DialogTitle>
                     <DialogDescription>
-                        Select prescriptions from previous visits to refill. Last 5 visits are shown.
+                        Select prescriptions from previous visits to refill.
+                        Last 5 visits are shown.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -165,13 +177,16 @@ export function RefillPrescriptionModal({
                     {groupedVisits.length > 0 ? (
                         <div className="space-y-6 pr-4">
                             {groupedVisits.map((visit) => {
-                                const visitPrescriptionIds = visit.prescriptions.map((p) => p.id);
-                                const allSelected = visitPrescriptionIds.every((id) =>
-                                    selectedIds.includes(id)
+                                const visitPrescriptionIds =
+                                    visit.prescriptions.map((p) => p.id);
+                                const allSelected = visitPrescriptionIds.every(
+                                    (id) => selectedIds.includes(id),
                                 );
                                 const someSelected =
                                     !allSelected &&
-                                    visitPrescriptionIds.some((id) => selectedIds.includes(id));
+                                    visitPrescriptionIds.some((id) =>
+                                        selectedIds.includes(id),
+                                    );
 
                                 return (
                                     <div
@@ -181,16 +196,25 @@ export function RefillPrescriptionModal({
                                         {/* Visit Header */}
                                         <div
                                             className="flex cursor-pointer items-center gap-3 border-b p-3 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                            onClick={() => handleToggleVisit(visit)}
+                                            onClick={() =>
+                                                handleToggleVisit(visit)
+                                            }
                                         >
                                             <Checkbox
                                                 checked={allSelected}
                                                 ref={(el) => {
                                                     if (el) {
-                                                        (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = someSelected;
+                                                        (
+                                                            el as HTMLButtonElement & {
+                                                                indeterminate: boolean;
+                                                            }
+                                                        ).indeterminate =
+                                                            someSelected;
                                                     }
                                                 }}
-                                                onCheckedChange={() => handleToggleVisit(visit)}
+                                                onCheckedChange={() =>
+                                                    handleToggleVisit(visit)
+                                                }
                                             />
                                             <div className="flex flex-1 items-center gap-4 text-sm">
                                                 <div className="flex items-center gap-1.5 font-medium">
@@ -201,60 +225,109 @@ export function RefillPrescriptionModal({
                                                     <User className="h-4 w-4" />
                                                     Dr. {visit.doctorName}
                                                 </div>
-                                                <Badge variant="outline" className="text-xs">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                >
                                                     {visit.departmentName}
                                                 </Badge>
                                             </div>
                                             <span className="text-xs text-gray-500">
-                                                {visit.prescriptions.length} prescription
-                                                {visit.prescriptions.length !== 1 ? 's' : ''}
+                                                {visit.prescriptions.length}{' '}
+                                                prescription
+                                                {visit.prescriptions.length !==
+                                                1
+                                                    ? 's'
+                                                    : ''}
                                             </span>
                                         </div>
 
                                         {/* Prescriptions */}
                                         <div className="divide-y">
-                                            {visit.prescriptions.map((prescription) => (
-                                                <label
-                                                    key={prescription.id}
-                                                    className="flex cursor-pointer items-start gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                >
-                                                    <Checkbox
-                                                        checked={selectedIds.includes(prescription.id)}
-                                                        onCheckedChange={() => handleToggle(prescription.id)}
-                                                        className="mt-0.5"
-                                                    />
-                                                    <div className="flex-1 space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <Pill className="h-4 w-4 text-green-600" />
-                                                            <span className="font-medium">
-                                                                {prescription.medication_name}
-                                                            </span>
-                                                            {prescription.drug?.strength && (
-                                                                <span className="text-sm text-gray-500">
-                                                                    {prescription.drug.strength}
+                                            {visit.prescriptions.map(
+                                                (prescription) => (
+                                                    <label
+                                                        key={prescription.id}
+                                                        className="flex cursor-pointer items-start gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                    >
+                                                        <Checkbox
+                                                            checked={selectedIds.includes(
+                                                                prescription.id,
+                                                            )}
+                                                            onCheckedChange={() =>
+                                                                handleToggle(
+                                                                    prescription.id,
+                                                                )
+                                                            }
+                                                            className="mt-0.5"
+                                                        />
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <Pill className="h-4 w-4 text-green-600" />
+                                                                <span className="font-medium">
+                                                                    {
+                                                                        prescription.medication_name
+                                                                    }
                                                                 </span>
-                                                            )}
-                                                            {prescription.drug?.form && (
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    {prescription.drug.form}
-                                                                </Badge>
+                                                                {prescription
+                                                                    .drug
+                                                                    ?.strength && (
+                                                                    <span className="text-sm text-gray-500">
+                                                                        {
+                                                                            prescription
+                                                                                .drug
+                                                                                .strength
+                                                                        }
+                                                                    </span>
+                                                                )}
+                                                                {prescription
+                                                                    .drug
+                                                                    ?.form && (
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="text-xs"
+                                                                    >
+                                                                        {
+                                                                            prescription
+                                                                                .drug
+                                                                                .form
+                                                                        }
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                                {prescription.dose_quantity && (
+                                                                    <span>
+                                                                        Dose:{' '}
+                                                                        {
+                                                                            prescription.dose_quantity
+                                                                        }
+                                                                    </span>
+                                                                )}
+                                                                <span>
+                                                                    Freq:{' '}
+                                                                    {
+                                                                        prescription.frequency
+                                                                    }
+                                                                </span>
+                                                                <span>
+                                                                    Duration:{' '}
+                                                                    {
+                                                                        prescription.duration
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            {prescription.instructions && (
+                                                                <p className="text-xs text-gray-500 italic">
+                                                                    {
+                                                                        prescription.instructions
+                                                                    }
+                                                                </p>
                                                             )}
                                                         </div>
-                                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                                            {prescription.dose_quantity && (
-                                                                <span>Dose: {prescription.dose_quantity}</span>
-                                                            )}
-                                                            <span>Freq: {prescription.frequency}</span>
-                                                            <span>Duration: {prescription.duration}</span>
-                                                        </div>
-                                                        {prescription.instructions && (
-                                                            <p className="text-xs text-gray-500 italic">
-                                                                {prescription.instructions}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </label>
-                                            ))}
+                                                    </label>
+                                                ),
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -265,21 +338,28 @@ export function RefillPrescriptionModal({
                             <Pill className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                             <p>No previous prescriptions found</p>
                             <p className="mt-1 text-sm">
-                                This patient has no prescription history from previous visits.
+                                This patient has no prescription history from
+                                previous visits.
                             </p>
                         </div>
                     )}
                 </ScrollArea>
 
                 <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                    <Button
+                        variant="outline"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                    >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleRefill}
                         disabled={selectedIds.length === 0 || isSubmitting}
                     >
-                        <RefreshCw className={`mr-2 h-4 w-4 ${isSubmitting ? 'animate-spin' : ''}`} />
+                        <RefreshCw
+                            className={`mr-2 h-4 w-4 ${isSubmitting ? 'animate-spin' : ''}`}
+                        />
                         {isSubmitting
                             ? 'Refilling...'
                             : `Refill ${selectedIds.length} Selected`}

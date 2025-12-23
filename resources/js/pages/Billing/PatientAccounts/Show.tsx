@@ -3,7 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import { ArrowLeft, CreditCard, Hash, Infinity, Plus, PlusCircle, Shield, Wallet } from 'lucide-react';
+import {
+    ArrowLeft,
+    CreditCard,
+    Hash,
+    Infinity,
+    Plus,
+    PlusCircle,
+    Shield,
+    Wallet,
+} from 'lucide-react';
 import { useState } from 'react';
 import { AdjustmentModal } from './components/AdjustmentModal';
 import { CreditLimitModal } from './components/CreditLimitModal';
@@ -56,7 +65,12 @@ interface Props {
 
 const UNLIMITED_CREDIT_VALUE = 999999999;
 
-export default function PatientAccountShow({ patient, account, transactions, paymentMethods }: Props) {
+export default function PatientAccountShow({
+    patient,
+    account,
+    transactions,
+    paymentMethods,
+}: Props) {
     const [depositModalOpen, setDepositModalOpen] = useState(false);
     const [creditLimitModalOpen, setCreditLimitModalOpen] = useState(false);
     const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
@@ -81,7 +95,7 @@ export default function PatientAccountShow({ patient, account, transactions, pay
     const balance = account ? Number(account.balance) : 0;
     const creditLimit = account ? Number(account.credit_limit) : 0;
     const isUnlimitedCredit = creditLimit >= UNLIMITED_CREDIT_VALUE;
-    
+
     // Deposit balance = positive balance only
     const depositBalance = Math.max(0, balance);
     // Amount owed = absolute value of negative balance
@@ -96,18 +110,34 @@ export default function PatientAccountShow({ patient, account, transactions, pay
     };
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'Billing', href: '/billing' },
-            { title: 'Patient Accounts', href: '/billing/patient-accounts' },
-            { title: `${patient.first_name} ${patient.last_name}`, href: '#' },
-        ]}>
-            <Head title={`Account - ${patient.first_name} ${patient.last_name}`} />
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Billing', href: '/billing' },
+                {
+                    title: 'Patient Accounts',
+                    href: '/billing/patient-accounts',
+                },
+                {
+                    title: `${patient.first_name} ${patient.last_name}`,
+                    href: '#',
+                },
+            ]}
+        >
+            <Head
+                title={`Account - ${patient.first_name} ${patient.last_name}`}
+            />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="sm" onClick={() => router.visit('/billing/patient-accounts')}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                                router.visit('/billing/patient-accounts')
+                            }
+                        >
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                         <div>
@@ -115,16 +145,23 @@ export default function PatientAccountShow({ patient, account, transactions, pay
                                 {patient.first_name} {patient.last_name}
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                {patient.patient_number} • {patient.phone_number}
+                                {patient.patient_number} •{' '}
+                                {patient.phone_number}
                             </p>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setAdjustmentModalOpen(true)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setAdjustmentModalOpen(true)}
+                        >
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Make Adjustment
                         </Button>
-                        <Button variant="outline" onClick={() => setCreditLimitModalOpen(true)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setCreditLimitModalOpen(true)}
+                        >
                             <Shield className="mr-2 h-4 w-4" />
                             Set Credit Limit
                         </Button>
@@ -151,13 +188,27 @@ export default function PatientAccountShow({ patient, account, transactions, pay
                     />
                     <StatCard
                         label="Credit Limit"
-                        value={isUnlimitedCredit ? 'Unlimited' : formatCurrency(creditLimit)}
-                        icon={isUnlimitedCredit ? <Infinity className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
+                        value={
+                            isUnlimitedCredit
+                                ? 'Unlimited'
+                                : formatCurrency(creditLimit)
+                        }
+                        icon={
+                            isUnlimitedCredit ? (
+                                <Infinity className="h-5 w-5" />
+                            ) : (
+                                <Shield className="h-5 w-5" />
+                            )
+                        }
                         variant={creditLimit > 0 ? 'info' : 'default'}
                     />
                     <StatCard
                         label="Remaining Credit"
-                        value={isUnlimitedCredit ? 'Unlimited' : formatCurrency(remainingCredit)}
+                        value={
+                            isUnlimitedCredit
+                                ? 'Unlimited'
+                                : formatCurrency(remainingCredit)
+                        }
                         icon={<Hash className="h-5 w-5" />}
                         variant="default"
                     />
@@ -167,14 +218,20 @@ export default function PatientAccountShow({ patient, account, transactions, pay
                 {account?.credit_reason && (
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm">Credit Authorization</CardTitle>
+                            <CardTitle className="text-sm">
+                                Credit Authorization
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-700 dark:text-gray-300">{account.credit_reason}</p>
+                            <p className="text-gray-700 dark:text-gray-300">
+                                {account.credit_reason}
+                            </p>
                             {account.credit_authorized_at && (
-                                <p className="text-sm text-gray-500 mt-2">
-                                    Authorized on {formatDate(account.credit_authorized_at)}
-                                    {account.credit_authorized_by && ` by ${account.credit_authorized_by.name}`}
+                                <p className="mt-2 text-sm text-gray-500">
+                                    Authorized on{' '}
+                                    {formatDate(account.credit_authorized_at)}
+                                    {account.credit_authorized_by &&
+                                        ` by ${account.credit_authorized_by.name}`}
                                 </p>
                             )}
                         </CardContent>
@@ -209,7 +266,9 @@ export default function PatientAccountShow({ patient, account, transactions, pay
                     phone_number: patient.phone_number,
                     account_balance: balance,
                     credit_limit: creditLimit,
-                    available_balance: isUnlimitedCredit ? 999999999 : balance + creditLimit,
+                    available_balance: isUnlimitedCredit
+                        ? 999999999
+                        : balance + creditLimit,
                 }}
             />
 

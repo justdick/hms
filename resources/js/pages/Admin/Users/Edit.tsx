@@ -2,13 +2,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ChevronDown, Key, UserCog, X } from 'lucide-react';
@@ -46,9 +46,14 @@ interface Props {
     permissions: Record<string, Permission[]>;
 }
 
-export default function UsersEdit({ user, roles, departments, permissions }: Props) {
+export default function UsersEdit({
+    user,
+    roles,
+    departments,
+    permissions,
+}: Props) {
     const [permissionsOpen, setPermissionsOpen] = useState(false);
-    
+
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         username: user.username,
@@ -85,24 +90,40 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
 
     const toggleCategory = (category: string) => {
         const categoryPermissions = permissions[category].map((p) => p.name);
-        const allSelected = categoryPermissions.every((p) => data.direct_permissions.includes(p));
+        const allSelected = categoryPermissions.every((p) =>
+            data.direct_permissions.includes(p),
+        );
 
         if (allSelected) {
-            setData('direct_permissions', data.direct_permissions.filter((p) => !categoryPermissions.includes(p)));
+            setData(
+                'direct_permissions',
+                data.direct_permissions.filter(
+                    (p) => !categoryPermissions.includes(p),
+                ),
+            );
         } else {
-            const newPermissions = [...new Set([...data.direct_permissions, ...categoryPermissions])];
+            const newPermissions = [
+                ...new Set([
+                    ...data.direct_permissions,
+                    ...categoryPermissions,
+                ]),
+            ];
             setData('direct_permissions', newPermissions);
         }
     };
 
     const isCategoryFullySelected = (category: string) => {
         const categoryPermissions = permissions[category].map((p) => p.name);
-        return categoryPermissions.every((p) => data.direct_permissions.includes(p));
+        return categoryPermissions.every((p) =>
+            data.direct_permissions.includes(p),
+        );
     };
 
     const isCategoryPartiallySelected = (category: string) => {
         const categoryPermissions = permissions[category].map((p) => p.name);
-        const selectedCount = categoryPermissions.filter((p) => data.direct_permissions.includes(p)).length;
+        const selectedCount = categoryPermissions.filter((p) =>
+            data.direct_permissions.includes(p),
+        ).length;
         return selectedCount > 0 && selectedCount < categoryPermissions.length;
     };
 
@@ -168,7 +189,9 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         Active
                                     </Badge>
                                 ) : (
-                                    <Badge variant="destructive">Inactive</Badge>
+                                    <Badge variant="destructive">
+                                        Inactive
+                                    </Badge>
                                 )}
                             </div>
 
@@ -180,13 +203,17 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         id="name"
                                         type="text"
                                         value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
+                                        onChange={(e) =>
+                                            setData('name', e.target.value)
+                                        }
                                         placeholder="e.g., John Doe"
                                         required
                                         className="mt-1"
                                     />
                                     {errors.name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.name}
+                                        </p>
                                     )}
                                 </div>
 
@@ -196,7 +223,12 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         id="username"
                                         type="text"
                                         value={data.username}
-                                        onChange={(e) => setData('username', e.target.value.toLowerCase())}
+                                        onChange={(e) =>
+                                            setData(
+                                                'username',
+                                                e.target.value.toLowerCase(),
+                                            )
+                                        }
                                         placeholder="e.g., johndoe"
                                         minLength={4}
                                         required
@@ -206,7 +238,9 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         Minimum 4 characters, alphanumeric only
                                     </p>
                                     {errors.username && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.username}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -228,7 +262,9 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                                 key={roleName}
                                                 variant="secondary"
                                                 className="cursor-pointer"
-                                                onClick={() => toggleRole(roleName)}
+                                                onClick={() =>
+                                                    toggleRole(roleName)
+                                                }
                                             >
                                                 {roleName}
                                                 <X className="ml-1 h-3 w-3" />
@@ -246,8 +282,12 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         >
                                             <Checkbox
                                                 id={`role-${role.id}`}
-                                                checked={data.roles.includes(role.name)}
-                                                onCheckedChange={() => toggleRole(role.name)}
+                                                checked={data.roles.includes(
+                                                    role.name,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleRole(role.name)
+                                                }
                                             />
                                             <Label
                                                 htmlFor={`role-${role.id}`}
@@ -259,7 +299,9 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                     ))}
                                 </div>
                                 {errors.roles && (
-                                    <p className="text-sm text-red-600">{errors.roles}</p>
+                                    <p className="text-sm text-red-600">
+                                        {errors.roles}
+                                    </p>
                                 )}
                             </div>
 
@@ -268,7 +310,8 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                 <div>
                                     <Label>Departments</Label>
                                     <p className="text-sm text-gray-500">
-                                        Optionally assign the user to one or more departments
+                                        Optionally assign the user to one or
+                                        more departments
                                     </p>
                                 </div>
 
@@ -276,13 +319,17 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                 {data.departments.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {data.departments.map((deptId) => {
-                                            const dept = departments.find((d) => d.id === deptId);
+                                            const dept = departments.find(
+                                                (d) => d.id === deptId,
+                                            );
                                             return dept ? (
                                                 <Badge
                                                     key={deptId}
                                                     variant="outline"
                                                     className="cursor-pointer"
-                                                    onClick={() => toggleDepartment(deptId)}
+                                                    onClick={() =>
+                                                        toggleDepartment(deptId)
+                                                    }
                                                 >
                                                     {dept.name}
                                                     <X className="ml-1 h-3 w-3" />
@@ -301,8 +348,12 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                         >
                                             <Checkbox
                                                 id={`dept-${dept.id}`}
-                                                checked={data.departments.includes(dept.id)}
-                                                onCheckedChange={() => toggleDepartment(dept.id)}
+                                                checked={data.departments.includes(
+                                                    dept.id,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleDepartment(dept.id)
+                                                }
                                             />
                                             <Label
                                                 htmlFor={`dept-${dept.id}`}
@@ -314,96 +365,167 @@ export default function UsersEdit({ user, roles, departments, permissions }: Pro
                                     ))}
                                 </div>
                                 {errors.departments && (
-                                    <p className="text-sm text-red-600">{errors.departments}</p>
+                                    <p className="text-sm text-red-600">
+                                        {errors.departments}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Direct Permissions Section */}
-                            {permissions && Object.keys(permissions).length > 0 && (
-                                <Collapsible
-                                    open={permissionsOpen}
-                                    onOpenChange={setPermissionsOpen}
-                                    className="space-y-4 border-t pt-4 dark:border-gray-700"
-                                >
-                                    <CollapsibleTrigger asChild>
-                                        <div className="flex cursor-pointer items-center justify-between">
-                                            <div>
-                                                <Label className="flex items-center gap-2">
-                                                    <Key className="h-4 w-4" />
-                                                    Direct Permissions
-                                                    {data.direct_permissions.length > 0 && (
-                                                        <Badge variant="secondary" className="ml-2">
-                                                            {data.direct_permissions.length}
-                                                        </Badge>
-                                                    )}
-                                                </Label>
-                                                <p className="text-sm text-gray-500">
-                                                    Assign permissions directly to this user (in addition to role permissions)
-                                                </p>
-                                            </div>
-                                            <ChevronDown
-                                                className={`h-5 w-5 text-gray-500 transition-transform ${
-                                                    permissionsOpen ? 'rotate-180' : ''
-                                                }`}
-                                            />
-                                        </div>
-                                    </CollapsibleTrigger>
-
-                                    <CollapsibleContent className="space-y-4">
-                                        {Object.entries(permissions).map(([category, categoryPermissions]) => (
-                                            <div key={category} className="rounded-lg border p-3 dark:border-gray-700">
-                                                <div className="mb-2 flex items-center gap-2 border-b pb-2 dark:border-gray-700">
-                                                    <Checkbox
-                                                        id={`direct-category-${category}`}
-                                                        checked={isCategoryFullySelected(category)}
-                                                        ref={(el) => {
-                                                            if (el) {
-                                                                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = isCategoryPartiallySelected(category);
-                                                            }
-                                                        }}
-                                                        onCheckedChange={() => toggleCategory(category)}
-                                                    />
-                                                    <Label
-                                                        htmlFor={`direct-category-${category}`}
-                                                        className="cursor-pointer text-sm font-semibold"
-                                                    >
-                                                        {formatCategoryName(category)}
+                            {permissions &&
+                                Object.keys(permissions).length > 0 && (
+                                    <Collapsible
+                                        open={permissionsOpen}
+                                        onOpenChange={setPermissionsOpen}
+                                        className="space-y-4 border-t pt-4 dark:border-gray-700"
+                                    >
+                                        <CollapsibleTrigger asChild>
+                                            <div className="flex cursor-pointer items-center justify-between">
+                                                <div>
+                                                    <Label className="flex items-center gap-2">
+                                                        <Key className="h-4 w-4" />
+                                                        Direct Permissions
+                                                        {data.direct_permissions
+                                                            .length > 0 && (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="ml-2"
+                                                            >
+                                                                {
+                                                                    data
+                                                                        .direct_permissions
+                                                                        .length
+                                                                }
+                                                            </Badge>
+                                                        )}
                                                     </Label>
-                                                    <span className="text-xs text-gray-500">
-                                                        ({categoryPermissions.filter((p) => data.direct_permissions.includes(p.name)).length}/{categoryPermissions.length})
-                                                    </span>
+                                                    <p className="text-sm text-gray-500">
+                                                        Assign permissions
+                                                        directly to this user
+                                                        (in addition to role
+                                                        permissions)
+                                                    </p>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-                                                    {categoryPermissions.map((permission) => (
-                                                        <div
-                                                            key={permission.id}
-                                                            className="flex items-center space-x-2"
-                                                        >
+                                                <ChevronDown
+                                                    className={`h-5 w-5 text-gray-500 transition-transform ${
+                                                        permissionsOpen
+                                                            ? 'rotate-180'
+                                                            : ''
+                                                    }`}
+                                                />
+                                            </div>
+                                        </CollapsibleTrigger>
+
+                                        <CollapsibleContent className="space-y-4">
+                                            {Object.entries(permissions).map(
+                                                ([
+                                                    category,
+                                                    categoryPermissions,
+                                                ]) => (
+                                                    <div
+                                                        key={category}
+                                                        className="rounded-lg border p-3 dark:border-gray-700"
+                                                    >
+                                                        <div className="mb-2 flex items-center gap-2 border-b pb-2 dark:border-gray-700">
                                                             <Checkbox
-                                                                id={`direct-perm-${permission.id}`}
-                                                                checked={data.direct_permissions.includes(permission.name)}
-                                                                onCheckedChange={() => toggleDirectPermission(permission.name)}
+                                                                id={`direct-category-${category}`}
+                                                                checked={isCategoryFullySelected(
+                                                                    category,
+                                                                )}
+                                                                ref={(el) => {
+                                                                    if (el) {
+                                                                        (
+                                                                            el as HTMLButtonElement & {
+                                                                                indeterminate: boolean;
+                                                                            }
+                                                                        ).indeterminate =
+                                                                            isCategoryPartiallySelected(
+                                                                                category,
+                                                                            );
+                                                                    }
+                                                                }}
+                                                                onCheckedChange={() =>
+                                                                    toggleCategory(
+                                                                        category,
+                                                                    )
+                                                                }
                                                             />
                                                             <Label
-                                                                htmlFor={`direct-perm-${permission.id}`}
-                                                                className="cursor-pointer text-xs font-normal"
-                                                                title={permission.name}
+                                                                htmlFor={`direct-category-${category}`}
+                                                                className="cursor-pointer text-sm font-semibold"
                                                             >
-                                                                {formatPermissionName(permission.name)}
+                                                                {formatCategoryName(
+                                                                    category,
+                                                                )}
                                                             </Label>
+                                                            <span className="text-xs text-gray-500">
+                                                                (
+                                                                {
+                                                                    categoryPermissions.filter(
+                                                                        (p) =>
+                                                                            data.direct_permissions.includes(
+                                                                                p.name,
+                                                                            ),
+                                                                    ).length
+                                                                }
+                                                                /
+                                                                {
+                                                                    categoryPermissions.length
+                                                                }
+                                                                )
+                                                            </span>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            )}
+                                                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                                                            {categoryPermissions.map(
+                                                                (
+                                                                    permission,
+                                                                ) => (
+                                                                    <div
+                                                                        key={
+                                                                            permission.id
+                                                                        }
+                                                                        className="flex items-center space-x-2"
+                                                                    >
+                                                                        <Checkbox
+                                                                            id={`direct-perm-${permission.id}`}
+                                                                            checked={data.direct_permissions.includes(
+                                                                                permission.name,
+                                                                            )}
+                                                                            onCheckedChange={() =>
+                                                                                toggleDirectPermission(
+                                                                                    permission.name,
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                        <Label
+                                                                            htmlFor={`direct-perm-${permission.id}`}
+                                                                            className="cursor-pointer text-xs font-normal"
+                                                                            title={
+                                                                                permission.name
+                                                                            }
+                                                                        >
+                                                                            {formatPermissionName(
+                                                                                permission.name,
+                                                                            )}
+                                                                        </Label>
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                )}
 
                             {/* Password Note */}
                             <div className="rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    <strong>Note:</strong> Password cannot be changed here. Use the "Reset Password" button on the users list to generate a new temporary password for this user.
+                                    <strong>Note:</strong> Password cannot be
+                                    changed here. Use the "Reset Password"
+                                    button on the users list to generate a new
+                                    temporary password for this user.
                                 </p>
                             </div>
 

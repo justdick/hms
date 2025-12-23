@@ -82,7 +82,12 @@ interface Props {
     };
 }
 
-export default function WardShow({ ward, stats, admissions, filters = {} }: Props) {
+export default function WardShow({
+    ward,
+    stats,
+    admissions,
+    filters = {},
+}: Props) {
     const [bedModalOpen, setBedModalOpen] = useState(false);
     const [selectedAdmission, setSelectedAdmission] =
         useState<WardPatientData | null>(null);
@@ -304,7 +309,7 @@ export default function WardShow({ ward, stats, admissions, filters = {} }: Prop
                                                             admission.bed_id ===
                                                             bed.id,
                                                     );
-                                                
+
                                                 const bedContent = (
                                                     <div className="text-center">
                                                         <div className="mb-2 flex justify-center">
@@ -313,8 +318,7 @@ export default function WardShow({ ward, stats, admissions, filters = {} }: Prop
                                                             )}
                                                         </div>
                                                         <div className="text-sm font-semibold">
-                                                            Bed{' '}
-                                                            {bed.bed_number}
+                                                            Bed {bed.bed_number}
                                                         </div>
                                                         <div className="text-xs text-gray-600 capitalize dark:text-gray-400">
                                                             {bed.type}

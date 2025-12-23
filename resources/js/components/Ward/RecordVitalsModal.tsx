@@ -106,16 +106,22 @@ export function RecordVitalsModal({
         if (open && admission) {
             if (isEditMode && editVitals) {
                 // Format recorded_at for datetime-local input (YYYY-MM-DDTHH:mm)
-                const recordedAt = editVitals.recorded_at 
-                    ? new Date(editVitals.recorded_at).toISOString().slice(0, 16)
+                const recordedAt = editVitals.recorded_at
+                    ? new Date(editVitals.recorded_at)
+                          .toISOString()
+                          .slice(0, 16)
                     : '';
                 setFormData({
-                    blood_pressure_systolic: editVitals.blood_pressure_systolic?.toString() || '',
-                    blood_pressure_diastolic: editVitals.blood_pressure_diastolic?.toString() || '',
+                    blood_pressure_systolic:
+                        editVitals.blood_pressure_systolic?.toString() || '',
+                    blood_pressure_diastolic:
+                        editVitals.blood_pressure_diastolic?.toString() || '',
                     temperature: editVitals.temperature?.toString() || '',
                     pulse_rate: editVitals.pulse_rate?.toString() || '',
-                    respiratory_rate: editVitals.respiratory_rate?.toString() || '',
-                    oxygen_saturation: editVitals.oxygen_saturation?.toString() || '',
+                    respiratory_rate:
+                        editVitals.respiratory_rate?.toString() || '',
+                    oxygen_saturation:
+                        editVitals.oxygen_saturation?.toString() || '',
                     weight: editVitals.weight?.toString() || '',
                     height: editVitals.height?.toString() || '',
                     notes: editVitals.notes || '',
@@ -145,9 +151,9 @@ export function RecordVitalsModal({
     };
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
         if (errors[field]) {
-            setErrors(prev => {
+            setErrors((prev) => {
                 const newErrors = { ...prev };
                 delete newErrors[field];
                 return newErrors;
@@ -162,13 +168,25 @@ export function RecordVitalsModal({
 
         const submitData: Record<string, string | number | null> = {
             // Required fields - always include them
-            blood_pressure_systolic: formData.blood_pressure_systolic ? parseFloat(formData.blood_pressure_systolic) : null,
-            blood_pressure_diastolic: formData.blood_pressure_diastolic ? parseFloat(formData.blood_pressure_diastolic) : null,
-            temperature: formData.temperature ? parseFloat(formData.temperature) : null,
-            pulse_rate: formData.pulse_rate ? parseInt(formData.pulse_rate) : null,
-            respiratory_rate: formData.respiratory_rate ? parseInt(formData.respiratory_rate) : null,
+            blood_pressure_systolic: formData.blood_pressure_systolic
+                ? parseFloat(formData.blood_pressure_systolic)
+                : null,
+            blood_pressure_diastolic: formData.blood_pressure_diastolic
+                ? parseFloat(formData.blood_pressure_diastolic)
+                : null,
+            temperature: formData.temperature
+                ? parseFloat(formData.temperature)
+                : null,
+            pulse_rate: formData.pulse_rate
+                ? parseInt(formData.pulse_rate)
+                : null,
+            respiratory_rate: formData.respiratory_rate
+                ? parseInt(formData.respiratory_rate)
+                : null,
             // Optional fields
-            oxygen_saturation: formData.oxygen_saturation ? parseInt(formData.oxygen_saturation) : null,
+            oxygen_saturation: formData.oxygen_saturation
+                ? parseInt(formData.oxygen_saturation)
+                : null,
             weight: formData.weight ? parseFloat(formData.weight) : null,
             height: formData.height ? parseFloat(formData.height) : null,
             notes: formData.notes || null,
@@ -180,19 +198,23 @@ export function RecordVitalsModal({
         }
 
         if (isEditMode && editVitals) {
-            router.patch(`/admissions/${admission?.id}/vitals/${editVitals.id}`, submitData, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Vital signs updated successfully');
-                    setProcessing(false);
-                    onSuccess();
+            router.patch(
+                `/admissions/${admission?.id}/vitals/${editVitals.id}`,
+                submitData,
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success('Vital signs updated successfully');
+                        setProcessing(false);
+                        onSuccess();
+                    },
+                    onError: (errs) => {
+                        setErrors(errs as Record<string, string>);
+                        toast.error('Failed to update vital signs');
+                        setProcessing(false);
+                    },
                 },
-                onError: (errs) => {
-                    setErrors(errs as Record<string, string>);
-                    toast.error('Failed to update vital signs');
-                    setProcessing(false);
-                },
-            });
+            );
         } else {
             router.post(`/admissions/${admission?.id}/vitals`, submitData, {
                 preserveScroll: true,
@@ -225,36 +247,59 @@ export function RecordVitalsModal({
                         {isEditMode ? 'Edit Vital Signs' : 'Record Vital Signs'}
                     </DialogTitle>
                     <p className="text-sm text-muted-foreground">
-                        {admission.patient.first_name} {admission.patient.last_name} • {patientAge ? `${patientAge} yrs` : 'N/A'}, {admission.patient.gender} • {admission.bed ? `Bed ${admission.bed.bed_number}` : 'Ward'}
+                        {admission.patient.first_name}{' '}
+                        {admission.patient.last_name} •{' '}
+                        {patientAge ? `${patientAge} yrs` : 'N/A'},{' '}
+                        {admission.patient.gender} •{' '}
+                        {admission.bed
+                            ? `Bed ${admission.bed.bed_number}`
+                            : 'Ward'}
                     </p>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Blood Pressure - prominent */}
                     <div className="rounded-lg border bg-muted/30 p-3">
-                        <Label className="text-sm font-medium mb-2 block">Blood Pressure (mmHg) <span className="text-destructive">*</span></Label>
+                        <Label className="mb-2 block text-sm font-medium">
+                            Blood Pressure (mmHg){' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <div className="flex items-center gap-2">
                             <Input
                                 value={formData.blood_pressure_systolic}
-                                onChange={(e) => handleInputChange('blood_pressure_systolic', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_pressure_systolic',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Systolic"
                                 type="number"
                                 required
-                                className="text-center text-lg font-semibold h-11"
+                                className="h-11 text-center text-lg font-semibold"
                             />
-                            <span className="text-xl font-bold text-muted-foreground">/</span>
+                            <span className="text-xl font-bold text-muted-foreground">
+                                /
+                            </span>
                             <Input
                                 value={formData.blood_pressure_diastolic}
-                                onChange={(e) => handleInputChange('blood_pressure_diastolic', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_pressure_diastolic',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Diastolic"
                                 type="number"
                                 required
-                                className="text-center text-lg font-semibold h-11"
+                                className="h-11 text-center text-lg font-semibold"
                             />
                         </div>
-                        {(errors.blood_pressure_systolic || errors.blood_pressure_diastolic) && (
-                            <p className="text-xs text-destructive mt-1">
-                                {errors.blood_pressure_systolic || errors.blood_pressure_diastolic}
+                        {(errors.blood_pressure_systolic ||
+                            errors.blood_pressure_diastolic) && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {errors.blood_pressure_systolic ||
+                                    errors.blood_pressure_diastolic}
                             </p>
                         )}
                     </div>
@@ -262,10 +307,18 @@ export function RecordVitalsModal({
                     {/* Row 1: Temp, Pulse, Resp - all required */}
                     <div className="grid grid-cols-3 gap-3">
                         <div>
-                            <Label className="text-xs text-muted-foreground">Temp (°C) <span className="text-destructive">*</span></Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Temp (°C){' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 value={formData.temperature}
-                                onChange={(e) => handleInputChange('temperature', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'temperature',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="37.0"
@@ -273,35 +326,57 @@ export function RecordVitalsModal({
                                 className="text-center"
                             />
                             {errors.temperature && (
-                                <p className="text-xs text-destructive mt-1">{errors.temperature}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.temperature}
+                                </p>
                             )}
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Pulse (BPM) <span className="text-destructive">*</span></Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Pulse (BPM){' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 value={formData.pulse_rate}
-                                onChange={(e) => handleInputChange('pulse_rate', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'pulse_rate',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="72"
                                 required
                                 className="text-center"
                             />
                             {errors.pulse_rate && (
-                                <p className="text-xs text-destructive mt-1">{errors.pulse_rate}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.pulse_rate}
+                                </p>
                             )}
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Resp (/min) <span className="text-destructive">*</span></Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Resp (/min){' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 value={formData.respiratory_rate}
-                                onChange={(e) => handleInputChange('respiratory_rate', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'respiratory_rate',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="16"
                                 required
                                 className="text-center"
                             />
                             {errors.respiratory_rate && (
-                                <p className="text-xs text-destructive mt-1">{errors.respiratory_rate}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.respiratory_rate}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -309,20 +384,31 @@ export function RecordVitalsModal({
                     {/* Row 2: SpO2, Weight, Height */}
                     <div className="grid grid-cols-3 gap-3">
                         <div>
-                            <Label className="text-xs text-muted-foreground">SpO₂ (%)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                SpO₂ (%)
+                            </Label>
                             <Input
                                 value={formData.oxygen_saturation}
-                                onChange={(e) => handleInputChange('oxygen_saturation', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'oxygen_saturation',
+                                        e.target.value,
+                                    )
+                                }
                                 type="number"
                                 placeholder="98"
                                 className="text-center"
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Weight (kg)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Weight (kg)
+                            </Label>
                             <Input
                                 value={formData.weight}
-                                onChange={(e) => handleInputChange('weight', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange('weight', e.target.value)
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="70.0"
@@ -330,10 +416,14 @@ export function RecordVitalsModal({
                             />
                         </div>
                         <div>
-                            <Label className="text-xs text-muted-foreground">Height (cm)</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Height (cm)
+                            </Label>
                             <Input
                                 value={formData.height}
-                                onChange={(e) => handleInputChange('height', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange('height', e.target.value)
+                                }
                                 type="number"
                                 step="0.1"
                                 placeholder="170"
@@ -344,10 +434,14 @@ export function RecordVitalsModal({
 
                     {/* Notes - compact */}
                     <div>
-                        <Label className="text-xs text-muted-foreground">Notes (Optional)</Label>
+                        <Label className="text-xs text-muted-foreground">
+                            Notes (Optional)
+                        </Label>
                         <Textarea
                             value={formData.notes}
-                            onChange={(e) => handleInputChange('notes', e.target.value)}
+                            onChange={(e) =>
+                                handleInputChange('notes', e.target.value)
+                            }
                             placeholder="Any additional observations..."
                             rows={2}
                         />
@@ -361,15 +455,22 @@ export function RecordVitalsModal({
                             </Label>
                             <Input
                                 value={formData.recorded_at}
-                                onChange={(e) => handleInputChange('recorded_at', e.target.value)}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'recorded_at',
+                                        e.target.value,
+                                    )
+                                }
                                 type="datetime-local"
                                 className="mt-1"
                             />
                             {errors.recorded_at && (
-                                <p className="text-xs text-destructive mt-1">{errors.recorded_at}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.recorded_at}
+                                </p>
                             )}
-                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                                {isEditMode 
+                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                {isEditMode
                                     ? 'Only modify if the original recording time was incorrect.'
                                     : 'Leave empty to use current time, or set a specific time for backdated entry.'}
                             </p>
@@ -377,11 +478,17 @@ export function RecordVitalsModal({
                     )}
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={handleModalClose}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleModalClose}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={processing}>
-                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {processing && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
                             {isEditMode ? 'Update Vitals' : 'Save Vitals'}
                         </Button>
                     </DialogFooter>

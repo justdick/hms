@@ -13,7 +13,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -175,7 +174,9 @@ export default function AsyncLabServiceSelect({
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                 <span>{service.category}</span>
                                                 <span>•</span>
-                                                <span>{service.sample_type}</span>
+                                                <span>
+                                                    {service.sample_type}
+                                                </span>
                                             </div>
                                         </div>
                                     </CommandItem>

@@ -1,14 +1,8 @@
 import { Link } from '@inertiajs/react';
-import {
-    Activity,
-    ArrowRight,
-    CheckCircle2,
-    Clock,
-    UserPlus,
-    Users,
-} from 'lucide-react';
+import { Activity, ArrowRight, CheckCircle2, Clock, Users } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { MetricCard } from '@/components/Dashboard/MetricCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,8 +12,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { MetricCard } from '@/components/Dashboard/MetricCard';
-import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
+import { cn } from '@/lib/utils';
 
 export interface ReceptionistMetricsData {
     todayCheckins: number;
@@ -33,7 +26,10 @@ export interface ReceptionistMetricsProps {
     checkinHref?: string;
 }
 
-export function ReceptionistMetrics({ metrics, checkinHref }: ReceptionistMetricsProps) {
+export function ReceptionistMetrics({
+    metrics,
+    checkinHref,
+}: ReceptionistMetricsProps) {
     return (
         <DashboardMetricsGrid columns={4}>
             <MetricCard
@@ -122,14 +118,16 @@ export function WaitingPatients({
                 ) : (
                     <div className="space-y-2">
                         {topWaiting.map((patient) => {
-                            const config = statusConfig[patient.status] || statusConfig.checked_in;
+                            const config =
+                                statusConfig[patient.status] ||
+                                statusConfig.checked_in;
                             return (
                                 <div
                                     key={patient.id}
                                     className="flex items-center justify-between rounded-lg border p-3"
                                 >
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-sm">
+                                        <span className="text-sm font-medium">
                                             {patient.patient_name}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
@@ -137,10 +135,18 @@ export function WaitingPatients({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={cn('text-xs font-medium', config.color)}>
+                                        <span
+                                            className={cn(
+                                                'text-xs font-medium',
+                                                config.color,
+                                            )}
+                                        >
                                             {config.label}
                                         </span>
-                                        <Badge variant="outline" className="font-mono">
+                                        <Badge
+                                            variant="outline"
+                                            className="font-mono"
+                                        >
                                             {patient.wait_time}
                                         </Badge>
                                     </div>

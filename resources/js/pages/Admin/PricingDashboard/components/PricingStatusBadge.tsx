@@ -54,7 +54,8 @@ const statusConfig: Record<
     },
     not_mapped: {
         label: 'Not Mapped',
-        description: 'Item is not mapped to NHIS tariff - patient pays full cash price',
+        description:
+            'Item is not mapped to NHIS tariff - patient pays full cash price',
         variant: 'outline',
         className: 'border-yellow-500 text-yellow-700 dark:text-yellow-400',
     },

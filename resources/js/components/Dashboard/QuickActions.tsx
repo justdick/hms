@@ -2,9 +2,9 @@ import { Link } from '@inertiajs/react';
 import * as LucideIcons from 'lucide-react';
 import { type LucideIcon, Zap } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export interface QuickAction {
     key: string;
@@ -12,7 +12,14 @@ export interface QuickAction {
     route: string;
     icon: string;
     href: string | null;
-    variant?: 'default' | 'primary' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
+    variant?:
+        | 'default'
+        | 'primary'
+        | 'accent'
+        | 'success'
+        | 'warning'
+        | 'danger'
+        | 'info';
 }
 
 export interface QuickActionsProps extends React.ComponentProps<typeof Card> {
@@ -28,10 +35,13 @@ function getIconComponent(iconName: string): LucideIcon {
 
 const variantStyles: Record<string, string> = {
     default: 'hover:bg-muted text-foreground hover:text-foreground',
-    primary: 'border-primary/30 bg-primary/5 hover:bg-primary/10 text-foreground hover:text-foreground [&_svg]:text-primary',
+    primary:
+        'border-primary/30 bg-primary/5 hover:bg-primary/10 text-foreground hover:text-foreground [&_svg]:text-primary',
     accent: 'border-accent/30 bg-accent/5 hover:bg-accent/10 text-foreground hover:text-foreground [&_svg]:text-accent',
-    success: 'border-success/30 bg-success/5 hover:bg-success/10 text-foreground hover:text-foreground [&_svg]:text-success',
-    warning: 'border-warning/30 bg-warning/5 hover:bg-warning/10 text-foreground hover:text-foreground [&_svg]:text-warning',
+    success:
+        'border-success/30 bg-success/5 hover:bg-success/10 text-foreground hover:text-foreground [&_svg]:text-success',
+    warning:
+        'border-warning/30 bg-warning/5 hover:bg-warning/10 text-foreground hover:text-foreground [&_svg]:text-warning',
     danger: 'border-destructive/30 bg-destructive/5 hover:bg-destructive/10 text-foreground hover:text-foreground [&_svg]:text-destructive',
     info: 'border-info/30 bg-info/5 hover:bg-info/10 text-foreground hover:text-foreground [&_svg]:text-info',
 };
@@ -52,7 +62,9 @@ export function QuickActions({
             <CardHeader className="pb-2 sm:pb-3">
                 <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-sm sm:text-base font-semibold">{title}</CardTitle>
+                    <CardTitle className="text-sm font-semibold sm:text-base">
+                        {title}
+                    </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -61,7 +73,7 @@ export function QuickActions({
                         'grid gap-3',
                         columns === 2 && 'grid-cols-2',
                         columns === 3 && 'grid-cols-2 sm:grid-cols-3',
-                        columns === 4 && 'grid-cols-2 sm:grid-cols-4'
+                        columns === 4 && 'grid-cols-2 sm:grid-cols-4',
                     )}
                 >
                     {actions.map((action) => {
@@ -77,14 +89,19 @@ export function QuickActions({
                                 key={action.key}
                                 variant="outline"
                                 className={cn(
-                                    'flex flex-col items-center justify-center h-auto py-4 px-3 gap-2 text-center',
-                                    variantStyles[variant]
+                                    'flex h-auto flex-col items-center justify-center gap-2 px-3 py-4 text-center',
+                                    variantStyles[variant],
                                 )}
                                 asChild
                             >
                                 <Link href={action.href}>
-                                    <Icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                                    <span className="text-xs font-medium leading-tight">{action.label}</span>
+                                    <Icon
+                                        className="h-6 w-6 shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                    <span className="text-xs leading-tight font-medium">
+                                        {action.label}
+                                    </span>
                                 </Link>
                             </Button>
                         );
@@ -127,12 +144,17 @@ export function QuickActionsCompact({
                                 key={action.key}
                                 variant="ghost"
                                 size="sm"
-                                className="justify-start h-9 px-3"
+                                className="h-9 justify-start px-3"
                                 asChild
                             >
                                 <Link href={action.href}>
-                                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                                    <span className="truncate">{action.label}</span>
+                                    <Icon
+                                        className="h-4 w-4 shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                    <span className="truncate">
+                                        {action.label}
+                                    </span>
                                 </Link>
                             </Button>
                         );

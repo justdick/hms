@@ -36,7 +36,8 @@ const UNLIMITED_CREDIT_VALUE = 999999999;
 export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<PatientResult[]>([]);
-    const [selectedPatient, setSelectedPatient] = useState<PatientResult | null>(null);
+    const [selectedPatient, setSelectedPatient] =
+        useState<PatientResult | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [creditLimit, setCreditLimit] = useState('');
     const [isUnlimited, setIsUnlimited] = useState(false);
@@ -59,7 +60,9 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
 
             setIsSearching(true);
             try {
-                const response = await fetch(`/billing/patient-accounts/search-patients?search=${encodeURIComponent(searchQuery)}`);
+                const response = await fetch(
+                    `/billing/patient-accounts/search-patients?search=${encodeURIComponent(searchQuery)}`,
+                );
                 const data = await response.json();
                 setSearchResults(data.patients || []);
             } catch (error) {
@@ -77,9 +80,12 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
         setSelectedPatient(patient);
         setSearchQuery('');
         setSearchResults([]);
-        const isCurrentlyUnlimited = patient.credit_limit >= UNLIMITED_CREDIT_VALUE;
+        const isCurrentlyUnlimited =
+            patient.credit_limit >= UNLIMITED_CREDIT_VALUE;
         setIsUnlimited(isCurrentlyUnlimited);
-        setCreditLimit(isCurrentlyUnlimited ? '0' : String(patient.credit_limit));
+        setCreditLimit(
+            isCurrentlyUnlimited ? '0' : String(patient.credit_limit),
+        );
     };
 
     const handleSubmit = () => {
@@ -88,23 +94,29 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
         setErrors({});
         setIsSubmitting(true);
 
-        const finalCreditLimit = isUnlimited ? UNLIMITED_CREDIT_VALUE : Number(creditLimit);
+        const finalCreditLimit = isUnlimited
+            ? UNLIMITED_CREDIT_VALUE
+            : Number(creditLimit);
 
-        router.post(`/billing/patient-accounts/patient/${selectedPatient.id}/credit-limit`, {
-            credit_limit: finalCreditLimit,
-            reason: reason || null,
-        }, {
-            onSuccess: () => {
-                resetForm();
-                onClose();
+        router.post(
+            `/billing/patient-accounts/patient/${selectedPatient.id}/credit-limit`,
+            {
+                credit_limit: finalCreditLimit,
+                reason: reason || null,
             },
-            onError: (errors) => {
-                setErrors(errors as Record<string, string>);
+            {
+                onSuccess: () => {
+                    resetForm();
+                    onClose();
+                },
+                onError: (errors) => {
+                    setErrors(errors as Record<string, string>);
+                },
+                onFinish: () => {
+                    setIsSubmitting(false);
+                },
             },
-            onFinish: () => {
-                setIsSubmitting(false);
-            },
-        });
+        );
     };
 
     const resetForm = () => {
@@ -139,11 +151,13 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                         <div className="space-y-2">
                             <Label>Search Patient</Label>
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     placeholder="Search by name, patient number, or phone..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
                                     className="pl-10"
                                 />
                             </div>
@@ -158,15 +172,22 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                                         <button
                                             key={patient.id}
                                             type="button"
-                                            className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 border-b last:border-b-0"
-                                            onClick={() => handleSelectPatient(patient)}
+                                            className="w-full border-b px-3 py-2 text-left last:border-b-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                            onClick={() =>
+                                                handleSelectPatient(patient)
+                                            }
                                         >
                                             <div className="flex items-center gap-2">
                                                 <User className="h-4 w-4 text-gray-400" />
                                                 <div>
-                                                    <div className="font-medium">{patient.full_name}</div>
+                                                    <div className="font-medium">
+                                                        {patient.full_name}
+                                                    </div>
                                                     <div className="text-sm text-gray-500">
-                                                        {patient.patient_number} • {patient.phone_number || 'No phone'}
+                                                        {patient.patient_number}{' '}
+                                                        •{' '}
+                                                        {patient.phone_number ||
+                                                            'No phone'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -174,28 +195,45 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                                     ))}
                                 </div>
                             )}
-                            {searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
-                                <p className="text-sm text-gray-500 text-center py-2">No patients found</p>
-                            )}
+                            {searchQuery.length >= 2 &&
+                                !isSearching &&
+                                searchResults.length === 0 && (
+                                    <p className="py-2 text-center text-sm text-gray-500">
+                                        No patients found
+                                    </p>
+                                )}
                         </div>
                     ) : (
                         <>
-                            <div className="rounded-lg border bg-gray-50 dark:bg-gray-800 p-4">
+                            <div className="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <div className="font-medium">{selectedPatient.full_name}</div>
-                                        <div className="text-sm text-gray-500">{selectedPatient.patient_number}</div>
+                                        <div className="font-medium">
+                                            {selectedPatient.full_name}
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {selectedPatient.patient_number}
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setSelectedPatient(null)}
+                                    >
                                         Change
                                     </Button>
                                 </div>
                                 <div className="mt-2 text-sm">
-                                    <span className="text-gray-500">Current Credit: </span>
+                                    <span className="text-gray-500">
+                                        Current Credit:{' '}
+                                    </span>
                                     <span className="font-medium text-blue-600">
-                                        {selectedPatient.credit_limit >= UNLIMITED_CREDIT_VALUE 
-                                            ? 'Unlimited' 
-                                            : formatCurrency(selectedPatient.credit_limit)}
+                                        {selectedPatient.credit_limit >=
+                                        UNLIMITED_CREDIT_VALUE
+                                            ? 'Unlimited'
+                                            : formatCurrency(
+                                                  selectedPatient.credit_limit,
+                                              )}
                                     </span>
                                 </div>
                             </div>
@@ -206,7 +244,10 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                                     checked={isUnlimited}
                                     onCheckedChange={handleUnlimitedChange}
                                 />
-                                <Label htmlFor="unlimited" className="flex items-center gap-2 cursor-pointer">
+                                <Label
+                                    htmlFor="unlimited"
+                                    className="flex cursor-pointer items-center gap-2"
+                                >
                                     <Infinity className="h-4 w-4" />
                                     Unlimited Credit
                                 </Label>
@@ -214,7 +255,9 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
 
                             {!isUnlimited && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="credit_limit">Credit Limit (GHS)</Label>
+                                    <Label htmlFor="credit_limit">
+                                        Credit Limit (GHS)
+                                    </Label>
                                     <Input
                                         id="credit_limit"
                                         type="number"
@@ -222,19 +265,25 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                                         step="100"
                                         placeholder="0.00"
                                         value={creditLimit}
-                                        onChange={(e) => setCreditLimit(e.target.value)}
+                                        onChange={(e) =>
+                                            setCreditLimit(e.target.value)
+                                        }
                                     />
                                     <p className="text-sm text-gray-500">
                                         Set to 0 to remove credit privileges
                                     </p>
                                     {errors.credit_limit && (
-                                        <p className="text-sm text-red-500">{errors.credit_limit}</p>
+                                        <p className="text-sm text-red-500">
+                                            {errors.credit_limit}
+                                        </p>
                                     )}
                                 </div>
                             )}
 
                             <div className="space-y-2">
-                                <Label htmlFor="reason">Reason (Optional)</Label>
+                                <Label htmlFor="reason">
+                                    Reason (Optional)
+                                </Label>
                                 <Textarea
                                     id="reason"
                                     placeholder="Explain why this credit limit is being set..."
@@ -243,7 +292,9 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                                     rows={2}
                                 />
                                 {errors.reason && (
-                                    <p className="text-sm text-red-500">{errors.reason}</p>
+                                    <p className="text-sm text-red-500">
+                                        {errors.reason}
+                                    </p>
                                 )}
                             </div>
                         </>
@@ -251,10 +302,17 @@ export function SetCreditModal({ isOpen, onClose, formatCurrency }: Props) {
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                    >
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit} disabled={isSubmitting || !selectedPatient}>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || !selectedPatient}
+                    >
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

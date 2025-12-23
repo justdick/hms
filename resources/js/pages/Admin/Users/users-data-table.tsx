@@ -11,7 +11,14 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, Filter, Plus, Search, Shield, UserCog } from 'lucide-react';
+import {
+    ChevronDown,
+    Filter,
+    Plus,
+    Search,
+    Shield,
+    UserCog,
+} from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -74,8 +81,10 @@ export function UsersDataTable<TData, TValue>({
     filters,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
     const [search, setSearch] = React.useState(filters.search || '');
 
     const table = useReactTable({
@@ -161,15 +170,19 @@ export function UsersDataTable<TData, TValue>({
         );
     };
 
-    const prevLink = pagination.links.find((link) => link.label.includes('Previous'));
-    const nextLink = pagination.links.find((link) => link.label.includes('Next'));
+    const prevLink = pagination.links.find((link) =>
+        link.label.includes('Previous'),
+    );
+    const nextLink = pagination.links.find((link) =>
+        link.label.includes('Next'),
+    );
 
     return (
         <div className="w-full space-y-4">
             <div className="flex flex-wrap items-center gap-4">
                 {/* Search */}
                 <div className="relative max-w-sm flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search by name or username..."
                         value={search}
@@ -220,7 +233,9 @@ export function UsersDataTable<TData, TValue>({
                             <DropdownMenuCheckboxItem
                                 key={role.id}
                                 checked={filters.role === role.name}
-                                onCheckedChange={() => handleRoleFilterChange(role.name)}
+                                onCheckedChange={() =>
+                                    handleRoleFilterChange(role.name)
+                                }
                             >
                                 {role.name}
                             </DropdownMenuCheckboxItem>
@@ -236,26 +251,42 @@ export function UsersDataTable<TData, TValue>({
                             Department
                             {filters.department && (
                                 <span className="ml-2 rounded bg-primary/20 px-1.5 py-0.5 text-xs">
-                                    {departments.find((d) => d.id.toString() === filters.department)?.name}
+                                    {
+                                        departments.find(
+                                            (d) =>
+                                                d.id.toString() ===
+                                                filters.department,
+                                        )?.name
+                                    }
                                 </span>
                             )}
                             <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                        <DropdownMenuLabel>Filter by Department</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                            Filter by Department
+                        </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                             checked={!filters.department}
-                            onCheckedChange={() => handleDepartmentFilterChange('')}
+                            onCheckedChange={() =>
+                                handleDepartmentFilterChange('')
+                            }
                         >
                             All Departments
                         </DropdownMenuCheckboxItem>
                         {departments.map((dept) => (
                             <DropdownMenuCheckboxItem
                                 key={dept.id}
-                                checked={filters.department === dept.id.toString()}
-                                onCheckedChange={() => handleDepartmentFilterChange(dept.id.toString())}
+                                checked={
+                                    filters.department === dept.id.toString()
+                                }
+                                onCheckedChange={() =>
+                                    handleDepartmentFilterChange(
+                                        dept.id.toString(),
+                                    )
+                                }
                             >
                                 {dept.name}
                             </DropdownMenuCheckboxItem>
@@ -279,7 +310,9 @@ export function UsersDataTable<TData, TValue>({
                                     key={column.id}
                                     className="capitalize"
                                     checked={column.getIsVisible()}
-                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                    onCheckedChange={(value) =>
+                                        column.toggleVisibility(!!value)
+                                    }
                                 >
                                     {column.id.replace('_', ' ')}
                                 </DropdownMenuCheckboxItem>
@@ -313,7 +346,11 @@ export function UsersDataTable<TData, TValue>({
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
+                                            : flexRender(
+                                                  header.column.columnDef
+                                                      .header,
+                                                  header.getContext(),
+                                              )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -322,22 +359,33 @@ export function UsersDataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-muted/50">
+                                <TableRow
+                                    key={row.id}
+                                    className="hover:bg-muted/50"
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
                                         </TableCell>
                                     ))}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
                                     <div className="flex flex-col items-center gap-2">
                                         <UserCog className="h-8 w-8 text-muted-foreground" />
                                         <div>No users found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {filters.search || filters.role || filters.department
+                                            {filters.search ||
+                                            filters.role ||
+                                            filters.department
                                                 ? 'Try adjusting your search or filters.'
                                                 : 'Get started by adding your first user.'}
                                         </div>
@@ -354,7 +402,8 @@ export function UsersDataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {pagination.from && pagination.to ? (
                         <>
-                            Showing {pagination.from} to {pagination.to} of {pagination.total} user(s)
+                            Showing {pagination.from} to {pagination.to} of{' '}
+                            {pagination.total} user(s)
                         </>
                     ) : (
                         <>No results</>
@@ -370,7 +419,11 @@ export function UsersDataTable<TData, TValue>({
                         Previous
                     </Button>
                     {pagination.links
-                        .filter((link) => !link.label.includes('Previous') && !link.label.includes('Next'))
+                        .filter(
+                            (link) =>
+                                !link.label.includes('Previous') &&
+                                !link.label.includes('Next'),
+                        )
                         .map((link, index) => (
                             <Button
                                 key={index}

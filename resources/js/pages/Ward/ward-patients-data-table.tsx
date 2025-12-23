@@ -389,7 +389,9 @@ export function WardPatientsDataTable<TData, TValue>({
                             .map((link, index) => (
                                 <Button
                                     key={index}
-                                    variant={link.active ? 'default' : 'outline'}
+                                    variant={
+                                        link.active ? 'default' : 'outline'
+                                    }
                                     size="sm"
                                     className="min-w-[40px]"
                                     onClick={() => handlePageChange(link.url)}

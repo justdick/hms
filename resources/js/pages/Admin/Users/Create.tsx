@@ -43,7 +43,9 @@ export default function UsersCreate({ roles, departments }: Props) {
     const flash = props.flash || {};
 
     const [passwordModalOpen, setPasswordModalOpen] = useState(false);
-    const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
+    const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
+        null,
+    );
     const [copied, setCopied] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -140,13 +142,17 @@ export default function UsersCreate({ roles, departments }: Props) {
                                         id="name"
                                         type="text"
                                         value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
+                                        onChange={(e) =>
+                                            setData('name', e.target.value)
+                                        }
                                         placeholder="e.g., John Doe"
                                         required
                                         className="mt-1"
                                     />
                                     {errors.name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.name}
+                                        </p>
                                     )}
                                 </div>
 
@@ -156,7 +162,12 @@ export default function UsersCreate({ roles, departments }: Props) {
                                         id="username"
                                         type="text"
                                         value={data.username}
-                                        onChange={(e) => setData('username', e.target.value.toLowerCase())}
+                                        onChange={(e) =>
+                                            setData(
+                                                'username',
+                                                e.target.value.toLowerCase(),
+                                            )
+                                        }
                                         placeholder="e.g., johndoe"
                                         minLength={4}
                                         required
@@ -166,7 +177,9 @@ export default function UsersCreate({ roles, departments }: Props) {
                                         Minimum 4 characters, alphanumeric only
                                     </p>
                                     {errors.username && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {errors.username}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -188,7 +201,9 @@ export default function UsersCreate({ roles, departments }: Props) {
                                                 key={roleName}
                                                 variant="secondary"
                                                 className="cursor-pointer"
-                                                onClick={() => toggleRole(roleName)}
+                                                onClick={() =>
+                                                    toggleRole(roleName)
+                                                }
                                             >
                                                 {roleName}
                                                 <X className="ml-1 h-3 w-3" />
@@ -206,8 +221,12 @@ export default function UsersCreate({ roles, departments }: Props) {
                                         >
                                             <Checkbox
                                                 id={`role-${role.id}`}
-                                                checked={data.roles.includes(role.name)}
-                                                onCheckedChange={() => toggleRole(role.name)}
+                                                checked={data.roles.includes(
+                                                    role.name,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleRole(role.name)
+                                                }
                                             />
                                             <Label
                                                 htmlFor={`role-${role.id}`}
@@ -219,7 +238,9 @@ export default function UsersCreate({ roles, departments }: Props) {
                                     ))}
                                 </div>
                                 {errors.roles && (
-                                    <p className="text-sm text-red-600">{errors.roles}</p>
+                                    <p className="text-sm text-red-600">
+                                        {errors.roles}
+                                    </p>
                                 )}
                             </div>
 
@@ -228,7 +249,8 @@ export default function UsersCreate({ roles, departments }: Props) {
                                 <div>
                                     <Label>Departments</Label>
                                     <p className="text-sm text-gray-500">
-                                        Optionally assign the user to one or more departments
+                                        Optionally assign the user to one or
+                                        more departments
                                     </p>
                                 </div>
 
@@ -236,13 +258,17 @@ export default function UsersCreate({ roles, departments }: Props) {
                                 {data.departments.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {data.departments.map((deptId) => {
-                                            const dept = departments.find((d) => d.id === deptId);
+                                            const dept = departments.find(
+                                                (d) => d.id === deptId,
+                                            );
                                             return dept ? (
                                                 <Badge
                                                     key={deptId}
                                                     variant="outline"
                                                     className="cursor-pointer"
-                                                    onClick={() => toggleDepartment(deptId)}
+                                                    onClick={() =>
+                                                        toggleDepartment(deptId)
+                                                    }
                                                 >
                                                     {dept.name}
                                                     <X className="ml-1 h-3 w-3" />
@@ -261,8 +287,12 @@ export default function UsersCreate({ roles, departments }: Props) {
                                         >
                                             <Checkbox
                                                 id={`dept-${dept.id}`}
-                                                checked={data.departments.includes(dept.id)}
-                                                onCheckedChange={() => toggleDepartment(dept.id)}
+                                                checked={data.departments.includes(
+                                                    dept.id,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleDepartment(dept.id)
+                                                }
                                             />
                                             <Label
                                                 htmlFor={`dept-${dept.id}`}
@@ -274,7 +304,9 @@ export default function UsersCreate({ roles, departments }: Props) {
                                     ))}
                                 </div>
                                 {errors.departments && (
-                                    <p className="text-sm text-red-600">{errors.departments}</p>
+                                    <p className="text-sm text-red-600">
+                                        {errors.departments}
+                                    </p>
                                 )}
                             </div>
 
@@ -287,7 +319,11 @@ export default function UsersCreate({ roles, departments }: Props) {
                                             Temporary Password
                                         </p>
                                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                                            A temporary password will be generated automatically. You'll need to share it with the user securely. They will be required to change it on their first login.
+                                            A temporary password will be
+                                            generated automatically. You'll need
+                                            to share it with the user securely.
+                                            They will be required to change it
+                                            on their first login.
                                         </p>
                                     </div>
                                 </div>
@@ -317,21 +353,28 @@ export default function UsersCreate({ roles, departments }: Props) {
                             User Created Successfully
                         </DialogTitle>
                         <DialogDescription>
-                            Please share this temporary password with the user securely. They will be required to change it on their first login.
+                            Please share this temporary password with the user
+                            securely. They will be required to change it on
+                            their first login.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="my-4">
                         <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                            <code className="flex-1 text-lg font-mono font-semibold">
+                            <code className="flex-1 font-mono text-lg font-semibold">
                                 {temporaryPassword}
                             </code>
-                            <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={copyToClipboard}
+                            >
                                 <Copy className="mr-1 h-4 w-4" />
                                 {copied ? 'Copied!' : 'Copy'}
                             </Button>
                         </div>
                         <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
-                            ⚠️ This password will only be shown once. Make sure to copy it now.
+                            ⚠️ This password will only be shown once. Make sure
+                            to copy it now.
                         </p>
                     </div>
                     <DialogFooter>

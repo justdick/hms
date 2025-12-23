@@ -3,7 +3,10 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { DepositModal } from './components/DepositModal';
 import { SetCreditModal } from './components/SetCreditModal';
-import { PatientAccountData, patientAccountsColumns } from './patient-accounts-columns';
+import {
+    PatientAccountData,
+    patientAccountsColumns,
+} from './patient-accounts-columns';
 import { PatientAccountsDataTable } from './patient-accounts-data-table';
 
 interface PaymentMethod {
@@ -29,7 +32,11 @@ interface Props {
     paymentMethods: PaymentMethod[];
 }
 
-export default function PatientAccountsIndex({ accounts, filters, paymentMethods }: Props) {
+export default function PatientAccountsIndex({
+    accounts,
+    filters,
+    paymentMethods,
+}: Props) {
     const [depositModalOpen, setDepositModalOpen] = useState(false);
     const [setCreditModalOpen, setSetCreditModalOpen] = useState(false);
 
@@ -41,16 +48,23 @@ export default function PatientAccountsIndex({ accounts, filters, paymentMethods
     };
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'Billing', href: '/billing' },
-            { title: 'Patient Accounts', href: '/billing/patient-accounts' },
-        ]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Billing', href: '/billing' },
+                {
+                    title: 'Patient Accounts',
+                    href: '/billing/patient-accounts',
+                },
+            ]}
+        >
             <Head title="Patient Accounts" />
 
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Patient Accounts</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        Patient Accounts
+                    </h1>
                     <p className="text-muted-foreground">
                         Manage patient prepaid balances and credit limits
                     </p>

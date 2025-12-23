@@ -7,13 +7,13 @@ import { type BreadcrumbItem } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, usePage } from '@inertiajs/react';
 import { Check, X } from 'lucide-react';
-import { useRef, useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { edit } from '@/routes/password';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -33,12 +33,21 @@ const passwordRequirements: PasswordRequirement[] = [
     { label: 'Contains uppercase letter', test: (p) => /[A-Z]/.test(p) },
     { label: 'Contains lowercase letter', test: (p) => /[a-z]/.test(p) },
     { label: 'Contains a number', test: (p) => /\d/.test(p) },
-    { label: 'Contains a symbol', test: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(p) },
+    {
+        label: 'Contains a symbol',
+        test: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(p),
+    },
 ];
 
-function getPasswordStrength(password: string): { score: number; label: string; color: string } {
-    const passedRequirements = passwordRequirements.filter((req) => req.test(password)).length;
-    
+function getPasswordStrength(password: string): {
+    score: number;
+    label: string;
+    color: string;
+} {
+    const passedRequirements = passwordRequirements.filter((req) =>
+        req.test(password),
+    ).length;
+
     if (password.length === 0) {
         return { score: 0, label: '', color: 'bg-gray-200 dark:bg-gray-700' };
     }
@@ -62,11 +71,16 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
     const [newPassword, setNewPassword] = useState('');
-    
-    const { props } = usePage<{ flash?: { warning?: string; success?: string } }>();
+
+    const { props } = usePage<{
+        flash?: { warning?: string; success?: string };
+    }>();
     const flash = props.flash || {};
 
-    const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+    const passwordStrength = useMemo(
+        () => getPasswordStrength(newPassword),
+        [newPassword],
+    );
 
     return (
         <div className="space-y-6">
@@ -122,15 +136,11 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
                                 placeholder="Enter your current password"
                             />
 
-                            <InputError
-                                message={errors.current_password}
-                            />
+                            <InputError message={errors.current_password} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">
-                                New password
-                            </Label>
+                            <Label htmlFor="password">New password</Label>
 
                             <Input
                                 id="password"
@@ -148,17 +158,26 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
 
                             {/* Password Strength Indicator */}
                             {newPassword.length > 0 && (
-                                <div className="space-y-3 mt-2">
+                                <div className="mt-2 space-y-3">
                                     {/* Strength Bar */}
                                     <div className="space-y-1">
                                         <div className="flex justify-between text-xs">
-                                            <span className="text-gray-500 dark:text-gray-400">Password strength</span>
-                                            <span className={`font-medium ${
-                                                passwordStrength.score <= 1 ? 'text-red-600 dark:text-red-400' :
-                                                passwordStrength.score === 2 ? 'text-orange-600 dark:text-orange-400' :
-                                                passwordStrength.score === 3 ? 'text-yellow-600 dark:text-yellow-400' :
-                                                'text-green-600 dark:text-green-400'
-                                            }`}>
+                                            <span className="text-gray-500 dark:text-gray-400">
+                                                Password strength
+                                            </span>
+                                            <span
+                                                className={`font-medium ${
+                                                    passwordStrength.score <= 1
+                                                        ? 'text-red-600 dark:text-red-400'
+                                                        : passwordStrength.score ===
+                                                            2
+                                                          ? 'text-orange-600 dark:text-orange-400'
+                                                          : passwordStrength.score ===
+                                                              3
+                                                            ? 'text-yellow-600 dark:text-yellow-400'
+                                                            : 'text-green-600 dark:text-green-400'
+                                                }`}
+                                            >
                                                 {passwordStrength.label}
                                             </span>
                                         </div>
@@ -167,7 +186,8 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
                                                 <div
                                                     key={level}
                                                     className={`h-1.5 flex-1 rounded-full transition-colors ${
-                                                        level <= passwordStrength.score
+                                                        level <=
+                                                        passwordStrength.score
                                                             ? passwordStrength.color
                                                             : 'bg-gray-200 dark:bg-gray-700'
                                                     }`}
@@ -178,26 +198,29 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
 
                                     {/* Requirements Checklist */}
                                     <div className="grid grid-cols-1 gap-1.5 text-xs">
-                                        {passwordRequirements.map((req, index) => {
-                                            const passed = req.test(newPassword);
-                                            return (
-                                                <div
-                                                    key={index}
-                                                    className={`flex items-center gap-1.5 ${
-                                                        passed
-                                                            ? 'text-green-600 dark:text-green-400'
-                                                            : 'text-gray-500 dark:text-gray-400'
-                                                    }`}
-                                                >
-                                                    {passed ? (
-                                                        <Check className="h-3.5 w-3.5" />
-                                                    ) : (
-                                                        <X className="h-3.5 w-3.5" />
-                                                    )}
-                                                    <span>{req.label}</span>
-                                                </div>
-                                            );
-                                        })}
+                                        {passwordRequirements.map(
+                                            (req, index) => {
+                                                const passed =
+                                                    req.test(newPassword);
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`flex items-center gap-1.5 ${
+                                                            passed
+                                                                ? 'text-green-600 dark:text-green-400'
+                                                                : 'text-gray-500 dark:text-gray-400'
+                                                        }`}
+                                                    >
+                                                        {passed ? (
+                                                            <Check className="h-3.5 w-3.5" />
+                                                        ) : (
+                                                            <X className="h-3.5 w-3.5" />
+                                                        )}
+                                                        <span>{req.label}</span>
+                                                    </div>
+                                                );
+                                            },
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -222,7 +245,9 @@ function PasswordForm({ isForced = false }: { isForced?: boolean }) {
                             />
                         </div>
 
-                        <div className={`flex items-center gap-4 ${isForced ? 'pt-2' : ''}`}>
+                        <div
+                            className={`flex items-center gap-4 ${isForced ? 'pt-2' : ''}`}
+                        >
                             <Button
                                 disabled={processing}
                                 data-test="update-password-button"

@@ -55,7 +55,10 @@ export function MyCollectionsCard({
     }
 
     return (
-        <div onClick={onViewDetails} className={onViewDetails ? 'cursor-pointer' : ''}>
+        <div
+            onClick={onViewDetails}
+            className={onViewDetails ? 'cursor-pointer' : ''}
+        >
             <StatCard
                 label={`My Collections Today · ${summary.transaction_count} transaction${summary.transaction_count !== 1 ? 's' : ''}`}
                 value={formatCurrency(summary.total_amount)}

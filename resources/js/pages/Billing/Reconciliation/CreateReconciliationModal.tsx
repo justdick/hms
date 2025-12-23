@@ -65,11 +65,13 @@ export default function CreateReconciliationModal({
 }: Props) {
     const [cashierId, setCashierId] = useState<string>('');
     const [reconciliationDate, setReconciliationDate] = useState<string>(
-        new Date().toISOString().split('T')[0]
+        new Date().toISOString().split('T')[0],
     );
     const [systemTotal, setSystemTotal] = useState<number>(0);
     const [physicalCount, setPhysicalCount] = useState<string>('');
-    const [denominationCounts, setDenominationCounts] = useState<Record<number, string>>({});
+    const [denominationCounts, setDenominationCounts] = useState<
+        Record<number, string>
+    >({});
     const [varianceReason, setVarianceReason] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetchingTotal, setIsFetchingTotal] = useState<boolean>(false);
@@ -80,7 +82,8 @@ export default function CreateReconciliationModal({
     // Calculate physical count from denominations
     const calculatedPhysicalCount = useDenominations
         ? DENOMINATIONS.reduce((total, denom) => {
-              const count = parseInt(denominationCounts[denom.value] || '0', 10) || 0;
+              const count =
+                  parseInt(denominationCounts[denom.value] || '0', 10) || 0;
               return total + count * denom.value;
           }, 0)
         : parseFloat(physicalCount) || 0;
@@ -127,9 +130,12 @@ export default function CreateReconciliationModal({
     useEffect(() => {
         if (cashierId) {
             const awaitingCashier = cashiersAwaitingReconciliation.find(
-                (c) => c.id.toString() === cashierId
+                (c) => c.id.toString() === cashierId,
             );
-            if (awaitingCashier && reconciliationDate === new Date().toISOString().split('T')[0]) {
+            if (
+                awaitingCashier &&
+                reconciliationDate === new Date().toISOString().split('T')[0]
+            ) {
                 setSystemTotal(awaitingCashier.system_total);
             }
         }
@@ -147,7 +153,7 @@ export default function CreateReconciliationModal({
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                }
+                },
             );
 
             if (!response.ok) {
@@ -206,7 +212,8 @@ export default function CreateReconciliationModal({
         const denominationBreakdown: Record<string, number> = {};
         if (useDenominations) {
             DENOMINATIONS.forEach((denom) => {
-                const count = parseInt(denominationCounts[denom.value] || '0', 10) || 0;
+                const count =
+                    parseInt(denominationCounts[denom.value] || '0', 10) || 0;
                 if (count > 0) {
                     denominationBreakdown[denom.value.toString()] = count;
                 }
@@ -219,7 +226,9 @@ export default function CreateReconciliationModal({
                 cashier_id: cashierId,
                 reconciliation_date: reconciliationDate,
                 physical_count: calculatedPhysicalCount,
-                denomination_breakdown: useDenominations ? denominationBreakdown : null,
+                denomination_breakdown: useDenominations
+                    ? denominationBreakdown
+                    : null,
                 variance_reason: hasVariance ? varianceReason : null,
             },
             {
@@ -228,12 +237,16 @@ export default function CreateReconciliationModal({
                 },
                 onError: (errors) => {
                     const firstError = Object.values(errors)[0];
-                    setError(typeof firstError === 'string' ? firstError : 'An error occurred');
+                    setError(
+                        typeof firstError === 'string'
+                            ? firstError
+                            : 'An error occurred',
+                    );
                 },
                 onFinish: () => {
                     setIsLoading(false);
                 },
-            }
+            },
         );
     };
 
@@ -243,7 +256,8 @@ export default function CreateReconciliationModal({
                 <DialogHeader>
                     <DialogTitle>New Cash Reconciliation</DialogTitle>
                     <DialogDescription>
-                        Reconcile a cashier's collections against their physical cash count
+                        Reconcile a cashier's collections against their physical
+                        cash count
                     </DialogDescription>
                 </DialogHeader>
 
@@ -261,7 +275,8 @@ export default function CreateReconciliationModal({
                         <Alert>
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription>
-                                This cashier has already been reconciled for this date.
+                                This cashier has already been reconciled for
+                                this date.
                             </AlertDescription>
                         </Alert>
                     )}
@@ -280,16 +295,26 @@ export default function CreateReconciliationModal({
                                         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                             Awaiting Reconciliation Today
                                         </div>
-                                        {cashiersAwaitingReconciliation.map((c) => (
-                                            <SelectItem key={`awaiting-${c.id}`} value={c.id.toString()}>
-                                                <span className="flex items-center gap-2">
-                                                    {c.name}
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {formatCurrency(c.system_total)}
-                                                    </Badge>
-                                                </span>
-                                            </SelectItem>
-                                        ))}
+                                        {cashiersAwaitingReconciliation.map(
+                                            (c) => (
+                                                <SelectItem
+                                                    key={`awaiting-${c.id}`}
+                                                    value={c.id.toString()}
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        {c.name}
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs"
+                                                        >
+                                                            {formatCurrency(
+                                                                c.system_total,
+                                                            )}
+                                                        </Badge>
+                                                    </span>
+                                                </SelectItem>
+                                            ),
+                                        )}
                                         <div className="my-1 border-t" />
                                         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                             All Cashiers
@@ -297,7 +322,10 @@ export default function CreateReconciliationModal({
                                     </>
                                 )}
                                 {cashiers.map((c) => (
-                                    <SelectItem key={c.id} value={c.id.toString()}>
+                                    <SelectItem
+                                        key={c.id}
+                                        value={c.id.toString()}
+                                    >
                                         {c.name}
                                     </SelectItem>
                                 ))}
@@ -312,7 +340,9 @@ export default function CreateReconciliationModal({
                             id="date"
                             type="date"
                             value={reconciliationDate}
-                            onChange={(e) => setReconciliationDate(e.target.value)}
+                            onChange={(e) =>
+                                setReconciliationDate(e.target.value)
+                            }
                             max={new Date().toISOString().split('T')[0]}
                         />
                     </div>
@@ -345,7 +375,9 @@ export default function CreateReconciliationModal({
                         <div className="flex gap-2">
                             <Button
                                 type="button"
-                                variant={useDenominations ? 'default' : 'outline'}
+                                variant={
+                                    useDenominations ? 'default' : 'outline'
+                                }
                                 size="sm"
                                 onClick={() => setUseDenominations(true)}
                             >
@@ -353,7 +385,9 @@ export default function CreateReconciliationModal({
                             </Button>
                             <Button
                                 type="button"
-                                variant={!useDenominations ? 'default' : 'outline'}
+                                variant={
+                                    !useDenominations ? 'default' : 'outline'
+                                }
                                 size="sm"
                                 onClick={() => setUseDenominations(false)}
                             >
@@ -368,17 +402,31 @@ export default function CreateReconciliationModal({
                             <Label>Denomination Breakdown</Label>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                                 {DENOMINATIONS.map((denom) => (
-                                    <div key={denom.value} className="flex items-center gap-2">
-                                        <span className="w-20 text-sm font-medium">{denom.label}</span>
-                                        <span className="text-muted-foreground">×</span>
+                                    <div
+                                        key={denom.value}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <span className="w-20 text-sm font-medium">
+                                            {denom.label}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            ×
+                                        </span>
                                         <Input
                                             type="number"
                                             min="0"
                                             placeholder="0"
                                             className="w-20"
-                                            value={denominationCounts[denom.value] || ''}
+                                            value={
+                                                denominationCounts[
+                                                    denom.value
+                                                ] || ''
+                                            }
                                             onChange={(e) =>
-                                                handleDenominationChange(denom.value, e.target.value)
+                                                handleDenominationChange(
+                                                    denom.value,
+                                                    e.target.value,
+                                                )
                                             }
                                         />
                                     </div>
@@ -387,7 +435,9 @@ export default function CreateReconciliationModal({
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            <Label htmlFor="physical-count">Physical Cash Count</Label>
+                            <Label htmlFor="physical-count">
+                                Physical Cash Count
+                            </Label>
                             <Input
                                 id="physical-count"
                                 type="number"
@@ -395,7 +445,9 @@ export default function CreateReconciliationModal({
                                 step="0.01"
                                 placeholder="Enter total cash amount"
                                 value={physicalCount}
-                                onChange={(e) => setPhysicalCount(e.target.value)}
+                                onChange={(e) =>
+                                    setPhysicalCount(e.target.value)
+                                }
                             />
                         </div>
                     )}
@@ -465,30 +517,39 @@ export default function CreateReconciliationModal({
                     {hasVariance && (
                         <div className="space-y-2">
                             <Label htmlFor="variance-reason">
-                                Variance Reason <span className="text-red-500">*</span>
+                                Variance Reason{' '}
+                                <span className="text-red-500">*</span>
                             </Label>
                             <Textarea
                                 id="variance-reason"
                                 placeholder="Please explain the reason for the variance..."
                                 value={varianceReason}
-                                onChange={(e) => setVarianceReason(e.target.value)}
+                                onChange={(e) =>
+                                    setVarianceReason(e.target.value)
+                                }
                                 rows={3}
                             />
                             <p className="text-xs text-muted-foreground">
-                                A reason is required when there is a variance between system total and
-                                physical count.
+                                A reason is required when there is a variance
+                                between system total and physical count.
                             </p>
                         </div>
                     )}
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        disabled={isLoading}
+                    >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isLoading || isFetchingTotal || alreadyReconciled}
+                        disabled={
+                            isLoading || isFetchingTotal || alreadyReconciled
+                        }
                     >
                         {isLoading ? (
                             <>

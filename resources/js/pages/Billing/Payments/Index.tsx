@@ -74,9 +74,12 @@ interface Props {
 
 export default function PaymentIndex({ permissions }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
+    const [searchResults, setSearchResults] = useState<PatientSearchResult[]>(
+        [],
+    );
     const [isSearching, setIsSearching] = useState(false);
-    const [selectedPatient, setSelectedPatient] = useState<PatientSearchResult | null>(null);
+    const [selectedPatient, setSelectedPatient] =
+        useState<PatientSearchResult | null>(null);
 
     // Modal states
     const [billingModalOpen, setBillingModalOpen] = useState(false);
@@ -85,7 +88,9 @@ export default function PaymentIndex({ permissions }: Props) {
     const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
     const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
     const [paidChargeIds, setPaidChargeIds] = useState<number[]>([]);
-    const [selectedChargeId, setSelectedChargeId] = useState<number | null>(null);
+    const [selectedChargeId, setSelectedChargeId] = useState<number | null>(
+        null,
+    );
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-GH', {
@@ -128,7 +133,9 @@ export default function PaymentIndex({ permissions }: Props) {
             router.post(`/billing/charges/quick-pay-all`, {
                 patient_checkin_id: mostRecentVisit.checkin_id,
                 payment_method: 'cash',
-                charges: patient.visits.flatMap((v) => v.charges.map((c) => c.id)),
+                charges: patient.visits.flatMap((v) =>
+                    v.charges.map((c) => c.id),
+                ),
             });
         }
     };
@@ -158,7 +165,10 @@ export default function PaymentIndex({ permissions }: Props) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({ charge_ids: chargeIds }),
             });
@@ -230,7 +240,6 @@ export default function PaymentIndex({ permissions }: Props) {
         }
     };
 
-
     return (
         <AppLayout breadcrumbs={[{ title: 'Billing', href: '/billing' }]}>
             <Head title="Billing - Payments & Collections" />
@@ -249,7 +258,9 @@ export default function PaymentIndex({ permissions }: Props) {
                     <div className="flex items-center gap-3">
                         <Button
                             variant="outline"
-                            onClick={() => router.visit('/billing/configuration')}
+                            onClick={() =>
+                                router.visit('/billing/configuration')
+                            }
                         >
                             <Settings className="mr-2 h-4 w-4" />
                             Configuration
@@ -269,12 +280,17 @@ export default function PaymentIndex({ permissions }: Props) {
                         <CardTitle>Search Patient</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <PatientSearchBar onSearch={searchPatients} isSearching={isSearching} />
+                        <PatientSearchBar
+                            onSearch={searchPatients}
+                            isSearching={isSearching}
+                        />
                         <div className="mt-4">
                             <PatientSearchResults
                                 results={searchResults}
                                 searchQuery={searchQuery}
-                                selectedPatientId={selectedPatient?.patient_id || null}
+                                selectedPatientId={
+                                    selectedPatient?.patient_id || null
+                                }
                                 onPatientSelect={handlePatientSelect}
                                 formatCurrency={formatCurrency}
                             />
@@ -289,8 +305,16 @@ export default function PaymentIndex({ permissions }: Props) {
                     patient={selectedPatient}
                     permissions={permissions}
                     formatCurrency={formatCurrency}
-                    onWaiveCharge={permissions.canWaiveCharges ? handleWaiveCharge : undefined}
-                    onAdjustCharge={permissions.canAdjustCharges ? handleAdjustCharge : undefined}
+                    onWaiveCharge={
+                        permissions.canWaiveCharges
+                            ? handleWaiveCharge
+                            : undefined
+                    }
+                    onAdjustCharge={
+                        permissions.canAdjustCharges
+                            ? handleAdjustCharge
+                            : undefined
+                    }
                     onPaymentSuccess={handlePaymentSuccess}
                     onPrintReceipt={handlePrintReceipt}
                     onViewReceipt={handleViewReceipt}

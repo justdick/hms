@@ -1,4 +1,4 @@
-import { Banknote, FileText, TrendingUp, Wallet } from 'lucide-react';
+import { FileText, TrendingUp, Wallet } from 'lucide-react';
 
 import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { MetricCard } from '@/components/Dashboard/MetricCard';

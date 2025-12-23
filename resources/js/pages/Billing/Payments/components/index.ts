@@ -3,7 +3,10 @@ export { BillingStatsCards } from './BillingStatsCards';
 export { BillWaiverModal } from './BillWaiverModal';
 export { ChangeCalculator, calculateChange } from './ChangeCalculator';
 export type { ChangeCalculationResult } from './ChangeCalculator';
-export { ChargeSelectionList, calculateChargeSelectionTotals } from './ChargeSelectionList';
+export {
+    ChargeSelectionList,
+    calculateChargeSelectionTotals,
+} from './ChargeSelectionList';
 export type { ChargeItem, ChargeSelectionSummary } from './ChargeSelectionList';
 export { ChargesList } from './ChargesList';
 export { InlinePaymentForm } from './InlinePaymentForm';

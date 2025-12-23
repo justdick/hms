@@ -39,7 +39,7 @@ export function PatientCreditBadge({
     const badge = (
         <Badge
             variant="default"
-            className={`bg-amber-500 hover:bg-amber-600 text-white ${className || ''}`}
+            className={`bg-amber-500 text-white hover:bg-amber-600 ${className || ''}`}
         >
             <Star className="size-3 fill-current" />
             Credit Account
@@ -55,7 +55,7 @@ export function PatientCreditBadge({
             <Tooltip>
                 <TooltipTrigger asChild>{badge}</TooltipTrigger>
                 <TooltipContent className="space-y-1">
-                    <div className="font-semibold flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-semibold">
                         <CreditCard className="size-4" />
                         Credit Account Details
                     </div>
@@ -75,7 +75,7 @@ export function PatientCreditBadge({
                                 <span className="text-muted-foreground">
                                     Reason:
                                 </span>
-                                <span className="font-medium max-w-[200px] truncate">
+                                <span className="max-w-[200px] truncate font-medium">
                                     {creditReason}
                                 </span>
                             </div>
@@ -97,7 +97,7 @@ export function PatientCreditBadge({
                                 </span>
                                 <span className="font-medium">
                                     {new Date(
-                                        creditAuthorizedAt
+                                        creditAuthorizedAt,
                                     ).toLocaleDateString()}
                                 </span>
                             </div>
