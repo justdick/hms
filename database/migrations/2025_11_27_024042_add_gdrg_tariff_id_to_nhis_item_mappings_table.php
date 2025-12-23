@@ -2,18 +2,35 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private function foreignKeyExistsOnColumn(string $table, string $column): bool
+    {
+        $foreignKeys = DB::select("
+            SELECT CONSTRAINT_NAME 
+            FROM information_schema.KEY_COLUMN_USAGE 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = ? 
+            AND COLUMN_NAME = ?
+            AND REFERENCED_TABLE_NAME IS NOT NULL
+        ", [$table, $column]);
+
+        return count($foreignKeys) > 0;
+    }
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('nhis_item_mappings', function (Blueprint $table) {
-            // Drop the foreign key constraint first
-            $table->dropForeign(['nhis_tariff_id']);
+            // Drop the foreign key constraint first (if exists)
+            if ($this->foreignKeyExistsOnColumn('nhis_item_mappings', 'nhis_tariff_id')) {
+                $table->dropForeign(['nhis_tariff_id']);
+            }
 
             // Make nhis_tariff_id nullable
             $table->unsignedBigInteger('nhis_tariff_id')->nullable()->change();
