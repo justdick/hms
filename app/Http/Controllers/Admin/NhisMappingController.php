@@ -29,7 +29,7 @@ class NhisMappingController extends Controller
         $perPage = min($request->input('per_page', 20), 100);
 
         $mappings = NhisItemMapping::query()
-            ->with(['nhisTariff'])
+            ->with(['nhisTariff', 'gdrgTariff'])
             ->when($request->input('item_type'), fn ($q, $type) => $q->byItemType($type))
             ->when($request->input('search'), function ($q, $search) {
                 $q->where(function ($query) use ($search) {

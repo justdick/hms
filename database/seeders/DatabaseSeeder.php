@@ -14,34 +14,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default user
-        // User::firstOrCreate(
-        //     ['email' => 'test@example.com'],
-        //     [
-        //         'name' => 'Test User',
-        //         'password' => Hash::make('password'),
-        //         'email_verified_at' => now(),
-        //     ]
-        // );
-
-        // Seed consultation module data
+        // Core seeders (always run)
         $this->call([
             PermissionSeeder::class,
             DepartmentSeeder::class,
-            MinorProceduresDepartmentSeeder::class,
-            MinorProcedureTypesSeeder::class,
-            TestDataSeeder::class,
             PaymentMethodSeeder::class,
-            // LabServiceSeeder::class,
-            // PharmacySeeder::class,
-            // DiagnosisSeeder::class,
-            // BillingServiceSeeder::class,
-            // BillingSeeder::class,
-            // PreviousConsultationsSeeder::class,
-            // WardSeeder::class,
-            // SystemConfigurationSeeder::class,
-            // InsuranceReportsSeeder::class,
-
         ]);
+
+        // Test data only in local/dev environment
+        if (app()->environment('local', 'development', 'testing')) {
+            $this->call([
+                TestDataSeeder::class,
+            ]);
+        }
+
+        // Uncomment as needed:
+        // MinorProcedureTypesSeeder::class,
+        // LabServiceSeeder::class,
+        // PharmacySeeder::class,
+        // DiagnosisSeeder::class,
+        // BillingServiceSeeder::class,
+        // BillingSeeder::class,
+        // WardSeeder::class,
+        // SystemConfigurationSeeder::class,
     }
 }

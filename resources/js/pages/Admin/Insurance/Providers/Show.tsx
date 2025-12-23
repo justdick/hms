@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/ui/stat-card';
 import {
     Table,
     TableBody,
@@ -14,11 +15,13 @@ import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     Building2,
+    Calendar,
     Edit,
     FileText,
     Mail,
     Phone,
     Plus,
+    Send,
     Shield,
 } from 'lucide-react';
 
@@ -109,32 +112,51 @@ export default function InsuranceProviderShow({ provider }: Props) {
                     </Link>
                 </div>
 
-                {/* Provider Information */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <Card className="lg:col-span-2">
+                {/* Provider Information - Stat Cards */}
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                    <StatCard
+                        icon={<Shield className="h-4 w-4" />}
+                        label="Provider Name"
+                        value={provider.name}
+                        variant="default"
+                    />
+                    <StatCard
+                        icon={<FileText className="h-4 w-4" />}
+                        label="Provider Code"
+                        value={provider.code}
+                        variant="default"
+                    />
+                    <StatCard
+                        icon={<Building2 className="h-4 w-4" />}
+                        label="Total Plans"
+                        value={provider.plans?.length || 0}
+                        variant="info"
+                    />
+                    <StatCard
+                        icon={<Send className="h-4 w-4" />}
+                        label="Claim Submission"
+                        value={provider.claim_submission_method || 'N/A'}
+                        variant="default"
+                    />
+                    <StatCard
+                        icon={<Calendar className="h-4 w-4" />}
+                        label="Payment Terms"
+                        value={`${provider.payment_terms_days || 0} days`}
+                        variant="default"
+                    />
+                </div>
+
+                {/* Contact & Additional Information */}
+                {(provider.contact_person ||
+                    provider.phone ||
+                    provider.email ||
+                    provider.address ||
+                    provider.notes) && (
+                    <Card>
                         <CardHeader>
-                            <CardTitle>Provider Information</CardTitle>
+                            <CardTitle>Contact Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Provider Name
-                                    </p>
-                                    <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                        {provider.name}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Provider Code
-                                    </p>
-                                    <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                        {provider.code}
-                                    </p>
-                                </div>
-                            </div>
-
                             {provider.contact_person && (
                                 <div>
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -197,39 +219,7 @@ export default function InsuranceProviderShow({ provider }: Props) {
                             )}
                         </CardContent>
                     </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Claim & Payment</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Claim Submission
-                                </p>
-                                <p className="mt-1 text-base font-semibold text-gray-900 capitalize dark:text-gray-100">
-                                    {provider.claim_submission_method || 'N/A'}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Payment Terms
-                                </p>
-                                <p className="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                    {provider.payment_terms_days} days
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                    Total Plans
-                                </p>
-                                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                    {provider.plans?.length || 0}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                )}
 
                 {/* Insurance Plans */}
                 <Card>

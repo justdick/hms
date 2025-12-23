@@ -15,14 +15,26 @@ export interface NhisTariff {
     display_name: string;
 }
 
+export interface UnifiedTariff {
+    id: number;
+    code: string;
+    name: string;
+    category: string;
+    price: number;
+    formatted_price: string;
+    source: 'nhis' | 'gdrg';
+}
+
 export interface NhisMappingData {
     id: number;
     item_type: string;
     item_id: number;
     item_code: string;
-    nhis_tariff_id: number;
+    nhis_tariff_id: number | null;
+    gdrg_tariff_id: number | null;
     item_type_label: string;
-    nhis_tariff: NhisTariff;
+    nhis_tariff?: NhisTariff;
+    tariff?: UnifiedTariff;
     created_at: string;
 }
 
@@ -108,7 +120,7 @@ export const createNhisMappingsColumns = (
         },
     },
     {
-        accessorKey: 'nhis_tariff.nhis_code',
+        accessorKey: 'tariff.code',
         id: 'nhis_code',
         header: ({ column }) => {
             return (
@@ -124,13 +136,13 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="font-mono text-sm">
-                    {row.original.nhis_tariff?.nhis_code || '-'}
+                    {row.original.tariff?.code || row.original.nhis_tariff?.nhis_code || '-'}
                 </div>
             );
         },
     },
     {
-        accessorKey: 'nhis_tariff.name',
+        accessorKey: 'tariff.name',
         id: 'nhis_name',
         header: ({ column }) => {
             return (
@@ -146,13 +158,13 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="max-w-[300px] truncate">
-                    {row.original.nhis_tariff?.name || '-'}
+                    {row.original.tariff?.name || row.original.nhis_tariff?.name || '-'}
                 </div>
             );
         },
     },
     {
-        accessorKey: 'nhis_tariff.formatted_price',
+        accessorKey: 'tariff.formatted_price',
         id: 'nhis_price',
         header: ({ column }) => {
             return (
@@ -169,7 +181,7 @@ export const createNhisMappingsColumns = (
         cell: ({ row }) => {
             return (
                 <div className="text-right font-medium">
-                    {row.original.nhis_tariff?.formatted_price || '-'}
+                    {row.original.tariff?.formatted_price || row.original.nhis_tariff?.formatted_price || '-'}
                 </div>
             );
         },

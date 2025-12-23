@@ -1,0 +1,13 @@
+// Run: php artisan tinker
+
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+
+$user = User::create([
+    'name' => 'Admin User',
+    'email' => 'admin@hospital.com',
+    'password' => bcrypt('your-secure-password'),
+    'email_verified_at' => now(),
+]);
+
+$user->assignRole('admin');
