@@ -24,9 +24,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import patientNumbering from '@/routes/patient-numbering';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CalendarIcon, Search, Settings, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Patient {
     id: number;
@@ -35,7 +35,7 @@ interface Patient {
     age: number;
     gender: string;
     phone_number: string | null;
-    has_checkin_today: boolean;
+    has_checkin_today?: boolean;
 }
 
 interface Department {
@@ -103,6 +103,15 @@ interface Props {
         canCancelCheckin: boolean;
         canEditVitals: boolean;
     };
+    patient?: {
+        id: number;
+        patient_number: string;
+        full_name: string;
+        age: number;
+        gender: string;
+        phone_number: string | null;
+        has_checkin_today?: boolean;
+    };
 }
 
 export default function CheckinIndex({
@@ -112,6 +121,7 @@ export default function CheckinIndex({
     nhisSettings,
     permissions,
 }: Props) {
+    const page = usePage();
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
     const [checkinPromptOpen, setCheckinPromptOpen] = useState(false);
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
@@ -131,6 +141,18 @@ export default function CheckinIndex({
     const [searchResults, setSearchResults] = useState<Checkin[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
+
+    // Check for newly registered patient from flash data
+    useEffect(() => {
+        const flashPatient = page.props.patient as Patient | undefined;
+        if (flashPatient && !selectedPatient) {
+            setSelectedPatient({
+                ...flashPatient,
+                has_checkin_today: flashPatient.has_checkin_today ?? false,
+            });
+            setCheckinPromptOpen(true);
+        }
+    }, [page.props.patient]);
 
     const handlePatientSelected = (patient: Patient) => {
         setSelectedPatient(patient);
@@ -293,11 +315,17 @@ export default function CheckinIndex({
                         <CardContent>
                             <Tabs defaultValue="search" className="w-full">
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="search" className="gap-2">
+                                    <TabsTrigger
+                                        value="search"
+                                        className="gap-2"
+                                    >
                                         <Search className="h-4 w-4" />
                                         Search Patient
                                     </TabsTrigger>
-                                    <TabsTrigger value="register" className="gap-2">
+                                    <TabsTrigger
+                                        value="register"
+                                        className="gap-2"
+                                    >
                                         <UserPlus className="h-4 w-4" />
                                         Register New
                                     </TabsTrigger>
@@ -346,7 +374,10 @@ export default function CheckinIndex({
                                         Today's List
                                     </TabsTrigger>
                                     {permissions.canViewAnyDate && (
-                                        <TabsTrigger value="search" className="gap-2">
+                                        <TabsTrigger
+                                            value="search"
+                                            className="gap-2"
+                                        >
                                             <CalendarIcon className="h-4 w-4" />
                                             Search by Date
                                         </TabsTrigger>
@@ -373,8 +404,12 @@ export default function CheckinIndex({
                                         departments={departments}
                                         onRecordVitals={handleRecordVitals}
                                         onEditVitals={handleEditVitals}
-                                        canCancelCheckin={permissions.canCancelCheckin}
-                                        canEditVitals={permissions.canEditVitals}
+                                        canCancelCheckin={
+                                            permissions.canCancelCheckin
+                                        }
+                                        canEditVitals={
+                                            permissions.canEditVitals
+                                        }
                                     />
                                 </TabsContent>
 
