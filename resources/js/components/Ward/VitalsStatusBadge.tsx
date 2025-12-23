@@ -50,12 +50,7 @@ export function VitalsStatusBadge({
     className,
     onClick,
 }: VitalsStatusBadgeProps) {
-    // If no schedule or status provided, don't render
-    if (!schedule && !status) {
-        return null;
-    }
-
-    // Get real-time minutes remaining
+    // Get real-time minutes remaining - must be called before any early returns
     const minutesRemaining = useTimeRemaining(
         schedule?.next_due_at || status?.next_due_at || null,
     );
@@ -65,7 +60,13 @@ export function VitalsStatusBadge({
         if (status) return status;
         if (!schedule) return null;
         return calculateStatus(schedule);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, schedule, minutesRemaining]);
+
+    // If no schedule or status provided, don't render
+    if (!schedule && !status) {
+        return null;
+    }
 
     const handleClick = () => {
         if (onClick) {

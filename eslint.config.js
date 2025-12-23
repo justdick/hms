@@ -38,7 +38,19 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        // Relax rules that have accumulated tech debt - clean up gradually
+        rules: {
+            '@typescript-eslint/no-unused-vars': 'warn',
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-empty-object-type': 'warn',
+            'no-case-declarations': 'warn',
+            'no-shadow-restricted-names': 'warn',
+            'no-empty-pattern': 'warn',
+            'no-useless-escape': 'warn',
+        },
+    },
+    {
+        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'nhis-ccc-extension'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

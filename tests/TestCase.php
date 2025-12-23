@@ -24,7 +24,15 @@ abstract class TestCase extends BaseTestCase
      */
     protected function preventProductionDatabaseAccess(): void
     {
-        $currentDatabase = DB::connection()->getDatabaseName();
+        $connection = DB::connection();
+        $driver = $connection->getDriverName();
+        
+        // SQLite (including :memory:) is always safe for testing
+        if ($driver === 'sqlite') {
+            return;
+        }
+        
+        $currentDatabase = $connection->getDatabaseName();
         $productionDatabase = 'hmst'; // Your production database name
 
         if ($currentDatabase === $productionDatabase) {
