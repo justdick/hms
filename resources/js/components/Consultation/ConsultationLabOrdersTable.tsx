@@ -24,8 +24,6 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -36,6 +34,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -78,7 +78,8 @@ interface LabOrder {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     ordered_at: string;
@@ -418,7 +419,9 @@ export function ConsultationLabOrdersTable({
         null,
     );
     const [modalOpen, setModalOpen] = React.useState(false);
-    const [deleteOrderId, setDeleteOrderId] = React.useState<number | null>(null);
+    const [deleteOrderId, setDeleteOrderId] = React.useState<number | null>(
+        null,
+    );
     const [deleting, setDeleting] = React.useState(false);
 
     const handleViewResults = (order: LabOrder) => {
@@ -428,19 +431,22 @@ export function ConsultationLabOrdersTable({
 
     const handleDelete = async () => {
         if (!deleteOrderId) return;
-        
+
         setDeleting(true);
         try {
             const { router } = await import('@inertiajs/react');
-            router.delete(`/consultation/${consultationId}/lab-orders/${deleteOrderId}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setDeleteOrderId(null);
+            router.delete(
+                `/consultation/${consultationId}/lab-orders/${deleteOrderId}`,
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setDeleteOrderId(null);
+                    },
+                    onFinish: () => {
+                        setDeleting(false);
+                    },
                 },
-                onFinish: () => {
-                    setDeleting(false);
-                },
-            });
+            );
         } catch (error) {
             setDeleting(false);
         }
@@ -567,7 +573,9 @@ export function ConsultationLabOrdersTable({
             header: () => null,
             cell: ({ row }) => {
                 const order = row.original;
-                const canDeleteOrder = canDelete && ['ordered', 'cancelled'].includes(order.status);
+                const canDeleteOrder =
+                    canDelete &&
+                    ['ordered', 'cancelled'].includes(order.status);
                 return (
                     <div className="flex justify-end gap-1">
                         <Button
@@ -877,16 +885,23 @@ export function ConsultationLabOrdersTable({
             )}
 
             {/* Delete Confirmation Dialog */}
-            <AlertDialog open={deleteOrderId !== null} onOpenChange={(open) => !open && setDeleteOrderId(null)}>
+            <AlertDialog
+                open={deleteOrderId !== null}
+                onOpenChange={(open) => !open && setDeleteOrderId(null)}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Lab Order</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this lab order? This will also remove the associated charge and any claim items. This action cannot be undone.
+                            Are you sure you want to delete this lab order? This
+                            will also remove the associated charge and any claim
+                            items. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleting}>
+                            Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
                             disabled={deleting}

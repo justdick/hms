@@ -8,7 +8,7 @@ interface LabService {
     name: string;
     code: string;
     category: string;
-    price: number;
+    price: number | null;
     sample_type: string;
 }
 
@@ -27,7 +27,8 @@ interface LabOrder {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     ordered_at: string;

@@ -25,11 +25,11 @@ import { PreviousLabResultCard } from './PreviousLabResultCard';
 
 interface VitalSigns {
     id: number;
-    temperature: number;
-    blood_pressure_systolic: number;
-    blood_pressure_diastolic: number;
-    pulse_rate: number;
-    respiratory_rate: number;
+    temperature: number | null;
+    blood_pressure_systolic: number | null;
+    blood_pressure_diastolic: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
     recorded_at: string;
 }
 
@@ -65,7 +65,8 @@ interface LabOrder {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     ordered_at: string;

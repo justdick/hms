@@ -20,18 +20,18 @@ import * as React from 'react';
 
 export interface ImageAttachment {
     id: number;
-    file_path: string;
+    file_path?: string;
     file_name: string;
     file_type: string;
-    file_size: number;
-    description: string | null;
+    file_size?: number;
+    description?: string | null;
     is_external: boolean;
-    external_facility_name: string | null;
-    external_study_date: string | null;
-    uploaded_by: { id: number; name: string };
-    uploaded_at: string;
-    url: string;
-    thumbnail_url: string | null;
+    external_facility_name?: string | null;
+    external_study_date?: string | null;
+    uploaded_by?: { id: number; name: string };
+    uploaded_at?: string;
+    url?: string;
+    thumbnail_url?: string | null;
 }
 
 interface ImageGalleryProps {
@@ -75,7 +75,7 @@ export function ImageGallery({
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!lightboxOpen) return;
-            
+
             if (e.key === 'ArrowLeft') {
                 goToPrevious();
             } else if (e.key === 'ArrowRight') {
@@ -122,11 +122,13 @@ export function ImageGallery({
                             ) : (
                                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted">
                                     <FileText className="h-10 w-10 text-muted-foreground" />
-                                    <span className="text-xs text-muted-foreground">PDF</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        PDF
+                                    </span>
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Hover overlay */}
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                             <ZoomIn className="h-8 w-8 text-white" />
@@ -134,11 +136,14 @@ export function ImageGallery({
 
                         {/* Image info */}
                         <div className="p-2">
-                            <p className="truncate text-sm font-medium" title={image.description || image.file_name}>
+                            <p
+                                className="truncate text-sm font-medium"
+                                title={image.description || image.file_name}
+                            >
                                 {image.description || image.file_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                {formatFileSize(image.file_size)}
+                                {formatFileSize(image.file_size ?? 0)}
                             </p>
                         </div>
                     </div>
@@ -147,13 +152,15 @@ export function ImageGallery({
 
             {/* Lightbox Dialog */}
             <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-                <DialogContent 
-                    className="max-w-5xl p-0 overflow-hidden bg-black/95"
+                <DialogContent
+                    className="max-w-5xl overflow-hidden bg-black/95 p-0"
                     showCloseButton={false}
                 >
                     <DialogHeader className="sr-only">
                         <DialogTitle>
-                            {currentImage?.description || currentImage?.file_name || 'Image Viewer'}
+                            {currentImage?.description ||
+                                currentImage?.file_name ||
+                                'Image Viewer'}
                         </DialogTitle>
                     </DialogHeader>
 
@@ -161,7 +168,7 @@ export function ImageGallery({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-2 top-2 z-50 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        className="absolute top-2 right-2 z-50 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
                         onClick={() => setLightboxOpen(false)}
                     >
                         <X className="h-5 w-5" />
@@ -203,13 +210,18 @@ export function ImageGallery({
                                 {currentImage.file_type.startsWith('image/') ? (
                                     <img
                                         src={currentImage.url}
-                                        alt={currentImage.description || currentImage.file_name}
+                                        alt={
+                                            currentImage.description ||
+                                            currentImage.file_name
+                                        }
                                         className="max-h-[70vh] max-w-full object-contain"
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center gap-4 py-12">
                                         <FileText className="h-20 w-20 text-white" />
-                                        <p className="text-lg text-white">PDF Document</p>
+                                        <p className="text-lg text-white">
+                                            PDF Document
+                                        </p>
                                         <Button variant="secondary" asChild>
                                             <a
                                                 href={currentImage.url}
@@ -227,20 +239,26 @@ export function ImageGallery({
                             <div className="flex items-center justify-between border-t border-white/10 bg-black/80 px-4 py-3">
                                 <div className="text-white">
                                     <p className="font-medium">
-                                        {currentImage.description || currentImage.file_name}
+                                        {currentImage.description ||
+                                            currentImage.file_name}
                                     </p>
                                     <p className="text-sm text-white/70">
                                         {images.length > 1 && (
                                             <span className="mr-2">
-                                                {currentIndex + 1} of {images.length}
+                                                {currentIndex + 1} of{' '}
+                                                {images.length}
                                             </span>
                                         )}
-                                        {formatFileSize(currentImage.file_size)}
+                                        {formatFileSize(currentImage.file_size ?? 0)}
                                     </p>
                                 </div>
-                                
+
                                 {showDownload && (
-                                    <Button variant="secondary" size="sm" asChild>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        asChild
+                                    >
                                         <a
                                             href={`/radiology/attachments/${currentImage.id}/download`}
                                             download
@@ -263,10 +281,12 @@ export function ImageGallery({
                                                 'h-16 w-16 flex-shrink-0 overflow-hidden rounded border-2 transition-all',
                                                 idx === currentIndex
                                                     ? 'border-primary'
-                                                    : 'border-transparent opacity-60 hover:opacity-100'
+                                                    : 'border-transparent opacity-60 hover:opacity-100',
                                             )}
                                         >
-                                            {img.file_type.startsWith('image/') ? (
+                                            {img.file_type.startsWith(
+                                                'image/',
+                                            ) ? (
                                                 <img
                                                     src={img.url}
                                                     alt=""

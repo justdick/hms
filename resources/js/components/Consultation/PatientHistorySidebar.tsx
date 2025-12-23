@@ -29,11 +29,11 @@ import { PreviousVisitModal } from './PreviousVisitModal';
 
 interface VitalSigns {
     id: number;
-    temperature: number;
-    blood_pressure_systolic: number;
-    blood_pressure_diastolic: number;
-    pulse_rate: number;
-    respiratory_rate: number;
+    temperature: number | null;
+    blood_pressure_systolic: number | null;
+    blood_pressure_diastolic: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
     recorded_at: string;
 }
 
@@ -54,6 +54,23 @@ interface Prescription {
     status: string;
 }
 
+interface ImagingAttachment {
+    id: number;
+    lab_order_id: number;
+    file_path?: string;
+    file_name: string;
+    file_type: string;
+    file_size?: number;
+    description?: string | null;
+    is_external: boolean;
+    external_facility_name?: string | null;
+    external_study_date?: string | null;
+    uploaded_by?: { id: number; name: string };
+    uploaded_at?: string;
+    url?: string;
+    thumbnail_url?: string | null;
+}
+
 interface LabOrder {
     id: number;
     lab_service: {
@@ -69,7 +86,8 @@ interface LabOrder {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     ordered_at: string;
@@ -81,6 +99,7 @@ interface LabOrder {
         id: number;
         name: string;
     };
+    imaging_attachments?: ImagingAttachment[];
 }
 
 interface MinorProcedureSupply {
@@ -126,23 +145,6 @@ interface MinorProcedure {
     };
     diagnoses: MinorProcedureDiagnosis[];
     supplies: MinorProcedureSupply[];
-}
-
-interface ImagingAttachment {
-    id: number;
-    lab_order_id: number;
-    file_path?: string;
-    file_name: string;
-    file_type: string;
-    file_size?: number;
-    description?: string | null;
-    is_external: boolean;
-    external_facility_name?: string | null;
-    external_study_date?: string | null;
-    uploaded_by?: { id: number; name: string };
-    uploaded_at?: string;
-    url?: string;
-    thumbnail_url?: string | null;
 }
 
 interface ImagingStudy {
@@ -430,7 +432,9 @@ export function PatientHistorySidebar({
                                 {previousImagingStudies.map((study) => (
                                     <div
                                         key={study.id}
-                                        onClick={() => handleImagingClick(study)}
+                                        onClick={() =>
+                                            handleImagingClick(study)
+                                        }
                                         className="cursor-pointer rounded-lg border bg-cyan-50/50 p-4 transition-colors hover:bg-cyan-100/50 dark:border-cyan-900/30 dark:bg-cyan-950/20 dark:hover:bg-cyan-950/40"
                                     >
                                         {/* Study Header */}
@@ -445,12 +449,21 @@ export function PatientHistorySidebar({
                                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                     <Calendar className="h-3 w-3" />
                                                     <span>
-                                                        {formatDate(study.ordered_at)}
+                                                        {formatDate(
+                                                            study.ordered_at,
+                                                        )}
                                                     </span>
-                                                    {study.lab_service.modality && (
+                                                    {study.lab_service
+                                                        .modality && (
                                                         <>
                                                             <span>•</span>
-                                                            <span>{study.lab_service.modality}</span>
+                                                            <span>
+                                                                {
+                                                                    study
+                                                                        .lab_service
+                                                                        .modality
+                                                                }
+                                                            </span>
                                                         </>
                                                     )}
                                                 </div>
@@ -461,7 +474,11 @@ export function PatientHistorySidebar({
                                         {/* Status and Indicators */}
                                         <div className="flex items-center gap-2">
                                             <Badge
-                                                variant={study.status === 'completed' ? 'default' : 'secondary'}
+                                                variant={
+                                                    study.status === 'completed'
+                                                        ? 'default'
+                                                        : 'secondary'
+                                                }
                                                 className={`text-xs ${
                                                     study.status === 'completed'
                                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -470,7 +487,7 @@ export function PatientHistorySidebar({
                                             >
                                                 {study.status.replace('_', ' ')}
                                             </Badge>
-                                            
+
                                             {/* Image availability indicator */}
                                             {study.has_images && (
                                                 <Badge
@@ -481,7 +498,7 @@ export function PatientHistorySidebar({
                                                     Images
                                                 </Badge>
                                             )}
-                                            
+
                                             {/* External indicator */}
                                             {study.is_external && (
                                                 <Badge

@@ -1,5 +1,11 @@
 'use client';
 
+import {
+    ImagingResultsModal,
+    type ImageAttachment,
+} from '@/components/Imaging';
+import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,11 +38,8 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 import { useState } from 'react';
-import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
 import { ConsultationLabOrdersTable } from './ConsultationLabOrdersTable';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ExternalImageUploadDialog } from './ExternalImageUploadDialog';
-import { ImagingResultsModal, type ImageAttachment } from '@/components/Imaging';
 
 interface LabService {
     id: number;
@@ -100,9 +103,12 @@ export function InvestigationsSection({
     const [activeTab, setActiveTab] = useState('laboratory');
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
     const [showImagingOrderDialog, setShowImagingOrderDialog] = useState(false);
-    const [showExternalUploadDialog, setShowExternalUploadDialog] = useState(false);
-    const [selectedLabService, setSelectedLabService] = useState<LabService | null>(null);
-    const [selectedImagingService, setSelectedImagingService] = useState<LabService | null>(null);
+    const [showExternalUploadDialog, setShowExternalUploadDialog] =
+        useState(false);
+    const [selectedLabService, setSelectedLabService] =
+        useState<LabService | null>(null);
+    const [selectedImagingService, setSelectedImagingService] =
+        useState<LabService | null>(null);
 
     const {
         data: labOrderData,
@@ -130,10 +136,10 @@ export function InvestigationsSection({
 
     // Separate lab orders into laboratory tests and imaging studies
     const laboratoryOrders = labOrders.filter(
-        (order) => !order.lab_service.is_imaging
+        (order) => !order.lab_service.is_imaging,
     );
     const imagingOrders = labOrders.filter(
-        (order) => order.lab_service.is_imaging
+        (order) => order.lab_service.is_imaging,
     );
 
     const handleLabOrderSubmit = (e: React.FormEvent) => {
@@ -176,7 +182,10 @@ export function InvestigationsSection({
             <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="laboratory" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="laboratory"
+                            className="flex items-center gap-2"
+                        >
                             <TestTube className="h-4 w-4" />
                             Laboratory Tests
                             {labCount > 0 && (
@@ -185,7 +194,10 @@ export function InvestigationsSection({
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="imaging" className="flex items-center gap-2">
+                        <TabsTrigger
+                            value="imaging"
+                            className="flex items-center gap-2"
+                        >
                             <Scan className="h-4 w-4" />
                             Imaging
                             {imagingCount > 0 && (
@@ -222,16 +234,22 @@ export function InvestigationsSection({
                                                 className="space-y-4"
                                             >
                                                 <div>
-                                                    <Label>Search Lab Test</Label>
+                                                    <Label>
+                                                        Search Lab Test
+                                                    </Label>
                                                     <AsyncLabServiceSelect
                                                         onSelect={(service) => {
-                                                            setSelectedLabService(service as LabService);
+                                                            setSelectedLabService(
+                                                                service as LabService,
+                                                            );
                                                             setLabOrderData(
                                                                 'lab_service_id',
-                                                                service.id.toString()
+                                                                service.id.toString(),
                                                             );
                                                         }}
-                                                        excludeIds={excludedLabIds}
+                                                        excludeIds={
+                                                            excludedLabIds
+                                                        }
                                                         placeholder={
                                                             selectedLabService
                                                                 ? selectedLabService.name
@@ -242,33 +260,58 @@ export function InvestigationsSection({
                                                     {selectedLabService && (
                                                         <div className="mt-2 rounded-md bg-muted p-2 text-sm">
                                                             <p className="font-medium">
-                                                                {selectedLabService.name}
+                                                                {
+                                                                    selectedLabService.name
+                                                                }
                                                             </p>
                                                             <p className="text-muted-foreground">
-                                                                {selectedLabService.code} •{' '}
-                                                                {selectedLabService.category} •{' '}
-                                                                {selectedLabService.sample_type}
+                                                                {
+                                                                    selectedLabService.code
+                                                                }{' '}
+                                                                •{' '}
+                                                                {
+                                                                    selectedLabService.category
+                                                                }{' '}
+                                                                •{' '}
+                                                                {
+                                                                    selectedLabService.sample_type
+                                                                }
                                                             </p>
                                                         </div>
                                                     )}
                                                     {/* Unpriced Lab Service Warning */}
                                                     {selectedLabService &&
-                                                        (selectedLabService.price === null ||
-                                                            selectedLabService.price === 0) && (
+                                                        (selectedLabService.price ===
+                                                            null ||
+                                                            selectedLabService.price ===
+                                                                0) && (
                                                             <Alert className="mt-3 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
                                                                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                                                 <AlertTitle className="text-amber-800 dark:text-amber-200">
-                                                                    Unpriced Test - External Referral
+                                                                    Unpriced
+                                                                    Test -
+                                                                    External
+                                                                    Referral
                                                                 </AlertTitle>
                                                                 <AlertDescription className="text-amber-700 dark:text-amber-300">
                                                                     <p>
-                                                                        This test has no price configured
-                                                                        in the system.
+                                                                        This
+                                                                        test has
+                                                                        no price
+                                                                        configured
+                                                                        in the
+                                                                        system.
                                                                     </p>
                                                                     <p className="mt-1 flex items-center gap-1">
                                                                         <ExternalLink className="h-3 w-3" />
-                                                                        Patient will need to do this test
-                                                                        at an external facility.
+                                                                        Patient
+                                                                        will
+                                                                        need to
+                                                                        do this
+                                                                        test at
+                                                                        an
+                                                                        external
+                                                                        facility.
                                                                     </p>
                                                                 </AlertDescription>
                                                             </Alert>
@@ -276,11 +319,20 @@ export function InvestigationsSection({
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor="lab-priority">Priority</Label>
+                                                    <Label htmlFor="lab-priority">
+                                                        Priority
+                                                    </Label>
                                                     <Select
-                                                        value={labOrderData.priority}
-                                                        onValueChange={(value) =>
-                                                            setLabOrderData('priority', value)
+                                                        value={
+                                                            labOrderData.priority
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setLabOrderData(
+                                                                'priority',
+                                                                value,
+                                                            )
                                                         }
                                                     >
                                                         <SelectTrigger id="lab-priority">
@@ -302,16 +354,19 @@ export function InvestigationsSection({
 
                                                 <div>
                                                     <Label htmlFor="lab-instructions">
-                                                        Special Instructions (Optional)
+                                                        Special Instructions
+                                                        (Optional)
                                                     </Label>
                                                     <Textarea
                                                         id="lab-instructions"
                                                         placeholder="Any special instructions for the lab..."
-                                                        value={labOrderData.special_instructions}
+                                                        value={
+                                                            labOrderData.special_instructions
+                                                        }
                                                         onChange={(e) =>
                                                             setLabOrderData(
                                                                 'special_instructions',
-                                                                e.target.value
+                                                                e.target.value,
                                                             )
                                                         }
                                                         rows={3}
@@ -322,7 +377,11 @@ export function InvestigationsSection({
                                                     <Button
                                                         type="button"
                                                         variant="outline"
-                                                        onClick={() => setShowLabOrderDialog(false)}
+                                                        onClick={() =>
+                                                            setShowLabOrderDialog(
+                                                                false,
+                                                            )
+                                                        }
                                                         className="flex-1"
                                                     >
                                                         Cancel
@@ -362,7 +421,11 @@ export function InvestigationsSection({
                                     {canUploadExternal && (
                                         <Button
                                             variant="outline"
-                                            onClick={() => setShowExternalUploadDialog(true)}
+                                            onClick={() =>
+                                                setShowExternalUploadDialog(
+                                                    true,
+                                                )
+                                            }
                                         >
                                             <Upload className="mr-2 h-4 w-4" />
                                             Upload External
@@ -380,25 +443,33 @@ export function InvestigationsSection({
                                         </DialogTrigger>
                                         <DialogContent className="max-w-md">
                                             <DialogHeader>
-                                                <DialogTitle>Order Imaging Study</DialogTitle>
+                                                <DialogTitle>
+                                                    Order Imaging Study
+                                                </DialogTitle>
                                             </DialogHeader>
                                             <form
-                                                onSubmit={handleImagingOrderSubmit}
+                                                onSubmit={
+                                                    handleImagingOrderSubmit
+                                                }
                                                 className="space-y-4"
                                             >
                                                 <div>
-                                                    <Label>Search Imaging Study</Label>
+                                                    <Label>
+                                                        Search Imaging Study
+                                                    </Label>
                                                     <AsyncLabServiceSelect
                                                         onSelect={(service) => {
                                                             setSelectedImagingService(
-                                                                service as LabService
+                                                                service as LabService,
                                                             );
                                                             setImagingOrderData(
                                                                 'lab_service_id',
-                                                                service.id.toString()
+                                                                service.id.toString(),
                                                             );
                                                         }}
-                                                        excludeIds={excludedImagingIds}
+                                                        excludeIds={
+                                                            excludedImagingIds
+                                                        }
                                                         placeholder={
                                                             selectedImagingService
                                                                 ? selectedImagingService.name
@@ -409,10 +480,15 @@ export function InvestigationsSection({
                                                     {selectedImagingService && (
                                                         <div className="mt-2 rounded-md bg-muted p-2 text-sm">
                                                             <p className="font-medium">
-                                                                {selectedImagingService.name}
+                                                                {
+                                                                    selectedImagingService.name
+                                                                }
                                                             </p>
                                                             <p className="text-muted-foreground">
-                                                                {selectedImagingService.code} •{' '}
+                                                                {
+                                                                    selectedImagingService.code
+                                                                }{' '}
+                                                                •{' '}
                                                                 {selectedImagingService.modality ||
                                                                     selectedImagingService.category}
                                                             </p>
@@ -420,22 +496,39 @@ export function InvestigationsSection({
                                                     )}
                                                     {/* Unpriced Imaging Service Warning */}
                                                     {selectedImagingService &&
-                                                        (selectedImagingService.price === null ||
-                                                            selectedImagingService.price === 0) && (
+                                                        (selectedImagingService.price ===
+                                                            null ||
+                                                            selectedImagingService.price ===
+                                                                0) && (
                                                             <Alert className="mt-3 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
                                                                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                                                 <AlertTitle className="text-amber-800 dark:text-amber-200">
-                                                                    Unpriced Study - External Referral
+                                                                    Unpriced
+                                                                    Study -
+                                                                    External
+                                                                    Referral
                                                                 </AlertTitle>
                                                                 <AlertDescription className="text-amber-700 dark:text-amber-300">
                                                                     <p>
-                                                                        This imaging study has no price
-                                                                        configured in the system.
+                                                                        This
+                                                                        imaging
+                                                                        study
+                                                                        has no
+                                                                        price
+                                                                        configured
+                                                                        in the
+                                                                        system.
                                                                     </p>
                                                                     <p className="mt-1 flex items-center gap-1">
                                                                         <ExternalLink className="h-3 w-3" />
-                                                                        Patient will need to do this study
-                                                                        at an external facility.
+                                                                        Patient
+                                                                        will
+                                                                        need to
+                                                                        do this
+                                                                        study at
+                                                                        an
+                                                                        external
+                                                                        facility.
                                                                     </p>
                                                                 </AlertDescription>
                                                             </Alert>
@@ -443,11 +536,20 @@ export function InvestigationsSection({
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor="imaging-priority">Priority</Label>
+                                                    <Label htmlFor="imaging-priority">
+                                                        Priority
+                                                    </Label>
                                                     <Select
-                                                        value={imagingOrderData.priority}
-                                                        onValueChange={(value) =>
-                                                            setImagingOrderData('priority', value)
+                                                        value={
+                                                            imagingOrderData.priority
+                                                        }
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
+                                                            setImagingOrderData(
+                                                                'priority',
+                                                                value,
+                                                            )
                                                         }
                                                     >
                                                         <SelectTrigger id="imaging-priority">
@@ -474,11 +576,13 @@ export function InvestigationsSection({
                                                     <Textarea
                                                         id="imaging-indication"
                                                         placeholder="Clinical indication for the imaging study..."
-                                                        value={imagingOrderData.special_instructions}
+                                                        value={
+                                                            imagingOrderData.special_instructions
+                                                        }
                                                         onChange={(e) =>
                                                             setImagingOrderData(
                                                                 'special_instructions',
-                                                                e.target.value
+                                                                e.target.value,
                                                             )
                                                         }
                                                         rows={3}
@@ -490,7 +594,9 @@ export function InvestigationsSection({
                                                         type="button"
                                                         variant="outline"
                                                         onClick={() =>
-                                                            setShowImagingOrderDialog(false)
+                                                            setShowImagingOrderDialog(
+                                                                false,
+                                                            )
                                                         }
                                                         className="flex-1"
                                                     >
@@ -590,9 +696,12 @@ function ImagingOrdersTable({
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Scan className="h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mt-4 text-lg font-medium">No imaging studies ordered</h3>
+                <h3 className="mt-4 text-lg font-medium">
+                    No imaging studies ordered
+                </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Order imaging studies like X-rays, CT scans, or MRIs for this patient.
+                    Order imaging studies like X-rays, CT scans, or MRIs for
+                    this patient.
                 </p>
             </div>
         );
@@ -611,15 +720,21 @@ function ImagingOrdersTable({
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="font-medium">{order.lab_service.name}</span>
+                                <span className="font-medium">
+                                    {order.lab_service.name}
+                                </span>
                                 {hasImages(order) && (
                                     <Badge
                                         variant="outline"
                                         className="flex items-center gap-1 border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-400"
                                     >
                                         <Image className="h-3 w-3" />
-                                        {order.imaging_attachments?.length} image
-                                        {(order.imaging_attachments?.length ?? 0) !== 1 ? 's' : ''}
+                                        {order.imaging_attachments?.length}{' '}
+                                        image
+                                        {(order.imaging_attachments?.length ??
+                                            0) !== 1
+                                            ? 's'
+                                            : ''}
                                     </Badge>
                                 )}
                             </div>
@@ -627,23 +742,34 @@ function ImagingOrdersTable({
                                 <span>{order.lab_service.code}</span>
                                 <span>•</span>
                                 <span>
-                                    {order.lab_service.modality || order.lab_service.category}
+                                    {order.lab_service.modality ||
+                                        order.lab_service.category}
                                 </span>
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
                                 Ordered: {formatDateTime(order.ordered_at)}
-                                {order.ordered_by && ` by ${order.ordered_by.name}`}
+                                {order.ordered_by &&
+                                    ` by ${order.ordered_by.name}`}
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={getStatusBadgeClasses(order.status)}>
+                        <Badge
+                            variant="outline"
+                            className={getStatusBadgeClasses(order.status)}
+                        >
                             {order.status.replace('_', ' ').toUpperCase()}
                         </Badge>
                         {order.priority !== 'routine' && (
-                            <Badge variant="destructive">{order.priority.toUpperCase()}</Badge>
+                            <Badge variant="destructive">
+                                {order.priority.toUpperCase()}
+                            </Badge>
                         )}
-                        <Button variant="ghost" size="sm" onClick={() => handleViewResults(order)}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewResults(order)}
+                        >
                             View
                         </Button>
                     </div>

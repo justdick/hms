@@ -1,10 +1,7 @@
 import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import VitalsModal from '@/components/Checkin/VitalsModal';
-import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
-import { InvestigationsSection } from '@/components/Consultation/InvestigationsSection';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
-import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
+import { InvestigationsSection } from '@/components/Consultation/InvestigationsSection';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
 import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
@@ -45,20 +42,15 @@ import { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Activity,
-    AlertTriangle,
     ArrowRightLeft,
     Bed,
     Building,
     Clock,
-    ExternalLink,
     FileText,
     FlaskConical,
     Heart,
     Pill,
-    Plus,
-    Scan,
     Stethoscope,
-    TestTube,
     User,
     UserPlus,
 } from 'lucide-react';
@@ -179,9 +171,19 @@ interface LabService {
 
 interface ImagingAttachment {
     id: number;
+    lab_order_id: number;
+    file_path?: string;
     file_name: string;
     file_type: string;
-    description?: string;
+    file_size?: number;
+    description?: string | null;
+    is_external: boolean;
+    external_facility_name?: string | null;
+    external_study_date?: string | null;
+    uploaded_by?: { id: number; name: string };
+    uploaded_at?: string;
+    url?: string;
+    thumbnail_url?: string | null;
 }
 
 interface LabOrder {
@@ -475,7 +477,8 @@ export default function ConsultationShow({
     can,
 }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const canUploadExternal = auth.permissions?.investigations?.uploadExternal ?? false;
+    const canUploadExternal =
+        auth.permissions?.investigations?.uploadExternal ?? false;
 
     const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
@@ -720,7 +723,10 @@ export default function ConsultationShow({
         setPrescriptionData('dose_quantity', prescription.dose_quantity || '');
         setPrescriptionData('frequency', prescription.frequency);
         setPrescriptionData('duration', prescription.duration);
-        setPrescriptionData('quantity_to_dispense', prescription.quantity_to_dispense || '');
+        setPrescriptionData(
+            'quantity_to_dispense',
+            prescription.quantity_to_dispense || '',
+        );
         setPrescriptionData('instructions', prescription.instructions || '');
     };
 
@@ -750,7 +756,7 @@ export default function ConsultationShow({
                     setEditingPrescription(null);
                     resetPrescription();
                 },
-            }
+            },
         );
     };
 
@@ -991,7 +997,8 @@ export default function ConsultationShow({
                                     <span className="text-gray-700 dark:text-gray-300">
                                         {new Date(
                                             consultation.service_date ||
-                                                consultation.patient_checkin.service_date ||
+                                                consultation.patient_checkin
+                                                    .service_date ||
                                                 consultation.started_at,
                                         ).toLocaleDateString('en-US', {
                                             year: 'numeric',
@@ -1553,7 +1560,9 @@ export default function ConsultationShow({
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between">
                                     <div>
-                                        <CardTitle>Current Vital Signs</CardTitle>
+                                        <CardTitle>
+                                            Current Vital Signs
+                                        </CardTitle>
                                         {latestVitals && (
                                             <p className="mt-1 text-sm text-gray-500">
                                                 Recorded on{' '}
@@ -1567,7 +1576,9 @@ export default function ConsultationShow({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => setVitalsModalOpen(true)}
+                                            onClick={() =>
+                                                setVitalsModalOpen(true)
+                                            }
                                         >
                                             Edit Vitals
                                         </Button>
@@ -1577,67 +1588,120 @@ export default function ConsultationShow({
                                     {latestVitals ? (
                                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4">
                                             <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                                                <p className="text-xs font-medium text-red-900">Blood Pressure</p>
-                                                <p className="text-xl font-bold text-red-600">
-                                                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
+                                                <p className="text-xs font-medium text-red-900">
+                                                    Blood Pressure
                                                 </p>
-                                                <p className="text-xs text-red-700">mmHg</p>
+                                                <p className="text-xl font-bold text-red-600">
+                                                    {
+                                                        latestVitals.blood_pressure_systolic
+                                                    }
+                                                    /
+                                                    {
+                                                        latestVitals.blood_pressure_diastolic
+                                                    }
+                                                </p>
+                                                <p className="text-xs text-red-700">
+                                                    mmHg
+                                                </p>
                                             </div>
                                             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                                                <p className="text-xs font-medium text-blue-900">Temperature</p>
+                                                <p className="text-xs font-medium text-blue-900">
+                                                    Temperature
+                                                </p>
                                                 <p className="text-xl font-bold text-blue-600">
                                                     {latestVitals.temperature}°C
                                                 </p>
-                                                <p className="text-xs text-blue-700">Normal: 36.1-37.2</p>
+                                                <p className="text-xs text-blue-700">
+                                                    Normal: 36.1-37.2
+                                                </p>
                                             </div>
                                             <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                                                <p className="text-xs font-medium text-green-900">Pulse Rate</p>
+                                                <p className="text-xs font-medium text-green-900">
+                                                    Pulse Rate
+                                                </p>
                                                 <p className="text-xl font-bold text-green-600">
                                                     {latestVitals.pulse_rate}
                                                 </p>
-                                                <p className="text-xs text-green-700">bpm</p>
+                                                <p className="text-xs text-green-700">
+                                                    bpm
+                                                </p>
                                             </div>
                                             <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                                                <p className="text-xs font-medium text-purple-900">Respiratory Rate</p>
-                                                <p className="text-xl font-bold text-purple-600">
-                                                    {latestVitals.respiratory_rate}
+                                                <p className="text-xs font-medium text-purple-900">
+                                                    Respiratory Rate
                                                 </p>
-                                                <p className="text-xs text-purple-700">/min</p>
+                                                <p className="text-xl font-bold text-purple-600">
+                                                    {
+                                                        latestVitals.respiratory_rate
+                                                    }
+                                                </p>
+                                                <p className="text-xs text-purple-700">
+                                                    /min
+                                                </p>
                                             </div>
                                             <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
-                                                <p className="text-xs font-medium text-cyan-900">SpO₂</p>
-                                                <p className="text-xl font-bold text-cyan-600">
-                                                    {latestVitals.oxygen_saturation ?? '-'}%
+                                                <p className="text-xs font-medium text-cyan-900">
+                                                    SpO₂
                                                 </p>
-                                                <p className="text-xs text-cyan-700">Normal: 95-100</p>
+                                                <p className="text-xl font-bold text-cyan-600">
+                                                    {latestVitals.oxygen_saturation ??
+                                                        '-'}
+                                                    %
+                                                </p>
+                                                <p className="text-xs text-cyan-700">
+                                                    Normal: 95-100
+                                                </p>
                                             </div>
                                             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                                                <p className="text-xs font-medium text-amber-900">Weight</p>
+                                                <p className="text-xs font-medium text-amber-900">
+                                                    Weight
+                                                </p>
                                                 <p className="text-xl font-bold text-amber-600">
-                                                    {latestVitals.weight ?? '-'} kg
+                                                    {latestVitals.weight ?? '-'}{' '}
+                                                    kg
                                                 </p>
                                             </div>
                                             <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
-                                                <p className="text-xs font-medium text-indigo-900">Height</p>
+                                                <p className="text-xs font-medium text-indigo-900">
+                                                    Height
+                                                </p>
                                                 <p className="text-xl font-bold text-indigo-600">
-                                                    {latestVitals.height ?? '-'} cm
+                                                    {latestVitals.height ?? '-'}{' '}
+                                                    cm
                                                 </p>
                                             </div>
-                                            {latestVitals.weight && latestVitals.height && (
-                                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                                    <p className="text-xs font-medium text-gray-900">BMI</p>
-                                                    <p className="text-xl font-bold text-gray-600">
-                                                        {(latestVitals.weight / Math.pow(latestVitals.height / 100, 2)).toFixed(1)}
-                                                    </p>
-                                                    <p className="text-xs text-gray-700">kg/m²</p>
-                                                </div>
-                                            )}
+                                            {latestVitals.weight &&
+                                                latestVitals.height && (
+                                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                                        <p className="text-xs font-medium text-gray-900">
+                                                            BMI
+                                                        </p>
+                                                        <p className="text-xl font-bold text-gray-600">
+                                                            {(
+                                                                latestVitals.weight /
+                                                                Math.pow(
+                                                                    latestVitals.height /
+                                                                        100,
+                                                                    2,
+                                                                )
+                                                            ).toFixed(1)}
+                                                        </p>
+                                                        <p className="text-xs text-gray-700">
+                                                            kg/m²
+                                                        </p>
+                                                    </div>
+                                                )}
                                         </div>
                                     ) : (
                                         <div className="py-8 text-center text-gray-500">
                                             <Activity className="mx-auto mb-2 h-10 w-10 text-gray-300" />
-                                            <p className="text-sm font-medium">No vital signs recorded</p>
-                                            <p className="text-xs">Vital signs will appear here once recorded</p>
+                                            <p className="text-sm font-medium">
+                                                No vital signs recorded
+                                            </p>
+                                            <p className="text-xs">
+                                                Vital signs will appear here
+                                                once recorded
+                                            </p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -1825,13 +1889,19 @@ export default function ConsultationShow({
                                             })
                                         }
                                         onEdit={handlePrescriptionEdit}
-                                        onCancelEdit={handlePrescriptionCancelEdit}
+                                        onCancelEdit={
+                                            handlePrescriptionCancelEdit
+                                        }
                                         onUpdate={handlePrescriptionUpdate}
-                                        editingPrescription={editingPrescription}
+                                        editingPrescription={
+                                            editingPrescription
+                                        }
                                         processing={prescriptionProcessing}
                                         consultationId={consultation.id}
                                         consultationStatus={consultation.status}
-                                        previousPrescriptions={patientHistory?.previousPrescriptions}
+                                        previousPrescriptions={
+                                            patientHistory?.previousPrescriptions
+                                        }
                                     />
                                 </CardContent>
                             </Card>
@@ -1922,20 +1992,32 @@ export default function ConsultationShow({
             <VitalsModal
                 open={vitalsModalOpen}
                 onClose={() => setVitalsModalOpen(false)}
-                checkin={consultation.patient_checkin ? {
-                    id: consultation.patient_checkin.id,
-                    patient: {
-                        id: consultation.patient_checkin.patient.id,
-                        patient_number: consultation.patient_checkin.patient.patient_number || '',
-                        full_name: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`,
-                        age: consultation.patient_checkin.patient.age || 0,
-                        gender: consultation.patient_checkin.patient.gender,
-                    },
-                    department: consultation.patient_checkin.department,
-                    status: consultation.patient_checkin.status || '',
-                    checked_in_at: consultation.patient_checkin.checked_in_at,
-                    vital_signs: consultation.patient_checkin.vital_signs,
-                } : null}
+                checkin={
+                    consultation.patient_checkin
+                        ? {
+                              id: consultation.patient_checkin.id,
+                              patient: {
+                                  id: consultation.patient_checkin.patient.id,
+                                  patient_number:
+                                      consultation.patient_checkin.patient
+                                          .patient_number || '',
+                                  full_name: `${consultation.patient_checkin.patient.first_name} ${consultation.patient_checkin.patient.last_name}`,
+                                  age:
+                                      consultation.patient_checkin.patient
+                                          .age || 0,
+                                  gender: consultation.patient_checkin.patient
+                                      .gender,
+                              },
+                              department:
+                                  consultation.patient_checkin.department,
+                              status: consultation.patient_checkin.status || '',
+                              checked_in_at:
+                                  consultation.patient_checkin.checked_in_at,
+                              vital_signs:
+                                  consultation.patient_checkin.vital_signs,
+                          }
+                        : null
+                }
                 onSuccess={() => {
                     setVitalsModalOpen(false);
                     router.reload();
