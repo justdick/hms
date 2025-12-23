@@ -31,9 +31,10 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Bed,
     Building2,
     CheckCircle,
     Edit3,
@@ -43,6 +44,7 @@ import {
     Plus,
     Settings,
     Shield,
+    Trash2,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -104,16 +106,38 @@ interface BillingConfiguration {
     is_active: boolean;
 }
 
+interface WardBillingTemplate {
+    id: number;
+    service_name: string;
+    service_code: string;
+    description: string | null;
+    billing_type: 'one_time' | 'daily' | 'hourly' | 'percentage' | 'quantity_based' | 'event_triggered';
+    base_amount: number;
+    effective_from: string;
+    effective_to: string | null;
+    is_active: boolean;
+}
+
+interface Ward {
+    id: number;
+    name: string;
+    code: string;
+}
+
 interface Props {
     systemConfig: Record<string, BillingConfiguration[]>;
     departments: Department[];
     serviceRules: Record<string, ServiceChargeRule[]>;
+    wardBillingTemplates: WardBillingTemplate[];
+    wards: Ward[];
 }
 
 export default function BillingConfigurationIndex({
     systemConfig,
     departments,
     serviceRules,
+    wardBillingTemplates,
+    wards,
 }: Props) {
     const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
     const [editingService, setEditingService] = useState<ServiceChargeRule | null>(null);
@@ -121,6 +145,8 @@ export default function BillingConfigurationIndex({
     const [editingConfig, setEditingConfig] = useState<BillingConfiguration | null>(null);
     const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
     const [showBulkConfig, setShowBulkConfig] = useState(false);
+    const [editingWardBilling, setEditingWardBilling] = useState<WardBillingTemplate | null>(null);
+    const [showCreateWardBilling, setShowCreateWardBilling] = useState(false);
 
     const toggleDepartmentSelection = (deptId: number) => {
         setSelectedDepartments((prev) =>
@@ -176,7 +202,7 @@ export default function BillingConfigurationIndex({
                 </div>
 
                 <Tabs defaultValue="departments" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="departments" className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
                             Department Billing
@@ -184,6 +210,10 @@ export default function BillingConfigurationIndex({
                         <TabsTrigger value="services" className="flex items-center gap-2">
                             <Shield className="h-4 w-4" />
                             Service Rules
+                        </TabsTrigger>
+                        <TabsTrigger value="ward-billing" className="flex items-center gap-2">
+                            <Bed className="h-4 w-4" />
+                            Ward Billing
                         </TabsTrigger>
                         <TabsTrigger value="system" className="flex items-center gap-2">
                             <Settings className="h-4 w-4" />
@@ -421,6 +451,105 @@ export default function BillingConfigurationIndex({
                         </Card>
                     </TabsContent>
 
+                    {/* Ward Billing Templates */}
+                    <TabsContent value="ward-billing" className="space-y-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Ward Billing Templates</CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                        Configure recurring daily/hourly fees for ward admissions
+                                    </p>
+                                </div>
+                                <Button onClick={() => setShowCreateWardBilling(true)}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Template
+                                </Button>
+                            </CardHeader>
+                            <CardContent>
+                                {wardBillingTemplates.length === 0 ? (
+                                    <div className="py-8 text-center text-gray-500">
+                                        <Bed className="mx-auto h-12 w-12 text-gray-300" />
+                                        <p className="mt-2">No ward billing templates configured.</p>
+                                        <p className="text-sm">Add templates to automatically charge daily fees for admissions.</p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Service Name</TableHead>
+                                                <TableHead>Code</TableHead>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Amount</TableHead>
+                                                <TableHead>Effective From</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {wardBillingTemplates.map((template) => (
+                                                <TableRow key={template.id}>
+                                                    <TableCell>
+                                                        <div>
+                                                            <div className="font-medium">{template.service_name}</div>
+                                                            {template.description && (
+                                                                <div className="text-sm text-gray-500">{template.description}</div>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-sm">{template.service_code}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className="capitalize">
+                                                            {template.billing_type.replace('_', ' ')}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">
+                                                        {formatCurrency(template.base_amount)}
+                                                        {template.billing_type === 'daily' && '/day'}
+                                                        {template.billing_type === 'hourly' && '/hr'}
+                                                    </TableCell>
+                                                    <TableCell>{new Date(template.effective_from).toLocaleDateString()}</TableCell>
+                                                    <TableCell>{getStatusBadge(template.is_active)}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => setEditingWardBilling(template)}
+                                                            >
+                                                                <Edit3 className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-red-600 hover:text-red-700"
+                                                                onClick={() => {
+                                                                    if (confirm('Are you sure you want to delete this template?')) {
+                                                                        router.delete(`/billing/configuration/ward-billing/${template.id}`);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertDescription>
+                                Ward billing templates define recurring charges that are automatically applied to admitted patients.
+                                Daily fees are charged at midnight for each day of stay.
+                            </AlertDescription>
+                        </Alert>
+                    </TabsContent>
+
                     {/* System Configuration */}
                     <TabsContent value="system" className="space-y-6">
                         {Object.keys(systemConfig).length === 0 ? (
@@ -504,6 +633,16 @@ export default function BillingConfigurationIndex({
 
             {/* Edit System Config Modal */}
             <EditConfigModal config={editingConfig} onOpenChange={(open) => !open && setEditingConfig(null)} />
+
+            {/* Ward Billing Template Modals */}
+            <WardBillingTemplateModal
+                template={editingWardBilling}
+                onOpenChange={(open) => !open && setEditingWardBilling(null)}
+            />
+            <CreateWardBillingTemplateModal
+                open={showCreateWardBilling}
+                onOpenChange={setShowCreateWardBilling}
+            />
         </AppLayout>
     );
 }
@@ -1195,6 +1334,326 @@ function BulkConfigModal({
                         <Button type="submit" disabled={form.processing}>
                             {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Configure {selectedDepartments.length} Departments
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// Ward Billing Template Modal - for editing
+function WardBillingTemplateModal({
+    template,
+    onOpenChange,
+}: {
+    template: WardBillingTemplate | null;
+    onOpenChange: (open: boolean) => void;
+}) {
+    const form = useForm({
+        service_name: template?.service_name || '',
+        description: template?.description || '',
+        billing_type: template?.billing_type || 'daily',
+        base_amount: template?.base_amount?.toString() || '0',
+        effective_from: template?.effective_from || new Date().toISOString().split('T')[0],
+        effective_to: template?.effective_to || '',
+        is_active: template?.is_active ?? true,
+    });
+
+    // Reset form when template changes
+    if (template && form.data.service_name !== template.service_name) {
+        form.setData({
+            service_name: template.service_name,
+            description: template.description || '',
+            billing_type: template.billing_type,
+            base_amount: template.base_amount.toString(),
+            effective_from: template.effective_from,
+            effective_to: template.effective_to || '',
+            is_active: template.is_active,
+        });
+    }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!template) return;
+
+        form.put(`/billing/configuration/ward-billing/${template.id}`, {
+            onSuccess: () => onOpenChange(false),
+        });
+    };
+
+    return (
+        <Dialog open={!!template} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>Edit Ward Billing Template</DialogTitle>
+                    <DialogDescription>
+                        Update the billing template for {template?.service_name}
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_service_name" className="text-right">
+                                Service Name
+                            </Label>
+                            <Input
+                                id="edit_service_name"
+                                value={form.data.service_name}
+                                onChange={(e) => form.setData('service_name', e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_description" className="text-right">
+                                Description
+                            </Label>
+                            <Input
+                                id="edit_description"
+                                value={form.data.description}
+                                onChange={(e) => form.setData('description', e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_billing_type" className="text-right">
+                                Billing Type
+                            </Label>
+                            <Select
+                                value={form.data.billing_type}
+                                onValueChange={(value) => form.setData('billing_type', value as 'daily' | 'hourly' | 'one_time')}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="daily">Daily</SelectItem>
+                                    <SelectItem value="hourly">Hourly</SelectItem>
+                                    <SelectItem value="one_time">One Time</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_base_amount" className="text-right">
+                                Amount (GHS)
+                            </Label>
+                            <Input
+                                id="edit_base_amount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={form.data.base_amount}
+                                onChange={(e) => form.setData('base_amount', e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_effective_from" className="text-right">
+                                Effective From
+                            </Label>
+                            <Input
+                                id="edit_effective_from"
+                                type="date"
+                                value={form.data.effective_from}
+                                onChange={(e) => form.setData('effective_from', e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit_effective_to" className="text-right">
+                                Effective To
+                            </Label>
+                            <Input
+                                id="edit_effective_to"
+                                type="date"
+                                value={form.data.effective_to}
+                                onChange={(e) => form.setData('effective_to', e.target.value)}
+                                className="col-span-3"
+                                placeholder="Leave empty for no end date"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Status</Label>
+                            <div className="col-span-3 flex items-center space-x-2">
+                                <Switch
+                                    id="edit_is_active"
+                                    checked={form.data.is_active}
+                                    onCheckedChange={(checked) => form.setData('is_active', checked)}
+                                />
+                                <Label htmlFor="edit_is_active">Active</Label>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// Create Ward Billing Template Modal
+function CreateWardBillingTemplateModal({
+    open,
+    onOpenChange,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
+    const form = useForm({
+        service_name: '',
+        service_code: '',
+        description: '',
+        billing_type: 'daily',
+        base_amount: '',
+        effective_from: new Date().toISOString().split('T')[0],
+        effective_to: '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        form.post('/billing/configuration/ward-billing', {
+            onSuccess: () => {
+                onOpenChange(false);
+                form.reset();
+            },
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>Create Ward Billing Template</DialogTitle>
+                    <DialogDescription>
+                        Add a new recurring fee template for ward admissions
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="service_name" className="text-right">
+                                Service Name
+                            </Label>
+                            <Input
+                                id="service_name"
+                                value={form.data.service_name}
+                                onChange={(e) => form.setData('service_name', e.target.value)}
+                                className="col-span-3"
+                                placeholder="e.g., Daily Ward Fee"
+                            />
+                            {form.errors.service_name && (
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.service_name}</p>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="service_code" className="text-right">
+                                Service Code
+                            </Label>
+                            <Input
+                                id="service_code"
+                                value={form.data.service_code}
+                                onChange={(e) => form.setData('service_code', e.target.value.toUpperCase().replace(/\s+/g, '_'))}
+                                className="col-span-3 font-mono"
+                                placeholder="e.g., DAILY_WARD_FEE"
+                            />
+                            {form.errors.service_code && (
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.service_code}</p>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="description" className="text-right">
+                                Description
+                            </Label>
+                            <Input
+                                id="description"
+                                value={form.data.description}
+                                onChange={(e) => form.setData('description', e.target.value)}
+                                className="col-span-3"
+                                placeholder="Optional description"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="billing_type" className="text-right">
+                                Billing Type
+                            </Label>
+                            <Select
+                                value={form.data.billing_type}
+                                onValueChange={(value) => form.setData('billing_type', value)}
+                            >
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="daily">Daily (charged every day)</SelectItem>
+                                    <SelectItem value="hourly">Hourly (charged per hour)</SelectItem>
+                                    <SelectItem value="one_time">One Time (charged once on admission)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="base_amount" className="text-right">
+                                Amount (GHS)
+                            </Label>
+                            <Input
+                                id="base_amount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={form.data.base_amount}
+                                onChange={(e) => form.setData('base_amount', e.target.value)}
+                                className="col-span-3"
+                                placeholder="0.00"
+                            />
+                            {form.errors.base_amount && (
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.base_amount}</p>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="effective_from" className="text-right">
+                                Effective From
+                            </Label>
+                            <Input
+                                id="effective_from"
+                                type="date"
+                                value={form.data.effective_from}
+                                onChange={(e) => form.setData('effective_from', e.target.value)}
+                                className="col-span-3"
+                            />
+                            {form.errors.effective_from && (
+                                <p className="col-span-3 col-start-2 text-sm text-red-500">{form.errors.effective_from}</p>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="effective_to" className="text-right">
+                                Effective To
+                            </Label>
+                            <Input
+                                id="effective_to"
+                                type="date"
+                                value={form.data.effective_to}
+                                onChange={(e) => form.setData('effective_to', e.target.value)}
+                                className="col-span-3"
+                            />
+                            <p className="col-span-3 col-start-2 text-xs text-gray-500">
+                                Leave empty for no end date
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Create Template
                         </Button>
                     </DialogFooter>
                 </form>

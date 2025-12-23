@@ -70,6 +70,9 @@ Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function
         Route::put('/department/{departmentBilling}', [BillingConfigurationController::class, 'updateDepartmentBilling'])->name('department.update')->middleware('can:billing.configure');
         Route::post('/service-rule', [BillingConfigurationController::class, 'createServiceRule'])->name('service-rule.create')->middleware('can:billing.configure');
         Route::put('/service-rule/{serviceRule}', [BillingConfigurationController::class, 'updateServiceRule'])->name('service-rule.update')->middleware('can:billing.configure');
+        Route::post('/ward-billing', [BillingConfigurationController::class, 'createWardBillingTemplate'])->name('ward-billing.create')->middleware('can:billing.configure');
+        Route::put('/ward-billing/{wardBillingTemplate}', [BillingConfigurationController::class, 'updateWardBillingTemplate'])->name('ward-billing.update')->middleware('can:billing.configure');
+        Route::delete('/ward-billing/{wardBillingTemplate}', [BillingConfigurationController::class, 'deleteWardBillingTemplate'])->name('ward-billing.delete')->middleware('can:billing.configure');
     });
 
     // Finance Officer Accounts Section

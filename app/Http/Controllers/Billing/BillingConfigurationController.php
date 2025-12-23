@@ -7,6 +7,8 @@ use App\Models\BillingConfiguration;
 use App\Models\Department;
 use App\Models\DepartmentBilling;
 use App\Models\ServiceChargeRule;
+use App\Models\Ward;
+use App\Models\WardBillingTemplate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,10 +38,19 @@ class BillingConfigurationController extends Controller
             ->get()
             ->groupBy('service_type');
 
+        $wardBillingTemplates = WardBillingTemplate::active()
+            ->effective()
+            ->orderBy('service_name')
+            ->get();
+
+        $wards = Ward::active()->orderBy('name')->get(['id', 'name', 'code']);
+
         return Inertia::render('Billing/Configuration/Index', [
             'systemConfig' => $systemConfig,
             'departments' => $departments,
             'serviceRules' => $serviceRules,
+            'wardBillingTemplates' => $wardBillingTemplates,
+            'wards' => $wards,
         ]);
     }
 
@@ -227,5 +238,73 @@ class BillingConfigurationController extends Controller
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    public function createWardBillingTemplate(Request $request)
+    {
+        $request->validate([
+            'service_name' => 'required|string|max:255',
+            'service_code' => 'required|string|max:50|unique:ward_billing_templates,service_code',
+            'description' => 'nullable|string',
+            'billing_type' => 'required|in:one_time,daily,hourly,percentage,quantity_based,event_triggered',
+            'base_amount' => 'required|numeric|min:0',
+            'effective_from' => 'required|date',
+            'effective_to' => 'nullable|date|after:effective_from',
+        ]);
+
+        WardBillingTemplate::create([
+            'service_name' => $request->service_name,
+            'service_code' => strtoupper(str_replace(' ', '_', $request->service_code)),
+            'description' => $request->description,
+            'billing_type' => $request->billing_type,
+            'base_amount' => $request->base_amount,
+            'effective_from' => $request->effective_from,
+            'effective_to' => $request->effective_to,
+            'calculation_rules' => [
+                'billing_starts' => 'midnight',
+                'charge_on_admission_day' => true,
+                'charge_on_discharge_day' => false,
+            ],
+            'auto_trigger_conditions' => [
+                'trigger_on' => 'daily_schedule',
+                'auto_create_charges' => true,
+            ],
+            'payment_requirement' => 'deferred',
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Ward billing template created successfully');
+    }
+
+    public function updateWardBillingTemplate(Request $request, WardBillingTemplate $wardBillingTemplate)
+    {
+        $request->validate([
+            'service_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'billing_type' => 'required|in:one_time,daily,hourly,percentage,quantity_based,event_triggered',
+            'base_amount' => 'required|numeric|min:0',
+            'effective_from' => 'required|date',
+            'effective_to' => 'nullable|date|after:effective_from',
+            'is_active' => 'boolean',
+        ]);
+
+        $wardBillingTemplate->update([
+            'service_name' => $request->service_name,
+            'description' => $request->description,
+            'billing_type' => $request->billing_type,
+            'base_amount' => $request->base_amount,
+            'effective_from' => $request->effective_from,
+            'effective_to' => $request->effective_to,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return redirect()->back()->with('success', 'Ward billing template updated successfully');
+    }
+
+    public function deleteWardBillingTemplate(WardBillingTemplate $wardBillingTemplate)
+    {
+        $wardBillingTemplate->delete();
+
+        return redirect()->back()->with('success', 'Ward billing template deleted successfully');
     }
 }
