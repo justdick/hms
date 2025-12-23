@@ -92,4 +92,32 @@ class LabOrderPolicy
         // Department-based access
         return $user->departments->contains($labOrder->consultation->patientCheckin->department_id);
     }
+
+    /**
+     * Determine whether the user can upload external images for an imaging order.
+     */
+    public function uploadExternalImages(User $user, ?LabOrder $labOrder = null): bool
+    {
+        // Admin can always upload external images
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // Must have the upload-external permission
+        if (! $user->can('investigations.upload-external')) {
+            return false;
+        }
+
+        // If no specific order provided, just check permission
+        if ($labOrder === null) {
+            return true;
+        }
+
+        // Verify the order is an imaging order
+        if (! $labOrder->labService || ! $labOrder->labService->is_imaging) {
+            return false;
+        }
+
+        return true;
+    }
 }

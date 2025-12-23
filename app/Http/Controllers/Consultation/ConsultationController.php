@@ -118,7 +118,11 @@ class ConsultationController extends Controller
                 },
                 'diagnoses.diagnosis:id,diagnosis,code,icd_10,g_drg',
                 'prescriptions:id,consultation_id,medication_name,dose_quantity,frequency,duration,instructions,status',
-                'labOrders.labService:id,name,code,category,price,sample_type',
+                'labOrders' => function ($query) {
+                    // Only include laboratory tests (non-imaging) in previous consultations
+                    $query->laboratory();
+                },
+                'labOrders.labService:id,name,code,category,price,sample_type,is_imaging',
                 'labOrders.orderedBy:id,name',
             ])
                 ->whereHas('patientCheckin', function ($query) use ($patient) {
@@ -162,6 +166,41 @@ class ConsultationController extends Controller
                 })
                 ->orderBy('created_at', 'desc')
                 ->get(),
+            // Separate imaging history - includes both internal and external imaging studies
+            'previousImagingStudies' => \App\Models\LabOrder::with([
+                'labService:id,name,code,category,modality,is_imaging',
+                'orderedBy:id,name',
+                'imagingAttachments' => function ($query) {
+                    $query->select('id', 'lab_order_id', 'file_name', 'file_type', 'is_external', 'external_facility_name', 'external_study_date');
+                },
+            ])
+                ->imaging() // Only imaging orders
+                ->where(function ($query) use ($patient, $consultation) {
+                    // Include orders from consultations
+                    $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patient, $consultation) {
+                        $q->whereHas('patientCheckin', function ($checkinQuery) use ($patient) {
+                            $checkinQuery->where('patient_id', $patient->id);
+                        })->where('id', '!=', $consultation->id);
+                    })
+                    // Also include orders from ward rounds
+                        ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                            $q->whereHas('patientAdmission', function ($admissionQuery) use ($patient) {
+                                $admissionQuery->where('patient_id', $patient->id);
+                            });
+                        });
+                })
+                ->whereIn('status', ['completed', 'in_progress']) // Include completed and in-progress imaging
+                ->orderBy('ordered_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function ($order) {
+                    // Add has_images flag for frontend
+                    $order->has_images = $order->imagingAttachments->count() > 0;
+                    // Check if any attachment is external
+                    $order->is_external = $order->imagingAttachments->contains('is_external', true);
+
+                    return $order;
+                }),
             'allergies' => [], // Could be extended with actual allergy data
         ];
 

@@ -54,6 +54,11 @@ export interface Auth {
             view: boolean;
             edit: boolean;
         };
+        investigations?: {
+            viewLab: boolean;
+            viewRadiology: boolean;
+            uploadExternal: boolean;
+        };
     };
 }
 

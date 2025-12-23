@@ -15,6 +15,16 @@ class CreateLabTestCharge
     {
         $labOrder = $event->labOrder;
 
+        // Skip charge creation for unpriced lab orders (external referrals)
+        if ($labOrder->is_unpriced || $labOrder->status === 'external_referral') {
+            return;
+        }
+
+        // Skip if the lab service has no price
+        if ($labOrder->labService->price === null || (float) $labOrder->labService->price === 0.0) {
+            return;
+        }
+
         // Get the patient check-in based on whether it's OPD or IPD
         $checkin = $this->getPatientCheckin($labOrder);
 

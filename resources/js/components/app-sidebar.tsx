@@ -30,10 +30,12 @@ import {
     Package,
     Palette,
     Pill,
+    ScanLine,
     Settings,
     Shield,
     Stethoscope,
     TableProperties,
+    TestTubes,
     Users,
     Wallet,
 } from 'lucide-react';
@@ -160,6 +162,27 @@ export function AppSidebar() {
         });
     }
 
+    // Build investigations sub-items based on permissions
+    const investigationsItems: NavItem[] = [];
+
+    // Laboratory - visible if user has lab permissions (lab-orders.view-all or lab-orders.view-dept)
+    if (auth.permissions?.investigations?.viewLab) {
+        investigationsItems.push({
+            title: 'Laboratory',
+            href: '/lab',
+            icon: FlaskConical,
+        });
+    }
+
+    // Radiology - visible if user has radiology.view-worklist permission
+    if (auth.permissions?.investigations?.viewRadiology) {
+        investigationsItems.push({
+            title: 'Radiology',
+            href: '/radiology',
+            icon: ScanLine,
+        });
+    }
+
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
@@ -187,9 +210,10 @@ export function AppSidebar() {
             icon: Hospital,
         },
         {
-            title: 'Laboratory',
+            title: 'Investigations',
             href: '/lab',
-            icon: FlaskConical,
+            icon: TestTubes,
+            items: investigationsItems.length > 0 ? investigationsItems : undefined,
         },
         {
             title: 'Minor Procedures',

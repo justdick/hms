@@ -32,6 +32,7 @@ use App\Policies\NhisTariffPolicy;
 use App\Policies\PatientCheckinPolicy;
 use App\Policies\PatientPolicy;
 use App\Policies\PricingDashboardPolicy;
+use App\Policies\RadiologyPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -78,6 +79,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('bulkUpdate-pricing-dashboard', fn (User $user) => $pricingPolicy->bulkUpdate($user));
         Gate::define('export-pricing-dashboard', fn (User $user) => $pricingPolicy->export($user));
         Gate::define('import-pricing-dashboard', fn (User $user) => $pricingPolicy->import($user));
+
+        // Register radiology policy gates
+        $radiologyPolicy = new RadiologyPolicy;
+        Gate::define('viewWorklist-radiology', fn (User $user) => $radiologyPolicy->viewWorklist($user));
+        Gate::define('uploadImages-radiology', fn (User $user, ?\App\Models\LabOrder $labOrder = null) => $radiologyPolicy->uploadImages($user, $labOrder));
+        Gate::define('enterReport-radiology', fn (User $user, ?\App\Models\LabOrder $labOrder = null) => $radiologyPolicy->enterReport($user, $labOrder));
 
         // Register observers
         Charge::observe(ChargeObserver::class);

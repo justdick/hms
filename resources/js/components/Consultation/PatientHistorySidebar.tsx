@@ -12,15 +12,19 @@ import {
 import {
     Activity,
     Bandage,
+    Building2,
     Calendar,
     ChevronRight,
     FileText,
     History,
+    Image,
     Pill,
+    Scan,
     TestTube,
     User,
 } from 'lucide-react';
 import { useState } from 'react';
+import { ImagingResultsModal } from '../Imaging/ImagingResultsModal';
 import { PreviousVisitModal } from './PreviousVisitModal';
 
 interface VitalSigns {
@@ -124,6 +128,52 @@ interface MinorProcedure {
     supplies: MinorProcedureSupply[];
 }
 
+interface ImagingAttachment {
+    id: number;
+    lab_order_id: number;
+    file_path?: string;
+    file_name: string;
+    file_type: string;
+    file_size?: number;
+    description?: string | null;
+    is_external: boolean;
+    external_facility_name?: string | null;
+    external_study_date?: string | null;
+    uploaded_by?: { id: number; name: string };
+    uploaded_at?: string;
+    url?: string;
+    thumbnail_url?: string | null;
+}
+
+interface ImagingStudy {
+    id: number;
+    lab_service: {
+        id: number;
+        name: string;
+        code: string;
+        category: string;
+        modality?: string | null;
+        is_imaging?: boolean;
+    };
+    status: string;
+    priority: string;
+    special_instructions?: string;
+    ordered_at: string;
+    result_entered_at?: string;
+    result_notes?: string;
+    ordered_by?: {
+        id: number;
+        name: string;
+    };
+    result_entered_by?: {
+        id: number;
+        name: string;
+    };
+    imaging_attachments?: ImagingAttachment[];
+    has_images?: boolean;
+    is_external?: boolean;
+}
+
 interface PreviousConsultation {
     id: number;
     started_at: string;
@@ -156,18 +206,23 @@ interface PreviousConsultation {
 interface Props {
     previousConsultations: PreviousConsultation[];
     previousMinorProcedures?: MinorProcedure[];
+    previousImagingStudies?: ImagingStudy[];
     allergies: string[];
 }
 
 export function PatientHistorySidebar({
     previousConsultations,
     previousMinorProcedures = [],
+    previousImagingStudies = [],
     allergies,
 }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedVisit, setSelectedVisit] =
         useState<PreviousConsultation | null>(null);
     const [showVisitModal, setShowVisitModal] = useState(false);
+    const [selectedImagingStudy, setSelectedImagingStudy] =
+        useState<ImagingStudy | null>(null);
+    const [showImagingModal, setShowImagingModal] = useState(false);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -192,6 +247,11 @@ export function PatientHistorySidebar({
         setShowVisitModal(true);
     };
 
+    const handleImagingClick = (study: ImagingStudy) => {
+        setSelectedImagingStudy(study);
+        setShowImagingModal(true);
+    };
+
     return (
         <>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -203,7 +263,8 @@ export function PatientHistorySidebar({
                         <History className="h-4 w-4" />
                         Previous Visits (
                         {previousConsultations.length +
-                            previousMinorProcedures.length}
+                            previousMinorProcedures.length +
+                            previousImagingStudies.length}
                         )
                     </Button>
                 </SheetTrigger>
@@ -359,6 +420,84 @@ export function PatientHistorySidebar({
                             </div>
                         )}
 
+                        {/* Imaging Studies Section */}
+                        {previousImagingStudies.length > 0 && (
+                            <div className="mb-6 space-y-3">
+                                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    Imaging Studies
+                                </h3>
+
+                                {previousImagingStudies.map((study) => (
+                                    <div
+                                        key={study.id}
+                                        onClick={() => handleImagingClick(study)}
+                                        className="cursor-pointer rounded-lg border bg-cyan-50/50 p-4 transition-colors hover:bg-cyan-100/50 dark:border-cyan-900/30 dark:bg-cyan-950/20 dark:hover:bg-cyan-950/40"
+                                    >
+                                        {/* Study Header */}
+                                        <div className="mb-2 flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="mb-1 flex items-center gap-2">
+                                                    <Scan className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                        {study.lab_service.name}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>
+                                                        {formatDate(study.ordered_at)}
+                                                    </span>
+                                                    {study.lab_service.modality && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span>{study.lab_service.modality}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                        </div>
+
+                                        {/* Status and Indicators */}
+                                        <div className="flex items-center gap-2">
+                                            <Badge
+                                                variant={study.status === 'completed' ? 'default' : 'secondary'}
+                                                className={`text-xs ${
+                                                    study.status === 'completed'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                                                }`}
+                                            >
+                                                {study.status.replace('_', ' ')}
+                                            </Badge>
+                                            
+                                            {/* Image availability indicator */}
+                                            {study.has_images && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="gap-1 border-cyan-300 text-xs text-cyan-700 dark:border-cyan-700 dark:text-cyan-400"
+                                                >
+                                                    <Image className="h-3 w-3" />
+                                                    Images
+                                                </Badge>
+                                            )}
+                                            
+                                            {/* External indicator */}
+                                            {study.is_external && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="gap-1 border-purple-300 text-xs text-purple-700 dark:border-purple-700 dark:text-purple-400"
+                                                >
+                                                    <Building2 className="h-3 w-3" />
+                                                    External
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Previous Visits List */}
                         <div className="space-y-3">
                             <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -501,6 +640,15 @@ export function PatientHistorySidebar({
                     visit={selectedVisit}
                     open={showVisitModal}
                     onOpenChange={setShowVisitModal}
+                />
+            )}
+
+            {/* Imaging Results Modal */}
+            {selectedImagingStudy && (
+                <ImagingResultsModal
+                    order={selectedImagingStudy as any}
+                    open={showImagingModal}
+                    onOpenChange={setShowImagingModal}
                 />
             )}
         </>

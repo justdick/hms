@@ -20,6 +20,7 @@ require __DIR__.'/consultation.php';
 require __DIR__.'/departments.php';
 require __DIR__.'/wards.php';
 require __DIR__.'/lab.php';
+require __DIR__.'/radiology.php';
 require __DIR__.'/pharmacy.php';
 require __DIR__.'/billing.php';
 require __DIR__.'/insurance.php';

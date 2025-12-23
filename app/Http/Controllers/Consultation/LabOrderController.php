@@ -4,13 +4,20 @@ namespace App\Http\Controllers\Consultation;
 
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ExternalImageUploadRequest;
 use App\Models\Consultation;
+use App\Models\ImagingAttachment;
 use App\Models\LabOrder;
 use App\Models\LabService;
+use App\Services\ImagingStorageService;
 use Illuminate\Http\Request;
 
 class LabOrderController extends Controller
 {
+    public function __construct(
+        protected ImagingStorageService $storageService
+    ) {}
+
     public function store(Request $request, Consultation $consultation)
     {
         $this->authorize('create', [LabOrder::class, $consultation]);
@@ -160,5 +167,78 @@ class LabOrderController extends Controller
             'lab_order' => $labOrder->load('labService'),
             'message' => 'Lab order status updated successfully.',
         ]);
+    }
+
+    /**
+     * Upload external imaging study to a consultation.
+     * External images are non-billable and marked as is_external = true.
+     */
+    public function uploadExternalImage(ExternalImageUploadRequest $request, Consultation $consultation)
+    {
+        $labService = LabService::findOrFail($request->lab_service_id);
+
+        // Verify this is an imaging service
+        if (! $labService->is_imaging) {
+            return back()->withErrors([
+                'lab_service_id' => 'External image uploads are only allowed for imaging services.',
+            ]);
+        }
+
+        // Create a lab order for the external image (no billing event fired)
+        $labOrder = $consultation->labOrders()->create([
+            'lab_service_id' => $request->lab_service_id,
+            'ordered_by' => $request->user()->id,
+            'ordered_at' => now(),
+            'status' => 'completed', // External images are already completed
+            'priority' => 'routine',
+            'special_instructions' => 'External imaging study from '.$request->external_facility_name,
+            'result_entered_at' => now(),
+            'result_notes' => $request->notes,
+        ]);
+
+        // Process uploaded files
+        $files = $request->file('files');
+        $descriptions = $request->input('descriptions', []);
+
+        foreach ($files as $index => $file) {
+            // Validate file using the storage service
+            $errors = $this->storageService->validateFile($file);
+            if (! empty($errors)) {
+                // If any file fails validation, delete the lab order and return error
+                $labOrder->delete();
+
+                return back()->withErrors(['files.'.$index => $errors[0]]);
+            }
+
+            // Store the file
+            try {
+                $filePath = $this->storageService->store($file, $labOrder);
+            } catch (\RuntimeException $e) {
+                // If storage fails, delete the lab order and return error
+                $labOrder->delete();
+
+                return back()->with('error', 'Failed to store file. Please try again.');
+            }
+
+            // Create the attachment record - marked as external (non-billable)
+            ImagingAttachment::create([
+                'lab_order_id' => $labOrder->id,
+                'file_path' => $filePath,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+                'description' => $descriptions[$index] ?? null,
+                'is_external' => true, // Mark as external (non-billable)
+                'external_facility_name' => $request->external_facility_name,
+                'external_study_date' => $request->external_study_date,
+                'uploaded_by' => $request->user()->id,
+                'uploaded_at' => now(),
+            ]);
+        }
+
+        // NOTE: No LabTestOrdered event is fired for external images
+        // This ensures no billing charge is created (Requirement 4.5)
+
+        return back()->with('success', 'External imaging study uploaded successfully.');
     }
 }

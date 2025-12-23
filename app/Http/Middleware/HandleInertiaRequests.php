@@ -96,6 +96,11 @@ class HandleInertiaRequests extends Middleware
                         'view' => $request->user()?->can('pricing.view') ?? false,
                         'edit' => $request->user()?->can('pricing.edit') ?? false,
                     ],
+                    'investigations' => [
+                        'viewLab' => $request->user()?->can('lab-orders.view-all') || $request->user()?->can('lab-orders.view-dept') ?? false,
+                        'viewRadiology' => $request->user()?->can('radiology.view-worklist') ?? false,
+                        'uploadExternal' => $request->user()?->can('investigations.upload-external') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

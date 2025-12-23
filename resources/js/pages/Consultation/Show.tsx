@@ -1,6 +1,7 @@
 import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import VitalsModal from '@/components/Checkin/VitalsModal';
 import { ConsultationLabOrdersTable } from '@/components/Consultation/ConsultationLabOrdersTable';
+import { InvestigationsSection } from '@/components/Consultation/InvestigationsSection';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
@@ -40,7 +41,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, useForm } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Activity,
     AlertTriangle,
@@ -50,9 +52,11 @@ import {
     Clock,
     ExternalLink,
     FileText,
+    FlaskConical,
     Heart,
     Pill,
     Plus,
+    Scan,
     Stethoscope,
     TestTube,
     User,
@@ -169,6 +173,15 @@ interface LabService {
     category: string;
     price: number | null;
     sample_type: string;
+    is_imaging?: boolean;
+    modality?: string | null;
+}
+
+interface ImagingAttachment {
+    id: number;
+    file_name: string;
+    file_type: string;
+    description?: string;
 }
 
 interface LabOrder {
@@ -179,7 +192,8 @@ interface LabOrder {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     ordered_at: string;
@@ -191,6 +205,7 @@ interface LabOrder {
         id: number;
         name: string;
     };
+    imaging_attachments?: ImagingAttachment[];
 }
 
 interface AdmissionWardRound {
@@ -386,6 +401,42 @@ interface Props {
                 dispensed: boolean;
             }[];
         }[];
+        previousImagingStudies?: {
+            id: number;
+            lab_service: {
+                id: number;
+                name: string;
+                code: string;
+                category: string;
+                modality?: string | null;
+                is_imaging?: boolean;
+            };
+            status: string;
+            priority: string;
+            special_instructions?: string;
+            ordered_at: string;
+            result_entered_at?: string;
+            result_notes?: string;
+            ordered_by?: {
+                id: number;
+                name: string;
+            };
+            result_entered_by?: {
+                id: number;
+                name: string;
+            };
+            imaging_attachments?: {
+                id: number;
+                lab_order_id: number;
+                file_name: string;
+                file_type: string;
+                is_external: boolean;
+                external_facility_name?: string | null;
+                external_study_date?: string | null;
+            }[];
+            has_images?: boolean;
+            is_external?: boolean;
+        }[];
         allergies: string[];
     };
     patientHistories: {
@@ -423,6 +474,9 @@ export default function ConsultationShow({
     activeOverride,
     can,
 }: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const canUploadExternal = auth.permissions?.investigations?.uploadExternal ?? false;
+
     const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -1177,6 +1231,9 @@ export default function ConsultationShow({
                             previousMinorProcedures={
                                 patientHistory?.previousMinorProcedures || []
                             }
+                            previousImagingStudies={
+                                patientHistory?.previousImagingStudies || []
+                            }
                             allergies={patientHistory?.allergies || []}
                         />
                         {consultation.status === 'in_progress' && (
@@ -1478,8 +1535,8 @@ export default function ConsultationShow({
                             value="orders"
                             className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-teal-50 text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
                         >
-                            <TestTube className="h-4 w-4" />
-                            Lab Orders
+                            <FlaskConical className="h-4 w-4" />
+                            Investigations
                         </TabsTrigger>
                         <TabsTrigger
                             value="theatre"
@@ -1781,180 +1838,14 @@ export default function ConsultationShow({
                         </div>
                     </TabsContent>
 
-                    {/* Lab Orders Tab */}
+                    {/* Investigations Tab (Laboratory Tests + Imaging) */}
                     <TabsContent value="orders">
-                        <div className="space-y-6">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                    <CardTitle>Laboratory Orders</CardTitle>
-                                    {consultation.status === 'in_progress' && (
-                                        <Dialog
-                                            open={showLabOrderDialog}
-                                            onOpenChange={setShowLabOrderDialog}
-                                        >
-                                            <DialogTrigger asChild>
-                                                <Button>
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    Order Lab Test
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-md">
-                                                <DialogHeader>
-                                                    <DialogTitle>
-                                                        Order Laboratory Test
-                                                    </DialogTitle>
-                                                </DialogHeader>
-                                                <form
-                                                    onSubmit={
-                                                        handleLabOrderSubmit
-                                                    }
-                                                    className="space-y-4"
-                                                >
-                                                    <div>
-                                                        <Label>
-                                                            Search Lab Test
-                                                        </Label>
-                                                        <AsyncLabServiceSelect
-                                                            onSelect={(service) => {
-                                                                setSelectedLabService(service);
-                                                                setLabOrderData(
-                                                                    'lab_service_id',
-                                                                    service.id.toString(),
-                                                                );
-                                                            }}
-                                                            excludeIds={consultation.lab_orders?.map(
-                                                                (o) => o.lab_service.id,
-                                                            ) || []}
-                                                            placeholder={
-                                                                selectedLabService
-                                                                    ? selectedLabService.name
-                                                                    : 'Search by test name or code...'
-                                                            }
-                                                        />
-                                                        {selectedLabService && (
-                                                            <div className="mt-2 rounded-md bg-muted p-2 text-sm">
-                                                                <p className="font-medium">{selectedLabService.name}</p>
-                                                                <p className="text-muted-foreground">
-                                                                    {selectedLabService.code} • {selectedLabService.category} • {selectedLabService.sample_type}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                        {/* Unpriced Lab Service Warning */}
-                                                        {selectedLabService && (selectedLabService.price === null || selectedLabService.price === 0) && (
-                                                            <Alert className="mt-3 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
-                                                                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                                                <AlertTitle className="text-amber-800 dark:text-amber-200">
-                                                                    Unpriced Test - External Referral
-                                                                </AlertTitle>
-                                                                <AlertDescription className="text-amber-700 dark:text-amber-300">
-                                                                    <p>This test has no price configured in the system.</p>
-                                                                    <p className="mt-1 flex items-center gap-1">
-                                                                        <ExternalLink className="h-3 w-3" />
-                                                                        Patient will need to do this test at an external facility.
-                                                                    </p>
-                                                                </AlertDescription>
-                                                            </Alert>
-                                                        )}
-                                                    </div>
-
-                                                    <div>
-                                                        <Label htmlFor="priority">
-                                                            Priority
-                                                        </Label>
-                                                        <Select
-                                                            value={
-                                                                labOrderData.priority
-                                                            }
-                                                            onValueChange={(
-                                                                value,
-                                                            ) =>
-                                                                setLabOrderData(
-                                                                    'priority',
-                                                                    value,
-                                                                )
-                                                            }
-                                                            required
-                                                        >
-                                                            <SelectTrigger id="priority">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="routine">
-                                                                    Routine
-                                                                </SelectItem>
-                                                                <SelectItem value="urgent">
-                                                                    Urgent
-                                                                </SelectItem>
-                                                                <SelectItem value="stat">
-                                                                    STAT
-                                                                    (Immediate)
-                                                                </SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-
-                                                    <div>
-                                                        <Label htmlFor="special_instructions">
-                                                            Special Instructions
-                                                            (Optional)
-                                                        </Label>
-                                                        <Textarea
-                                                            id="special_instructions"
-                                                            placeholder="Any special instructions for the lab..."
-                                                            value={
-                                                                labOrderData.special_instructions
-                                                            }
-                                                            onChange={(e) =>
-                                                                setLabOrderData(
-                                                                    'special_instructions',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            rows={3}
-                                                        />
-                                                    </div>
-
-                                                    <div className="flex gap-2 pt-4">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                setShowLabOrderDialog(
-                                                                    false,
-                                                                )
-                                                            }
-                                                            className="flex-1"
-                                                        >
-                                                            Cancel
-                                                        </Button>
-                                                        <Button
-                                                            type="submit"
-                                                            disabled={
-                                                                labOrderProcessing ||
-                                                                !labOrderData.lab_service_id
-                                                            }
-                                                            className="flex-1"
-                                                        >
-                                                            {labOrderProcessing
-                                                                ? 'Ordering...'
-                                                                : 'Order Test'}
-                                                        </Button>
-                                                    </div>
-                                                </form>
-                                            </DialogContent>
-                                        </Dialog>
-                                    )}
-                                </CardHeader>
-                                <CardContent>
-                                    <ConsultationLabOrdersTable
-                                        labOrders={consultation.lab_orders}
-                                        consultationId={consultation.id}
-                                        canDelete={consultation.status === 'in_progress'}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </div>
+                        <InvestigationsSection
+                            consultationId={consultation.id}
+                            labOrders={consultation.lab_orders}
+                            consultationStatus={consultation.status}
+                            canUploadExternal={canUploadExternal}
+                        />
                     </TabsContent>
 
                     {/* Theatre Procedures Tab */}

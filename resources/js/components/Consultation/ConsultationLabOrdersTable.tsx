@@ -66,7 +66,7 @@ interface LabService {
     name: string;
     code: string;
     category: string;
-    price: number;
+    price: number | null;
     sample_type: string;
 }
 

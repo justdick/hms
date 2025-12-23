@@ -25,6 +25,8 @@ interface LabService {
     sample_type: string;
     turnaround_time: string;
     price?: number | null;
+    is_imaging?: boolean;
+    modality?: string | null;
 }
 
 interface Props {
@@ -32,6 +34,7 @@ interface Props {
     excludeIds?: number[];
     placeholder?: string;
     disabled?: boolean;
+    filterType?: 'all' | 'laboratory' | 'imaging';
 }
 
 export default function AsyncLabServiceSelect({
@@ -39,6 +42,7 @@ export default function AsyncLabServiceSelect({
     excludeIds = [],
     placeholder = 'Search lab tests...',
     disabled = false,
+    filterType = 'all',
 }: Props) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
@@ -56,9 +60,11 @@ export default function AsyncLabServiceSelect({
 
             setLoading(true);
             try {
-                const response = await fetch(
-                    `/lab/services/search?q=${encodeURIComponent(query)}`,
-                );
+                let url = `/lab/services/search?q=${encodeURIComponent(query)}`;
+                if (filterType !== 'all') {
+                    url += `&type=${filterType}`;
+                }
+                const response = await fetch(url);
                 const data = await response.json();
                 const filtered = data.filter(
                     (s: LabService) => !excludeIds.includes(s.id),
@@ -71,7 +77,7 @@ export default function AsyncLabServiceSelect({
                 setLoading(false);
             }
         },
-        [excludeIds],
+        [excludeIds, filterType],
     );
 
     const handleSearchChange = useCallback(

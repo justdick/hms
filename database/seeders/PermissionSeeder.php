@@ -249,6 +249,15 @@ class PermissionSeeder extends Seeder
             // Pricing Dashboard Management
             'pricing.view' => 'View unified pricing dashboard',
             'pricing.edit' => 'Edit prices and copay amounts in pricing dashboard',
+
+            // Investigations Management (Imaging/Radiology)
+            'investigations.order' => 'Order imaging studies during consultation',
+            'investigations.upload-external' => 'Upload external imaging studies from other facilities',
+
+            // Radiology Management
+            'radiology.view-worklist' => 'View radiology worklist of pending imaging orders',
+            'radiology.upload' => 'Upload images for imaging orders',
+            'radiology.report' => 'Enter radiology reports for imaging orders',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -360,6 +369,8 @@ class PermissionSeeder extends Seeder
             'administer medications',
             'medications.view',
             'manage prescriptions', // Doctors can discontinue prescriptions
+            'investigations.order', // Doctors can order imaging studies
+            'investigations.upload-external', // Doctors can upload external imaging
         ]);
 
         // Create Pharmacist role
@@ -458,6 +469,35 @@ class PermissionSeeder extends Seeder
             'pricing.edit',
             'drugs.view',
             'drugs.manage-nhis-settings',
+        ]);
+
+        // Create Radiologist role
+        $radiologist = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Radiologist',
+            'guard_name' => 'web',
+        ]);
+
+        $radiologist->syncPermissions([
+            'patients.view-all',
+            'radiology.view-worklist',
+            'radiology.upload',
+            'radiology.report',
+            'lab-orders.view-all',
+            'lab-orders.update',
+        ]);
+
+        // Create Radiology Technician role
+        $radiologyTech = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'Radiology Technician',
+            'guard_name' => 'web',
+        ]);
+
+        $radiologyTech->syncPermissions([
+            'patients.view-all',
+            'radiology.view-worklist',
+            'radiology.upload',
+            'lab-orders.view-all',
+            'lab-orders.update',
         ]);
 
         // Admin gets ALL permissions automatically

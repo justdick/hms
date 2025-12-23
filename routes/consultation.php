@@ -54,6 +54,9 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
         Route::delete('/{labOrder}', [LabOrderController::class, 'destroy'])->name('destroy');
     });
 
+    // External image upload for consultations
+    Route::post('/{consultation}/external-images', [LabOrderController::class, 'uploadExternalImage'])->name('external-images.store');
+
     // Procedure management (Theatre tab)
     Route::prefix('/{consultation}/procedures')->name('procedures.')->group(function () {
         Route::post('/', [ConsultationProcedureController::class, 'store'])->name('store');
