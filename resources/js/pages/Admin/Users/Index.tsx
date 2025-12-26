@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { copyToClipboard } from '@/lib/utils';
 import { Head, usePage } from '@inertiajs/react';
 import { Copy, Key, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -72,11 +73,13 @@ export default function UsersIndex({
         }
     }, [flash.temporary_password]);
 
-    const copyToClipboard = () => {
+    const handleCopyToClipboard = async () => {
         if (temporaryPassword) {
-            navigator.clipboard.writeText(temporaryPassword);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            const success = await copyToClipboard(temporaryPassword);
+            if (success) {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }
         }
     };
 
@@ -140,7 +143,7 @@ export default function UsersIndex({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={copyToClipboard}
+                                onClick={handleCopyToClipboard}
                             >
                                 <Copy className="mr-1 h-4 w-4" />
                                 {copied ? 'Copied!' : 'Copy'}

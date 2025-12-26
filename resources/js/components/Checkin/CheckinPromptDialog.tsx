@@ -8,6 +8,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { copyToClipboard } from '@/lib/utils';
 import { Check, CheckCircle2, Copy, FileText, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -41,12 +42,12 @@ export default function CheckinPromptDialog({
     }
 
     const handleCopyFolderNumber = async () => {
-        try {
-            await navigator.clipboard.writeText(patient.patient_number);
+        const success = await copyToClipboard(patient.patient_number);
+        if (success) {
             setCopied(true);
             toast.success('Folder number copied to clipboard');
             setTimeout(() => setCopied(false), 2000);
-        } catch {
+        } else {
             toast.error('Failed to copy');
         }
     };

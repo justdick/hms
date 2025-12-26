@@ -10,6 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useNhisExtension } from '@/hooks/useNhisExtension';
+import { copyToClipboard } from '@/lib/utils';
 import { useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -281,7 +282,7 @@ export default function PatientRegistrationForm({
         }
 
         // Copy membership number to clipboard
-        navigator.clipboard.writeText(data.membership_id).catch(() => {});
+        copyToClipboard(data.membership_id);
 
         // Start verification
         startVerification(

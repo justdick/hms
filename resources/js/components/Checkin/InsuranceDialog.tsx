@@ -8,6 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNhisExtension } from '@/hooks/useNhisExtension';
+import { copyToClipboard } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -229,9 +230,7 @@ export default function InsuranceDialog({
         }
 
         // Copy membership number to clipboard for manual paste
-        navigator.clipboard.writeText(insurance.membership_id).catch(() => {
-            // Clipboard API might fail, continue anyway
-        });
+        copyToClipboard(insurance.membership_id);
 
         // Start verification (opens portal, extension will auto-fill and login)
         startVerification(
