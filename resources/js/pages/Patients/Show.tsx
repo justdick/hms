@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import BillingSummary from './components/BillingSummary';
+import MedicalHistoryTab from './components/MedicalHistoryTab';
 
 interface InsurancePlan {
     id: number;
@@ -127,6 +128,110 @@ interface AccountSummary {
     credit_limit: number;
 }
 
+interface MedicalHistoryData {
+    consultations: Array<{
+        id: number;
+        date: string | null;
+        doctor: string | null;
+        department: string | null;
+        presenting_complaint: string | null;
+        history_presenting_complaint: string | null;
+        examination_findings: string | null;
+        assessment_notes: string | null;
+        plan_notes: string | null;
+        diagnoses: Array<{
+            type: string;
+            code: string | null;
+            description: string | null;
+            notes?: string | null;
+        }>;
+        prescriptions: Array<{
+            drug_name: string | null;
+            generic_name: string | null;
+            form: string | null;
+            strength: string | null;
+            dose_quantity: string | null;
+            frequency: string | null;
+            duration: string | null;
+            quantity: number | null;
+            instructions: string | null;
+            status: string;
+        }>;
+        lab_orders: Array<{
+            service_name: string | null;
+            code: string | null;
+            is_imaging: boolean;
+            status: string;
+            result_values: Record<string, unknown> | null;
+            result_notes: string | null;
+            ordered_at: string | null;
+            result_entered_at: string | null;
+        }>;
+        procedures: Array<{
+            name: string | null;
+            code: string | null;
+            notes: string | null;
+        }>;
+    }>;
+    vitals: Array<{
+        id: number;
+        recorded_at: string | null;
+        recorded_by: string | null;
+        blood_pressure: string;
+        temperature: number | null;
+        pulse_rate: number | null;
+        respiratory_rate: number | null;
+        oxygen_saturation: number | null;
+        weight: number | null;
+        height: number | null;
+        bmi: number | null;
+        notes: string | null;
+    }>;
+    admissions: Array<{
+        id: number;
+        admission_number: string;
+        admitted_at: string | null;
+        discharged_at: string | null;
+        status: string;
+        ward: string | null;
+        bed: string | null;
+        admission_reason: string | null;
+        discharge_notes: string | null;
+        admitting_doctor: string | null;
+        diagnoses: Array<{
+            type: string;
+            code: string | null;
+            description: string | null;
+            is_active: boolean;
+        }>;
+    }>;
+    prescriptions: Array<{
+        id: number;
+        date: string | null;
+        drug_name: string | null;
+        generic_name: string | null;
+        form: string | null;
+        strength: string | null;
+        dose_quantity: string | null;
+        frequency: string | null;
+        duration: string | null;
+        quantity: number | null;
+        instructions: string | null;
+        status: string;
+    }>;
+    lab_results: Array<{
+        id: number;
+        service_name: string | null;
+        code: string | null;
+        is_imaging: boolean;
+        ordered_by: string | null;
+        ordered_at: string | null;
+        result_entered_at: string | null;
+        result_values: Record<string, unknown> | null;
+        result_notes: string | null;
+    }>;
+}
+
 interface Props {
     patient: Patient;
     can_edit: boolean;
@@ -134,6 +239,7 @@ interface Props {
     can_view_medical_history: boolean;
     departments?: DepartmentOption[];
     billing_summary?: BillingSummaryData | null;
+    medical_history?: MedicalHistoryData | null;
     can_process_payment?: boolean;
     can_manage_credit?: boolean;
     payment_methods?: PaymentMethod[];
@@ -147,6 +253,7 @@ export default function PatientsShow({
     can_view_medical_history,
     departments = [],
     billing_summary = null,
+    medical_history = null,
     can_process_payment = false,
     can_manage_credit = false,
     payment_methods = [],
@@ -577,6 +684,14 @@ export default function PatientsShow({
                                                                 .name
                                                         }
                                                     </p>
+                                                    <p className="text-xs text-green-600 dark:text-green-400">
+                                                        ID:{' '}
+                                                        {
+                                                            patient
+                                                                .active_insurance
+                                                                .membership_id
+                                                        }
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -923,91 +1038,16 @@ export default function PatientsShow({
                     {/* Medical History Tab */}
                     {can_view_medical_history && (
                         <TabsContent value="medical" className="space-y-6">
-                            {patient.past_medical_surgical_history ||
-                            patient.drug_history ||
-                            patient.family_history ||
-                            patient.social_history ? (
-                                <div className="grid gap-6 lg:grid-cols-2">
-                                    {patient.past_medical_surgical_history && (
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="flex items-center gap-2 text-lg">
-                                                    <Heart className="h-5 w-5 text-red-500" />
-                                                    Past Medical/Surgical
-                                                    History
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm leading-relaxed">
-                                                    {
-                                                        patient.past_medical_surgical_history
-                                                    }
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                    {patient.drug_history && (
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="flex items-center gap-2 text-lg">
-                                                    <Activity className="h-5 w-5 text-blue-500" />
-                                                    Drug History
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm leading-relaxed">
-                                                    {patient.drug_history}
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                    {patient.family_history && (
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="flex items-center gap-2 text-lg">
-                                                    <Users className="h-5 w-5 text-purple-500" />
-                                                    Family History
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm leading-relaxed">
-                                                    {patient.family_history}
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                    {patient.social_history && (
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="flex items-center gap-2 text-lg">
-                                                    <FileText className="h-5 w-5 text-orange-500" />
-                                                    Social History
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-sm leading-relaxed">
-                                                    {patient.social_history}
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
-                            ) : (
-                                <Card>
-                                    <CardContent className="flex flex-col items-center justify-center py-12">
-                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                                            <FileText className="h-10 w-10 text-muted-foreground/50" />
-                                        </div>
-                                        <p className="mt-4 text-sm font-medium">
-                                            No Medical History
-                                        </p>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            No medical history has been recorded
-                                            for this patient
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            )}
+                            <MedicalHistoryTab
+                                backgroundHistory={{
+                                    past_medical_surgical_history:
+                                        patient.past_medical_surgical_history,
+                                    drug_history: patient.drug_history,
+                                    family_history: patient.family_history,
+                                    social_history: patient.social_history,
+                                }}
+                                medicalHistory={medical_history}
+                            />
                         </TabsContent>
                     )}
                 </Tabs>

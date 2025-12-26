@@ -259,6 +259,12 @@ class PatientController extends Controller
             $billingSummary = $this->getBillingSummary($patient);
         }
 
+        // Get medical history if user has permission
+        $medicalHistory = null;
+        if ($canViewMedicalHistory) {
+            $medicalHistory = $this->getMedicalHistory($patient);
+        }
+
         return inertia('Patients/Show', [
             'patient' => [
                 'id' => $patient->id,
@@ -324,6 +330,7 @@ class PatientController extends Controller
             'can_edit' => auth()->user()->can('update', $patient),
             'can_checkin' => auth()->user()->can('create', \App\Models\PatientCheckin::class),
             'can_view_medical_history' => $canViewMedicalHistory,
+            'medical_history' => $medicalHistory,
             'billing_summary' => $billingSummary,
             'can_process_payment' => auth()->user()->can('billing.create'),
             'can_manage_credit' => auth()->user()->can('billing.manage-credit'),
@@ -573,6 +580,195 @@ class PatientController extends Controller
         return [
             'balance' => (float) $account->balance,
             'credit_limit' => (float) $account->credit_limit,
+        ];
+    }
+
+    /**
+     * Get comprehensive medical history for a patient
+     */
+    private function getMedicalHistory(Patient $patient): array
+    {
+        // Get consultations with all related data
+        $consultations = \App\Models\Consultation::with([
+            'doctor:id,name',
+            'patientCheckin:id,department_id,checked_in_at',
+            'patientCheckin.department:id,name',
+            'diagnoses.diagnosis:id,code,description',
+            'prescriptions.drug:id,name,generic_name,form,strength',
+            'labOrders.labService:id,name,code,is_imaging',
+            'procedures.procedureType:id,name,code',
+        ])
+            ->whereHas('patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
+            ->where('status', 'completed')
+            ->orderByDesc('started_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($consultation) {
+                return [
+                    'id' => $consultation->id,
+                    'date' => $consultation->started_at?->format('Y-m-d H:i'),
+                    'doctor' => $consultation->doctor?->name,
+                    'department' => $consultation->patientCheckin?->department?->name,
+                    'presenting_complaint' => $consultation->presenting_complaint,
+                    'history_presenting_complaint' => $consultation->history_presenting_complaint,
+                    'examination_findings' => $consultation->examination_findings,
+                    'assessment_notes' => $consultation->assessment_notes,
+                    'plan_notes' => $consultation->plan_notes,
+                    'diagnoses' => $consultation->diagnoses->map(fn ($d) => [
+                        'type' => $d->type,
+                        'code' => $d->diagnosis?->code,
+                        'description' => $d->diagnosis?->description,
+                        'notes' => $d->notes,
+                    ]),
+                    'prescriptions' => $consultation->prescriptions->map(fn ($p) => [
+                        'drug_name' => $p->drug?->name ?? $p->medication_name,
+                        'generic_name' => $p->drug?->generic_name,
+                        'form' => $p->drug?->form ?? $p->dosage_form,
+                        'strength' => $p->drug?->strength,
+                        'dose_quantity' => $p->dose_quantity,
+                        'frequency' => $p->frequency,
+                        'duration' => $p->duration,
+                        'quantity' => $p->quantity,
+                        'instructions' => $p->instructions,
+                        'status' => $p->status,
+                    ]),
+                    'lab_orders' => $consultation->labOrders->map(fn ($l) => [
+                        'service_name' => $l->labService?->name,
+                        'code' => $l->labService?->code,
+                        'is_imaging' => $l->labService?->is_imaging,
+                        'status' => $l->status,
+                        'result_values' => $l->result_values,
+                        'result_notes' => $l->result_notes,
+                        'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                        'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                    ]),
+                    'procedures' => $consultation->procedures->map(fn ($p) => [
+                        'name' => $p->procedureType?->name,
+                        'code' => $p->procedureType?->code,
+                        'notes' => $p->notes,
+                    ]),
+                ];
+            });
+
+        // Get vitals history
+        $vitals = $patient->vitalSigns()
+            ->with('recordedBy:id,name')
+            ->orderByDesc('recorded_at')
+            ->limit(50)
+            ->get()
+            ->map(fn ($v) => [
+                'id' => $v->id,
+                'recorded_at' => $v->recorded_at?->format('Y-m-d H:i'),
+                'recorded_by' => $v->recordedBy?->name,
+                'blood_pressure' => $v->blood_pressure,
+                'temperature' => $v->temperature,
+                'pulse_rate' => $v->pulse_rate,
+                'respiratory_rate' => $v->respiratory_rate,
+                'oxygen_saturation' => $v->oxygen_saturation,
+                'weight' => $v->weight,
+                'height' => $v->height,
+                'bmi' => $v->bmi,
+                'notes' => $v->notes,
+            ]);
+
+        // Get admissions history
+        $admissions = $patient->admissions()
+            ->with([
+                'ward:id,name',
+                'bed:id,bed_number',
+                'consultation.doctor:id,name',
+                'diagnoses.diagnosis:id,code,description',
+            ])
+            ->orderByDesc('admitted_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'admission_number' => $a->admission_number,
+                'admitted_at' => $a->admitted_at?->format('Y-m-d H:i'),
+                'discharged_at' => $a->discharged_at?->format('Y-m-d H:i'),
+                'status' => $a->status,
+                'ward' => $a->ward?->name,
+                'bed' => $a->bed?->bed_number,
+                'admission_reason' => $a->admission_reason,
+                'discharge_notes' => $a->discharge_notes,
+                'admitting_doctor' => $a->consultation?->doctor?->name,
+                'diagnoses' => $a->diagnoses->map(fn ($d) => [
+                    'type' => $d->type,
+                    'code' => $d->diagnosis?->code,
+                    'description' => $d->diagnosis?->description,
+                    'is_active' => $d->is_active,
+                ]),
+            ]);
+
+        // Get all prescriptions (including from ward rounds)
+        $allPrescriptions = \App\Models\Prescription::with([
+            'drug:id,name,generic_name,form,strength',
+            'prescribable',
+        ])
+            ->where(function ($query) use ($patient) {
+                // Prescriptions from consultations
+                $query->whereHasMorph('prescribable', [\App\Models\Consultation::class], function ($q) use ($patient) {
+                    $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patient->id));
+                })
+                // Prescriptions from ward rounds
+                    ->orWhereHasMorph('prescribable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                        $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patient->id));
+                    });
+            })
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'date' => $p->created_at?->format('Y-m-d H:i'),
+                'drug_name' => $p->drug?->name ?? $p->medication_name,
+                'generic_name' => $p->drug?->generic_name,
+                'form' => $p->drug?->form ?? $p->dosage_form,
+                'strength' => $p->drug?->strength,
+                'dose_quantity' => $p->dose_quantity,
+                'frequency' => $p->frequency,
+                'duration' => $p->duration,
+                'quantity' => $p->quantity,
+                'instructions' => $p->instructions,
+                'status' => $p->status,
+            ]);
+
+        // Get all lab results
+        $allLabResults = \App\Models\LabOrder::with([
+            'labService:id,name,code,is_imaging',
+            'orderedBy:id,name',
+        ])
+            ->where(function ($query) use ($patient) {
+                $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patient) {
+                    $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patient->id));
+                })
+                    ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                        $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patient->id));
+                    });
+            })
+            ->where('status', 'completed')
+            ->orderByDesc('result_entered_at')
+            ->limit(100)
+            ->get()
+            ->map(fn ($l) => [
+                'id' => $l->id,
+                'service_name' => $l->labService?->name,
+                'code' => $l->labService?->code,
+                'is_imaging' => $l->labService?->is_imaging,
+                'ordered_by' => $l->orderedBy?->name,
+                'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                'result_values' => $l->result_values,
+                'result_notes' => $l->result_notes,
+            ]);
+
+        return [
+            'consultations' => $consultations,
+            'vitals' => $vitals,
+            'admissions' => $admissions,
+            'prescriptions' => $allPrescriptions,
+            'lab_results' => $allLabResults,
         ];
     }
 
