@@ -76,7 +76,8 @@ export interface ConsultationTest {
         | 'sample_collected'
         | 'in_progress'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     sample_collected_at?: string;
@@ -114,6 +115,12 @@ const statusConfig = {
         label: 'Cancelled',
         icon: AlertCircle,
         className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    },
+    external_referral: {
+        label: 'External Referral',
+        icon: FileText,
+        className:
+            'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     },
 };
 
@@ -687,7 +694,7 @@ export const consultationTestColumns: ColumnDef<ConsultationTest>[] = [
         },
         cell: ({ row }) => {
             const status = row.getValue('status') as ConsultationTest['status'];
-            const config = statusConfig[status];
+            const config = statusConfig[status] || statusConfig.ordered;
             const Icon = config.icon;
 
             return (
@@ -705,7 +712,7 @@ export const consultationTestColumns: ColumnDef<ConsultationTest>[] = [
             const priority = row.getValue(
                 'priority',
             ) as ConsultationTest['priority'];
-            const config = priorityConfig[priority];
+            const config = priorityConfig[priority] || priorityConfig.routine;
 
             return (
                 <Badge variant="outline" className={config.className}>
