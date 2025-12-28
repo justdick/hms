@@ -93,6 +93,7 @@ export function LabOrdersDataTable<TData, TValue>({
         { value: 'in_progress', label: 'In Progress' },
         { value: 'completed', label: 'Completed' },
         { value: 'cancelled', label: 'Cancelled' },
+        { value: 'external_referral', label: 'External Referral' },
         { value: 'all', label: 'All Statuses' },
     ];
 
