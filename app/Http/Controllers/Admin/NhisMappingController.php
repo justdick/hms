@@ -38,7 +38,7 @@ class NhisMappingController extends Controller
                         ->orWhereHas('nhisTariff', fn ($tariffQuery) => $tariffQuery->where('name', 'like', $searchTerm))
                         ->orWhereHas('nhisTariff', fn ($tariffQuery) => $tariffQuery->where('nhis_code', 'like', $searchTerm))
                         ->orWhereHas('gdrgTariff', fn ($tariffQuery) => $tariffQuery->where('name', 'like', $searchTerm))
-                        ->orWhereHas('gdrgTariff', fn ($tariffQuery) => $tariffQuery->where('gdrg_code', 'like', $searchTerm));
+                        ->orWhereHas('gdrgTariff', fn ($tariffQuery) => $tariffQuery->where('code', 'like', $searchTerm));
                 });
             })
             ->orderBy('item_type')
