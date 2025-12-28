@@ -149,7 +149,7 @@ const formatDateTime = (dateString: string) => {
 const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
     const [showResultsDialog, setShowResultsDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
-    const [resultValues, setResultValues] = useState(test.result_values || {});
+    const [resultValues, setResultValues] = useState<Record<string, string | number | boolean>>(test.result_values || {});
     const [resultNotes, setResultNotes] = useState(test.result_notes || '');
     const [cancelReason, setCancelReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -296,8 +296,12 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                 <div className="space-y-4">
                                     {test.lab_service.test_parameters.parameters.map(
                                         (param, index) => {
+                                            const rawValue =
+                                                resultValues[param.name];
                                             const value =
-                                                resultValues[param.name] || '';
+                                                rawValue !== undefined
+                                                    ? String(rawValue)
+                                                    : '';
                                             const isOutOfRange =
                                                 param.type === 'numeric' &&
                                                 param.normal_range &&
@@ -485,9 +489,9 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                         >
                                                             <Checkbox
                                                                 checked={
-                                                                    value ===
+                                                                    rawValue ===
                                                                         'true' ||
-                                                                    value ===
+                                                                    rawValue ===
                                                                         true
                                                                 }
                                                                 onCheckedChange={(
