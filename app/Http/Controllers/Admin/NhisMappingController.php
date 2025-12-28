@@ -32,12 +32,11 @@ class NhisMappingController extends Controller
             ->with(['nhisTariff', 'gdrgTariff'])
             ->when($request->input('item_type'), fn ($q, $type) => $q->byItemType($type))
             ->when($request->input('search'), function ($q, $search) {
-                $q->where(function ($query) use ($search) {
-                    $query->where('item_code', 'like', "%{$search}%")
-                        ->orWhereHas('nhisTariff', function ($tariffQuery) use ($search) {
-                            $tariffQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('nhis_code', 'like', "%{$search}%");
-                        });
+                $searchTerm = "%{$search}%";
+                $q->where(function ($query) use ($searchTerm) {
+                    $query->where('item_code', 'like', $searchTerm)
+                        ->orWhereHas('nhisTariff', fn ($tariffQuery) => $tariffQuery->where('name', 'like', $searchTerm))
+                        ->orWhereHas('nhisTariff', fn ($tariffQuery) => $tariffQuery->where('nhis_code', 'like', $searchTerm));
                 });
             })
             ->orderBy('item_type')
