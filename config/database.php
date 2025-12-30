@@ -89,7 +89,7 @@ return [
         'mittag_old' => [
             'driver' => 'mysql',
             'host' => env('MITTAG_DB_HOST', '127.0.0.1'),
-            'port' => env('MITTAG_DB_PORT', '3306'),
+            'port' => env('MITTAG_DB_PORT', '3307'),
             'database' => env('MITTAG_DB_DATABASE', 'mittag_old'),
             'username' => env('MITTAG_DB_USERNAME', 'root'),
             'password' => env('MITTAG_DB_PASSWORD', ''),

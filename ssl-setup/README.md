@@ -2,8 +2,10 @@
 
 This enables HTTPS so clipboard works on client machines.
 
-## Server IP: 192.168.1.76
-## Client Access URL: https://192.168.1.76
+## Server IP: 192.168.1.3
+## Client Access URL: https://192.168.1.3:8443
+
+> **Note**: WAMP uses port 8443 for HTTPS because XAMPP uses 443.
 
 ---
 
@@ -15,12 +17,12 @@ Run in PowerShell (as Admin) on the SERVER:
 # Create SSL directory
 New-Item -ItemType Directory -Path "C:\wamp64\bin\apache\apache2.4.65\conf\ssl" -Force
 
-# Copy certificate files (adjust path to where hms3 is located)
-Copy-Item "C:\wamp64\www\hms3\ssl-setup\server.crt" "C:\wamp64\bin\apache\apache2.4.65\conf\ssl\"
-Copy-Item "C:\wamp64\www\hms3\ssl-setup\server.key" "C:\wamp64\bin\apache\apache2.4.65\conf\ssl\"
+# Copy certificate files
+Copy-Item "C:\wamp64\www\hms\ssl-setup\server.crt" "C:\wamp64\bin\apache\apache2.4.65\conf\ssl\"
+Copy-Item "C:\wamp64\www\hms\ssl-setup\server.key" "C:\wamp64\bin\apache\apache2.4.65\conf\ssl\"
 
 # Copy SSL config file
-Copy-Item "C:\wamp64\www\hms3\ssl-setup\httpd-ssl.conf" "C:\wamp64\bin\apache\apache2.4.65\conf\extra\"
+Copy-Item "C:\wamp64\www\hms\ssl-setup\httpd-ssl.conf" "C:\wamp64\bin\apache\apache2.4.65\conf\extra\"
 ```
 
 ## Step 2: Enable SSL in Apache
@@ -54,8 +56,8 @@ APP_URL=https://192.168.1.76
 
 ## Step 5: Test
 
-- On SERVER: Open https://localhost or https://192.168.1.76
-- On CLIENT machines: Open https://192.168.1.76
+- On SERVER: Open https://localhost or https://192.168.1.3
+- On CLIENT machines: Open https://192.168.1.3
 
 First time, browser shows warning:
 1. Click "Advanced" 

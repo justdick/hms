@@ -77,11 +77,12 @@ async function sendCccToHmsWithPending(data, pending) {
     const tabs = await chrome.tabs.query({});
     
     for (const tab of tabs) {
-        // Check if this tab is from HMS origin or localhost
+        // Check if this tab is from HMS origin or localhost or LAN IP
         if (tab.url && (
             (pending.hmsOrigin && tab.url.startsWith(pending.hmsOrigin)) ||
             tab.url.includes('localhost') ||
-            tab.url.includes('127.0.0.1')
+            tab.url.includes('127.0.0.1') ||
+            tab.url.includes('192.168.1.3')
         )) {
             await sendToTab(tab, data);
         }
@@ -97,7 +98,11 @@ async function sendCccToAllHmsTabs(data) {
     const tabs = await chrome.tabs.query({});
     
     for (const tab of tabs) {
-        if (tab.url && (tab.url.includes('localhost') || tab.url.includes('127.0.0.1'))) {
+        if (tab.url && (
+            tab.url.includes('localhost') || 
+            tab.url.includes('127.0.0.1') ||
+            tab.url.includes('192.168.1.3')
+        )) {
             await sendToTab(tab, data);
         }
     }
