@@ -408,7 +408,7 @@ export default function EditDrug({
                                     <AlertDescription className="flex items-center justify-between">
                                         <span>
                                             {drug.unit_price !== null
-                                                ? `Current price: GHS ${drug.unit_price.toFixed(2)}`
+                                                ? `Current price: GHS ${Number(drug.unit_price).toFixed(2)}`
                                                 : 'Price not set'}
                                             . Manage pricing in the Pricing
                                             Dashboard.

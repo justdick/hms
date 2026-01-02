@@ -1,0 +1,1217 @@
+Code,Name,Category,Cash Price,Patient Copay
+ASUR,Adult Surgery Consultation,consultation,40,20
+ANCP,Antenatal/Postnatal Care Consultation,consultation,40,20
+DENT,Dental Consultation,consultation,40,20
+ENTH,"Ear, Nose and Throat Consultation",consultation,40,20
+OPDC,General OPD Consultation,consultation,40,20
+ZOOM,Minor Procedures Consultation,consultation,40,20
+OBGY,Obstetrics and Gynaecology Consultation,consultation,40,20
+OPTH,Ophthalmology Consultation,consultation,40,20
+ORTH,Orthopaedics Consultation,consultation,40,20
+PSUR,Paediatric Surgery Consultation,consultation,40,20
+PAED,Paediatrics Consultation,consultation,40,20
+PHYS,Physiotherapy Consultation,consultation,40,20
+RSUR,Reconstructive Plastic Surgery Consultation,consultation,40,20
+5FLUORIN1,"5-Fluorouracil Injection, 50 mg/mL	10",drugs,0,0
+ABC/3TC,ABACAVIR/LAMIVUDINE 600MG/300MG,drugs,0,0
+ABC/3TC DISP,"ABACAVIR/LAMIVUDINE, 120MG/60MG",drugs,0,0
+AMITRIPSYTAB1,"AMITRYPTILLINE TABLET, 25MG",drugs,0,0
+N1595,AMOKSIKLAV,drugs,8,8
+RABIES,ANTI RABIES,drugs,0,0
+TETANUS,ANTI TETANUS,drugs,0,0
+ARTEINJ,"ARTEMETHER INJECTION, 80MG",drugs,0,0
+D1AFT005,AZITHROMYCIN  500MG,drugs,35,25
+ACETAZIN1,"Acetazolamide Injection, 500 mg  Ampoule",drugs,0,0
+ACETAZTA1,"Acetazolamide Tablet, 250 mg  Tablet",drugs,0,0
+ACETYLIN1,"Acetylcysteine Injection, 200 mg/mL  1 mL",drugs,0,0
+ACETYLTA1,"Acetylsalicylic Acid Tablet, 300 mg  Tablet",drugs,0,0.2
+ACETYLDT1,"Acetylsalicylic Acid Tablet, 75 mg (Dispersible)  Tablet",drugs,0,0.3
+ACTINOIN1,Actinomycin D Injection 0.5 mg Intravenous  Vial,drugs,0,0
+ACTCHAPO1,"Activated Charcoal Powder, 50 g  50 G",drugs,0,13
+ACICLOCR1,"Acyclovir Cream, 5%  5G",drugs,0,0
+ACICLOEO1,"Acyclovir Eye Ointment, 3%  2G",drugs,0,0
+ACICLOIN1,"Acyclovir Injection, 250 mg vial  Vial",drugs,0,0
+ACICLOSU2,"Acyclovir Suspension, 200 mg/5 mL  20 mL",drugs,0,0
+ACICLOTA1,"Acyclovir Tablet, 200 mg  Tablet",drugs,0,0
+ADRENAIN1,"Adrenaline Injection, 1 mg/1mL (1:1000)  1 mL",drugs,0,10
+ADRENAIN2,"Adrenaline Injection, 1:10,000  Vial",drugs,0,0
+ADRIAMIN1,"Adriamycin Injection, 50 mg  Vial",drugs,0,0
+ALBENDSY1,"Albendazole Syrup, 100 mg/5 mL  20 mL",drugs,0,5
+ALBENDTA1,"Albendazole Tablet, 200 mg  Tablet",drugs,0,3
+ALBENDTA2,"Albendazole Tablet, 400 mg  Tablet",drugs,10,3
+ALLOPUTA1,"Allopurinol Tablet, 100 mg  Tablet",drugs,0,0
+ALLOPUTA2,"Allopurinol Tablet, 300 mg  Tablet",drugs,0,0
+ALUDROX,Aluminium Hydroxide Tablet,drugs,0,0
+AMIACIIN1,"Amino Acid Solution Injection, 10%  200 mL",drugs,0,0
+AMIACIIN2,"Amino Acid Solution Injection, 20%",drugs,0,0
+AMINOPIN1,"Aminophylline Injection, 250 mg/10 mL  Ampoule",drugs,0,0
+AMIODATA1,"Amiodarone Tablet, 200 mg  Tablet",drugs,0,0
+AMITRITA1,"Amitriptyline Tablet, 10 mg  Tablet",drugs,0,5
+AMITRITA2,"Amitriptyline Tablet, 25 mg  Tablet",drugs,10,5
+AMITRITA3,"Amitriptyline Tablet, 50 mg  Tablet",drugs,0,0
+AMLODITA2,"Amlodipine Tablet, 10 mg  Tablet",drugs,25,15
+AMLODITA1,"Amlodipine Tablet, 5 mg  Tablet",drugs,0,0
+AMOARTPO2,"Amodiaquine + Artesunate Granular Powder, 150",drugs,0,0
+AMOARTPO1,"Amodiaquine + Artesunate Granular Powder, 75 mg",drugs,0,0
+AMOARTTA2,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg (12 tabs)",drugs,0,0
+AMOARTTA4,"Amodiaquine + Artesunate Tablet, 135 mg + 50 mg (3's)",drugs,0,0
+AMOARTTA5,"Amodiaquine + Artesunate Tablet, 270 mg + 100 mg (3's)",drugs,0,0
+AMOARTTA6,"Amodiaquine + Artesunate Tablet, 270 mg + 100 mg (6's)",drugs,0,0
+AMOARTTA3,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25 mg (3's)",drugs,0,0
+AMOARTTA1,"Amodiaquine + Artesunate Tablet, 67.5 mg + 25 mg (6 tabs)",drugs,0,0
+DRG00007,Amoksiclav 1000 mg,drugs,100,80
+COAMOXIN2,"Amoxicillin + Clavulanic Acid Injection, 1.2g  Vial",drugs,0,30
+COAMOXIN1,"Amoxicillin + Clavulanic Acid Injection, 500 mg +",drugs,0,20
+COAMOXSU1,"Amoxicillin + Clavulanic Acid Suspension, 250 mg +",drugs,0,20
+COAMOXSU2,"Amoxicillin + Clavulanic Acid Suspension, 400 mg +",drugs,0,20
+COAMOXTA1,"Amoxicillin + Clavulanic Acid Tablet, 500 mg + 125",drugs,70,50
+COAMOXTA2,"Amoxicillin + Clavulanic Acid Tablet, 875 mg + 125",drugs,0,0
+AMOXICDT1,"Amoxicillin 250 mg, Dispersible Tablet  Tablet",drugs,0,0
+AMOXICCA1,"Amoxicillin Capsule, 250 mg",drugs,0.5,0.3
+AMOXICCA2,"Amoxicillin Capsule, 500 mg  Capsule",drugs,40,20
+AMOXICSU1,"Amoxicillin Suspension, 125 mg/5 mL  100 mL",drugs,10,5
+AMPICIIN1,"Ampicillin Injection, 500 mg  Vial",drugs,0,0
+ANASTRTA1,"Anastrozole Tablet, 1 mg  Tablet",drugs,0,0
+ANIMGLIN1,"Anti RH Immunoglobulin Injection, 1500IU /5ml  Vial",drugs,0,0
+ANTISNAKE,"Anti Snake  Injection, 1vial",drugs,0,0
+ANTESEIN1,Anti Tetanus Serum Injection 1500 IU  Vial,drugs,0,0
+AQUEOUCR1,Aqueous Cream BP  100 G,drugs,0,0
+ARTLUMSU1,"Artemether + Lumefantrine Suspension, (Powder For",drugs,0,12
+ARTLUMTA3,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (12's)",drugs,0,10
+ARTLUMTA4,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (18's)",drugs,0,10
+ARTLUMTA1,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (24's)",drugs,0,8
+ARTLUMTA2,"Artemether + Lumefantrine Tablet, 20 mg + 120 mg (6's)",drugs,0,10
+ARTEMEIN2,Artemether Injection 80mg/mL  Ampoule,drugs,0,0
+ARTLUMDT1,"Artermether + Lumefantrine Dispersible, (20 mg +",drugs,0,0
+ARTESUIN1,"Artesunate Injection, 30 mg  Vial",drugs,20,10
+ARTESUIN2,"Artesunate Injection, 60 mg  Vial",drugs,25,10
+ARTESURE1,"Artesunate Suppository, 50 mg  Supp.",drugs,0,0
+ARTESUIN3,Artesunate injection 120mg  Vial,drugs,40,20
+ARTESURE2,Artesunate suppository 100mg  Supp,drugs,0,0
+10101,Ascorbic  acid ( Syr vitamin C),drugs,20,10
+ATEHYDTA2,"Atenolol + Hydrochlorthiazide Tablet, 100 mg + 25",drugs,0,0
+ATEHYDTA1,"Atenolol + Hydrochlorthiazide Tablet, 50 mg + 25",drugs,0,0
+ATENOLIN1,"Atenolol Injection, 500 microgram/10 mL  Ampoule",drugs,0,15
+ATENOLTA3,"Atenolol Tablet, 100 mg",drugs,0,0
+ATENOLTA1,"Atenolol Tablet, 25 mg  Tablet",drugs,0,0
+ATENOLTA2,"Atenolol Tablet, 50 mg  Tablet",drugs,0,0
+ATORVATA1,"Atorvastatin Tablet, 10 mg  Tablet",drugs,0,0
+ATORVATA2,"Atorvastatin Tablet, 20 mg  Tablet",drugs,0,0
+ATROPIID1,"Atropine Eye Drops, 1%  10 mL",drugs,0,0
+ATROPIIN1,"Atropine Injection, 0.6 mg/mL  1 mL",drugs,0,10
+AZITHRCA1,"Azithromycin Capsule, 250 mg  Capsule",drugs,0,3.5
+AZITHRSU1,"Azithromycin Oral Suspension, 200 mg/5 mL/15mL  15 mL",drugs,0,0
+AZITHRSU2,"Azithromycin Oral Suspension, 200 mg/5 mL/30mL  30 mL",drugs,0,0
+MACAINE,"BUPIVACAINE INJECTION, 0.5%",drugs,50,30
+BADOESIN1,"Badoe's Solution Injection, 1000 mL  1000 mL",drugs,0,0
+BECDIPGA2,"Beclometasone  dipropionate Inhaler, 100",drugs,0,0
+BECDIPGA1,"Beclometasone  dipropionate Inhaler, 50",drugs,0,0
+BECDIPGA3,"Beclometasone dipropionate Inhaler, 200",drugs,0,0
+BENDROTA1,"Bendroflumethiazide Tablet, 2.5 mg  Tablet",drugs,0,0
+BENZATIN1,"Benzatropine Injection, 1 mg/mL  1 mL",drugs,0,0
+BENZATTA1,"Benzatropine Tablet, 2 mg  Tablet",drugs,0,0
+BEACSAOI1,"Benzoic Acid + Salicylic Acid Ointment, 6% + 3%  25 G",drugs,0,0
+BENPERCR2,"Benzoyl Peroxide Cream, 10%  30 G",drugs,0,0
+BENPERCR1,"Benzoyl Peroxide Cream, 5%  30 G",drugs,0,0
+BENBENLO2,"Benzyl Benzoate Lotion, 25%  100 mL",drugs,0,0
+BENBENLO1,"Benzyl Benzoate Lotion, 25%  30mL",drugs,0,0
+BENZYLIN1,"Benzylpenicillin Injection, 1 MU  Vial",drugs,0,0
+BENZYLIN2,"Benzylpenicillin Injection, 5 MU",drugs,0,0
+BETVALCR2,"Betamethasone Valerate cream, 0.1%  15 G",drugs,0,0
+BETAXOID1,"Betaxolol HCL Eye Drops, 0.5%  5 mL",drugs,0,0
+BISACOTA1,"Bisacodyl Tablet, 5 mg  Tablet",drugs,0,0
+BISOPRTA2,Bisoprolol Tablet 10 mg  Tablet,drugs,0,0
+BISOPRTA1,Bisoprolol Tablet 5 mg  Tablet,drugs,0,0
+BROMOCTA1,"Bromocriptine Tablet, 2.5 mg  Tablet",drugs,0,0
+BUDFORGA2,Budesonide + Formoterol Inhaler 160,drugs,0,0
+BUDFORGA1,Budesonide + Formoterol Inhaler 80 microgram/4.5,drugs,0,0
+BUDESOGA1,"Budesonide DPI, 100 microgram (100 Doses)  Inhaler",drugs,0,0
+BUDESOGA2,"Budesonide DPI, 200 microgram (100 Doses)  Inhaler",drugs,0,0
+1,CEFOMAX 125,drugs,50,40
+ROCEP1,"CEFTRIAXONE (Rocephin) INJECTION, 1g",drugs,0,0
+STUGERON,"CINNARIZINE TABLET, 25MG",drugs,50,30
+ENTCIPRO,CIPROFLOXACIN EYE/EAR DROP,drugs,0,0
+ENTCIPROEYE/EAR,CIPROFLOXACIN EYE/EAR DROP,drugs,0,0
+CLINDACAP2,"CLINDAMYCIN CAPSULE, 300MG",drugs,1.5,1.5
+HIVCD,CONDOM,drugs,0,0
+CALAMICR1,"Calamine Cream, 15%  40 G",drugs,0,0
+CALAMILO1,"Calamine Lotion, 15%  200 mL",drugs,0,0
+CALCIFTA1,"Calciferol Tablet, 10,000 units  Tablet",drugs,0,0
+CALGLUIN1,"Calcium  Gluconate Injection, 100 mg/mL in 10 mL  Ampoule",drugs,0,0
+CALCARTA1,"Calcium Carbonate Tablet, 500 mg  Tablet",drugs,0,0
+CALVITTA1,"Calcium with Vitamin D Tablet, (97 mg + 10",drugs,0,0
+CAPECITA1,"Capecitabine Tablet, 500 mg  Tablet",drugs,0,0
+CARBAMTA3,"Carbamazepine Sustained -Release Tablet, 200 mg  Tablet",drugs,0,0
+CARBAMTA4,"Carbamazepine Sustained -Release Tablet, 400 mg  Tablet",drugs,0,0
+CARBAMTA1,"Carbamazepine Tablet, 100 mg  Tablet",drugs,0,0
+CARBAMTA2,"Carbamazepine Tablet, 200 mg  Tablet",drugs,0,0
+CARBIMTA2,"Carbimazole Tablet, 20 mg  Tablet",drugs,0,0
+CARBIMTA1,"Carbimazole Tablet, 5 mg",drugs,0,0
+CARBOCSY1,"Carbocisteine Paediatric Syrup , 125 mg/5 mL  100 mL",drugs,25,15
+CARBOCSY2,"Carbocisteine Syrup, 250 mg/5 mL  100 mL",drugs,30,20
+CARBOPIN1,"Carboplatin Injection, 150 mg Intravenous  Vial",drugs,0,0
+CARBOPIN2,"Carboplatin Injection, 450 mg Intravenous  Vial",drugs,0,0
+CARVEDTA2,Carvedilol Tablet 12.5 mg  Tablet,drugs,0,0
+CARVEDTA1,Carvedilol Tablet 3.125 mg  Tablet,drugs,0,0
+CEFACLCA1,"Cefaclor Capsule, 250 mg  Capsule",drugs,0,0
+CEFACLCA2,"Cefaclor Capsule, 500 mg  Capsule",drugs,0,0
+CEFACLSU1,"Cefaclor Suspension, 125 mg/5 mL  100 mL",drugs,0,0
+CEFACLSU2,"Cefaclor Suspension, 250 mg/5 mL  100 mL",drugs,0,0
+CEFOTAIN2,"Cefotaxime Injection, 1 g  Vial",drugs,0,0
+CEFOTAIN1,"Cefotaxime Injection, 500 mg  Vial",drugs,0,0
+CEFTBACTAM1,"Ceftriaxone + sulbactam injection, 1.5g",drugs,35,25
+CEFTRIIN3,"Ceftriazone Injection, 1g  Vial",drugs,0,10
+CEFTRIIN2,"Ceftriazone Injection, 500 mg  Vial",drugs,0,0
+zenzcef,Cefuroxime (Zenacef),drugs,0,0
+CEFUROIN2,Cefuroxime Injection 1.5 g  Vial,drugs,0,20
+CEFUROIN1,"Cefuroxime Injection, 750 mg  Vial",drugs,20,10
+CEFUROSU1,"Cefuroxime Suspension, 125 mg/5 mL  50mL",drugs,40,30
+CEFUROTA1,"Cefuroxime Tablet, 125 mg  Tablet",drugs,0,0
+CEFUROTA2,"Cefuroxime Tablet, 250 mg  Tablet",drugs,45,25
+CEFXIME,"Cefuroxime Tablet, 500mg",drugs,60,40
+CELECOTA1,Celecoxib Tablet 100 mg  Tablet,drugs,0,3
+CELECOTA2,Celecoxib Tablet 200 mg  Tablet,drugs,50,30
+CETIRISY1,"Cetirizine Syrup, 5 mg/5 mL  30 mL",drugs,20,10
+CETIRITA1,"Cetirizine Tablet, 10 mg",drugs,2,1
+CETRIMSO1,Cetrimide Solution  200 mL,drugs,0,0
+CHLORAED1,"Chloramphenicol Ear Drops, 5%  10 mL",drugs,20,10
+CHLORAID1,"Chloramphenicol Eye Drops, 0.5%  10 mL",drugs,20,10
+CHLORAEO1,"Chloramphenicol Eye Ointment, 1%  5 G",drugs,0,10
+CHLORAIN1,"Chloramphenicol Injection, 1 g  1 G",drugs,0,0
+CHLORASU1,"Chloramphenicol Suspension, 125mg/5mL  100 mL",drugs,0,0
+CHLORHCR1,"Chlorhexidine Cream, 1%  15 G",drugs,0,0
+CHLORHGE1,Chlorhexidine Gel 7.1 % ( digluconate  ) delivering,drugs,0,10
+CHLORHMW2,Chlorhexidine Mouth wash 0.12%   300ml,drugs,0,0
+CHLORHSO1,"Chlorhexidine Solution, 2.5%  100 mL",drugs,0,0
+CHLPHESY1,"Chlorphenamine Syrup, 2 mg/5 mL  100 mL",drugs,0,0
+CHLPHETA1,"Chlorphenamine Tablet, 4 mg  Tablet",drugs,0,0.2
+CHLPROIN1,"Chlorpromazine Injection, 25 mg/mL in 2 mL  Ampoule",drugs,0,15
+CHLPROTA3,"Chlorpromazine Tablet, 100 mg  Tablet",drugs,0,0
+CHLPROTA1,"Chlorpromazine Tablet, 25 mg  Tablet",drugs,0,0
+CHLPROTA2,"Chlorpromazine Tablet, 50 mg  Tablet",drugs,0,0
+CHREFLIN2,"Cholera Replacement Fluid Injection, (5:4:1) 1 Litre  1000 mL",drugs,0,0
+CHREFLIN1,"Cholera Replacement Fluid Injection, (5:4:1) 500 mL  500 mL",drugs,0,0
+CIPTINTA1,"Ciprofloxacin + Tinidazole Tablet, 500 mg + 500 mg  Tablet",drugs,0,20
+CIPROFID1,"Ciprofloxacin Eye Drops, 0.3%  10 mL",drugs,0,10
+CIPROFIN1,"Ciprofloxacin Infusion, 2 mg/mL in 100 mL  Bottle",drugs,25,15
+CIPROFTA1,"Ciprofloxacin Tablet, 250 mg  Tablet",drugs,0,0.5
+CIPROFTA2,"Ciprofloxacin Tablet, 500 mg",drugs,20,10
+CLARITCA1,"Clarithromycin Capsule, 250 mg  Capsule",drugs,0,0
+CLARITCA2,"Clarithromycin Capsule, 500 mg  Capsule",drugs,0,0
+CLARITSU1,"Clarithromycin Paediatric Suspension, 125 mg/5 mL  100 mL",drugs,0,0
+CLINDACA1,"Clindamycin Capsule, 150 mg  Capsule",drugs,0,1.5
+CLINDAIN1,"Clindamycin Injection, 150 mg/mL in 2 mL  Vial",drugs,0,25
+CLINDASU1,"Clindamycin Suspension, 75 mg/5 mL  100 mL",drugs,0,95
+CLINDASO1,"Clindamycin Topical Solution, 1%  30 mL",drugs,0,30
+CLOPROCR1,"Clobetasol Propionate Cream, 0.05%  15 G",drugs,0,0
+CLOGREL,"Clopidogrel Tablet, 75mg",drugs,0,0
+CLOHYDCR1,"Clotrimazole + Hydrocortisone Cream, 1% + 1%  15 G",drugs,0,20
+CLOTRICR1,"Clotrimazole Cream, 1%  30 G",drugs,20,10
+CLOTRICR2,"Clotrimazole Cream, 2%  30 G",drugs,20,10
+CLOTRIVP1,"Clotrimazole Pessary, 100 mg  6 Pess.",drugs,0,10
+CLOTRIVP2,"Clotrimazole Pessary, 200 mg  3 Pess.",drugs,0,20
+CLOTRIVP3,"Clotrimazole Pessary, 500 mg  1 Pess.",drugs,0,20
+CLOXACIN1,"Cloxacillin Injection, 250 mg  Vial",drugs,0,0
+CLOXACIN2,"Cloxacillin Injection, 500 mg  Vial",drugs,0,0
+COTRIMSU1,"Co-trimoxazole Suspension, (200+40) mg/5 mL	100",drugs,0,0
+CODEINTA1,"Codeine Tablet, 30 mg",drugs,0,0
+COOENOTA1,"Conjugated Oestrogen + Norgesterol Tablet, 625",drugs,0,0
+CONOESTA1,"Conjugated Oestrogen Tablet, 625 microgram  Tablet",drugs,0,0
+CONOESVC1,"Conjugated Oestrogen Vaginal cream, 625",drugs,0,0
+CORANTID1,Corticosteroid + Antibiotic Eye Drops  10 mL,drugs,0,0
+CORANTEO1,Corticosteroid + Antibiotic Eye Ointment  10 G,drugs,0,0
+COTRIMTA1,"Cotrimoxazole Tablet, (400+80) mg  Tablet",drugs,0,0
+CYCLOPID1,"Cyclopentolate Eye Drops, 1%  5 mL",drugs,0,0
+CYCLOPIN1,"Cyclophosphamide Injection, 500 mg  Vial",drugs,0,0
+DNS1L,"DEXTROSE 5% IN SODIUM CHLORIDE 0.9%, 1L",drugs,0,0
+D5IV,"DEXTROSE 5%, 1L",drugs,0,0
+K-31001,DICLOFENAC,drugs,20,10
+1111,DICLOFENAC + PARACETAMOL,drugs,0,0
+P-ALAXIN,"DIHYDROARTEMISININ + PIPERAQUINE, 40/320",drugs,0,0
+A DIPHEN ,DIPHENHYDRAMINE,drugs,0,0
+C DIPHEN ,DIPHENHYDRAMINE CHILD,drugs,0,0
+DTG,DOLUTIGRAVIR 50MG,drugs,0,0
+ES510,DOMPERIDONE,drugs,0.8,0.8
+DALSODIN1,"Dalteparin Sodium Injection, 5000 units/0.2 mL  Prefilled",drugs,0,0
+DARROWIN1,"Darrow's Solution Injection, Half Strength 250 mL  250 mL",drugs,0,0
+DEXAMEID1,"Dexamethasone Eye Drops, 1%  5 mL",drugs,0,0
+DEXAMEEO1,"Dexamethasone Eye Ointment, 1%  5 G",drugs,0,0
+DEXAMEIN1,"Dexamethasone Injection, 4 mg/mL  1mL",drugs,0,5
+DEXAMEIN2,"Dexamethasone Injection, 8 mg/2 mL  2mL",drugs,0,0
+DEXAMETA2,"Dexamethasone Tablet, 2 mg  Tablet",drugs,0,0
+DEXAMETA3,"Dexamethasone Tablet, 4 mg  Tablet",drugs,0,0
+DEXAMETA1,"Dexamethasone Tablet, 500 microgram  Tablet",drugs,0,0
+DEXTROTA1,Dextromethorphan Containing Cough Syrup   100ml,drugs,0,0
+DEXTROIN3,"Dextrose Infusion, 10% (250 mL)  250 mL",drugs,0,8
+DEXTROIN4,"Dextrose Infusion, 10% (500 mL)  500 mL",drugs,0,8
+DEXTROIN1,"Dextrose Infusion, 5% (250 mL)  250 mL",drugs,0,0
+DEXTROIN2,"Dextrose Infusion, 5% (500 mL)  500 mL",drugs,25,15
+DEXTROIN6,"Dextrose Infusion, 50% (250 mL)  250 mL",drugs,0,0
+DESOCHIN1,"Dextrose in Sodium Chloride Intravenous Infusion,",drugs,0,15
+DESOCHIN2,"Dextrose in Sodium Chloride Intravenous Infusion,",drugs,0,15
+DIAZEPIN1,"Diazepam Injection, 5 mg/mL in 2 mL  Ampoule",drugs,20,10
+DIAZEPRS1,"Diazepam Rectal Tubes, 2 mg/mL in 1.25 mL  Rectal",drugs,0,5
+DIAZEPTA2,"Diazepam Tablet, 10 mg",drugs,0.4,0.2
+DIAZEPTA1,"Diazepam Tablet, 5 mg  Tablet",drugs,0,0.1
+DICLOFCA1,"Diclofenac Capsule, 75 mg  Capsule",drugs,0,1
+DICLOFGE1,Diclofenac Gel  30 G,drugs,0,10
+DICLOFIN1,"Diclofenac Injection, 75mg/3mL  Ampoule",drugs,10,5
+DICLOFRE2,"Diclofenac Suppository, 100 mg  Supp.",drugs,0,2
+DICLOFRE1,"Diclofenac Suppository, 50 mg  Supp.",drugs,0,1
+DICLOFTA2,"Diclofenac Tablet, 50 mg  Tablet",drugs,20,10
+DIESTITA1,"Diethylstilboestrol Tablet, 1 mg  Tablet",drugs,0,0
+DIESTITA2,"Diethylstilboestrol Tablet, 5 mg  Tablet",drugs,0,0
+DIGOXIEL1,"Digoxin Elixir, 50 microgram/mL  60 mL",drugs,0,0
+DIGOXITA2,"Digoxin Tablet, 125 microgram  Tablet",drugs,0,0
+DIGOXITA3,"Digoxin Tablet, 250 microgram  Tablet",drugs,0,0
+DIGOXITA1,"Digoxin Tablet, 62.5 microgram  Tablet",drugs,0,0
+DIHPIPPO1,"Dihydroartemisin + Piperaquine Granular Powder,",drugs,0,0
+DIHYDRTA1,"Dihydrocodeine Tablet, 30 mg  Tablet",drugs,0,0
+DISOPYCA1,"Disopyramide Capsule, 100 mg  Capsule",drugs,0,0
+DISPHOIN1,"Disopyramide Phosphate Injection, 10 mg/mL in 5",drugs,0,0
+DOCETAIN1,"Docetaxel Injection, 20 mg/mL  Ampoule",drugs,0,0
+DOMPERTA1,"Domperidone Tablet, 10 mg  Tablet",drugs,0,0.4
+DOPAMIIN1,"Dopamine Injection, 40 mg/mL in 5 mL  Vial",drugs,0,0
+DOXAPRIN1,"Doxapram Injection, 20 mg/mL in 5 mL  Vial",drugs,0,0
+DOXORUIN1,Doxorubicin Injection 50 mg Intravenous  Vial,drugs,0,0
+DOXYCYCA1,"Doxycycline Capsule, 100 mg",drugs,20,10
+ENOSODIN2,"Enoxaparin Sodium Injection, 40 mg/0.4 mL  Prefilled",drugs,0,0
+EPHEDRIN1,"Ephedrine HCI Injection, 30 mg/mL  Ampoule",drugs,50,30
+EPHEDRND1,"Ephedrine Nasal Drops, 0.5%  10 mL",drugs,20,10
+EPHEDRND2,"Ephedrine Nasal Drops, 1%  10 mL",drugs,20,10
+ERGOMEIN1,"Ergometrine Injection, 0.2 mg/mL  1 mL",drugs,0,0
+ERGOMEIN2,"Ergometrine Injection, 0.5 mg/ml  1 mL",drugs,0,0
+ERGOMETA1,"Ergometrine Tablet, 0.5 mg  Tablet",drugs,0,0
+ERGOTATA1,"Ergotamine Tablet, 2 mg  Tablet",drugs,0,0
+ERYTHRSY1,"Erythromycin Syrup, 125 mg/5 mL  100 mL",drugs,0,0
+ERYTHRTA1,"Erythromycin Tablet, 250 mg  Tablet",drugs,0,0
+ESOMEPCA1,"Esomeprazole Capsule, 20 mg  Capsule",drugs,0,0
+ESOMEPCA2,"Esomeprazole Capsule, 40 mg  Capsule",drugs,0,0
+ETHOSUSY1,"Ethosuximide Syrup, 250 mg/5 mL  200 mL",drugs,0,0
+ETHOSUTA1,"Ethosuximide Tablet, 250 mg  Tablet",drugs,0,0
+ETODO,"Etodolac Tablet, 400mg",drugs,0,0
+ETOPOSIN1,Etoposide Injection 100 mg Intravenous  Vial,drugs,0,0
+FLUOXETA1,"FLUOXETINE TABLET, 20MG",drugs,0,0
+FLUOTAB,"FLUOXETINE, 20MG",drugs,0,0
+FEAMCISU1,Ferric Ammonium Citrate Mixture (FAC)  200 mL,drugs,0,0
+FERFUMTA1,"Ferrous Fumarate Tablet, 100 mg (Elemental Iron)  Tablet",drugs,0,0
+FERSULSY1,"Ferrous Sulphate (BPC) Syrup, 60 mg/5 mL  200 mL",drugs,0,0
+FESUFOTA1,"Ferrous Sulphate + Folic Acid Tablet, 50 mg",drugs,0,0
+FERSULTA1,"Ferrous Sulphate Tablet, 60 mg (Elemental Iron)  Tablet",drugs,0,0.04
+FINASTTA1,"Finasteride Tablet, 5 mg  Tablet",drugs,0,0
+FLUCLOCA1,"Flucloxacillin Capsule, 250 mg  Capsule",drugs,0,1
+FLUCLOIN1,"Flucloxacillin Injection, 250 mg",drugs,0,0
+FLUCLOIN2,"Flucloxacillin Injection, 500 mg  Vial",drugs,0,0.5
+FLUCLOSU1,"Flucloxacillin Suspension, 125 mg/5 mL  100 mL",drugs,0,1
+FLUCONCA1,"Fluconazole Capsule, 150 mg  Capsule",drugs,25,15
+FLUCONCA2,"Fluconazole Capsule, 200 mg  Capsule",drugs,0,0
+FLUCONSU1,"Fluconazole Suspension, 10 mg/mL  35 mL",drugs,0,0
+FLUCONSU2,"Fluconazole Suspension, 50 mg/5 mL  35 mL",drugs,0,0
+FLUCONTA1,"Fluconazole Tablet, 50 mg  Tablet",drugs,0,0
+FLUDROTA1,"Fludrocortisone Tablet, 100 microgram  Tablet",drugs,0,0
+FLUOXECA1,"Fluoxetine Capsule, 20 mg  Capsule",drugs,0,0
+FLUPENTA2,"Flupentixol Tablet, 1mg  Tablet",drugs,0,0
+FLUPENTA1,"Flupentixol Tablet, 500 microgram  Tablet",drugs,0,0
+FLUDECIN1,"Fluphenazine Deconoate Injection, 25 mg/mL  1 mL",drugs,0,0
+FLUSALGA1,"Fluticasone + Salmeterol Inhaler, 250 microgram/50",drugs,0,0
+FLUTICGA2,"Fluticasone MDI, 125 microgram (120 Dose)  Inhaler",drugs,0,0
+FLUTICGA3,"Fluticasone MDI, 250 microgram (120 Dose)  Inhaler",drugs,0,0
+FLUVASCA1,"Fluvastatin Capsule, 20 mg  Capsule",drugs,0,0
+FOLACITA1,"Folic Acid Tablet, 5 mg  Tablet",drugs,0.5,2
+FUROSEIN1,"Furosemide Injection, 10 mg/mL in 2 mL  Ampoule",drugs,0,2
+FUROSETA1,"Furosemide Tablet, 40 mg  Tablet",drugs,30,15
+GELATIIN1,Gelatin Infusion (Succinylated Gelatin)  500 mL,drugs,0,0
+GENTAMED1,"Gentamicin Ear Drops, 0.3%  10mL",drugs,20,10
+GENTAMID1,"Gentamicin Eye Drops, 0.3%  10 mL",drugs,20,10
+GENTAMIN1,"Gentamicin Injection, 40 mg/mL in 2 mL",drugs,10,5
+GLIBENTA1,"Glibenclamide Tablet, 5 mg  Tablet",drugs,0,0
+GLICLATA1,"Gliclazide Tablet, 80 mg  Tablet",drugs,25,15
+GLIMEPTA1,"Glimepiride Tablet, 1 mg  Tablet",drugs,0,0
+GLIMEPTA2,"Glimepiride Tablet, 2 mg  Tablet",drugs,0,0
+GLIMEPTA3,"Glimepiride Tablet, 3 mg  Tablet",drugs,0,0
+GLIMEPTA4,"Glimepiride Tablet, 4 mg  Tablet",drugs,0,0
+GLUCAGIN1,"Glucagon Injection, 1 mg  Ampoule",drugs,0,0
+GLTRSUTA1,"Glyceryl Trinitrate Sublingual Tablet, 500 microgram  100",drugs,0,0
+GRANISIN1,"Granisetron Injection, 1 mg/1mL  Ampoule",drugs,0,0
+GRANISTA1,"Granisetron Tablet, 1 mg  Tablet",drugs,0,0
+GRISEOSU1,"Griseofulvin Suspension, 125 mg/5 mL  100 mL",drugs,0,0
+GRISEOTA1,"Griseofulvin Tablet, 125 mg  Tablet",drugs,0,0
+GRISEOTA2,"Griseofulvin Tablet, 500 mg  Tablet",drugs,0,0
+GUAIFESY1,Guaifenesin Containing Expectorant Syrup   100ml,drugs,0,0
+HALOINJ,"HALOPERIDOL INJECTION, 50MG",drugs,0,0
+HYPERSALINE,HYPERTONIC SALINE,drugs,20,10
+HALOPEIN1,"Haloperidol Injection, 5 mg/5 mL  Ampoule",drugs,0,0
+HALOPETA1,"Haloperidol Tablet, 0.5 mg  Tablet",drugs,0,0
+HALOPETA3,"Haloperidol Tablet, 10 mg  Tablet",drugs,0,0
+HALOPETA2,"Haloperidol Tablet, 5 mg  Tablet",drugs,0,0
+HEPARIIN1,"Heparin Injection, 1000 units/mL in 5 mL  Ampoule",drugs,0,0
+HEPARIIN2,"Heparin Injection, 5000 units/mL in 1mL  Ampoule",drugs,0,0
+HEPARIIN3,"Heparin Injection, 5000 units/mL in 5 mL  Vial",drugs,0,0
+HUIMTEIN2,"Human Immune Tetanus Globulins Injection, 1,500 IU/mL (ATS)	1",drugs,0,0
+HUIMTEIN1,"Human Immune Tetanus Globulins Injection, 250",drugs,0,30
+HYDRALIN1,"Hydralazine Injection, 20 mg  Ampoule",drugs,40,10
+HYDRALTA1,"Hydralazine Tablet, 25 mg  Tablet",drugs,0,1
+HYDROCCR1,"Hydrocortisone Cream, 1%  15 G",drugs,0,20
+HYDROCID1,"Hydrocortisone Eye Drops, 1%  5 mL",drugs,0,0
+HYDROCEO1,"Hydrocortisone Eye Ointment, 1%  5 G",drugs,0,0
+HYSOSUIN1,"Hydrocortisone Sodium Succinate Injection, 100 mg  Vial",drugs,20,10
+HYDROXIN1,"Hydroxocobalamin Injection, 1 mg/mL  1 mL",drugs,0,0
+HYDROXCA1,"Hydroxyurea Capsule, 500mg  Capsule",drugs,0,0
+HYOBUTTA1,"Hyoscine Butylbromide  Tablet, 10 mg  Tablet",drugs,0,0.7
+HYOBUTIN1,"Hyoscine Butylbromide Injection, 20 mg/ mL  1 mL",drugs,0,5
+HIVPT1,"ISONIAZIDE TABLET, 100MG",drugs,0,0
+IBUPROSU1,"Ibuprofen Suspension, 100 mg/5 mL  100 mL",drugs,15,7
+IBUPROTA1,"Ibuprofen Tablet, 200 mg  Tablet",drugs,0,0.15
+IBUPROTA2,"Ibuprofen Tablet, 400 mg  Tablet",drugs,0,0.15
+IMIPRATA1,"Imipramine Tablet, 25 mg  Tablet",drugs,0,0
+INSSOLIN1,"Insulin Soluble HM, 100 units/mL in 10 mL  Vial",drugs,0,0
+INPRMIIN1,"Insulin premixed (30/70) HM Injection, 100 units/mL",drugs,0,0
+INTRALSO1,Intralipid Solution (for TPN)  500 mL,drugs,0,0
+IPRBROGA1,Ipratropium Bromide Nebulizer 250 micrograms  Dose,drugs,0,0
+IPRBROGA2,Ipratropium Bromide Nebulizer 500 micrograms  Dose,drugs,0,0
+IROPOLCA1,Iron (III) Polymaltose Complex Capsule  Capsule,drugs,0,0.5
+IROPOLSU1,Iron (III) Polymaltose Complex Suspension  200 mL,drugs,0,10
+IRODEXIN1,"Iron Dextran Injection, 100mg/2mL  2 mL",drugs,0,0
+IROSUCIN1,"Iron Sucrose Injection, 20 mg/mL",drugs,0,0
+ISOINSIN1,"Isophane Insulin Injection (HM), 100 units/mL in 10",drugs,0,0
+ISODINTA1,"Isosorbide Dinitrate Tablet, 10 mg  Tablet",drugs,0,0
+ITRACOCA1,"Itraconazole Capsule, 100 mg  Capsule",drugs,0,0
+ITRACOSU1,"Itraconazole Suspension, 10 mg/mL  30 mL",drugs,0,0
+KETAM1,"Ketamine Injection, 50mg",drugs,50,30
+KETOCOCR1,"Ketoconazole Cream, 30g  Tube",drugs,0,0
+KETOCOTA1,"Ketoconazole Tablet, 200 mg  Tablet",drugs,0,0
+DRG0001,LEVOFLOXACIN,drugs,5,5
+LISTERINE,LISTERINE MOUTHWASH,drugs,0,0
+C045501,LOPERAMIDE,drugs,1,0.5
+ALLUVIA,LOPINAVIR/RITONAVIR 250/50MG,drugs,0,0
+T017H126,LUFART  DS,drugs,35,35
+LABETAIN1,"Labetalol Injection, 5 mg/mL in 20 mL  Ampoule",drugs,0,90
+LABETATA1,"Labetalol Tablet, 100 mg  Tablet",drugs,0,0
+LABETATA2,"Labetalol Tablet, 200 mg  Tablet",drugs,0,0
+LACTULLI1,Lactulose Liquid 3.1 –3.7 g/5 mL  300 mL,drugs,0,40
+LAMOTRTA1,Lamotrigine Tablet 100 mg  Tablet,drugs,0,0
+lvf,Levofloxacin 500mg,drugs,5,5
+LEVOFLIN1,Levofloxacin infusion 500mg  100mL,drugs,0,0
+LEVSODTA3,"Levothyroxine Sodium Tablet, 100 microgram  Tablet",drugs,0,0
+LEVSODTA1,"Levothyroxine Sodium Tablet, 25 microgram  Tablet",drugs,0,0
+LEVSODTA2,"Levothyroxine Sodium Tablet, 50 microgram  Tablet",drugs,0,0
+LIDOADRE,Lidocaine + Adrenaline Injection,drugs,0,0
+LIDOCACR1,"Lidocaine Cream, 2%  15 G",drugs,0,0
+LIDOCAGE1,"Lidocaine Gel, 4%  15 G",drugs,0,0
+LIDO-1,"Lidocaine(Plain) Injection, 2%",drugs,40,20
+LISHYDTA1,"Lisinopril + Hydrochlorthiazide Tablet, (10 mg +",drugs,0,0
+LISHYDTA2,"Lisinopril + Hydrochlorthiazide Tablet, (20 mg +",drugs,0,0
+LISINOTA3,"Lisinopril Tablet, 10 mg  Tablet",drugs,25,15
+LISINOTA1,"Lisinopril Tablet, 2.5 mg  Tablet",drugs,0,0
+LISINOTA4,"Lisinopril Tablet, 20 mg Tablet",drugs,0,0
+LISINOTA2,"Lisinopril Tablet, 5 mg",drugs,0,0
+LODOXAID1,"Lodoxamide Eye Drops, 0.1%  10 mL",drugs,0,0
+LORAZEIN1,"Lorazepam Injection, 4 mg/mL in 1mL  Ampoule",drugs,0,0
+LORAZETA1,"Lorazepam Tablet, 1 mg  Tablet",drugs,0,0
+LORAZETA2,"Lorazepam Tablet, 2 mg  Tablet",drugs,0,0
+LORAZETA3,"Lorazepam Tablet, 2.5 mg  Tablet",drugs,0,0
+LOSARTTA3,"Losartan Tablet, 100 mg  Tablet",drugs,0,0.3
+LOSARTTA1,"Losartan Tablet, 25 mg  Tablet",drugs,0,0.3
+LOSARTTA2,"Losartan Tablet, 50 mg  Tablet",drugs,25,`15
+DRG0004,MENTHOX,drugs,30,20
+MERO-INJ,"MEROPENEM INJECTION, 1G",drugs,0,0
+METTA2,"METFORMIN + GLYBURIDE TABLET, 250MG/1.25MG",drugs,0,0
+NEUROPAT1,METHYLCOBA;LANIN TABLET (NEUROPAT),drugs,0,0
+EXPECT. SED,MIST. EXPECTORANT SEDATIVE,drugs,0,0
+MOXI1,MOXIFLOAXACIN,drugs,150,50
+CREMUPIRO,MUPIROCIN,drugs,0,0
+MAGSULIN1,"Magnesium Sulphate Injection, 20% (10 mL)  Ampoule",drugs,0,0
+MAGSULIN3,"Magnesium Sulphate Injection, 50% (10 mL)  Ampoule",drugs,0,45
+MAGSULPO1,Magnesium Sulphate Salt  1 G,drugs,0,0
+MATRALMI1,Magnesium Trisilicate + Aluminium Hydroxide,drugs,0,5
+MATRALTA1,Magnesium Trisilicate + Aluminium Hydroxide Tablet  Tablet,drugs,0,0.3
+MAGTRIMI1,Magnesium Trisilicate Mixture  200 mL,drugs,0,5
+MAGTRITA1,"Magnesium Trisilicate Tablet, 500 mg  Tablet",drugs,0,0.15
+MANNITIN1,"Mannitol Injection, 10%  500 mL",drugs,0,0
+MANNITIN2,"Mannitol Injection, 20%  500 mL",drugs,0,0
+MEBENDSU1,"Mebendazole Suspension, 100 mg/5 mL  30 mL",drugs,15,5
+MEBENDTA1,"Mebendazole Tablet, 100 mg  6 Tablets",drugs,0,5
+MEBENDTA2,"Mebendazole Tablet, 500 mg  Tablet",drugs,0,5
+MEBEVETA1,"Mebeverine Tablet, 135 mg  Tablet",drugs,0,0
+MEDACETA1,"Medroxyprogesterone Acetate Tablet, 5 mg  Tablet",drugs,0,0
+MEFACICA1,"Mefenamic Acid Capsule, 250 mg",drugs,0,0
+MEFACITA1,"Mefenamic Acid Tablet, 500 mg  Tablet",drugs,0,0
+METFORTA1,"Metformin Tablet, 500 mg  Tablet",drugs,5,2
+METHOTIN1,"Methotrexate Injection, 2.5 mg/ mL  Ampoule",drugs,0,0
+METHOTIN2,"Methotrexate Injection, 25 mg/ mL in 2mL  Ampoule",drugs,0,0
+METHOTTA2,"Methotrexate Tablet, 10 mg  Tablet",drugs,0,0
+METHOTTA1,"Methotrexate Tablet, 2.5 mg  Tablet",drugs,0,0
+METCELID1,"Methyl Cellulose Eye Drops, 0.3%  10 mL",drugs,0,0
+METHYLTA1,"Methyldopa Tablet, 250 mg  Tablet",drugs,0,0
+METOCLIN1,"Metoclopramide Injection, 5 mg/mL in 2 mL  Ampoule",drugs,0,5
+METOCLSY1,"Metoclopramide Syrup, 5 mg/5 mL  200 mL",drugs,0,0
+METOCLTA1,"Metoclopramide Tablet, 10 mg  Tablet",drugs,10,5
+METOLATA1,"Metolazone Tablet, 5 mg  Tablet",drugs,0,0
+METTARTA1,Metoprolol Tartrate Tablet 100 mg  Tablet,drugs,0,0
+METRONIN1,"Metronidazole Injection, 5 mg/mL in 100 mL  Bottle",drugs,0,10
+METRONRE1,"Metronidazole Suppository, 500 mg  Supp.",drugs,0,0
+METRONSU1,"Metronidazole Suspension, 100 mg/5 mL (as",drugs,10,5
+METRONSU2,"Metronidazole Suspension, 200 mg/5 mL(as",drugs,20,10
+METRONTA1,"Metronidazole Tablet, 200 mg  Tablet",drugs,0.5,0.1
+METRONTA2,"Metronidazole Tablet, 400 mg  Tablet",drugs,0.5,0.2
+MICHYDCR1,"Miconazole + Hydrocortisone Cream, 2% + 1%  15 G",drugs,0,0
+MICONACR1,"Miconazole Cream, 2%  15 G",drugs,0,0
+MICONAOG1,"Miconazole Oral Gel, 25 mg/mL  40 G",drugs,0,0
+MICONAVP1,"Miconazole Ovule, 400 mg	3",drugs,0,0
+-,Micronutrient Supplement,drugs,0.1,0.05
+MIDAZOIN1,"Midazolam Injection, 5 mg/5mL  Ampoule",drugs,0,0
+MIDAZOTA1,"Midazolam Tablet, 15 mg  Tablet",drugs,0,0
+MISOTOL,"Misoprostol Tablet, 200mg",drugs,0,0
+MORPHIIN1,"Morphine Injection, 10 mg/mL  Ampoule",drugs,0,0
+MORPHIIN2,"Morphine Injection, 10 mg/mL (Preservative Free)  Ampoule",drugs,0,0
+MORSULTA1,"Morphine Sulphate Tablet, 10 mg (Slow release)  Tablet",drugs,0,0
+MORSULTA2,"Morphine Sulphate Tablet, 30 mg (Slow release)  Tablet",drugs,0,0
+MULTIVDR1,Multivitamin Drops  20 mL,drugs,0,20
+MULTIVSY1,Multivitamin Syrup  125 mL,drugs,15,7
+MULTIVTA1,Multivitamin Tablet  Tablet,drugs,3,1
+NEOHY1,NEOHYCOLEX,drugs,0,0
+NVP,NEVIRAPINE 50MG/5ML,drugs,0,0
+NUGELSY2,NUGEL SYRUP,drugs,0,0
+NUGELSY1,NUGEL-O SYRUP,drugs,0,0
+NALOXOIN1,"Naloxone Injection, 400 microgram/mL in 1mL  Ampoule",drugs,0,0
+NEOMYCTA1,"Neomycin Tablet, 500 mg  Tablet",drugs,0,0
+NEOBROTA1,"Neostigmine Bromide Tablet, 15 mg  Tablet",drugs,0,0
+NEOSTIIN1,"Neostigmine Injection, 2.5 mg/mL  Ampoule",drugs,0,0
+nvpdisp,"Nevirapine Tablet, 50mg",drugs,0,0
+NIFEDICA1,"Nifedipine Capsule, 10 mg  Capsule",drugs,0,0.3
+NIFEDITA1,"Nifedipine Tablet, 10 mg (slow release)  Tablet",drugs,0,0.3
+NIFEDITA2,"Nifedipine Tablet, 20 mg (slow release)  Tablet",drugs,0,0.3
+NIFEDITA3,"Nifedipine Tablet, 30 mg (GITS)  Tablet",drugs,35,20
+NITROFTA1,"Nitrofurantoin Tablet, 100 mg  Tablet",drugs,0,0
+NORETHTA1,"Norethisterone Tablet, 5 mg  Tablet",drugs,0,0
+NYSTATOI1,"Nystatin Ointment, 100,000 IU  30 G",drugs,0,0
+NYSTATTA1,"Nystatin Pessary, 100,000 IU  Pessary",drugs,0,0
+NYSTATSU1,"Nystatin Suspension, 100,000 IU/mL  15 mL",drugs,0,0
+NYSTATTA2,"Nystatin Tablet, 500,000 IU",drugs,0,0
+OLANZATA1,Olanzapine Tablet 10 mg  Tablet,drugs,0,0
+OLANTAB2,"Olanzapine Tablet, 10mg",drugs,0,0
+OLANTAB1,"Olanzapine Tablet, 5mg",drugs,0,0
+OLANTAB3,"Olanzapine Tablet, 5mg",drugs,0,0
+OMEPRAIN2,"Omeprazole Injection, 40 mg  Vial",drugs,30,20
+OMEPRATA1,"Omeprazole Tablet, 20 mg  Tablet",drugs,20,10
+ONDANSTA1,"Ondansetrone Tablet, 4 mg  Tablet",drugs,0,0
+ORRESAPO1,Oral Rehydration Salts Powder  Sachet,drugs,5,7
+OXYTOCIN2,"Oxytocin Injection, 10 units/mL  Ampoule",drugs,0,10
+OXYTOCIN1,"Oxytocin Injection, 5 units/mL  Ampoule",drugs,0,0
+PARAPHENYLTAB2,"PARACETAMOL + GUAFENESIN + PHENYLEPHERINE TABLET, 325/200/2MG",drugs,0,0
+PHENOTA1,"PHENOBARBITONE TABLET, 30MG",drugs,0,0
+PHENOTA2,"PHENOBARBITONE TABLET, 60MG",drugs,0,0
+AR5001,PINEK,drugs,5.8,43
+BENZATHINE INJ,PROCAINE PENICILLIN,drugs,0,0
+PROPOFOLIN,"PROPOFOL  INJECTION, 1%",drugs,0,0
+PACLITIN1,"Paclitaxel Injection, 100 mg/16.7mL  Vial",drugs,0,0
+PARA-PHERINE 1,"Paracetamol + Phenylephrine  Tablet, 325mg/5mg",drugs,0,0
+PARA+PIRIPHRINE,Paracetamol + Piriton + Phenylephrine  Tablet,drugs,0,0
+PARA-INJ 1,"Paracetamol Injection, 1g",drugs,30,30
+PARACERE1,"Paracetamol Suppository, 125 mg  Supp",drugs,35,20
+PARASUPP1,"Paracetamol Suppository, 1g",drugs,0,0
+PARACERE2,"Paracetamol Suppository, 250 mg  Supp",drugs,35,20
+PARACERE3,"Paracetamol Suppository, 500 mg  Supp",drugs,0,1
+PARACESY1,"Paracetamol Syrup, 120 mg/5 mL  125 mL",drugs,15,7
+PARACETA1,"Paracetamol Tablet, 500 mg  Tablet",drugs,3,1
+PARAFFLI1,Paraffin Liquid  100 mL,drugs,0,0
+PETHIDIN1,"Pethidine Injection, 50 mg/mL in 2 mL  Ampoule",drugs,0,0
+PHENOBEL1,"Phenobarbital Elixir, 15 mg/5 mL  100 mL",drugs,0,0
+PHENOBIN1,"Phenobarbital Injection, 200 mg/mL  Ampoule",drugs,0,0
+PHENOBTA1,"Phenobarbital Tablet, 30 mg  Tablet",drugs,0,0
+PHENOBTA2,"Phenobarbital Tablet, 60 mg  Tablet",drugs,0,0
+PHENOLIN1,Phenol 5% in Almond Oil Injection  50 mL,drugs,0,0
+PHEPENTA1,"Phenoxymethyl Penicillin Tablet, 250 mg  Tablet",drugs,0,0
+PHENYTIN1,"Phenytoin Injection, 50 mg/mL  in 5 mL  Ampoule",drugs,0,0
+PHENYTCA2,"Phenytoin Sodium Capsule, 100 mg",drugs,0,0
+PHENYTTA1,"Phenytoin Sodium Tablet, 100 mg  Tablet",drugs,0,0
+PHYTOMIN1,"Phytomenadione Injection, 1 mg/mL (Paediatric)  Ampoule",drugs,0,10
+PHYTOMIN2,"Phytomenadione Injection, 10 mg/mL  Ampoule",drugs,0,0
+PILOCAID1,"Pilocarpine Eye Drops, 2%  10 mL",drugs,0,0
+PILOCAID2,"Pilocarpine Eye Drops, 4%  10 mL",drugs,0,0
+PIOGLITA1,"Pioglitazone Tablet, 15 mg  Tablet",drugs,0,0
+PIOGLITA2,"Pioglitazone Tablet, 30 mg  Tablet",drugs,0,0
+PIRACETA1,"Piracetam Tablet, 800 mg  Tablet",drugs,0,0
+POTCHLIN1,"Potassium Chloride Injection, 20 mEq/10 mL  Vial",drugs,0,0
+POTCHLTA1,"Potassium Chloride Tablet, 600 mg (Enteric Coated)  Tablet",drugs,0,0
+POTCITMI1,Potassium Citrate Mixture BP  200 mL,drugs,0,0
+POVIDOSO1,"Povidone Iodine Aqueous Solution, 10%  100 mL",drugs,0,0
+POVIDOOI1,"Povidone Iodine Ointment, 10%  10 G",drugs,0,0
+PRAZIQTA1,"Praziquantel Tablet, 600 mg  Tablet",drugs,0,0
+PRAZOSTA1,"Prazosin Tablet, 500 microgram  Tablet",drugs,0,0
+PREDNIDT1,Prednisolone 5mg Dispersible Tablets  Tablet,drugs,0,0
+PREDNIID1,"Prednisolone Eye Drops, 0.5%  10 mL",drugs,0,0
+PREDNIID2,"Prednisolone Eye Drops, 1%  10 mL",drugs,0,0
+PREDNISY1,"Prednisolone Oral Solution, 5mg/5ml  60ml",drugs,0,0
+PREDNITA1,"Prednisolone Tablet, 5 mg  Tablet",drugs,10,5
+PRIMIDTA1,"Primidone Tablet, 250 mg  Tablet",drugs,0,0
+PROBENIN1,"Procaine Benzylpenicillin Injection, 4 MU  Vial",drugs,0,0
+PROHYDEL1,"Promethazine Hydrochloride Elixir, 5 mg/5 mL	60",drugs,0,0
+PROHYDIN1,"Promethazine Hydrochloride Injection, 25 mg/mL in",drugs,0,5
+PROMETTA1,"Promethazine Hydrochloride Tablet, 25 mg  Tablet",drugs,10,5
+PROTHETA1,"Promethazine Theoclate  Tablet, 25 mg  Tablet",drugs,0,0
+PROPRAIN1,"Propranolol Injection, 1 mg/mL in 1mL  Ampoule",drugs,0,0
+PROPRATA1,"Propranolol Tablet, 10 mg  Tablet",drugs,0,0
+PROPRATA2,"Propranolol Tablet, 40 mg  Tablet",drugs,0,0
+PROPRATA3,"Propranolol Tablet, 80 mg  Tablet",drugs,0,0
+PROPYLTA1,"Propylthiouracil Tablet, 50 mg  Tablet",drugs,0,0
+PROSULIN1,"Protamine Sulphate Injection, 10 mg/mL in 5 mL  Ampoule",drugs,0,0
+pyri,Pyridoxine 100mg,drugs,0,0
+pyri5,Pyridoxine 50mg,drugs,0,0
+QUINININ1,"Quinine Injection, 300 mg/mL in 2 mL  Ampoule",drugs,0,0
+QUININSY1,"Quinine Syrup, 75 mg/5 mL  125 mL",drugs,0,0
+QUININTA1,"Quinine Tablet, 300 mg  Tablet",drugs,0,0
+RHZ-CHILD,RIFAMPICIN + ISONIAZIDE + PYRAZINAMIDE PEDIATRIC,drugs,0,0
+RLD51L,"RINGER`S LACTATE + 5% DEXTROSE, 1L",drugs,0,0
+RL1L,"RINGER`S LACTATE, 1L",drugs,0,0
+RL,RITONAVIR/LOPINAVIR,drugs,0,0
+RAMIPRTA1,"Ramipril Tablet, 2.5 mg  Tablet",drugs,0,0
+RAMIPRTA2,"Ramipril Tablet, 5 mg  Tablet",drugs,0,0
+RANITITA1,"Ranitidine Tablet, 150 mg  Tablet",drugs,0,0
+RETSOFCA2,"Retinol Soft Capsule, 200,000 IU  Capsule",drugs,0,0
+RINLACSO1,"Ringer - Lactate Solution, 500 mL  500 mL",drugs,25,15
+RISPERLI1,"Risperidone Liquid, 1 mg/mL  10 mL",drugs,0,0
+RISPERTA2,"Risperidone Tablet, 1 mg  Tablet",drugs,0,0
+RISPERTA3,"Risperidone Tablet, 2 mg  Tablet",drugs,0,0
+RISPERTA1,"Risperidone Tablet, 500 microgram  Tablet",drugs,0,0
+RITUXIIN2,Rituximab Injection 500mg/10ml  Vial,drugs,0,0
+ROSUTATIN,"Rosuvastatin Tablet, 5mg",drugs,0,0
+HIV,SEPTRIN,drugs,0,0
+SIMVASTTA1,"SIMVASTATIN TABLET, 20MG",drugs,0,0
+SIMVASTTA2,"SIMVASTATIN TABLET, 40MG",drugs,0,0
+NCL100,"SODIUM CHLORIDE INFUSION, 100ml",drugs,0,0
+NS1LITRE,"SODIUM CHLORIDE INFUSION, 1litre",drugs,0,0
+SP,"SULPHADOXINE + PYRIMETHAMINE TABLET, 500/25MG",drugs,0,0
+SALBUTGA1,"Salbutamol Inhaler, 100 microgram/metered dose,",drugs,0,0
+SALBUTGA2,"Salbutamol Nebules, 2.5 mg  Dose",drugs,20,10
+SALBUTGA3,"Salbutamol Nebules, 5 mg  Dose",drugs,20,10
+SALSULIN1,"Salbutamol Sulphate Injection, 500 microgram/mL in",drugs,0,0
+SALBUTSY1,"Salbutamol Syrup, 2 mg/5 mL  200 mL",drugs,0,0
+SALBU1,"Salbutamol Tablet, 4mg",drugs,0,0
+SALACIOI1,"Salicylic Acid Ointment, 2%  40G",drugs,0,0
+SECNIDTA1,"Secnidazole Tablet, 500 mg  Tablet",drugs,0,0
+SELSULSH1,"Selenium Sulphide Shampoo, 2.5%  50 mL",drugs,0,0
+SERTRATA2,"Sertraline Tablet, 100 mg  Tablet",drugs,0,0
+SERTRATA1,"Sertraline Tablet, 50 mg  Tablet",drugs,0,0
+SILSULCR1,"Silver Sulphadiazine Cream, 1%  50 G",drugs,0,0
+SIMLINSY1,Simple Linctus  BPC (Paediatric)  125mL,drugs,15,7
+SIMLINSY2,Simple Linctus BPC  200mL,drugs,0,13
+SIMVASTA1,"Simvastatin Tablet, 10 mg  Tablet",drugs,0,0
+SIMVASTA2,"Simvastatin Tablet, 20 mg  Tablet",drugs,0,0
+SIMVASTA3,"Simvastatin Tablet, 40 mg  Tablet",drugs,0,0
+SIMVASTA4,"Simvastatin Tablet, 80 mg  Tablet",drugs,0,0
+SODBICIN1,"Sodium Bicarbonate Injection, 8.4% in 10 mL  Ampoule",drugs,0,0
+SODCHLIN1,"Sodium Chloride Infusion, 0.45% (250 mL)  250 mL",drugs,0,15
+SODCHLIN3,"Sodium Chloride Infusion, 0.9% (500 mL)  500 mL",drugs,0,15
+SODCHLND1,"Sodium Chloride Nasal Drops, 0.9%  10 mL",drugs,0,5
+SODVALCA2,"Sodium Valproate Capsule (Slow Release), 500 mg",drugs,0,0
+SODVALCA1,"Sodium Valproate Capsule, 200 mg  Capsule",drugs,0,0
+SODVALSY1,"Sodium Valproate Syrup, 200 mg/5 Ml  300 mL",drugs,0,0
+SODVALTA1,"Sodium Valproate Tablet, 200 mg  Tablet",drugs,0,0
+SOANSTOI1,Soothing Agent + Local Anaesthetic  + Steroid,drugs,0,0
+SOANSTRE1,Soothing Agent + Local Anaesthetic + Steroid,drugs,0,0
+SOOANAOI1,Soothing Agent + Local Anaesthetic Ointment  15 G,drugs,0,0
+SOOANARE1,Soothing Agent + Local Anaesthetic Suppository  Supp,drugs,0,0
+SPIRONTA1,"Spironolactone Tablet, 25 mg  Tablet",drugs,0,0
+SPIRONTA2,"Spironolactone Tablet, 50 mg  Tablet",drugs,0,0
+STREPTIN1,"Streptokinase Injection, 100,000 unit -vial Vial",drugs,0,0
+STREPTIN2,"Streptokinase Injection, 250,000 unit -vial Vial",drugs,0,0
+STREPTIN3,"Streptokinase Injection, 750,000 unit -vial Vial",drugs,0,0
+SULFASTA1,"Sulfasalazine Tablet, 500 mg  Tablet",drugs,0,0
+CATI&amp;III,TB CAT I &amp; III,drugs,0,0
+TDF/FTC,TENOFOVIR/EMTRICITABINE 300/300MG,drugs,0,0
+3TC/TDF,TENOFOVIR/LAMIVUDINE 300/300MG,drugs,0,0
+TDF/3TC/DTG,TENOFOVIR/LAMIVUDINE/DOLUTEGRAVIR TABLET,drugs,0,0
+0,TRAMADOL + PARACETAMOL,drugs,0,0
+2222,TRAMADOL + PARACETAMOL,drugs,0,0
+TRAMADOL-INJ,"TRAMADOL INJECTION, 100MG",drugs,25,25
+ARTANETAB1,"TRIHEXYPHENIDLY TABLET, 5MG",drugs,0,0
+TRIPPLE,TRIPPLE ACTION CREAM,drugs,20,10
+TAMOXITA1,"Tamoxifen Tablet, 10 mg  Tablet",drugs,0,0
+TAMOXITA2,"Tamoxifen Tablet, 20 mg  Tablet",drugs,0,0
+TAMSULCA1,"Tamsulosin Capsule, 400 microgram  Capsule",drugs,0,0
+TERAZOTA1,"Terazosin Tablet, 2 mg  Tablet",drugs,0,0
+TERAZOTA2,"Terazosin Tablet, 5 mg  Tablet",drugs,0,0
+TERBINTA1,"Terbinafine HCl Tablet, 250 mg  Tablet",drugs,0,0
+TETRACCA1,"Tetracycline Capsule, 250 mg  Capsule",drugs,0,0.4
+TETRACEO2,"Tetracycline Eye Ointment, 1%  5 G",drugs,30,20
+THEOPHTA1,"Theophylline Tablet, 200 mg (slow release)  Tablet",drugs,0,0
+THIAMIIN1,"Thiamine Injection, 100mg/2mL",drugs,0,0
+THIAMITA2,"Thiamine Tablet, 100 mg  Tablet",drugs,0,0
+THIAMITA1,"Thiamine Tablet, 50 mg  Tablet",drugs,0,0
+TIABENTA1,"Tiabendazole Tablet, 500 mg  Tablet",drugs,0,0
+TIMMALID1,"Timolol Maleate Eye Drops, 0.5%  10 mL",drugs,0,0
+TINIDACA1,"Tinidazole Capsule, 500 mg  Capsule",drugs,0,0
+TIROFIIN2,"Tirofiban Infusion, 250 micrograms/ml (concentrate)  100 mL",drugs,0,0
+TIROFIIN1,"Tirofiban Infusion, 50 micrograms/mL  100 mL",drugs,0,0
+TOLBUTTA1,"Tolbutamide Tablet, 500 mg  Tablet",drugs,0,0
+TRAMOL,"Tramadol Capsule, 50mg",drugs,3,3
+TRAACICA1,"Tranexamic Acid Capsule, 250 mg  Capsule",drugs,0,0
+TRAACIIN1,"Tranexamic Acid Injection, 500 mg/5mL  Ampoule",drugs,0,10
+TRAACITA1,"Tranexamic Acid Tablet, 500 mg  Tablet",drugs,0,0.3
+TRIHEXTA1,"Trihexyphenidyl Tablet, 2 mg  Tablet",drugs,0,0
+TRIHEXTA2,"Trihexyphenidyl Tablet, 5 mg  Tablet",drugs,0,0
+VITAFOLTAB,VITAFOL,drugs,0,0
+VITC,"VITAMIN C, 100MG",drugs,0.5,0.3
+VERAPATA1,"Verapamil Tablet, 40 mg  Tablet",drugs,0,0
+VERAPATA2,"Verapamil Tablet, 80 mg  Tablet",drugs,0,0
+VINCRIIN1,Vincristine Injection 1 mg Intravenous  Vial,drugs,0,0
+VINCRIIN2,Vincristine Injection 2 mg Intravenous  Vial,drugs,0,0
+VITB-CO,Vitamin B-Complex,drugs,3,1
+VIT-C,"Vitamin C Tablet,100mg",drugs,0.5,0.3
+WARFARTA1,"Warfarin Tablet, 1 mg  Tablet",drugs,0,0
+WARFARTA2,"Warfarin Tablet, 3 mg  Tablet",drugs,0,0
+WARFARTA3,"Warfarin Tablet, 5 mg (scored)  Tablet",drugs,0,0
+WATFORIN1,Water for Injection  10 mL,drugs,0,0
+1,XULU MR,drugs,1.5,1.5
+DRG0002,ZEROCID,drugs,60,40
+DRG0003,ZEROCID PLUS,drugs,60,40
+101,ZEROCID PLUS,drugs,60,40
+AZT,ZIDOVUDINE 50MG/5ML,drugs,0,0
+AZT/3TC,ZIDOVUDINE/LAMIVUDINE 300MG/150MG,drugs,0,0
+DISPAZT/3TC,ZIDOVUDINE/LAMIVUDINE 60/30MG,drugs,0,0
+ZINCOSYR,ZINCOVIT SYRUP,drugs,0,0
+0A06909,ZULU 100MG,drugs,2,1.5
+A24273,ZULU PLUS,drugs,1,1
+ZINCOOTA1,"Zinc Tablet, 10 mg  Tablet",drugs,0,0
+ZINCOOTA2,"Zinc Tablet, 20 mg",drugs,5,2
+ZINCOV,Zincovit Tablet,drugs,0,0
+kt048,azithromycin,drugs,2.5,2.5
+boric1,boric acid,drugs,0,0
+decatyloz,decatylen loz,drugs,0,0
+en-159h,ezipen,drugs,1,1
+modecate,"fluphenazine injection, 25mg",drugs,0,0
+gly1,glycerie spirit,drugs,0,0
+iro2,irovit drop,drugs,0,0
+isoflurane,"isoflurane inhalation solution, 100/250ml",drugs,0,0
+DRG 77777777,levofloaxacin 500mg,drugs,5,5
+ENTNEOHYCO,neohycolex eye/ear drop,drugs,0,0
+1%nor,normal saline in 1% dextrose,drugs,0,0
+carrierLS,plastic envelope l/s,drugs,0,0
+carrierMS,plastic envelope m/s,drugs,0,0
+res,resperidone,drugs,0,0
+2-Sep,septrin,drugs,0,0
+ht401e,tramodal,drugs,25,25
+G/671,vitamin b complex injection,drugs,8.33,5.33
+INVE01D,2 Hour Post Prandial Blood Glucose,lab,0,0
+INVE02D,24hr Urine for Protein,lab,0,0
+INVE125,A-scan,lab,0,0
+INVE150,AEC,lab,0,0
+INVE154,ASO titre,lab,0,0
+INVE100,Acid Phosphate,lab,0,0
+INVE03D,Alanine Aminotransferase (ALT),lab,0,0
+INVE04D,Alpha Amylase (Serum/Urine),lab,0,0
+INVE05D,Alpha-Fetoprotein (AFP),lab,0,0
+INVE132,Anti-streptolysin test,lab,0,0
+INVE06D,Ap-Prothrombin Time,lab,0,0
+INVE07D,Arterial Blood Gas (ABG),lab,0,0
+INVE08D,Aspartate Aminotransferase (AST),lab,0,0
+INVE09D,B/F for Malaria Parasites,lab,30,20
+INVE10D,Barium Enema,lab,0,0
+INVE11D,Barium Meal,lab,0,0
+INVE12D,Barium Meal & Follow Through,lab,0,0
+INVE13D,Barium Swallow,lab,0,0
+INVE14D,Bilirubin,lab,0,0
+INVE152,Biopsy L/A,lab,0,0
+INVE15D,Bleeding and Clotting Time,lab,0,0
+INVE17D,Blood Grouping,lab,0,30
+INVE18D,Blood Grouping & Antibody Screen,lab,0,30
+INVE19D,Blood Parasites,lab,0,0
+INVE151,Blood Sugar PP,lab,0,0
+INVE20D,Blood Urea,lab,0,0
+INVE21D,Blood Urea & Electrolytes,lab,0,0
+INVE16D,Blood for C/S,lab,0,0
+INVE22D,Bone Marrow - Trephine Biopsy,lab,0,0
+INVE23D,Bone Marrow Aspirate,lab,0,0
+INVE139,Bone Scan,lab,0,0
+INVE140,Breast tissue Biopsy,lab,0,0
+INVE24D,Bue & Creatinine,lab,0,40
+INVE141,C Reactive Protein,lab,0,0
+INVE31D,CSF Latex Agglutination,lab,0,0
+INVE33D,CT Scan - 1 Region + 1IV Contrast,lab,0,0
+INVE32D,CT Scan - 1 Region + 2 Contrast,lab,0,0
+INVE34D,CT Scan - 1 Region + No Contrast,lab,0,0
+INVE158,CT Scan - 2 Region + 1Contrast,lab,0,0
+INVE157,CT Scan - 2 Region with No Contrast,lab,0,0
+INVE159,CT Scan - 2 region + 2 contrast,lab,0,0
+INVE134,Calcium Infusion test,lab,0,0
+INVE137,Cancer antigen 19-9,lab,0,0
+INVE25D,Carcino Embryonic Antigen (CEA),lab,0,0
+INVE26D,Cerebrospinal Fluid For C/S,lab,0,0
+INVE101,Chloride,lab,0,0
+INVE27D,Clusters of Differentiation Cells (CD4),lab,0,0
+INVE28D,Coombs Test (Direct),lab,0,0
+INVE30D,Creatine Kinase (CK),lab,0,0
+INVE29D,Creatine Kinase - Mb (CK - Mb),lab,0,0
+INVE35D,Cystogram,lab,0,0
+INVE36D,Cytology,lab,0,0
+INVE130,Demonstration of Heinz bodies,lab,0,0
+INVE37D,Digoxin Level,lab,0,0
+INVE38D,Dihydroxy Epiandesterone Sulphate (Dhea-S),lab,0,0
+INVE102,Direct Bilirubin/Total Bilirubin,lab,0,0
+INVE103,Donor Screening for HB & AG,lab,0,0
+INVE39D,Doppler Scan,lab,0,0
+INVE40D,Ductologram/Galactographyy,lab,0,0
+INVE41D,ECG,lab,0,0
+INVE142,EEG (Electroencephalogram),lab,0,0
+INVE42D,Erythrocyte Sedimentation Rate (ESR),lab,0,0
+INVE43D,Estrogen,lab,0,0
+INVE49D,FT3,lab,0,0
+INVE50D,FT4,lab,0,0
+INVE44D,Factor IX,lab,0,0
+INVE45D,Factor VIII,lab,0,0
+INVE46D,Fasting Blood Sugar/Random Blood Sugar,lab,0,10
+INVE47D,Fistulogram,lab,0,0
+INVE48D,Follicle Stimulating Hormone (FSH),lab,0,0
+INVE51D,Full Blood Count FBC (Auto) & Film Comment,lab,0,0
+INVE52D,Full Blood Count FBC (Automation),lab,70,50
+INVE53D,Full Blood Count With Film Comment (Manual),lab,0,0
+INVE54D,Fungal Cultures,lab,0,0
+INVE55D,Gamma Glutamyl Transferase (GGT),lab,0,0
+INVE56D,Glucose-6-Phosphate Dehydrogenase (G6PD),lab,0,10
+INVE57D,Glycosylated Haemoglobin (HBA 1C),lab,0,120
+INVE155,Gonioscopy,lab,0,0
+INVE104,Grouping/X' Matching/Unit,lab,0,5
+INVE146,Guthrie test,lab,0,0
+INVE61D,HDL - Cholesterol,lab,0,0
+KGH3,HIV FINAL RESULT,lab,0,0
+INVE58D,Haemoglobin A2 & F Estimation,lab,0,0
+INVE59D,Haemoglobin Electrophoresis,lab,0,150
+INVE60D,Haemoglobin Estimation (HB),lab,0,20
+INVE62D,Helicobacter Pylori Test,lab,50,30
+INVE156,Hematocrit,lab,0,0
+INVE63D,Hepatitis B Surface Antigen (HBSAG) HBV,lab,50,30
+INVE64D,Hepatitis B Virus Profile (HBV Profile),lab,50,30
+INVE105,Hepatitis C screening,lab,70,50
+INVE66D,High Vaginal Swab Routine Examination,lab,120,70
+INVE65D,High Vaginal Swab for C/S,lab,120,70
+INVE67D,Histopathology,lab,0,0
+INVE143,Holter,lab,0,0
+INVE68D,Human Immunodeficiency Virus (HIV) Confirmation,lab,0,0
+INVE69D,Human Immunodeficiency Virus (HIV) Screening,lab,20,10
+INVE70D,Hysterosalpingogram,lab,0,0
+INVE106,IOPA Xray,lab,0,0
+INVE71D,Immunostaining,lab,0,0
+INVE72D,Intravenous Urography,lab,0,0
+INVE124,Keratometry,lab,0,0
+INVE73D,LDL - Cholesterol,lab,0,0
+INVE74D,LFT,lab,0,70
+INVE75D,Lipid Profile,lab,0,100
+INVE76D,Lupus Erythematosus Cell (Le Cell),lab,0,0
+INVE77D,Luteinizing Hormone (LH),lab,0,0
+INVE80D,MRI - 1 Region + Contrast,lab,0,0
+INVE81D,MRI - 1 Region + No Contrast,lab,0,0
+INVE161,MRI 2 region with + contrast,lab,0,0
+INVE160,MRI 2 region with no contrast,lab,0,0
+INVE107,Magnesium,lab,0,0
+INVE122,Malaria Card Test (Dipstik assay/rapid card),lab,0,5
+INVE78D,Mammogram,lab,0,0
+INVE79D,"Miscelllaneous Cultures (Fluids, Aspirates & Exudates)",lab,0,0
+INVE82D,Myelogram - 1 Region,lab,0,0
+INVE145,Myocardial perfusion imaging,lab,0,0
+INVE108,NA+,lab,0,0
+INVE83D,Oral Glucose Tolerance Test (OGTT),lab,0,0
+INVE84D,Orthopanthomograph (OPT),lab,0,0
+INVE85D,Pancreatic Amylase,lab,0,0
+INVE86D,Pap Smear/Fine Needle Aspiration,lab,0,0
+INVE87D,Percutaneous Biopsy - CT Scan Guide,lab,0,0
+INVE88D,Percutaneous Biopsy - Flouroscopic Guide,lab,0,0
+INVE109,Phosphorus,lab,0,0
+INVE91D,Plasma Cortisol,lab,0,0
+INVE110,Platelet Count,lab,0,0
+INVE136,Pleural fluid analysis,lab,0,0
+INVE111,Potassium,lab,0,0
+INVE92D,Pregnancy Test,lab,50,30
+INVE93D,Progesterone (Prog),lab,0,0
+INVE94D,Prostate Specific Antigen (PSA),lab,150,100
+INVE95D,Prothrombin Time,lab,0,0
+INVE135,Pulmonary Function test,lab,0,0
+INVE123,RH Typing,lab,0,0
+INVE112,Renal Function Test,lab,150,100
+INVE96D,Reticulocyte Count (Retics),lab,0,0
+INVE97D,Rheumatoid Factor,lab,0,0
+INVE98D,Routine Stool Examination,lab,0,0
+INVE99D,Routine Urine Examination,lab,50,30
+INVE113,Semen Analysis,lab,0,0
+INVE01E,Serum Adrenocorticotropic Hormone (ACTH),lab,0,0
+INVE02E,Serum Albumin,lab,0,0
+INVE03E,Serum Alkalne Phosphatase (ALP),lab,0,0
+INVE04E,Serum Beta-Human Chorionic Gonadotropin (HCG),lab,0,0
+INVE05E,Serum Calcium,lab,0,0
+INVE06E,Serum Creatinine,lab,0,0
+INVE07E,"Serum Electrolyte (Na+, K+)",lab,0,0
+INVE08E,Serum Ferritin,lab,0,0
+INVE09E,Serum Iron (Fe),lab,0,0
+INVE10E,Serum Lactate Dehydrogenase (LDH),lab,0,0
+INVE11E,Serum Prolactin (PRL),lab,0,0
+INVE12E,Serum Total Protein,lab,0,0
+INVE13E,Serum Triglyceride,lab,0,0
+INVE14E,Serum Uric Acid,lab,0,0
+INVE126,"Serum vitamin B12, and folate levels",lab,0,0
+INVE15E,Sialogram,lab,0,0
+INVE16E,Sickling Test,lab,150,100
+INVE17E,Skin Scrapping for Fungal Elements,lab,0,0
+INVE18E,Skin Snip,lab,150,100
+INVE19E,Stool C/S,lab,0,0
+INVE20E,Stool For Occult Blood,lab,0,0
+INVE21E,T3,lab,0,0
+INVE22E,T4,lab,0,0
+INVE23E,Testosterone,lab,0,0
+INVE24E,Thyroid Function Test (TSH),lab,0,100
+INVE25E,Thyroid Profile,lab,0,0
+INVE26E,Total Iron Binding Capacity (TIBC),lab,0,0
+INVE115,Total Proteins Blood,lab,0,0
+INVE27E,Total Serum Cholesterol,lab,0,0
+INVE114,Total leucocyte count,lab,0,0
+INVE138,Transhepatic cholangiography (PTC),lab,0,0
+INVE28E,Trophozoite Count,lab,0,0
+INVE29E,Troponin,lab,0,0
+INVE149,Typhi Dot,lab,0,0
+INVE30E,Ultrasound,lab,0,0
+INVE31E,Ultrasound - 2 Regions,lab,0,0
+INVE32E,Ultrasound Guided Incision & Drainage,lab,0,0
+INVE129,Ultrasound biomicroscopy,lab,0,0
+INVE33E,Urethrogram,lab,0,0
+INVE34E,Urine C/S,lab,0,0
+INVE35E,Urine For Bence Jones Protein,lab,0,0
+INVE116,Urine Sugar,lab,0,0
+INVE117,VCT,lab,0,0
+INVE119,VLDL,lab,0,0
+INVE36E,Veneral Disease Research Laboratory (VDRL),lab,40,20
+INVE37E,Venogram - 1 Region,lab,0,0
+INVE133,Viral serology,lab,0,0
+INVE118,Vitality Test,lab,0,0
+INVE120,WBC+Differential,lab,0,0
+INVE38E,Widal Test,lab,50,30
+INVE89D,X-ray one region,lab,0,0
+INVE90D,X-ray two region,lab,0,0
+OBGY20A,Abdominal Hysterectomy,procedure,0,0
+DENT04C,Amalgam Filling <12 Yrs,procedure,0,0
+DENT04A,Amalgam Filling >=12 Yrs,procedure,0,0
+ORTH27C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",procedure,0,0
+PSUR39C,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb <12 Yrs",procedure,0,0
+ASUR37A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",procedure,0,0
+ORTH27A,"Amputation below or through elbow or knee, through proximal joints or for the complete removal of limb >=12 Yrs",procedure,0,0
+OPHT08C,Anterior chamber washout <12 Yrs,procedure,0,0
+OPHT08A,Anterior chamber washout >=12 Yrs,procedure,0,0
+ENTH23C,Antral Lavage under Local Anaesthesia <12 Yrs,procedure,0,0
+ENTH23A,Antral Lavage under Local Anaesthesia >=12 Yrs,procedure,0,0
+DENT09C,Apicectomy <12 Yrs,procedure,0,0
+DENT09A,Apicectomy >=12 Yrs,procedure,0,0
+ENTH17C,Arterial Ligation for Epistaxis <12 Yrs,procedure,0,0
+ENTH17A,Arterial Ligation for Epistaxis >=12 Yrs,procedure,0,0
+ORTH01C,Bandaging/Cast (POP Application) <12 Yrs,procedure,0,0
+ORTH01A,Bandaging/Cast (POP Application) >=12 Yrs,procedure,0,0
+ORTH02C,Bone Biopsy <12 Yrs,procedure,0,0
+ORTH02A,Bone Biopsy >=12 Yrs,procedure,0,0
+ORTH03C,Bone Graft <12 Yrs,procedure,0,0
+ORTH03A,Bone Graft >=12 Yrs,procedure,0,0
+PSUR27C,Burns - Non operative Management - Inpatient <12 Yrs,procedure,0,0
+PSUR26C,Burns - OPD Wound Dressing <12 Yrs,procedure,0,0
+OBGY32A,Caesarean Section,procedure,0,0
+OPHT18A,Cataract Surgery with Implants >=12 Yrs,procedure,0,0
+OPHT10C,Cataract surgery <12 Yrs,procedure,0,0
+OPHT10A,Cataract surgery >=12 Yrs,procedure,0,0
+OBGY05A,Cauterization,procedure,0,0
+OBGY35A,Cervical Cerclage suture,procedure,0,0
+ZOOM04C,Change of Catheter <12 Yrs,procedure,70,50
+ZOOM04A,Change of Catheter >= 12 Yrs,procedure,70,50
+ZOOM05C,Change of Dressing < 12 Yrs,procedure,20,10
+ZOOM05A,Change of Dressing >= 12 Yrs,procedure,20,10
+ORTH04C,Closed Reduction and Splintage of Fractures and Joints <12 Yrs,procedure,0,0
+ORTH04A,Closed Reduction and Splintage of Fractures and Joints >=12 Yrs,procedure,0,0
+DENT20C,Closed Reduction of Fractures of Facial Bones (IMF) <12 Yrs,procedure,0,0
+DENT20A,Closed Reduction of Fractures of Facial Bones (IMF) >=12 Yrs,procedure,0,0
+ASUR32A,Closure of colostomy and ileostomy >=12 Yrs,procedure,0,0
+OBGY17A,Colpocleisis,procedure,0,0
+OBGY23A,Colposcopy and Biopsy,procedure,0,0
+DENT05C,Composite/GI Filling <12 Yrs,procedure,0,0
+DENT05A,Composite/GI Filling >=12 Yrs,procedure,0,0
+ASUR34A,Conservative management of surgery,procedure,0,0
+PSUR36C,Conservative management of surgery,procedure,0,0
+OBGY27A,Correction of Malposition of Uterus,procedure,0,0
+RSUR10C,Corrective Osteotomy <12 Yrs,procedure,0,0
+RSUR10A,Corrective Osteotomy >=12 Yrs,procedure,0,0
+OBGY04A,Culdocentesis/Culdotomy,procedure,0,0
+DENT12C,Curetage/Sequestrectomy of Facial Bone <12 Yrs,procedure,0,0
+DENT12A,Curetage/Sequestrectomy of Facial Bone >=12 Yrs,procedure,0,0
+RSUR14C,Debaulking <12 Yrs,procedure,0,0
+RSUR14A,Debaulking >=12 Yrs,procedure,0,0
+ORTH05C,Debridement and Suturing <12 Yrs,procedure,0,0
+ORTH05A,Debridement and Suturing >=12 Yrs,procedure,0,0
+DENT24C,Dental Examination (Medical Management) <12 Yrs,procedure,0,0
+DENT24A,Dental Examination (Medical Management) >=12 Yrs,procedure,0,0
+OBGY31A,Destructive Delivery,procedure,0,0
+ZOOM02A,Detention for Observation and Treatment - Adult,procedure,0,0
+ZOOM02C,Detention for Observation and Treatment - Child,procedure,0,0
+OBGY02A,Diagnostic Laparascopy,procedure,0,0
+ZOOM07C,Dressing And Minor Suturing <=12 Yrs,procedure,120,80
+ZOOM07A,Dressing And Minor Suturing >=12 Yrs,procedure,120,80
+DENT16C,Dressing of Open Facial Wounds <12 Yrs,procedure,0,0
+DENT16A,Dressing of Open Facial Wounds >=12 Yrs,procedure,0,0
+ENTH20C,ENT OPD Procedures <12 Yrs,procedure,0,0
+ENTH20A,ENT OPD Procedures >=12 Yrs,procedure,0,0
+OBGY40A,Eclampsia,procedure,0,0
+ASUR27A,Emergency circumcision >=12 Yrs,procedure,0,0
+ENTH24C,Endoscopic ENT Surgery <12 Yrs,procedure,0,0
+ENTH24A,Endoscopic ENT Surgery >=12 Yrs,procedure,0,0
+PSUR33C,Endoscopic surgery for bleeding oesophageal varices <12 Yrs,procedure,0,0
+ASUR09A,Endoscopic surgery for bleeding oesophageal varices >=12 Yrs,procedure,0,0
+ZOOM01C,Endoscopy (Rigid & Flexible) <12 Yrs,procedure,0,0
+ZOOM01A,Endoscopy (Rigid & Flexible) >=12 Yrs,procedure,0,0
+OPHT01C,Enucleation <12 Yrs,procedure,0,0
+OPHT01A,Enucleation >=12 Yrs,procedure,0,0
+RSUR08C,Escharotomy <12 Yrs,procedure,0,0
+RSUR08A,Escharotomy >=12 Yrs,procedure,0,0
+OPHT02C,Evisceration <12 Yrs,procedure,0,0
+OPHT02A,Evisceration >=12 Yrs,procedure,0,0
+ENTH22C,Evoked response audiometry <12 Yrs,procedure,0,0
+ENTH22A,Evoked response audiometry >=12 Yrs,procedure,0,0
+OPHT16C,Examination under anaesthesia <12 Yrs,procedure,0,0
+OPHT16A,Examination under anaesthesia >=12 Yrs,procedure,0,0
+ENTH13C,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat <12 Yrs",procedure,0,0
+ENTH13A,"Examination under anaesthesia and removal of foreign body in Ear, Nose and Throat >=12 Yrs",procedure,0,0
+RSUR07C,Excision Biopsy <12 Yrs,procedure,0,0
+RSUR07A,Excision Biopsy >=12 Yrs,procedure,0,0
+PSUR05C,Excision Biopsy Superficial masses <12 Yrs,procedure,0,0
+PSUR04C,Excision Biopsy deep masses <12 Yrs,procedure,0,0
+ENTH12C,Excision and Reconstruction of Oro- and Naso-pharynx <12 Yrs,procedure,0,0
+ENTH12A,Excision and Reconstruction of Oro- and Naso-pharynx >=12 Yrs,procedure,0,0
+ENTH01C,"Excision and biopsy of swellings of ear, nose and throat <12 Yrs",procedure,0,0
+ENTH01A,"Excision and biopsy of swellings of ear, nose and throat >=12 Yrs",procedure,0,0
+ENTH19C,Excision biopsy of swellings of neck <12 Yrs,procedure,0,0
+ENTH19A,Excision biopsy of swellings of neck >=12 Yrs,procedure,0,0
+ASUR05A,Excision of Neck Swellings >=12 Yrs,procedure,0,0
+ORTH07C,Excision of Soft Tissue Lumps <12 Yrs,procedure,0,0
+ORTH07A,Excision of Soft Tissue Lumps >=12 Yrs,procedure,0,0
+OBGY11A,Excision of genital lesions,procedure,0,0
+RSUR03C,Excisional Debridement and Dressing <12 Yrs,procedure,0,0
+RSUR03A,Excisional Debridement and Dressing >=12 Yrs,procedure,0,0
+RSUR06C,Excisional Debridement with Flap Reconstruction <12 Yrs,procedure,0,0
+RSUR06A,Excisional Debridement with Flap Reconstruction >=12 Yrs,procedure,0,0
+RSUR05C,Excisional Debridement with Skin Grafting <12 Yrs,procedure,0,0
+RSUR05A,Excisional Debridement with Skin Grafting >=12 Yrs,procedure,0,0
+RSUR04C,Excisional Debridement with Suturing <12 Yrs,procedure,0,0
+RSUR04A,Excisional Debridement with Suturing >=12 Yrs,procedure,0,0
+OBGY09A,Expectant management/Medical Treatment in Obstetrics and Gynaecology,procedure,0,0
+PSUR09C,Exploratory Laparotomy <12 Yrs,procedure,0,0
+ORTH08C,External Fixation <12 Yrs,procedure,0,0
+ORTH08A,External Fixation >=12 Yrs,procedure,0,0
+ASUR20A,External Hernia Repair >=12 Yrs,procedure,0,0
+OPHT06C,Eyelid surgery <12 Yrs,procedure,0,0
+OPHT06A,Eyelid surgery >=12 Yrs,procedure,0,0
+ORTH09C,Fasciotomy <12 Yrs,procedure,0,0
+ORTH09A,Fasciotomy >=12 Yrs,procedure,0,0
+OBGY19A,Fistula Repair - Complex,procedure,0,0
+OBGY18A,Fistula Repair - Simple,procedure,0,0
+DENT01C,Forceps Extraction of Tooth <12 Yrs,procedure,0,0
+DENT01A,Forceps Extraction of Tooth >=12 Yrs,procedure,0,0
+DENT17C,Frenectomy/Frenotomy <12 Yrs,procedure,0,0
+DENT17A,Frenectomy/Frenotomy >=12 Yrs,procedure,0,0
+PSUR10C,Gastrostomy <12 Yrs,procedure,0,0
+ASUR30A,General Surgery Excision Biopsy >=12 Yrs,procedure,0,0
+ASUR28A,Genitourinary surgery >=12 Yrs,procedure,0,0
+DENT07C,Gingivectomy <12 Yrs,procedure,0,0
+DENT07A,Gingivectomy >=12 Yrs,procedure,0,0
+OPHT09C,Glaucoma surgery <12 Yrs,procedure,0,0
+OPHT09A,Glaucoma surgery >=12 Yrs,procedure,0,0
+OBGY01A,Gynaecological Laparotomy,procedure,0,0
+ORTH24A,Head injury/spinal injury >=12 Yrs,procedure,0,0
+ORTH24C,Head injury/spinal injury >=12 Yrs,procedure,0,0
+ORTH10C,Hemi-Arthroplasty <12 Yrs,procedure,0,0
+ORTH10A,Hemi-Arthroplasty >=12 Yrs,procedure,0,0
+OBGY26A,Hysteroscopy,procedure,0,0
+ZOOM10A,IUD >=12 Yrs,procedure,0,0
+ZOOM11A,Implant >=12 Yrs,procedure,0,0
+DENT10C,Incision and Drainage (I & D) of Oro-Facial Abscess <12 Yrs,procedure,0,0
+DENT10A,Incision and Drainage (I & D) of Oro-Facial Abscess >=12 Yrs,procedure,0,0
+PSUR06C,Incision and Drainage GA <12 Yrs,procedure,500,300
+ENTH14C,"Incision and Drainage of Abscess of ear, nose and throat <12 Yrs",procedure,0,0
+ENTH14A,"Incision and Drainage of Abscess of ear, nose and throat >=12 Yrs",procedure,0,0
+ORTH11C,Incision and Drainage of Abscesses < 12 Yrs,procedure,0,0
+ORTH11A,Incision and Drainage of Abscesses >=12 Yrs,procedure,0,0
+OPHT12C,Incision and curettage of eyelid <12 Yrs,procedure,0,0
+OPHT12A,Incision and curettage of eyelid >=12 Yrs,procedure,0,0
+OBGY12A,Incision and drainage in Gynaecology Cases,procedure,0,0
+OPHT15C,Incision and drainage of abscesses <12 Yrs,procedure,0,0
+OPHT15A,Incision and drainage of abscesses >=12 Yrs,procedure,0,0
+ASUR31A,"Incision, Drainage and Debridement - General Surgery >=12 Yrs",procedure,0,0
+ZOOM13A,Injectable (One Month) >=12 Yrs,procedure,0,0
+ZOOM12A,Injectable (Three Months) >=12 Yrs,procedure,0,0
+ZOOM03A,Inpatient transfer out/Referral- Adult,procedure,0,0
+ZOOM03C,Inpatient transfer out/Referral- Child,procedure,0,0
+OBGY29A,Instrumental delivery,procedure,0,0
+ORTH12C,Internal Fixation of Fractures <12 Yrs,procedure,0,0
+ORTH12A,Internal Fixation of Fractures >=12 Yrs,procedure,0,0
+ASUR19A,Internal Hernia Repair >=12 Yrs,procedure,0,0
+OBGY30A,Internal Podalic Version with Breech Extraction,procedure,0,0
+PSUR19C,Laparatomy for biliary surgery <12 Yrs,procedure,0,0
+ASUR13A,Laparotomy and AP Resection >=12 Yrs,procedure,0,0
+PSUR02C,Laparotomy and Excision Biopsy <12 Yrs,procedure,0,0
+ASUR18A,Laparotomy and Pancreatic Surgery >=12 Yrs,procedure,0,0
+ASUR33A,Laparotomy and Porto-caval Shunt >=12 Yrs,procedure,0,0
+PSUR01C,Laparotomy and Resection <12 Yrs,procedure,0,0
+ASUR10A,Laparotomy and Small Bowel Resection >=12 Yrs,procedure,0,0
+ASUR11A,Laparotomy and colon resection >=12 Yrs,procedure,0,0
+ASUR16A,Laparotomy and drainage of liver >=12 Yrs,procedure,0,0
+PSUR03C,Laparotomy and surgery for upper renal anomalies <12 Yrs,procedure,0,0
+ASUR12A,Laparotomy for Colostomy or Ileostomy >=12 Yrs,procedure,0,0
+ASUR07A,Laparotomy for Gastric Surgery >=12 Yrs,procedure,0,0
+PSUR23C,Laparotomy for Haemoperitoneum <12 Yrs,procedure,0,0
+ASUR17A,Laparotomy for biliary surgery >=12 Yrs,procedure,0,0
+ASUR08A,Laparotomy for peritonitis >=12 Yrs,procedure,0,0
+ASUR06A,Laparotomy for solid organ Surgery >=12 Yrs,procedure,0,0
+PSUR12C,Laparotomy with Appendicectomy <12 Yrs,procedure,0,0
+PSUR24C,Laparotomy with Enterostomy Formation and closure <12 Yrs,procedure,0,0
+PSUR11C,Laparotomy with Repair <12 Yrs,procedure,0,0
+PSUR20C,Laparotomy with Separation <12 Yrs,procedure,0,0
+PSUR31C,Laparotomy with anastomosis <12 Yrs,procedure,0,0
+ENTH10C,Laryngectomy <12 Yrs,procedure,0,0
+ENTH10A,Laryngectomy >=12 Yrs,procedure,0,0
+OBGY06A,MVA/EOU,procedure,0,0
+PSUR30C,Major Surgery for Sexual Assault <12 Yrs,procedure,0,0
+ORTH14C,Major Surgery of Joints <12 Yrs,procedure,0,0
+ORTH14A,Major Surgery of Joints >=12 Yrs,procedure,0,0
+ZOOM06C,Male Circumcision <12 Yrs,procedure,0,0
+ZOOM06A,Male Circumcision >=12 Yrs,procedure,0,0
+ENTH15C,Manipulation and reduction of fractured nasal bone <12 Yrs,procedure,0,0
+ENTH15A,Manipulation and reduction of fractured nasal bone >=12 Yrs,procedure,0,0
+DENT23C,Manual Reduction of TMJ Dislocation <12 Yrs,procedure,0,0
+DENT23A,Manual Reduction of TMJ Dislocation >=12 Yrs,procedure,0,0
+OBGY08A,Manual Removal of Placenta,procedure,0,0
+OBGY10A,Marsupialization of Batholin's gland,procedure,0,0
+ASUR23A,Mastectomy >=12 Yrs,procedure,0,0
+PSUR29C,Minor Surgery for Sexual Assault <12 Yrs,procedure,0,0
+ORTH15C,Minor Surgery of Joints <12 Yrs,procedure,0,0
+ORTH15A,Minor Surgery of Joints >=12 Yrs,procedure,0,0
+OBGY36A,Myomectomy,procedure,0,0
+ORTH16C,Nail Avulsion <12 Yrs,procedure,0,0
+ORTH16A,Nail Avulsion >=12 Yrs,procedure,0,0
+OPHT14C,Nasolacrimal drainage system surgery <12 Yrs,procedure,0,0
+OPHT14A,Nasolacrimal drainage system surgery >=12 Yrs,procedure,0,0
+ORTH17C,Open Reduction and Internal Fixation <12 Yrs,procedure,0,0
+ORTH17A,Open Reduction and Internal Fixation >=12 Yrs,procedure,0,0
+DENT21C,Open Reduction of Facial Fractures <12 Yrs,procedure,0,0
+DENT21A,Open Reduction of Facial Fractures >=12 Yrs,procedure,0,0
+ASUR01A,Operations of thyroid & parathyroid glands >=12 Yrs,procedure,0,0
+ASUR15A,Operations on Anus >=12 Yrs,procedure,0,0
+ASUR04A,Operations on the oesophagus and diaphragm >=12 Yrs,procedure,0,0
+ASUR21A,Operations on the urethra >=12 Yrs,procedure,0,0
+OBGY03A,Operative Laparascopy,procedure,0,0
+ORTH18C,Osteotomy <12 Yrs,procedure,0,0
+ORTH18A,Osteotomy >=12 Yrs,procedure,0,0
+DENT18C,Partial Resection of Facial Bones or Soft Tissues <12 Yrs,procedure,0,0
+DENT18A,Partial Resection of Facial Bones or Soft Tissues >=12 Yrs,procedure,0,0
+OBGY24A,Partial Vaginectomy,procedure,0,0
+OBGY22A,Pelvic Floor Repair - Complex,procedure,0,0
+OBGY13A,Pelvic Floor Repair - Simple,procedure,0,0
+ASUR14A,Percutaneous Ultrasound Guided Drainage of lesions >=12 Yrs,procedure,0,0
+OBGY21A,Perineal repair - Complex,procedure,0,0
+OBGY25A,Polypectomy (Avulsion),procedure,0,0
+OBGY38A,Post Partum Haemorrhage,procedure,0,0
+PSUR25C,Posterior Sagittal Anorectoplasty (PSARP) <12 Yrs,procedure,0,0
+PSUR18C,Primary Closure and Repair <12 Yrs,procedure,0,0
+RSUR15C,Primary Suturing <12 Yrs,procedure,0,0
+RSUR15A,Primary Suturing >=12 Yrs,procedure,0,0
+RSUR11C,Reconstruction <12 Yrs,procedure,0,0
+RSUR11A,Reconstruction >=12 Yrs,procedure,0,0
+ENTH06C,Reconstructive Surgery of ear <12 Yrs,procedure,0,0
+ENTH06A,Reconstructive Surgery of ear >=12 Yrs,procedure,0,0
+RSUR01C,Reconstructive repair <12 Yrs,procedure,0,0
+RSUR01A,Reconstructive repair >=12 Yrs,procedure,0,0
+OPHT13C,Reconstructive surgery of eyelid <12 Yrs,procedure,0,0
+OPHT13A,Reconstructive surgery of eyelid >=12 Yrs,procedure,0,0
+RSUR13C,Release/Excision and Full thickness skin graft <12 Yrs,procedure,0,0
+RSUR13A,Release/Excision and Full thickness skin graft >=12 Yrs,procedure,0,0
+RSUR12C,Release/Excision and Split Skin Grafting <12 Yrs,procedure,0,0
+RSUR12A,Release/Excision and Split Skin Grafting >=12 Yrs,procedure,0,0
+DENT22C,Removal of Dental Wiring <12 Yrs,procedure,0,0
+DENT22A,Removal of Dental Wiring >=12 Yrs,procedure,0,0
+DENT13C,Removal of Stone from Salivary Duct <12 Yrs,procedure,0,0
+DENT13A,Removal of Stone from Salivary Duct >=12 Yrs,procedure,0,0
+OPHT04C,Removal of intraocular foreign body <12 Yrs,procedure,0,0
+OPHT04A,Removal of intraocular foreign body >=12 Yrs,procedure,0,0
+OPHT05C,Removal of intraorbital foreign body <12 Yrs,procedure,0,0
+OPHT05A,Removal of intraorbital foreign body >=12 Yrs,procedure,0,0
+OPHT03C,Removal of superficial foreign body <12 Yrs,procedure,0,0
+OPHT03A,Removal of superficial foreign body >=12 Yrs,procedure,0,0
+PSUR16C,Repair of Congenital Genito-Urinary Malformations <12 Yrs,procedure,0,0
+OBGY15A,Repair of Enterocele,procedure,0,0
+PSUR15C,Repair of Lower Urinary Tract Malformation <12 Yrs,procedure,0,0
+PSUR08C,Repair of Major Abdominal Wall Defects <12 Yrs,procedure,0,0
+PSUR07C,Repair of Minor Abdominal Wall Defects <12 Yrs,procedure,0,0
+DENT08C,Root Canal Therapy - Single Root (RCT) <12 Yrs,procedure,0,0
+DENT08A,Root Canal Therapy - Single Root (RCT) >=12 Yrs,procedure,0,0
+DENT06C,Scaling & Polishing <12 Yrs,procedure,0,0
+DENT06A,Scaling & Polishing >=12 Yrs,procedure,0,0
+OPHT07C,Scleral and Corneal surgery <12 Yrs,procedure,0,0
+OPHT07A,Scleral and Corneal surgery >=12 Yrs,procedure,0,0
+RSUR02C,Shaving and Skin Grafting <12 Yrs,procedure,0,0
+RSUR02A,Shaving and Skin Grafting >=12 Yrs,procedure,0,0
+DENT14C,Sialoadenectomy <12 Yrs,procedure,0,0
+DENT14A,Sialoadenectomy >=12 Yrs,procedure,0,0
+ENTH07C,Sinus Surgery <12 Yrs,procedure,0,0
+ENTH07A,Sinus Surgery >=12 Yrs,procedure,0,0
+ORTH19C,Skin traction <12 Yrs,procedure,0,0
+ORTH19A,Skin traction >=12 Yrs,procedure,0,0
+ENTH16C,Specific nasal surgery <12 Yrs,procedure,0,0
+ENTH16A,Specific nasal surgery >=12 Yrs,procedure,0,0
+OBGY34A,Spontaneous Vaginal Delivery with or without Episiotomy,procedure,300,200
+OPHT11C,Strabismus surgery <12 Yrs,procedure,0,0
+OPHT11A,Strabismus surgery >=12 Yrs,procedure,0,0
+ASUR25A,Stripping and Ligation of veins >=12 Yrs,procedure,0,0
+OBGY07A,Suction Curettage,procedure,0,0
+PSUR28C,Surgery for Burns <12 Yrs,procedure,0,0
+ORTH20C,Surgery for Infected Bone <12 Yrs,procedure,0,0
+ORTH20A,Surgery for Infected Bone >=12 Yrs,procedure,0,0
+PSUR38C,Surgery for amputation of hand/foot (through or below ankle or wrist joint) < 12 Yrs,procedure,0,0
+ORTH26C,Surgery for amputation of hand/foot (through or below ankle/wrist joint) <12 Yrs,procedure,0,0
+ORTH26A,Surgery for amputation of hand/foot (through or below ankle/wrist joint) >=12 Yrs,procedure,0,0
+PSUR17C,Surgery for anal conditions <12 Yrs,procedure,0,0
+ENTH02C,Surgery for external ear lesions <12 Yrs,procedure,0,0
+ENTH02A,Surgery for external ear lesions >=12 Yrs,procedure,0,0
+ENTH05C,Surgery for internal ear lesions <12 Yrs,procedure,0,0
+ENTH05A,Surgery for internal ear lesions >=12 Yrs,procedure,0,0
+ASUR02A,Surgery for lung and bronchus lesions >=12 Yrs,procedure,0,0
+ORTH25C,Surgery for removal of finger/toe <12 Yrs,procedure,0,0
+PSUR37C,Surgery for removal of finger/toe <12 Yrs,procedure,0,0
+ASUR35A,Surgery for removal of finger/toe >= 12 Yrs,procedure,0,0
+ORTH25A,Surgery for removal of finger/toe >=12 Yrs,procedure,0,0
+ASUR36A,Surgery for removal of hand or foot >=12 Yrs,procedure,0,0
+ENTH18C,"Surgery for trauma to ear, nose, throat <12 Yrs",procedure,0,0
+ENTH18A,"Surgery for trauma to ear, nose, throat >=12 Yrs",procedure,0,0
+ENTH09C,Surgery of Salivary Glands <12 Yrs,procedure,0,0
+ENTH09A,Surgery of Salivary Glands >=12 Yrs,procedure,0,0
+PSUR21C,Surgery of Scrotal contents and testes <12 Yrs,procedure,0,0
+ENTH08C,Surgery of tonsils and adenoids <12 Yrs,procedure,0,0
+ENTH08A,Surgery of tonsils and adenoids >=12 Yrs,procedure,0,0
+ASUR22A,Surgery on scrotum & tunica vaginalis >=12 Yrs,procedure,0,0
+DENT11C,Surgical Excision of Intraoral Lesions <12 Yrs,procedure,0,0
+DENT11A,Surgical Excision of Intraoral Lesions >=12 Yrs,procedure,0,0
+DENT02A,Surgical Removal of Tooth >=12 Yrs,procedure,0,0
+DENT15C,Suturing of Lacerations of Facial Region <12 Yrs,procedure,0,0
+DENT15A,Suturing of Lacerations of Facial Region >=12 Yrs,procedure,0,0
+ORTH22C,Synovectomy <12 Yrs,procedure,0,0
+ORTH22A,Synovectomy >=12 Yrs,procedure,0,0
+DENT03C,Temporary Filling <12 Yrs,procedure,0,0
+DENT03A,Temporary Filling >=12 Yrs,procedure,0,0
+ORTH23C,Tendon Surgery <12 Yrs,procedure,0,0
+ORTH23A,Tendon Surgery >=12 Yrs,procedure,0,0
+PSUR34C,Thoracostomy and chest tube insertion <12 Yrs,procedure,0,0
+ASUR03A,Thoracostomy and chest tube insertion >=12 Yrs,procedure,0,0
+PSUR14C,Thoracotomy and oesophageal surgery <12 Yrs,procedure,0,0
+DENT19C,Total Resection of Facial Bones and Soft Tissues <12 Yrs,procedure,0,0
+DENT19A,Total Resection of Facial Bones and Soft Tissues >=12 Yrs,procedure,0,0
+ZOOM08A,Tubal Ligation,procedure,0,0
+OPHT17A,Uveitis Management,procedure,0,0
+OBGY14A,Vaginal Hysterectomy,procedure,0,0
+OBGY16A,Vaginal Pessary Insertion,procedure,0,0
+PSUR35C,Vascular Surgery Operations <12 Yrs,procedure,0,0
+ASUR24A,Vascular surgery operations >=12 Yrs,procedure,0,0
+ZOOM09A,Vasectomy,procedure,0,0
+ENTH21C,Vestibulometry <12 Yrs,procedure,0,0
+ENTH21A,Vestibulometry >=12 Yrs,procedure,0,0
+OBGY28A,Vulvectomy,procedure,0,0
+OBGY39A,Wertheim's Operation,procedure,0,0
+RSUR09C,Z-plasty <12 Yrs,procedure,0,0
+RSUR09A,Z-plasty >=12 Yrs,procedure,0,0
