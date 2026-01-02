@@ -142,9 +142,13 @@ class PricingDashboardService
     protected function preloadInsuranceData(int $insurancePlanId, bool $isNhis): void
     {
         // Load all NHIS mappings with tariffs in one query
+        // Drugs use nhis_tariff_id, Labs/Procedures use gdrg_tariff_id
         if ($isNhis) {
-            $this->nhisMappingsCache = NhisItemMapping::with('nhisTariff')
-                ->whereNotNull('nhis_tariff_id')
+            $this->nhisMappingsCache = NhisItemMapping::with(['nhisTariff', 'gdrgTariff'])
+                ->where(function ($query) {
+                    $query->whereNotNull('nhis_tariff_id')
+                        ->orWhereNotNull('gdrg_tariff_id');
+                })
                 ->get()
                 ->keyBy(fn ($mapping) => $mapping->item_type.':'.$mapping->item_id);
         }
@@ -336,14 +340,26 @@ class PricingDashboardService
 
         if ($insurancePlanId) {
             // Get NHIS mapping from cache (no query)
+            // Drugs use nhis_tariff_id, Labs/Procedures use gdrg_tariff_id
             if ($isNhis && $this->nhisMappingsCache !== null) {
                 $cacheKey = $itemType.':'.$itemId;
                 $mapping = $this->nhisMappingsCache->get($cacheKey);
-                $isMapped = $mapping && $mapping->nhisTariff;
 
-                if ($isMapped) {
-                    $insuranceTariff = (float) $mapping->nhisTariff->price;
-                    $nhisCode = $mapping->nhisTariff->nhis_code;
+                // Determine which tariff to use based on item type
+                if ($itemType === 'drug') {
+                    // Drugs use NHIS tariff
+                    $isMapped = $mapping && $mapping->nhisTariff;
+                    if ($isMapped) {
+                        $insuranceTariff = (float) $mapping->nhisTariff->price;
+                        $nhisCode = $mapping->nhisTariff->nhis_code;
+                    }
+                } else {
+                    // Labs, procedures use G-DRG tariff
+                    $isMapped = $mapping && $mapping->gdrgTariff;
+                    if ($isMapped) {
+                        $insuranceTariff = (float) $mapping->gdrgTariff->tariff_price;
+                        $nhisCode = $mapping->gdrgTariff->code;
+                    }
                 }
             }
 
@@ -431,13 +447,27 @@ class PricingDashboardService
 
         if ($insurancePlanId) {
             // Get NHIS mapping if applicable
+            // Drugs use nhis_tariff_id, Labs/Procedures use gdrg_tariff_id
             if ($isNhis) {
-                $mapping = NhisItemMapping::forItem($itemType, $itemId)->with('nhisTariff')->first();
-                $isMapped = $mapping && $mapping->nhisTariff;
+                $mapping = NhisItemMapping::forItem($itemType, $itemId)
+                    ->with(['nhisTariff', 'gdrgTariff'])
+                    ->first();
 
-                if ($isMapped) {
-                    $insuranceTariff = (float) $mapping->nhisTariff->price;
-                    $nhisCode = $mapping->nhisTariff->nhis_code;
+                // Determine which tariff to use based on item type
+                if ($itemType === 'drug') {
+                    // Drugs use NHIS tariff
+                    $isMapped = $mapping && $mapping->nhisTariff;
+                    if ($isMapped) {
+                        $insuranceTariff = (float) $mapping->nhisTariff->price;
+                        $nhisCode = $mapping->nhisTariff->nhis_code;
+                    }
+                } else {
+                    // Labs, procedures use G-DRG tariff
+                    $isMapped = $mapping && $mapping->gdrgTariff;
+                    if ($isMapped) {
+                        $insuranceTariff = (float) $mapping->gdrgTariff->tariff_price;
+                        $nhisCode = $mapping->gdrgTariff->code;
+                    }
                 }
             }
 
@@ -843,13 +873,25 @@ class PricingDashboardService
 
     /**
      * Check if an item is mapped to NHIS tariff.
+     * Drugs use nhis_tariff_id, Labs/Procedures use gdrg_tariff_id.
      */
     protected function isItemMappedToNhis(string $itemType, int $itemId): bool
     {
         $nhisItemType = $this->mapTypeToNhisItemType($itemType);
-        $mapping = NhisItemMapping::forItem($nhisItemType, $itemId)->with('nhisTariff')->first();
+        $mapping = NhisItemMapping::forItem($nhisItemType, $itemId)
+            ->with(['nhisTariff', 'gdrgTariff'])
+            ->first();
 
-        return $mapping && $mapping->nhisTariff;
+        if (! $mapping) {
+            return false;
+        }
+
+        // Drugs use NHIS tariff, others use G-DRG tariff
+        if ($nhisItemType === 'drug') {
+            return $mapping->nhisTariff !== null;
+        }
+
+        return $mapping->gdrgTariff !== null;
     }
 
     /**

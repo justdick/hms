@@ -1442,16 +1442,17 @@ describe('Property 5: NHIS tariff display matches master data', function () {
 
     it('displays correct NHIS tariff for mapped lab service', function () {
         $lab = LabService::factory()->create(['is_active' => true]);
-        $nhisTariff = \App\Models\NhisTariff::factory()->create([
-            'nhis_code' => 'NHIS-LAB-001',
-            'price' => 75.00,
+        // Lab services use GDRG tariffs, not NHIS tariffs
+        $gdrgTariff = \App\Models\GdrgTariff::factory()->create([
+            'code' => 'GDRG-LAB-001',
+            'tariff_price' => 75.00,
             'is_active' => true,
         ]);
         \App\Models\NhisItemMapping::create([
             'item_type' => 'lab_service',
             'item_id' => $lab->id,
             'item_code' => $lab->code,
-            'nhis_tariff_id' => $nhisTariff->id,
+            'gdrg_tariff_id' => $gdrgTariff->id,
         ]);
 
         $result = $this->service->getPricingData($this->nhisPlan->id, 'lab', null);
@@ -1461,7 +1462,7 @@ describe('Property 5: NHIS tariff display matches master data', function () {
 
         expect($labItem['is_mapped'])->toBeTrue();
         expect((float) $labItem['insurance_tariff'])->toBe(75.00);
-        expect($labItem['nhis_code'])->toBe('NHIS-LAB-001');
+        expect($labItem['nhis_code'])->toBe('GDRG-LAB-001');
     });
 
     it('property test: all mapped items display correct NHIS tariff from master data', function () {
@@ -1469,7 +1470,7 @@ describe('Property 5: NHIS tariff display matches master data', function () {
         $drugs = Drug::factory()->count(10)->create(['is_active' => true]);
         $labs = LabService::factory()->count(10)->create(['is_active' => true]);
 
-        // Create NHIS tariffs with various prices
+        // Create NHIS tariffs for drugs
         $nhisTariffs = [];
         for ($i = 0; $i < 10; $i++) {
             $nhisTariffs[] = \App\Models\NhisTariff::factory()->create([
@@ -1479,9 +1480,20 @@ describe('Property 5: NHIS tariff display matches master data', function () {
             ]);
         }
 
+        // Create GDRG tariffs for labs
+        $gdrgTariffs = [];
+        for ($i = 0; $i < 10; $i++) {
+            $gdrgTariffs[] = \App\Models\GdrgTariff::factory()->create([
+                'code' => 'GDRG-PBT-'.str_pad($i, 3, '0', STR_PAD_LEFT),
+                'tariff_price' => round(rand(500, 50000) / 100, 2),
+                'is_active' => true,
+            ]);
+        }
+
         // Map items to tariffs and track expected values
         $expectedTariffs = [];
 
+        // Drugs use NHIS tariffs
         foreach ($drugs as $drug) {
             $tariff = $nhisTariffs[array_rand($nhisTariffs)];
             \App\Models\NhisItemMapping::create([
@@ -1496,17 +1508,18 @@ describe('Property 5: NHIS tariff display matches master data', function () {
             ];
         }
 
+        // Labs use GDRG tariffs
         foreach ($labs as $lab) {
-            $tariff = $nhisTariffs[array_rand($nhisTariffs)];
+            $tariff = $gdrgTariffs[array_rand($gdrgTariffs)];
             \App\Models\NhisItemMapping::create([
                 'item_type' => 'lab_service',
                 'item_id' => $lab->id,
                 'item_code' => $lab->code,
-                'nhis_tariff_id' => $tariff->id,
+                'gdrg_tariff_id' => $tariff->id,
             ]);
             $expectedTariffs["lab-{$lab->id}"] = [
-                'price' => (float) $tariff->price,
-                'code' => $tariff->nhis_code,
+                'price' => (float) $tariff->tariff_price,
+                'code' => $tariff->code,
             ];
         }
 

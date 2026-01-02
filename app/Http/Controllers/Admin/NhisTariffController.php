@@ -28,16 +28,27 @@ class NhisTariffController extends Controller
     {
         $this->authorize('viewAny', NhisTariff::class);
 
+        $perPage = $request->integer('per_page', 25);
+
         $tariffs = NhisTariff::query()
             ->search($request->input('search'))
             ->byCategory($request->input('category'))
             ->when($request->boolean('active_only'), fn ($q) => $q->active())
             ->orderBy('name')
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Admin/NhisTariffs/Index', [
-            'tariffs' => NhisTariffResource::collection($tariffs),
+            'tariffs' => [
+                'data' => NhisTariffResource::collection($tariffs->items())->resolve(),
+                'current_page' => $tariffs->currentPage(),
+                'from' => $tariffs->firstItem(),
+                'last_page' => $tariffs->lastPage(),
+                'per_page' => $tariffs->perPage(),
+                'to' => $tariffs->lastItem(),
+                'total' => $tariffs->total(),
+                'links' => $tariffs->linkCollection()->toArray(),
+            ],
             'filters' => [
                 'search' => $request->input('search'),
                 'category' => $request->input('category'),
