@@ -262,11 +262,12 @@ describe('Property 8: Unmapped NHIS billing without copay', function () {
         }
     });
 
-    it('does not use regular coverage rule for unmapped items', function () {
+    it('uses regular coverage rule copay for unmapped items when copay is configured', function () {
         $cashPrice = 100.00;
         $itemCode = 'DRUG-WITH-REGULAR-RULE';
+        $copayAmount = 5.00;
 
-        // Create a regular (non-unmapped) coverage rule
+        // Create a regular (non-unmapped) coverage rule with copay
         InsuranceCoverageRule::factory()->create([
             'insurance_plan_id' => $this->nhisPlan->id,
             'coverage_category' => 'drug',
@@ -275,11 +276,11 @@ describe('Property 8: Unmapped NHIS billing without copay', function () {
             'is_covered' => true,
             'coverage_type' => 'percentage',
             'coverage_value' => 80,
-            'patient_copay_amount' => 5.00,
+            'patient_copay_amount' => $copayAmount,
             'is_active' => true,
         ]);
 
-        // Item is not mapped to NHIS tariff, so regular rule should not apply
+        // Item is not mapped to NHIS tariff, but has copay configured
         $coverage = $this->service->calculateNhisCoverage(
             insurancePlanId: $this->nhisPlan->id,
             category: 'drug',
@@ -290,12 +291,12 @@ describe('Property 8: Unmapped NHIS billing without copay', function () {
             quantity: 1
         );
 
-        // Should still charge full cash price since item is unmapped and no flexible copay
-        expect($coverage['is_covered'])->toBeFalse()
+        // Should charge the copay amount since it's configured, even though item is unmapped
+        expect($coverage['is_covered'])->toBeTrue()
             ->and($coverage['insurance_pays'])->toBe(0.00)
-            ->and($coverage['patient_pays'])->toBe($cashPrice)
+            ->and($coverage['patient_pays'])->toBe($copayAmount)
             ->and($coverage['is_unmapped'])->toBeTrue()
-            ->and($coverage['has_flexible_copay'])->toBeFalse();
+            ->and($coverage['has_flexible_copay'])->toBeTrue();
     });
 });
 

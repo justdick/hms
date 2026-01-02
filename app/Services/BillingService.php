@@ -21,6 +21,11 @@ class BillingService
             return null;
         }
 
+        // Check if NHIS patient should skip consultation fee (one-time charge rule)
+        if ($this->shouldSkipNhisConsultationFee($checkin)) {
+            return null;
+        }
+
         $departmentBilling = DepartmentBilling::getForDepartment($checkin->department_id);
 
         if (! $departmentBilling) {
@@ -30,6 +35,7 @@ class BillingService
         $consultationCharge = $this->createCharge(
             checkin: $checkin,
             serviceType: 'consultation',
+            serviceCode: $departmentBilling->department_code,
             description: "Consultation fee for {$departmentBilling->department_name}",
             amount: $departmentBilling->consultation_fee,
             chargeType: 'consultation_fee'
@@ -419,5 +425,44 @@ class BillingService
         }
 
         return 'Service blocked due to billing requirements';
+    }
+
+    /**
+     * Check if NHIS patient should skip consultation fee.
+     * When enabled, NHIS patients are only charged consultation fee once per lifetime.
+     */
+    private function shouldSkipNhisConsultationFee(PatientCheckin $checkin): bool
+    {
+        // Check if the feature is enabled
+        if (! BillingConfiguration::getValue('nhis_consultation_fee_once_per_lifetime', false)) {
+            return false;
+        }
+
+        $patient = $checkin->patient;
+
+        if (! $patient) {
+            return false;
+        }
+
+        // Check if patient has active NHIS insurance
+        if (! $patient->hasValidNhis()) {
+            return false;
+        }
+
+        // Check if patient has ever been charged a consultation fee before
+        return $this->hasNhisConsultationFeeAlreadyCharged($patient->id);
+    }
+
+    /**
+     * Check if an NHIS patient has already been charged a consultation fee.
+     */
+    private function hasNhisConsultationFeeAlreadyCharged(int $patientId): bool
+    {
+        return Charge::whereHas('patientCheckin', function ($query) use ($patientId) {
+            $query->where('patient_id', $patientId);
+        })
+            ->where('charge_type', 'consultation_fee')
+            ->where('status', '!=', 'voided')
+            ->exists();
     }
 }

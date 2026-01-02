@@ -52,13 +52,19 @@ class ChargeObserver
             return;
         }
 
+        // Get item ID for NHIS coverage lookup
+        // For consultations, use department_id; for other types, extract from metadata or related models
+        $itemId = $this->getItemIdForCharge($charge, $checkin);
+
         // Calculate coverage
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
             $charge->service_code ?? 'GENERAL',
             (float) $charge->amount,
-            1
+            1,
+            null,
+            $itemId
         );
 
         // Update charge with insurance information
@@ -114,13 +120,19 @@ class ChargeObserver
             return;
         }
 
+        // Get item ID for NHIS coverage lookup
+        $checkin = $charge->patientCheckin;
+        $itemId = $checkin ? $this->getItemIdForCharge($charge, $checkin) : null;
+
         // Calculate coverage again (in case it wasn't done in creating)
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
             $charge->service_code ?? 'GENERAL',
             (float) $charge->amount,
-            1
+            1,
+            null,
+            $itemId
         );
 
         // Create insurance claim item
@@ -257,6 +269,21 @@ class ChargeObserver
             'procedure' => 'procedure',
             'ward', 'admission' => 'ward',
             'nursing' => 'nursing',
+            default => null,
+        };
+    }
+
+    /**
+     * Get the item ID for a charge based on its service type.
+     * This is used for NHIS coverage lookup which requires the actual item ID.
+     */
+    protected function getItemIdForCharge(Charge $charge, \App\Models\PatientCheckin $checkin): ?int
+    {
+        return match ($charge->service_type) {
+            // For consultations, the item ID is the department ID
+            'consultation' => $checkin->department_id,
+            // For other types, we would need to look up the item from the service_code
+            // This can be extended as needed for drugs, labs, procedures, etc.
             default => null,
         };
     }

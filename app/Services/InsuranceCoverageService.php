@@ -70,19 +70,18 @@ class InsuranceCoverageService
         // Look up NHIS tariff from Master via mapping
         $nhisTariff = $this->nhisTariffService->getTariffForItem($itemType, $itemId);
 
-        // If item is not mapped to NHIS, check for flexible copay
+        // If item is not mapped to NHIS, check for copay rules
         if (! $nhisTariff) {
             $subtotal = $amount * $quantity;
 
-            // Check for flexible copay rule (unmapped item with copay configured)
+            // First check for flexible copay rule (unmapped item with is_unmapped flag)
             $flexibleCopayRule = $this->getFlexibleCopayRule($insurancePlanId, $category, $itemCode, $date);
 
             if ($flexibleCopayRule && $flexibleCopayRule->patient_copay_amount !== null) {
-                // Unmapped item with flexible copay: patient pays copay, insurance pays 0
                 $copayAmount = (float) $flexibleCopayRule->patient_copay_amount * $quantity;
 
                 return [
-                    'is_covered' => true, // Covered in the sense that it's configured
+                    'is_covered' => true,
                     'insurance_pays' => 0.00,
                     'patient_pays' => $copayAmount,
                     'coverage_percentage' => 0.00,
@@ -101,7 +100,34 @@ class InsuranceCoverageService
                 ];
             }
 
-            // Unmapped item without flexible copay: patient pays full cash price, insurance pays 0
+            // Also check regular coverage rule - if it has patient_copay_amount, use it
+            // This handles items like consultations where copay is set but is_unmapped may not be true
+            $regularRule = $this->getCoverageRule($insurancePlanId, $category, $itemCode, $date);
+
+            if ($regularRule && $regularRule->patient_copay_amount !== null && (float) $regularRule->patient_copay_amount > 0) {
+                $copayAmount = (float) $regularRule->patient_copay_amount * $quantity;
+
+                return [
+                    'is_covered' => true,
+                    'insurance_pays' => 0.00,
+                    'patient_pays' => $copayAmount,
+                    'coverage_percentage' => 0.00,
+                    'rule_type' => $regularRule->item_code ? 'specific' : 'general',
+                    'rule_id' => $regularRule->id,
+                    'coverage_type' => 'nhis_unmapped_with_copay',
+                    'insurance_tariff' => $amount,
+                    'subtotal' => $subtotal,
+                    'requires_preauthorization' => $regularRule->requires_preauthorization ?? false,
+                    'exceeded_limit' => false,
+                    'limit_message' => null,
+                    'nhis_code' => null,
+                    'is_nhis' => true,
+                    'is_unmapped' => true,
+                    'has_flexible_copay' => true,
+                ];
+            }
+
+            // Unmapped item without any copay rule: patient pays full cash price
             return [
                 'is_covered' => false,
                 'insurance_pays' => 0.00,
