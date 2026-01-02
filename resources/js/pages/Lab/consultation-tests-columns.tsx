@@ -317,10 +317,13 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                 case 'numeric':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}{' '}
                                                                 {param.unit &&
                                                                     `(${param.unit})`}
@@ -331,7 +334,11 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                 )}
                                                             </Label>
                                                             <Input
+                                                                id={`param-${param.name}`}
+                                                                name={`param-${param.name}`}
                                                                 type="number"
+                                                                step="any"
+                                                                autoComplete="off"
                                                                 placeholder="Enter value"
                                                                 value={value}
                                                                 onChange={(e) =>
@@ -387,10 +394,13 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                 case 'text':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}
                                                                 {param.required && (
                                                                     <span className="text-red-500">
@@ -399,6 +409,9 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                 )}
                                                             </Label>
                                                             <Textarea
+                                                                id={`param-${param.name}`}
+                                                                name={`param-${param.name}`}
+                                                                autoComplete="off"
                                                                 placeholder="Enter text"
                                                                 value={value}
                                                                 onChange={(e) =>
@@ -424,7 +437,7 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                 case 'select':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
                                                             <Label className="text-sm font-medium">
@@ -484,10 +497,11 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                 case 'boolean':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="flex items-center space-x-2"
                                                         >
                                                             <Checkbox
+                                                                id={`param-${param.name}`}
                                                                 checked={
                                                                     rawValue ===
                                                                         'true' ||
@@ -511,7 +525,10 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                     isCompleted
                                                                 }
                                                             />
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}
                                                                 {param.required && (
                                                                     <span className="text-red-500">

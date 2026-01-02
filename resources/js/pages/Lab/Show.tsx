@@ -207,7 +207,7 @@ export default function LabShow({
 }: Props) {
     const [showResultsDialog, setShowResultsDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
-    const [resultValues, setResultValues] = useState(
+    const [resultValues, setResultValues] = useState<Record<string, any>>(
         labOrder.result_values || {},
     );
     const [resultNotes, setResultNotes] = useState(labOrder.result_notes || '');
@@ -811,10 +811,13 @@ export default function LabShow({
                                                 case 'numeric':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}{' '}
                                                                 {param.unit &&
                                                                     `(${param.unit})`}
@@ -825,7 +828,11 @@ export default function LabShow({
                                                                 )}
                                                             </Label>
                                                             <Input
+                                                                id={`param-${param.name}`}
+                                                                name={`param-${param.name}`}
                                                                 type="number"
+                                                                step="any"
+                                                                autoComplete="off"
                                                                 placeholder="Enter value"
                                                                 value={value}
                                                                 onChange={(e) =>
@@ -878,10 +885,13 @@ export default function LabShow({
                                                 case 'text':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}
                                                                 {param.required && (
                                                                     <span className="text-red-500">
@@ -890,6 +900,9 @@ export default function LabShow({
                                                                 )}
                                                             </Label>
                                                             <Textarea
+                                                                id={`param-${param.name}`}
+                                                                name={`param-${param.name}`}
+                                                                autoComplete="off"
                                                                 placeholder="Enter text"
                                                                 value={value}
                                                                 onChange={(e) =>
@@ -912,7 +925,7 @@ export default function LabShow({
                                                 case 'select':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="space-y-2"
                                                         >
                                                             <Label className="text-sm font-medium">
@@ -969,10 +982,11 @@ export default function LabShow({
                                                 case 'boolean':
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={param.name}
                                                             className="flex items-center space-x-2"
                                                         >
                                                             <Checkbox
+                                                                id={`param-${param.name}`}
                                                                 checked={
                                                                     value ===
                                                                         'true' ||
@@ -993,7 +1007,10 @@ export default function LabShow({
                                                                     )
                                                                 }
                                                             />
-                                                            <Label className="text-sm font-medium">
+                                                            <Label 
+                                                                htmlFor={`param-${param.name}`}
+                                                                className="text-sm font-medium"
+                                                            >
                                                                 {param.label}
                                                                 {param.required && (
                                                                     <span className="text-red-500">
