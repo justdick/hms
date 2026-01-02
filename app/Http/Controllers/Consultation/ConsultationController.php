@@ -28,9 +28,14 @@ class ConsultationController extends Controller
 
         $search = $request->input('search');
 
-        // Get total counts (always show)
+        // Exclude Minor Procedures department from consultation queue
+        $minorProceduresDept = Department::where('code', 'ZOOM')->first();
+        $excludeDeptId = $minorProceduresDept?->id;
+
+        // Get total counts (always show) - excluding Minor Procedures
         $totalAwaitingCount = PatientCheckin::accessibleTo($user)
             ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
+            ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId))
             ->count();
 
         $totalActiveCount = Consultation::accessibleTo($user)
@@ -40,6 +45,7 @@ class ConsultationController extends Controller
         // Only query if search is provided and at least 2 characters
         if ($search && strlen($search) >= 2) {
             // Get patient check-ins awaiting consultation (accessible to user)
+            // Exclude Minor Procedures department - those go to Minor Procedures page
             $awaitingConsultation = PatientCheckin::with([
                 'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
                 'department:id,name',
@@ -49,6 +55,7 @@ class ConsultationController extends Controller
             ])
                 ->accessibleTo($user)
                 ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
+                ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId))
                 ->whereHas('patient', function ($query) use ($search) {
                     $query->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")

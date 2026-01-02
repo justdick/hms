@@ -22,13 +22,13 @@ class MinorProcedureController extends Controller
         $user = $request->user();
 
         // Get Minor Procedures department
-        $minorProceduresDept = \App\Models\Department::where('code', 'MINPROC')->first();
+        $minorProceduresDept = \App\Models\Department::where('code', 'ZOOM')->first();
 
         // Get count of patients in Minor Procedures queue
+        // Users with minor-procedures permission can see all patients in this department
         $queueCount = 0;
         if ($minorProceduresDept) {
-            $queueCount = PatientCheckin::accessibleTo($user)
-                ->where('department_id', $minorProceduresDept->id)
+            $queueCount = PatientCheckin::where('department_id', $minorProceduresDept->id)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->count();
         }
@@ -46,7 +46,6 @@ class MinorProcedureController extends Controller
     {
         $this->authorize('viewAny', MinorProcedure::class);
 
-        $user = $request->user();
         $search = $request->input('search');
 
         // Validate search input
@@ -57,7 +56,7 @@ class MinorProcedureController extends Controller
         }
 
         // Get Minor Procedures department ID
-        $minorProceduresDept = \App\Models\Department::where('code', 'MINPROC')->first();
+        $minorProceduresDept = \App\Models\Department::where('code', 'ZOOM')->first();
 
         if (! $minorProceduresDept) {
             return response()->json([
@@ -67,6 +66,7 @@ class MinorProcedureController extends Controller
         }
 
         // Search patients in Minor Procedures queue
+        // Users with minor-procedures permission can see all patients in this department
         $patients = PatientCheckin::with([
             'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
             'department:id,name',
@@ -74,7 +74,6 @@ class MinorProcedureController extends Controller
                 $query->latest()->limit(1);
             },
         ])
-            ->accessibleTo($user)
             ->where('department_id', $minorProceduresDept->id)
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->whereHas('patient', function ($query) use ($search) {
