@@ -19,7 +19,8 @@
         "browser_network_requests",
         "browser_console_messages",
         "browser_press_key",
-        "browser_close"
+        "browser_close",
+        "browser_run_code"
       ]
     },
     "laravel-boost": {

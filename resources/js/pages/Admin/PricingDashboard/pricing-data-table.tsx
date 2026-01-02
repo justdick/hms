@@ -159,14 +159,14 @@ export function PricingDataTable<TData extends PricingItem, TValue>({
         },
     });
 
-    // Debounced server-side search
+    // Debounced server-side search (500ms for better UX)
     const debouncedSearch = useDebouncedCallback((value: string) => {
         router.get(
             '/admin/pricing-dashboard',
             { ...filters, search: value || undefined },
             { preserveState: true, preserveScroll: true },
         );
-    }, 300);
+    }, 500);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);

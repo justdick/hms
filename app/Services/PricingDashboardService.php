@@ -39,6 +39,7 @@ class PricingDashboardService
 
     /**
      * Get all pricing data for a specific insurance plan.
+     * Optimized version using database-level UNION query with pagination.
      *
      * @param  string|null  $pricingStatus  Filter by pricing status: 'unpriced', 'priced', or null for all
      * @return array{
@@ -56,72 +57,62 @@ class PricingDashboardService
         ?int $perPage = null,
         ?string $pricingStatus = null
     ): array {
-        // Default to 5 items per page, allow override via request
         $perPage = $perPage ?? (int) request()->get('per_page', 5);
+        $page = (int) request()->get('page', 1);
         $plan = $insurancePlanId ? InsurancePlan::with('provider')->find($insurancePlanId) : null;
         $isNhis = $plan && $plan->provider && $plan->provider->is_nhis;
 
-        // Pre-load all insurance data in bulk to avoid N+1 queries
-        if ($insurancePlanId) {
-            $this->preloadInsuranceData($insurancePlanId, $isNhis);
+        // Build optimized UNION query with database-level filtering and pagination
+        $unionQuery = $this->buildUnionQuery($category, $search, $pricingStatus);
+
+        // Get total count for pagination (using a count query)
+        $countQuery = DB::table(DB::raw("({$unionQuery->toSql()}) as items_union"))
+            ->mergeBindings($unionQuery);
+        $total = $countQuery->count();
+
+        // Get paginated results
+        $offset = ($page - 1) * $perPage;
+        $rawItems = $unionQuery
+            ->orderBy('category')
+            ->orderBy('name')
+            ->offset($offset)
+            ->limit($perPage)
+            ->get();
+
+        // Transform raw items to pricing items with insurance data
+        // Pre-load insurance data for the paginated items only (optimized)
+        if ($insurancePlanId && $rawItems->isNotEmpty()) {
+            $this->preloadInsuranceDataForItems($insurancePlanId, $isNhis, $rawItems);
         }
 
-        // Collect all pricing items
-        $items = collect();
-
-        // Get drugs
-        if (! $category || $category === 'drugs') {
-            $drugs = $this->getDrugPricingItems($insurancePlanId, $isNhis, $search);
-            $items = $items->merge($drugs);
-        }
-
-        // Get lab services
-        if (! $category || $category === 'lab') {
-            $labServices = $this->getLabServicePricingItems($insurancePlanId, $isNhis, $search);
-            $items = $items->merge($labServices);
-        }
-
-        // Get consultations (department billing)
-        if (! $category || $category === 'consultation') {
-            $consultations = $this->getConsultationPricingItems($insurancePlanId, $isNhis, $search);
-            $items = $items->merge($consultations);
-        }
-
-        // Get procedures
-        if (! $category || $category === 'procedure') {
-            $procedures = $this->getProcedurePricingItems($insurancePlanId, $isNhis, $search);
-            $items = $items->merge($procedures);
-        }
+        $items = $rawItems->map(function ($row) use ($insurancePlanId, $isNhis) {
+            return $this->buildPricingItemOptimized(
+                $row->id,
+                $row->type,
+                $row->code,
+                $row->name,
+                $row->category,
+                $row->cash_price !== null ? (float) $row->cash_price : null,
+                $insurancePlanId,
+                $isNhis,
+                $row->id,
+                $this->mapTypeToNhisItemType($row->type)
+            );
+        });
 
         // Clear caches after use
         $this->clearCaches();
 
-        // Filter unmapped items for NHIS
+        // Post-filter for NHIS unmapped (requires insurance data lookup)
         if ($unmappedOnly && $isNhis) {
             $items = $items->filter(fn ($item) => ! $item['is_mapped']);
+            $total = $items->count(); // Adjust total for filtered results
         }
 
-        // Filter by pricing status
-        if ($pricingStatus === 'unpriced') {
-            // Unpriced items have null or zero cash price
-            $items = $items->filter(fn ($item) => $item['cash_price'] === null || $item['cash_price'] <= 0);
-        } elseif ($pricingStatus === 'priced') {
-            // Priced items have a positive cash price
-            $items = $items->filter(fn ($item) => $item['cash_price'] !== null && $item['cash_price'] > 0);
-        }
-
-        // Sort by category then name
-        $items = $items->sortBy([
-            ['category', 'asc'],
-            ['name', 'asc'],
-        ])->values();
-
-        // Paginate manually
-        $page = request()->get('page', 1);
-        $offset = ($page - 1) * $perPage;
+        // Create paginator
         $paginatedItems = new LengthAwarePaginator(
-            $items->slice($offset, $perPage)->values(),
-            $items->count(),
+            $items->values(),
+            $total,
             $perPage,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
@@ -136,8 +127,234 @@ class PricingDashboardService
     }
 
     /**
+     * Build optimized UNION query for all pricing items.
+     * Applies search and pricing status filters at database level.
+     */
+    protected function buildUnionQuery(?string $category, ?string $search, ?string $pricingStatus): \Illuminate\Database\Query\Builder
+    {
+        $queries = [];
+
+        // Drugs query
+        if (! $category || $category === 'drugs') {
+            $drugsQuery = DB::table('drugs')
+                ->select([
+                    'id',
+                    DB::raw("'drug' as type"),
+                    'drug_code as code',
+                    'name',
+                    DB::raw("'drugs' as category"),
+                    'unit_price as cash_price',
+                ])
+                ->where('is_active', true);
+
+            if ($search) {
+                $drugsQuery->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('drug_code', 'LIKE', "%{$search}%")
+                        ->orWhere('generic_name', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $this->applyPricingStatusFilter($drugsQuery, $pricingStatus, 'unit_price');
+            $queries[] = $drugsQuery;
+        }
+
+        // Lab services query
+        if (! $category || $category === 'lab') {
+            $labsQuery = DB::table('lab_services')
+                ->select([
+                    'id',
+                    DB::raw("'lab' as type"),
+                    'code',
+                    'name',
+                    DB::raw("'lab' as category"),
+                    'price as cash_price',
+                ])
+                ->where('is_active', true);
+
+            if ($search) {
+                $labsQuery->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('code', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $this->applyPricingStatusFilter($labsQuery, $pricingStatus, 'price');
+            $queries[] = $labsQuery;
+        }
+
+        // Consultations query (departments with billing)
+        if (! $category || $category === 'consultation') {
+            $consultationsQuery = DB::table('departments')
+                ->leftJoin('department_billings', 'departments.id', '=', 'department_billings.department_id')
+                ->select([
+                    'departments.id',
+                    DB::raw("'consultation' as type"),
+                    'departments.code',
+                    DB::raw("CONCAT(departments.name, ' Consultation') as name"),
+                    DB::raw("'consultation' as category"),
+                    'department_billings.consultation_fee as cash_price',
+                ])
+                ->where('departments.is_active', true);
+
+            if ($search) {
+                $consultationsQuery->where(function ($q) use ($search) {
+                    $q->where('departments.name', 'LIKE', "%{$search}%")
+                        ->orWhere('departments.code', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $this->applyPricingStatusFilter($consultationsQuery, $pricingStatus, 'department_billings.consultation_fee');
+            $queries[] = $consultationsQuery;
+        }
+
+        // Procedures query
+        if (! $category || $category === 'procedure') {
+            $proceduresQuery = DB::table('minor_procedure_types')
+                ->select([
+                    'id',
+                    DB::raw("'procedure' as type"),
+                    'code',
+                    'name',
+                    DB::raw("'procedure' as category"),
+                    'price as cash_price',
+                ])
+                ->where('is_active', true);
+
+            if ($search) {
+                $proceduresQuery->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('code', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $this->applyPricingStatusFilter($proceduresQuery, $pricingStatus, 'price');
+            $queries[] = $proceduresQuery;
+        }
+
+        // Build UNION query
+        if (empty($queries)) {
+            // Return empty query if no categories selected
+            return DB::table('drugs')->whereRaw('1 = 0')->select([
+                'id',
+                DB::raw("'drug' as type"),
+                'drug_code as code',
+                'name',
+                DB::raw("'drugs' as category"),
+                'unit_price as cash_price',
+            ]);
+        }
+
+        $unionQuery = array_shift($queries);
+        foreach ($queries as $query) {
+            $unionQuery = $unionQuery->union($query);
+        }
+
+        return $unionQuery;
+    }
+
+    /**
+     * Apply pricing status filter to a query.
+     */
+    protected function applyPricingStatusFilter(\Illuminate\Database\Query\Builder $query, ?string $pricingStatus, string $priceColumn): void
+    {
+        if ($pricingStatus === 'unpriced') {
+            $query->where(function ($q) use ($priceColumn) {
+                $q->whereNull($priceColumn)
+                    ->orWhere($priceColumn, '<=', 0);
+            });
+        } elseif ($pricingStatus === 'priced') {
+            $query->whereNotNull($priceColumn)
+                ->where($priceColumn, '>', 0);
+        }
+    }
+
+    /**
+     * Pre-load insurance data for specific items only.
+     * This eliminates N+1 queries by loading data for the paginated items upfront.
+     *
+     * @param  Collection  $rawItems  The raw items from the UNION query
+     */
+    protected function preloadInsuranceDataForItems(int $insurancePlanId, bool $isNhis, Collection $rawItems): void
+    {
+        if ($rawItems->isEmpty()) {
+            return;
+        }
+
+        // Group items by type for efficient querying
+        $itemsByType = $rawItems->groupBy('type');
+
+        // Load NHIS mappings only for the specific items
+        if ($isNhis) {
+            $mappingConditions = [];
+
+            foreach ($itemsByType as $type => $items) {
+                $nhisItemType = $this->mapTypeToNhisItemType($type);
+                $itemIds = $items->pluck('id')->toArray();
+
+                if (! empty($itemIds)) {
+                    $mappingConditions[] = [
+                        'item_type' => $nhisItemType,
+                        'item_ids' => $itemIds,
+                    ];
+                }
+            }
+
+            if (! empty($mappingConditions)) {
+                $query = NhisItemMapping::with(['nhisTariff', 'gdrgTariff'])
+                    ->where(function ($q) use ($mappingConditions) {
+                        foreach ($mappingConditions as $condition) {
+                            $q->orWhere(function ($subQ) use ($condition) {
+                                $subQ->where('item_type', $condition['item_type'])
+                                    ->whereIn('item_id', $condition['item_ids']);
+                            });
+                        }
+                    })
+                    ->where(function ($q) {
+                        $q->whereNotNull('nhis_tariff_id')
+                            ->orWhereNotNull('gdrg_tariff_id');
+                    });
+
+                $this->nhisMappingsCache = $query->get()
+                    ->keyBy(fn ($mapping) => $mapping->item_type.':'.$mapping->item_id);
+            }
+        }
+
+        // Load coverage rules only for the specific item codes
+        $itemCodes = $rawItems->pluck('code')->filter()->unique()->toArray();
+
+        if (! empty($itemCodes)) {
+            $allRules = InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+                ->where('is_active', true)
+                ->where(function ($q) use ($itemCodes) {
+                    $q->whereIn('item_code', $itemCodes)
+                        ->orWhereNull('item_code'); // Also get category defaults
+                })
+                ->get();
+
+            // Separate item-specific rules and category defaults
+            $this->coverageRulesCache = $allRules
+                ->whereNotNull('item_code')
+                ->keyBy(fn ($rule) => $rule->coverage_category.':'.$rule->item_code);
+
+            $this->categoryDefaultsCache = $allRules
+                ->whereNull('item_code')
+                ->keyBy('coverage_category');
+        } else {
+            // Just load category defaults
+            $this->categoryDefaultsCache = InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+                ->where('is_active', true)
+                ->whereNull('item_code')
+                ->get()
+                ->keyBy('coverage_category');
+        }
+    }
+
+    /**
      * Pre-load all insurance data (NHIS mappings and coverage rules) in bulk.
      * This eliminates N+1 queries by loading everything upfront.
+     *
+     * @deprecated Use preloadInsuranceDataForItems for better performance
      */
     protected function preloadInsuranceData(int $insurancePlanId, bool $isNhis): void
     {
@@ -1338,6 +1555,7 @@ class PricingDashboardService
 
     /**
      * Get pricing status summary counts.
+     * Optimized version using direct database queries instead of loading all items.
      *
      * Returns counts of items in each pricing status category:
      * - unpriced: Items with null or zero cash price
@@ -1357,34 +1575,88 @@ class PricingDashboardService
      */
     public function getPricingStatusSummary(?int $insurancePlanId = null): array
     {
-        // Get all items without pagination
-        $data = $this->getPricingData($insurancePlanId, null, null, false, 100000);
-        $items = collect($data['items']->items());
-        $isNhis = $data['is_nhis'];
+        // Count unpriced items using direct database queries
+        $unpricedDrugs = Drug::active()->where(function ($q) {
+            $q->whereNull('unit_price')->orWhere('unit_price', '<=', 0);
+        })->count();
 
-        // Count unpriced items (null or zero cash price)
-        $unpriced = $items->filter(fn ($item) => $item['cash_price'] === null || $item['cash_price'] <= 0)->count();
+        $unpricedLabs = LabService::active()->where(function ($q) {
+            $q->whereNull('price')->orWhere('price', '<=', 0);
+        })->count();
 
-        // Count priced items (positive cash price)
-        $priced = $items->filter(fn ($item) => $item['cash_price'] !== null && $item['cash_price'] > 0)->count();
+        $unpricedConsultations = Department::active()
+            ->whereDoesntHave('billing', function ($q) {
+                $q->where('consultation_fee', '>', 0);
+            })->count();
+
+        $unpricedProcedures = MinorProcedureType::active()->where(function ($q) {
+            $q->whereNull('price')->orWhere('price', '<=', 0);
+        })->count();
+
+        $unpriced = $unpricedDrugs + $unpricedLabs + $unpricedConsultations + $unpricedProcedures;
+
+        // Count priced items
+        $pricedDrugs = Drug::active()->where('unit_price', '>', 0)->count();
+        $pricedLabs = LabService::active()->where('price', '>', 0)->count();
+        $pricedConsultations = Department::active()
+            ->whereHas('billing', function ($q) {
+                $q->where('consultation_fee', '>', 0);
+            })->count();
+        $pricedProcedures = MinorProcedureType::active()->where('price', '>', 0)->count();
+
+        $priced = $pricedDrugs + $pricedLabs + $pricedConsultations + $pricedProcedures;
 
         // Initialize NHIS-specific counts
         $nhisMapped = 0;
         $nhisUnmapped = 0;
         $flexibleCopay = 0;
 
-        if ($isNhis && $insurancePlanId) {
-            // For NHIS plans, calculate mapping status
-            foreach ($items as $item) {
-                $status = $this->getPricingStatus($item['type'], $item['id'], $insurancePlanId);
+        if ($insurancePlanId) {
+            $plan = InsurancePlan::with('provider')->find($insurancePlanId);
+            $isNhis = $plan && $plan->provider && $plan->provider->is_nhis;
 
-                if ($status === 'nhis_mapped') {
-                    $nhisMapped++;
-                } elseif ($status === 'flexible_copay') {
-                    $flexibleCopay++;
-                } elseif ($status === 'not_mapped') {
-                    $nhisUnmapped++;
-                }
+            if ($isNhis) {
+                // Count mapped items (items with NHIS mappings that have tariffs)
+                // Drugs use nhis_tariff_id
+                $mappedDrugs = NhisItemMapping::where('item_type', 'drug')
+                    ->whereNotNull('nhis_tariff_id')
+                    ->whereIn('item_id', Drug::active()->pluck('id'))
+                    ->count();
+
+                // Labs use gdrg_tariff_id
+                $mappedLabs = NhisItemMapping::where('item_type', 'lab_service')
+                    ->whereNotNull('gdrg_tariff_id')
+                    ->whereIn('item_id', LabService::active()->pluck('id'))
+                    ->count();
+
+                // Procedures use gdrg_tariff_id
+                $mappedProcedures = NhisItemMapping::where('item_type', 'procedure')
+                    ->whereNotNull('gdrg_tariff_id')
+                    ->whereIn('item_id', MinorProcedureType::active()->pluck('id'))
+                    ->count();
+
+                // Consultations use gdrg_tariff_id
+                $mappedConsultations = NhisItemMapping::where('item_type', 'consultation')
+                    ->whereNotNull('gdrg_tariff_id')
+                    ->whereIn('item_id', Department::active()->pluck('id'))
+                    ->count();
+
+                $nhisMapped = $mappedDrugs + $mappedLabs + $mappedProcedures + $mappedConsultations;
+
+                // Count flexible copay items (unmapped items with copay rules)
+                $flexibleCopay = InsuranceCoverageRule::where('insurance_plan_id', $insurancePlanId)
+                    ->where('is_unmapped', true)
+                    ->where('is_active', true)
+                    ->whereNotNull('patient_copay_amount')
+                    ->count();
+
+                // Calculate unmapped as total active items minus mapped minus flexible copay
+                $totalActive = Drug::active()->count()
+                    + LabService::active()->count()
+                    + Department::active()->count()
+                    + MinorProcedureType::active()->count();
+
+                $nhisUnmapped = max(0, $totalActive - $nhisMapped - $flexibleCopay);
             }
         }
 

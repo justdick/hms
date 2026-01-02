@@ -47,7 +47,7 @@ import {
     Trash2,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const SERVICE_TYPES = [
     { value: 'consultation', label: 'Consultation' },
@@ -1512,9 +1512,23 @@ function EditConfigModal({
         ],
     });
 
+    // Update form data when config changes
+    useEffect(() => {
+        if (config) {
+            form.setData('configs', [
+                {
+                    key: config.key,
+                    value: config.value,
+                    category: config.category,
+                    description: config.description || '',
+                },
+            ]);
+        }
+    }, [config]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.put('/billing/configuration/system', {
+        form.post('/billing/configuration/system', {
             onSuccess: () => onOpenChange(false),
         });
     };
