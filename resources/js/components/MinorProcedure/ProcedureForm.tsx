@@ -466,23 +466,10 @@ export default function ProcedureForm({
                                                                                 }
                                                                             </Badge>
                                                                         </div>
-                                                                        {type.description && (
-                                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                                                {
-                                                                                    type.description
-                                                                                }
-                                                                            </div>
-                                                                        )}
+                                                                        <div className="text-xs text-muted-foreground">
+                                                                            Age category: {type.category}
+                                                                        </div>
                                                                     </div>
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="ml-2"
-                                                                    >
-                                                                        KES{' '}
-                                                                        {
-                                                                            type.price
-                                                                        }
-                                                                    </Badge>
                                                                 </div>
                                                             </CommandItem>
                                                         ),
