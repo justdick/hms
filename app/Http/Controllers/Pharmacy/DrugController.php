@@ -258,7 +258,7 @@ class DrugController extends Controller
 
         $drug->update($validated);
 
-        return redirect()->route('pharmacy.drugs.show', $drug)
+        return redirect()->route('pharmacy.inventory.index')
             ->with('success', 'Drug updated successfully.');
     }
 
