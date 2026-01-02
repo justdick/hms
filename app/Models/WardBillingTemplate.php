@@ -12,6 +12,7 @@ class WardBillingTemplate extends Model
         'description',
         'billing_type',
         'base_amount',
+        'nhis_amount',
         'percentage_rate',
         'calculation_rules',
         'effective_from',
@@ -28,6 +29,7 @@ class WardBillingTemplate extends Model
     {
         return [
             'base_amount' => 'decimal:2',
+            'nhis_amount' => 'decimal:2',
             'percentage_rate' => 'decimal:2',
             'calculation_rules' => 'json',
             'effective_from' => 'date',
@@ -81,6 +83,12 @@ class WardBillingTemplate extends Model
 
     public function calculateAmount(array $context = []): float
     {
+        // Check if patient is NHIS and use nhis_amount
+        $isNhis = $context['is_nhis'] ?? false;
+        if ($isNhis) {
+            return round((float) ($this->nhis_amount ?? 0), 2);
+        }
+
         $amount = $this->base_amount;
 
         // Apply patient category rules
@@ -99,5 +107,21 @@ class WardBillingTemplate extends Model
         }
 
         return round($amount, 2);
+    }
+
+    /**
+     * Get the amount for NHIS patients.
+     */
+    public function getNhisAmount(): float
+    {
+        return (float) ($this->nhis_amount ?? 0);
+    }
+
+    /**
+     * Get the amount for cash patients.
+     */
+    public function getCashAmount(): float
+    {
+        return (float) $this->base_amount;
     }
 }

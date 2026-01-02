@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Charge;
 use App\Models\PatientAdmission;
+use App\Models\PatientInsurance;
 use App\Models\WardBillingTemplate;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -38,9 +39,9 @@ class GenerateDailyWardCharges extends Command
 
         $this->info("Found {$templates->count()} active daily billing template(s).");
 
-        // Get all active admissions
+        // Get all active admissions with patient insurance info
         $admissions = PatientAdmission::where('status', 'admitted')
-            ->with(['patient', 'ward', 'consultation.patientCheckin'])
+            ->with(['patient.insurancePlans.plan.provider', 'ward', 'consultation.patientCheckin'])
             ->get();
 
         if ($admissions->isEmpty()) {
@@ -56,6 +57,9 @@ class GenerateDailyWardCharges extends Command
         $errors = 0;
 
         foreach ($admissions as $admission) {
+            // Check if patient has active NHIS insurance
+            $isNhis = $this->patientHasActiveNhis($admission->patient);
+
             foreach ($templates as $template) {
                 try {
                     // Check if charge already exists for this admission, template, and date
@@ -80,21 +84,35 @@ class GenerateDailyWardCharges extends Command
                         continue;
                     }
 
+                    // Calculate amount based on NHIS status
+                    $amount = $template->calculateAmount(['is_nhis' => $isNhis]);
+
+                    // Skip creating charge if amount is 0 (NHIS patients with free ward fees)
+                    if ($amount <= 0) {
+                        $chargesSkipped++;
+                        if ($isDryRun) {
+                            $this->line("  [DRY RUN] Skipping {$admission->patient->full_name} (NHIS): {$template->service_name} - GHS 0.00");
+                        }
+
+                        continue;
+                    }
+
                     if ($isDryRun) {
-                        $this->line("  [DRY RUN] Would charge {$admission->patient->full_name}: {$template->service_name} - GHS {$template->base_amount}");
+                        $nhisLabel = $isNhis ? ' (NHIS)' : '';
+                        $this->line("  [DRY RUN] Would charge {$admission->patient->full_name}{$nhisLabel}: {$template->service_name} - GHS {$amount}");
                         $chargesCreated++;
 
                         continue;
                     }
 
                     // Create the charge
-                    DB::transaction(function () use ($admission, $template, $date) {
+                    DB::transaction(function () use ($admission, $template, $date, $amount, $isNhis) {
                         Charge::create([
                             'patient_checkin_id' => $admission->consultation?->patient_checkin_id,
                             'service_type' => 'ward',
                             'service_code' => $template->service_code,
                             'description' => "{$template->service_name} - {$date->toDateString()}",
-                            'amount' => $template->base_amount,
+                            'amount' => $amount,
                             'charge_type' => 'service',
                             'status' => 'pending',
                             'charged_at' => $date,
@@ -105,12 +123,16 @@ class GenerateDailyWardCharges extends Command
                                 'template_id' => $template->id,
                                 'billing_type' => $template->billing_type,
                                 'generated_by' => 'daily_scheduler',
+                                'is_nhis' => $isNhis,
+                                'base_amount' => $template->base_amount,
+                                'nhis_amount' => $template->nhis_amount,
                             ],
                         ]);
                     });
 
                     $chargesCreated++;
-                    $this->line("  Created charge for {$admission->patient->full_name}: {$template->service_name} - GHS {$template->base_amount}");
+                    $nhisLabel = $isNhis ? ' (NHIS)' : '';
+                    $this->line("  Created charge for {$admission->patient->full_name}{$nhisLabel}: {$template->service_name} - GHS {$amount}");
                 } catch (\Exception $e) {
                     $errors++;
                     Log::error('Failed to create daily ward charge', [
@@ -126,7 +148,7 @@ class GenerateDailyWardCharges extends Command
         $this->newLine();
         $this->info('Summary:');
         $this->line("  Charges created: {$chargesCreated}");
-        $this->line("  Charges skipped (already exist): {$chargesSkipped}");
+        $this->line("  Charges skipped (already exist or NHIS free): {$chargesSkipped}");
 
         if ($errors > 0) {
             $this->error("  Errors: {$errors}");
@@ -135,5 +157,19 @@ class GenerateDailyWardCharges extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Check if patient has active NHIS insurance.
+     */
+    private function patientHasActiveNhis($patient): bool
+    {
+        if (! $patient || ! $patient->insurancePlans) {
+            return false;
+        }
+
+        return $patient->insurancePlans
+            ->filter(fn (PatientInsurance $insurance) => $insurance->isActive() && $insurance->isNhis())
+            ->isNotEmpty();
     }
 }

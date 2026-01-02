@@ -248,6 +248,7 @@ class BillingConfigurationController extends Controller
             'description' => 'nullable|string',
             'billing_type' => 'required|in:one_time,daily,hourly,percentage,quantity_based,event_triggered',
             'base_amount' => 'required|numeric|min:0',
+            'nhis_amount' => 'required|numeric|min:0',
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after:effective_from',
         ]);
@@ -258,6 +259,7 @@ class BillingConfigurationController extends Controller
             'description' => $request->description,
             'billing_type' => $request->billing_type,
             'base_amount' => $request->base_amount,
+            'nhis_amount' => $request->nhis_amount,
             'effective_from' => $request->effective_from,
             'effective_to' => $request->effective_to,
             'calculation_rules' => [
@@ -283,6 +285,7 @@ class BillingConfigurationController extends Controller
             'description' => 'nullable|string',
             'billing_type' => 'required|in:one_time,daily,hourly,percentage,quantity_based,event_triggered',
             'base_amount' => 'required|numeric|min:0',
+            'nhis_amount' => 'required|numeric|min:0',
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after:effective_from',
             'is_active' => 'boolean',
@@ -293,6 +296,7 @@ class BillingConfigurationController extends Controller
             'description' => $request->description,
             'billing_type' => $request->billing_type,
             'base_amount' => $request->base_amount,
+            'nhis_amount' => $request->nhis_amount,
             'effective_from' => $request->effective_from,
             'effective_to' => $request->effective_to,
             'is_active' => $request->boolean('is_active', true),

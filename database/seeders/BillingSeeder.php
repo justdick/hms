@@ -263,6 +263,7 @@ class BillingSeeder extends Seeder
                 'description' => 'Standard daily ward accommodation fee',
                 'billing_type' => 'daily',
                 'base_amount' => 100.00,
+                'nhis_amount' => 0.00, // NHIS patients don't pay daily admission fees
                 'percentage_rate' => null,
                 'calculation_rules' => [
                     'billing_starts' => 'midnight',
@@ -286,6 +287,7 @@ class BillingSeeder extends Seeder
                 'description' => 'Daily nursing care and monitoring fee',
                 'billing_type' => 'daily',
                 'base_amount' => 50.00,
+                'nhis_amount' => 0.00, // NHIS patients don't pay daily nursing fees
                 'percentage_rate' => null,
                 'calculation_rules' => [
                     'billing_starts' => 'midnight',
