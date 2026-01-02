@@ -23,6 +23,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import lab from '@/routes/lab';
 import { Head, router } from '@inertiajs/react';
 import {
@@ -815,7 +816,7 @@ export default function LabShow({
                                                             className="space-y-2"
                                                         >
                                                             <Label 
-                                                                htmlFor={`param-${param.name}`}
+                                                                htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
                                                                 {param.label}{' '}
@@ -828,9 +829,10 @@ export default function LabShow({
                                                                 )}
                                                             </Label>
                                                             <Input
-                                                                id={`param-${param.name}`}
-                                                                name={`param-${param.name}`}
+                                                                id={`param-${index}-${param.name}`}
+                                                                name={`param-${index}-${param.name}`}
                                                                 type="number"
+                                                                inputMode="decimal"
                                                                 step="any"
                                                                 autoComplete="off"
                                                                 placeholder="Enter value"
@@ -848,11 +850,13 @@ export default function LabShow({
                                                                         }),
                                                                     )
                                                                 }
-                                                                className={
+                                                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                                                className={cn(
+                                                                    '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
                                                                     isOutOfRange
                                                                         ? 'border-red-500 bg-red-50'
                                                                         : ''
-                                                                }
+                                                                )}
                                                             />
                                                             {param.normal_range && (
                                                                 <p className="text-xs text-muted-foreground">
@@ -889,7 +893,7 @@ export default function LabShow({
                                                             className="space-y-2"
                                                         >
                                                             <Label 
-                                                                htmlFor={`param-${param.name}`}
+                                                                htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
                                                                 {param.label}
@@ -900,8 +904,8 @@ export default function LabShow({
                                                                 )}
                                                             </Label>
                                                             <Textarea
-                                                                id={`param-${param.name}`}
-                                                                name={`param-${param.name}`}
+                                                                id={`param-${index}-${param.name}`}
+                                                                name={`param-${index}-${param.name}`}
                                                                 autoComplete="off"
                                                                 placeholder="Enter text"
                                                                 value={value}
@@ -986,7 +990,7 @@ export default function LabShow({
                                                             className="flex items-center space-x-2"
                                                         >
                                                             <Checkbox
-                                                                id={`param-${param.name}`}
+                                                                id={`param-${index}-${param.name}`}
                                                                 checked={
                                                                     value ===
                                                                         'true' ||
@@ -1008,7 +1012,7 @@ export default function LabShow({
                                                                 }
                                                             />
                                                             <Label 
-                                                                htmlFor={`param-${param.name}`}
+                                                                htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
                                                                 {param.label}
