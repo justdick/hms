@@ -119,6 +119,7 @@ interface WardBillingTemplate {
         | 'quantity_based'
         | 'event_triggered';
     base_amount: number;
+    nhis_amount: number | null;
     effective_from: string;
     effective_to: string | null;
     is_active: boolean;
@@ -654,7 +655,12 @@ export default function BillingConfigurationIndex({
                                                 </TableHead>
                                                 <TableHead>Code</TableHead>
                                                 <TableHead>Type</TableHead>
-                                                <TableHead>Amount</TableHead>
+                                                <TableHead>
+                                                    Cash Amount
+                                                </TableHead>
+                                                <TableHead>
+                                                    NHIS Amount
+                                                </TableHead>
                                                 <TableHead>
                                                     Effective From
                                                 </TableHead>
@@ -708,6 +714,30 @@ export default function BillingConfigurationIndex({
                                                             {template.billing_type ===
                                                                 'hourly' &&
                                                                 '/hr'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span
+                                                                className={
+                                                                    template.nhis_amount ===
+                                                                    0
+                                                                        ? 'font-medium text-green-600'
+                                                                        : 'font-medium text-blue-600'
+                                                                }
+                                                            >
+                                                                {formatCurrency(
+                                                                    template.nhis_amount ??
+                                                                        0,
+                                                                )}
+                                                                {template.nhis_amount ===
+                                                                    0 && (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="ml-2 bg-green-50 text-green-700"
+                                                                    >
+                                                                        Free
+                                                                    </Badge>
+                                                                )}
+                                                            </span>
                                                         </TableCell>
                                                         <TableCell>
                                                             {new Date(
@@ -1830,6 +1860,7 @@ function WardBillingTemplateModal({
         description: template?.description || '',
         billing_type: template?.billing_type || 'daily',
         base_amount: template?.base_amount?.toString() || '0',
+        nhis_amount: template?.nhis_amount?.toString() || '',
         effective_from:
             template?.effective_from || new Date().toISOString().split('T')[0],
         effective_to: template?.effective_to || '',
@@ -1843,6 +1874,7 @@ function WardBillingTemplateModal({
             description: template.description || '',
             billing_type: template.billing_type,
             base_amount: template.base_amount.toString(),
+            nhis_amount: template.nhis_amount?.toString() || '',
             effective_from: template.effective_from,
             effective_to: template.effective_to || '',
             is_active: template.is_active,
@@ -1939,7 +1971,7 @@ function WardBillingTemplateModal({
                                 htmlFor="edit_base_amount"
                                 className="text-right"
                             >
-                                Amount (GHS)
+                                Cash Amount (GHS)
                             </Label>
                             <Input
                                 id="edit_base_amount"
@@ -1952,6 +1984,33 @@ function WardBillingTemplateModal({
                                 }
                                 className="col-span-3"
                             />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                                htmlFor="edit_nhis_amount"
+                                className="text-right"
+                            >
+                                NHIS Amount (GHS)
+                            </Label>
+                            <div className="col-span-3 space-y-1">
+                                <Input
+                                    id="edit_nhis_amount"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={form.data.nhis_amount}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nhis_amount',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="0.00"
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Set to 0 if NHIS patients don't pay this fee
+                                </p>
+                            </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label
@@ -2040,6 +2099,7 @@ function CreateWardBillingTemplateModal({
         description: '',
         billing_type: 'daily',
         base_amount: '',
+        nhis_amount: '0',
         effective_from: new Date().toISOString().split('T')[0],
         effective_to: '',
     });
@@ -2159,7 +2219,7 @@ function CreateWardBillingTemplateModal({
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="base_amount" className="text-right">
-                                Amount (GHS)
+                                Cash Amount (GHS)
                             </Label>
                             <Input
                                 id="base_amount"
@@ -2178,6 +2238,35 @@ function CreateWardBillingTemplateModal({
                                     {form.errors.base_amount}
                                 </p>
                             )}
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="nhis_amount" className="text-right">
+                                NHIS Amount (GHS)
+                            </Label>
+                            <div className="col-span-3 space-y-1">
+                                <Input
+                                    id="nhis_amount"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={form.data.nhis_amount}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'nhis_amount',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="0.00"
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Set to 0 if NHIS patients don't pay this fee
+                                </p>
+                                {form.errors.nhis_amount && (
+                                    <p className="text-sm text-red-500">
+                                        {form.errors.nhis_amount}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label
