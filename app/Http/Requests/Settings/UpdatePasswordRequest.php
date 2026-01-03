@@ -20,11 +20,7 @@ class UpdatePasswordRequest extends FormRequest
                 'required',
                 'string',
                 'confirmed',
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols(),
+                Password::min(6),
             ],
         ];
     }
@@ -36,7 +32,7 @@ class UpdatePasswordRequest extends FormRequest
             'current_password.current_password' => 'The current password is incorrect.',
             'password.required' => 'New password is required.',
             'password.confirmed' => 'Password confirmation does not match.',
-            'password.min' => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 6 characters.',
         ];
     }
 }
