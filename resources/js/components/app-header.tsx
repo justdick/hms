@@ -68,6 +68,13 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+
+    // Handle session expiry - redirect to login if user is null
+    if (!auth.user) {
+        window.location.href = '/login';
+        return null;
+    }
+
     return (
         <>
             <div className="border-b border-sidebar-border/80">

@@ -141,6 +141,12 @@ function buildBillingNavItems(billingPermissions?: {
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
 
+    // Handle session expiry - redirect to login if user is null
+    if (!auth.user) {
+        window.location.href = '/login';
+        return null;
+    }
+
     // Build pharmacy sub-items based on permissions
     const pharmacyItems: NavItem[] = [];
 
