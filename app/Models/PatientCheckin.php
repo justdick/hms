@@ -147,9 +147,8 @@ class PatientCheckin extends Model
         ]);
 
         // Delete the associated insurance claim to free up the CCC for reuse
-        if ($this->insuranceClaim) {
-            $this->insuranceClaim->delete();
-        }
+        // Use query to ensure we get the claim even if relationship wasn't loaded
+        InsuranceClaim::where('patient_checkin_id', $this->id)->delete();
 
         // Void all pending charges (unpaid charges are forgiven)
         // Keep paid charges as-is (no refund policy)
