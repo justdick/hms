@@ -34,6 +34,87 @@ interface Props {
     disabled?: boolean;
 }
 
+interface CustomDiagnosisFormProps {
+    search: string;
+    customIcdCode: string;
+    setCustomIcdCode: (value: string) => void;
+    customError: string | null;
+    setCustomError: (value: string | null) => void;
+    creating: boolean;
+    onCancel: () => void;
+    onSubmit: () => void;
+}
+
+function CustomDiagnosisForm({
+    search,
+    customIcdCode,
+    setCustomIcdCode,
+    customError,
+    setCustomError,
+    creating,
+    onCancel,
+    onSubmit,
+}: CustomDiagnosisFormProps) {
+    return (
+        <div className="space-y-3">
+            <div className="text-sm font-medium">Add Custom Diagnosis</div>
+            <div className="space-y-2">
+                <div>
+                    <Label className="text-xs text-muted-foreground">
+                        Diagnosis Name
+                    </Label>
+                    <div className="mt-1 text-sm font-medium">{search}</div>
+                </div>
+                <div>
+                    <Label htmlFor="icd-code" className="text-xs">
+                        ICD-10 Code <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="icd-code"
+                        placeholder="e.g., A00.0"
+                        value={customIcdCode}
+                        onChange={(e) => {
+                            setCustomIcdCode(e.target.value.toUpperCase());
+                            setCustomError(null);
+                        }}
+                        className="mt-1 h-8"
+                        autoFocus
+                    />
+                    {customError && (
+                        <p className="mt-1 text-xs text-destructive">
+                            {customError}
+                        </p>
+                    )}
+                </div>
+            </div>
+            <div className="flex gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={onCancel}
+                    disabled={creating}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={onSubmit}
+                    disabled={creating || !customIcdCode.trim()}
+                >
+                    {creating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Add
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 export default function AsyncDiagnosisSelect({
     value,
     onChange,
@@ -52,6 +133,17 @@ export default function AsyncDiagnosisSelect({
     const [selectedDiagnosis, setSelectedDiagnosis] =
         useState<Diagnosis | null>(null);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Check if exact match exists in results (case-insensitive)
+    const hasExactMatch = useCallback(
+        (searchTerm: string, results: Diagnosis[]) => {
+            const normalizedSearch = searchTerm.toLowerCase().trim();
+            return results.some(
+                (d) => d.name.toLowerCase().trim() === normalizedSearch,
+            );
+        },
+        [],
+    );
 
     // Search function
     const searchDiagnoses = useCallback(
@@ -229,85 +321,20 @@ export default function AsyncDiagnosisSelect({
                                             </Button>
                                         </>
                                     ) : (
-                                        <div className="space-y-3">
-                                            <div className="text-sm font-medium">
-                                                Add Custom Diagnosis
-                                            </div>
-                                            <div className="space-y-2">
-                                                <div>
-                                                    <Label className="text-xs text-muted-foreground">
-                                                        Diagnosis Name
-                                                    </Label>
-                                                    <div className="mt-1 text-sm font-medium">
-                                                        {search}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <Label
-                                                        htmlFor="icd-code"
-                                                        className="text-xs"
-                                                    >
-                                                        ICD-10 Code{' '}
-                                                        <span className="text-destructive">
-                                                            *
-                                                        </span>
-                                                    </Label>
-                                                    <Input
-                                                        id="icd-code"
-                                                        placeholder="e.g., A00.0"
-                                                        value={customIcdCode}
-                                                        onChange={(e) => {
-                                                            setCustomIcdCode(
-                                                                e.target.value.toUpperCase(),
-                                                            );
-                                                            setCustomError(
-                                                                null,
-                                                            );
-                                                        }}
-                                                        className="mt-1 h-8"
-                                                        autoFocus
-                                                    />
-                                                    {customError && (
-                                                        <p className="mt-1 text-xs text-destructive">
-                                                            {customError}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() => {
-                                                        setShowCustomForm(
-                                                            false,
-                                                        );
-                                                        setCustomIcdCode('');
-                                                        setCustomError(null);
-                                                    }}
-                                                    disabled={creating}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={handleCreateCustom}
-                                                    disabled={
-                                                        creating ||
-                                                        !customIcdCode.trim()
-                                                    }
-                                                >
-                                                    {creating ? (
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <Plus className="mr-2 h-4 w-4" />
-                                                    )}
-                                                    Add
-                                                </Button>
-                                            </div>
-                                        </div>
+                                        <CustomDiagnosisForm
+                                            search={search}
+                                            customIcdCode={customIcdCode}
+                                            setCustomIcdCode={setCustomIcdCode}
+                                            customError={customError}
+                                            setCustomError={setCustomError}
+                                            creating={creating}
+                                            onCancel={() => {
+                                                setShowCustomForm(false);
+                                                setCustomIcdCode('');
+                                                setCustomError(null);
+                                            }}
+                                            onSubmit={handleCreateCustom}
+                                        />
                                     )}
                                 </CommandEmpty>
                             )}
@@ -351,6 +378,51 @@ export default function AsyncDiagnosisSelect({
                                         </div>
                                     </CommandItem>
                                 ))}
+                                {/* Show "Add custom" option when no exact match found */}
+                                {!hasExactMatch(search, diagnoses) && (
+                                    <>
+                                        <div className="my-2 border-t" />
+                                        {!showCustomForm ? (
+                                            <CommandItem
+                                                onSelect={handleShowCustomForm}
+                                                className="text-blue-600 dark:text-blue-400"
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                <span>
+                                                    Add "{search}" as custom
+                                                    diagnosis
+                                                </span>
+                                            </CommandItem>
+                                        ) : (
+                                            <div className="p-2">
+                                                <CustomDiagnosisForm
+                                                    search={search}
+                                                    customIcdCode={
+                                                        customIcdCode
+                                                    }
+                                                    setCustomIcdCode={
+                                                        setCustomIcdCode
+                                                    }
+                                                    customError={customError}
+                                                    setCustomError={
+                                                        setCustomError
+                                                    }
+                                                    creating={creating}
+                                                    onCancel={() => {
+                                                        setShowCustomForm(
+                                                            false,
+                                                        );
+                                                        setCustomIcdCode('');
+                                                        setCustomError(null);
+                                                    }}
+                                                    onSubmit={
+                                                        handleCreateCustom
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </CommandGroup>
                         )}
                     </CommandList>

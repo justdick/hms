@@ -20,7 +20,8 @@
         "browser_console_messages",
         "browser_press_key",
         "browser_close",
-        "browser_run_code"
+        "browser_run_code",
+        "browser_select_option"
       ]
     },
     "laravel-boost": {

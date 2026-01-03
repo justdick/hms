@@ -19,28 +19,44 @@ class DiagnosisController extends Controller
             return response()->json([]);
         }
 
-        $diagnoses = collect();
+        // Strategy: Prioritize phrase matches over individual word matches
+        // 1. First, try exact phrase match (LIKE '%phrase%')
+        // 2. Then, try starts-with match
+        // 3. Finally, use FULLTEXT for broader matches
+        // Results are ordered by relevance: exact > starts-with > contains phrase > word matches
 
-        // Use FULLTEXT search for better performance with 12,500+ diagnoses
-        // Fall back to LIKE if FULLTEXT doesn't return results or isn't supported
-        try {
-            $diagnoses = Diagnosis::query()
-                ->whereFullText(['diagnosis', 'icd_10'], $query)
-                ->orderBy('diagnosis')
-                ->limit(20)
-                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
-        } catch (\RuntimeException $e) {
-            // FULLTEXT not supported (e.g., SQLite in tests)
-        }
+        $normalizedQuery = trim(strtolower($query));
 
-        // Fall back to LIKE for partial matching
+        // Build a combined query with relevance scoring
+        $diagnoses = Diagnosis::query()
+            ->where(function ($q) use ($normalizedQuery) {
+                // Match diagnosis containing the search phrase
+                $q->whereRaw('LOWER(diagnosis) LIKE ?', ["%{$normalizedQuery}%"])
+                    ->orWhereRaw('LOWER(icd_10) LIKE ?', ["%{$normalizedQuery}%"]);
+            })
+            ->orderByRaw('
+                CASE
+                    WHEN LOWER(diagnosis) = ? THEN 1
+                    WHEN LOWER(diagnosis) LIKE ? THEN 2
+                    WHEN LOWER(diagnosis) LIKE ? THEN 3
+                    ELSE 4
+                END
+            ', [$normalizedQuery, "{$normalizedQuery}%", "%{$normalizedQuery}%"])
+            ->orderBy('diagnosis')
+            ->limit(20)
+            ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
+
+        // If no phrase matches found, fall back to FULLTEXT for word-based search
         if ($diagnoses->isEmpty()) {
-            $diagnoses = Diagnosis::query()
-                ->where('diagnosis', 'like', "{$query}%")
-                ->orWhere('icd_10', 'like', "{$query}%")
-                ->orderBy('diagnosis')
-                ->limit(20)
-                ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
+            try {
+                $diagnoses = Diagnosis::query()
+                    ->whereFullText(['diagnosis', 'icd_10'], $query)
+                    ->orderBy('diagnosis')
+                    ->limit(20)
+                    ->get(['id', 'diagnosis as name', 'icd_10 as icd_code', 'is_custom']);
+            } catch (\RuntimeException $e) {
+                // FULLTEXT not supported (e.g., SQLite in tests)
+            }
         }
 
         return response()->json($diagnoses);
