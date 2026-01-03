@@ -9,6 +9,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StatCard } from '@/components/ui/stat-card';
@@ -20,6 +27,7 @@ import {
     ArrowLeft,
     BarChart3,
     Calendar,
+    ChevronDown,
     Download,
     Package,
     Plus,
@@ -74,6 +82,7 @@ export default function InventoryIndex({
     filters,
 }: Props) {
     const [importModalOpen, setImportModalOpen] = useState(false);
+    const [inventoryImportModalOpen, setInventoryImportModalOpen] = useState(false);
     const { data, setData, post, processing, reset } = useForm<{
         file: File | null;
     }>({
@@ -88,6 +97,19 @@ export default function InventoryIndex({
             forceFormData: true,
             onSuccess: () => {
                 setImportModalOpen(false);
+                reset();
+            },
+        });
+    };
+
+    const handleInventoryImport = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!data.file) return;
+
+        post('/pharmacy/inventory/import', {
+            forceFormData: true,
+            onSuccess: () => {
+                setInventoryImportModalOpen(false);
                 reset();
             },
         });
@@ -205,6 +227,88 @@ export default function InventoryIndex({
                                             {processing
                                                 ? 'Importing...'
                                                 : 'Import'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                        {/* Inventory Export/Import Dropdown */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <Package className="mr-1 h-4 w-4" />
+                                    Stock Batches
+                                    <ChevronDown className="ml-1 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <a href="/pharmacy/inventory/export">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Export Stock (Backup)
+                                    </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => setInventoryImportModalOpen(true)}
+                                >
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import Stock (Restore)
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        {/* Inventory Import Dialog */}
+                        <Dialog
+                            open={inventoryImportModalOpen}
+                            onOpenChange={setInventoryImportModalOpen}
+                        >
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Import Stock Batches</DialogTitle>
+                                    <DialogDescription>
+                                        Restore inventory from a previously exported file.
+                                        Drugs must exist in the system before importing batches.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleInventoryImport}>
+                                    <div className="space-y-4 py-4">
+                                        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                                            <strong>Note:</strong> Export your current stock before migration,
+                                            then import after running migrate:fresh to restore stock levels.
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="inventory-file">
+                                                Select Exported File
+                                            </Label>
+                                            <Input
+                                                id="inventory-file"
+                                                type="file"
+                                                accept=".csv,.xlsx,.xls"
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'file',
+                                                        e.target.files?.[0] || null,
+                                                    )
+                                                }
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Use the file from "Export Stock (Backup)"
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setInventoryImportModalOpen(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={!data.file || processing}
+                                        >
+                                            {processing ? 'Importing...' : 'Import Stock'}
                                         </Button>
                                     </DialogFooter>
                                 </form>

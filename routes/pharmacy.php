@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DrugImportController;
+use App\Http\Controllers\Admin\InventoryImportController;
 use App\Http\Controllers\Pharmacy\DispensingController;
 use App\Http\Controllers\Pharmacy\DrugController;
 use App\Http\Controllers\Pharmacy\PharmacyController;
@@ -40,4 +41,8 @@ Route::middleware(['auth', 'can:pharmacy.view'])->prefix('pharmacy')->name('phar
     Route::get('inventory', [DrugController::class, 'inventory'])->name('inventory.index')->middleware('can:inventory.view');
     Route::get('inventory/low-stock', [DrugController::class, 'lowStock'])->name('inventory.low-stock')->middleware('can:inventory.view');
     Route::get('inventory/expiring', [DrugController::class, 'expiring'])->name('inventory.expiring')->middleware('can:inventory.view');
+
+    // Inventory Export/Import (for migration backup)
+    Route::get('inventory/export', [InventoryImportController::class, 'export'])->name('inventory.export')->middleware('can:inventory.view');
+    Route::post('inventory/import', [InventoryImportController::class, 'import'])->name('inventory.import')->middleware('can:inventory.manage');
 });
