@@ -205,7 +205,9 @@ export default function PrescriptionFormSection({
 }: Props) {
     const [drugComboOpen, setDrugComboOpen] = useState(false);
     const [manuallyEdited, setManuallyEdited] = useState(false);
+    // Smart mode is temporarily disabled - always use classic mode
     const [mode, setMode] = useState<PrescriptionMode>('classic');
+    const smartModeEnabled = false; // Set to true to re-enable smart mode toggle
     const [smartInput, setSmartInput] = useState('');
     const [parsedResult, setParsedResult] = useState<ParsedPrescription | null>(
         null,
@@ -637,10 +639,12 @@ export default function PrescriptionFormSection({
                                     Cancel
                                 </Button>
                             ) : (
-                                <ModeToggle
-                                    mode={mode}
-                                    onChange={handleModeChange}
-                                />
+                                smartModeEnabled && (
+                                    <ModeToggle
+                                        mode={mode}
+                                        onChange={handleModeChange}
+                                    />
+                                )
                             )}
                         </div>
                     </div>
