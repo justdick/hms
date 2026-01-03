@@ -29,14 +29,7 @@ interface PasswordRequirement {
 }
 
 const passwordRequirements: PasswordRequirement[] = [
-    { label: 'At least 8 characters', test: (p) => p.length >= 8 },
-    { label: 'Contains uppercase letter', test: (p) => /[A-Z]/.test(p) },
-    { label: 'Contains lowercase letter', test: (p) => /[a-z]/.test(p) },
-    { label: 'Contains a number', test: (p) => /\d/.test(p) },
-    {
-        label: 'Contains a symbol',
-        test: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(p),
-    },
+    { label: 'At least 6 characters', test: (p) => p.length >= 6 },
 ];
 
 function getPasswordStrength(password: string): {
@@ -44,23 +37,13 @@ function getPasswordStrength(password: string): {
     label: string;
     color: string;
 } {
-    const passedRequirements = passwordRequirements.filter((req) =>
-        req.test(password),
-    ).length;
-
     if (password.length === 0) {
         return { score: 0, label: '', color: 'bg-gray-200 dark:bg-gray-700' };
     }
-    if (passedRequirements <= 2) {
-        return { score: 1, label: 'Weak', color: 'bg-red-500' };
+    if (password.length >= 6) {
+        return { score: 4, label: 'Valid', color: 'bg-green-500' };
     }
-    if (passedRequirements <= 3) {
-        return { score: 2, label: 'Fair', color: 'bg-orange-500' };
-    }
-    if (passedRequirements <= 4) {
-        return { score: 3, label: 'Good', color: 'bg-yellow-500' };
-    }
-    return { score: 4, label: 'Strong', color: 'bg-green-500' };
+    return { score: 1, label: 'Too short', color: 'bg-red-500' };
 }
 
 interface Props {
