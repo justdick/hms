@@ -79,7 +79,7 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
         !!patient.active_insurance,
     );
 
-    const { data, setData, patch, processing, errors } = useForm({
+    const { data, setData, processing, errors } = useForm({
         first_name: patient.first_name || '',
         last_name: patient.last_name || '',
         gender: (patient.gender || '') as 'male' | 'female' | '',
@@ -114,13 +114,31 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        patch(patients.update.url(patient.id), {
+        // Ensure has_insurance is synced before submission
+        const submitData = {
+            ...data,
+            has_insurance: hasInsurance,
+        };
+
+        router.patch(patients.update.url(patient.id), submitData, {
             preserveScroll: true,
-            onSuccess: () => {
-                toast.success('Patient information updated successfully');
+            onSuccess: (page) => {
+                // Check for flash success message
+                const flash = page.props.flash as { success?: string } | undefined;
+                if (flash?.success) {
+                    toast.success(flash.success);
+                } else {
+                    toast.success('Patient information updated successfully');
+                }
             },
-            onError: () => {
-                toast.error('Failed to update patient information');
+            onError: (errors) => {
+                // Show specific validation errors if available
+                const errorMessages = Object.values(errors);
+                if (errorMessages.length > 0) {
+                    toast.error(errorMessages[0] as string);
+                } else {
+                    toast.error('Failed to update patient information');
+                }
             },
         });
     };

@@ -27,70 +27,77 @@ class ConsultationController extends Controller
         $this->authorize('viewAny', PatientCheckin::class);
 
         $search = $request->input('search');
+        $departmentFilter = $request->input('department_id');
 
         // Exclude Minor Procedures department from consultation queue
         $minorProceduresDept = Department::where('code', 'ZOOM')->first();
         $excludeDeptId = $minorProceduresDept?->id;
 
-        // Get total counts (always show) - excluding Minor Procedures
-        $totalAwaitingCount = PatientCheckin::accessibleTo($user)
+        // Base query for awaiting consultation
+        $awaitingQuery = PatientCheckin::with([
+            'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'department:id,name',
+            'vitalSigns' => function ($query) {
+                $query->latest()->limit(1);
+            },
+        ])
+            ->accessibleTo($user)
             ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
-            ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId))
-            ->count();
+            ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId));
 
-        $totalActiveCount = Consultation::accessibleTo($user)
-            ->inProgress()
-            ->count();
+        // Base query for active consultations
+        $activeQuery = Consultation::with([
+            'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.department:id,name',
+            'doctor:id,name',
+        ])
+            ->accessibleTo($user)
+            ->inProgress();
 
-        // Only query if search is provided and at least 2 characters
-        if ($search && strlen($search) >= 2) {
-            // Get patient check-ins awaiting consultation (accessible to user)
-            // Exclude Minor Procedures department - those go to Minor Procedures page
-            $awaitingConsultation = PatientCheckin::with([
-                'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
-                'department:id,name',
-                'vitalSigns' => function ($query) {
-                    $query->latest()->limit(1);
-                },
-            ])
-                ->accessibleTo($user)
-                ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
-                ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId))
-                ->whereHas('patient', function ($query) use ($search) {
-                    $query->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('patient_number', 'like', "%{$search}%")
-                        ->orWhere('phone_number', 'like', "%{$search}%");
-                })
-                ->orderBy('checked_in_at')
-                ->get();
-
-            // Get active consultations (accessible to user)
-            $activeConsultations = Consultation::with([
-                'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
-                'patientCheckin.department:id,name',
-            ])
-                ->accessibleTo($user)
-                ->inProgress()
-                ->whereHas('patientCheckin.patient', function ($query) use ($search) {
-                    $query->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('patient_number', 'like', "%{$search}%")
-                        ->orWhere('phone_number', 'like', "%{$search}%");
-                })
-                ->orderBy('started_at')
-                ->get();
-        } else {
-            $awaitingConsultation = collect();
-            $activeConsultations = collect();
+        // Apply department filter if provided
+        if ($departmentFilter) {
+            $awaitingQuery->where('department_id', $departmentFilter);
+            $activeQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
         }
+
+        // Apply search filter if provided (for search tab)
+        if ($search && strlen($search) >= 2) {
+            $awaitingQuery->whereHas('patient', function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+
+            $activeQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Get results
+        $awaitingConsultation = $awaitingQuery->orderBy('checked_in_at')->get();
+        $activeConsultations = $activeQuery->orderBy('started_at')->get();
+
+        // Get departments for filter dropdown (only departments user has access to)
+        $departments = Department::active()
+            ->opd()
+            ->when($excludeDeptId, fn ($q) => $q->where('id', '!=', $excludeDeptId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
 
         return Inertia::render('Consultation/Index', [
             'awaitingConsultation' => $awaitingConsultation,
             'activeConsultations' => $activeConsultations,
-            'totalAwaitingCount' => $totalAwaitingCount,
-            'totalActiveCount' => $totalActiveCount,
-            'search' => $search,
+            'totalAwaitingCount' => $awaitingConsultation->count(),
+            'totalActiveCount' => $activeConsultations->count(),
+            'departments' => $departments,
+            'filters' => [
+                'search' => $search,
+                'department_id' => $departmentFilter,
+            ],
         ]);
     }
 

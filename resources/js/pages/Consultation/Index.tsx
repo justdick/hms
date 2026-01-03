@@ -12,10 +12,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { Building, Clock, Search, Stethoscope } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { Head, router, usePoll } from '@inertiajs/react';
+import { Clock, List, RefreshCw, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Patient {
     id: number;
@@ -29,6 +45,7 @@ interface Patient {
 interface Department {
     id: number;
     name: string;
+    code?: string;
 }
 
 interface VitalSigns {
@@ -48,10 +65,16 @@ interface PatientCheckin {
     vital_signs?: VitalSigns[];
 }
 
+interface Doctor {
+    id: number;
+    name: string;
+}
+
 interface ActiveConsultation {
     id: number;
     started_at: string;
     status: string;
+    doctor?: Doctor;
     patient_checkin: {
         patient: Pick<
             Patient,
@@ -66,12 +89,18 @@ interface ActiveConsultation {
     };
 }
 
+interface Filters {
+    search?: string;
+    department_id?: string;
+}
+
 interface Props {
     awaitingConsultation: PatientCheckin[];
     activeConsultations: ActiveConsultation[];
     totalAwaitingCount: number;
     totalActiveCount: number;
-    search?: string;
+    departments: Department[];
+    filters: Filters;
 }
 
 export default function ConsultationIndex({
@@ -79,9 +108,15 @@ export default function ConsultationIndex({
     activeConsultations,
     totalAwaitingCount,
     totalActiveCount,
-    search: initialSearch,
+    departments,
+    filters,
 }: Props) {
-    const [search, setSearch] = useState(initialSearch || '');
+    const [activeTab, setActiveTab] = useState<string>('search');
+    const [search, setSearch] = useState(filters.search || '');
+    const [departmentFilter, setDepartmentFilter] = useState(
+        filters.department_id || '',
+    );
+    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
         type: 'start' | 'continue';
@@ -91,9 +126,33 @@ export default function ConsultationIndex({
         type: 'start',
     });
 
-    const { data, setData, post, processing } = useForm({
-        patient_checkin_id: 0,
-    });
+    // Auto-poll every 30 seconds for queue updates
+    const { stop, start } = usePoll(
+        30000,
+        {
+            only: [
+                'awaitingConsultation',
+                'activeConsultations',
+                'totalAwaitingCount',
+                'totalActiveCount',
+            ],
+            onFinish: () => {
+                setLastUpdated(new Date());
+            },
+        },
+        {
+            autoStart: activeTab === 'queue',
+        },
+    );
+
+    // Start/stop polling based on active tab
+    useEffect(() => {
+        if (activeTab === 'queue') {
+            start();
+        } else {
+            stop();
+        }
+    }, [activeTab, start, stop]);
 
     const formatTime = (dateString: string) => {
         return new Date(dateString).toLocaleTimeString('en-US', {
@@ -126,26 +185,70 @@ export default function ConsultationIndex({
         return age;
     };
 
+    const getTimeSinceUpdate = () => {
+        const seconds = Math.floor(
+            (new Date().getTime() - lastUpdated.getTime()) / 1000,
+        );
+        if (seconds < 60) return `${seconds}s ago`;
+        const minutes = Math.floor(seconds / 60);
+        return `${minutes}m ago`;
+    };
+
     // Debounced search effect
     useEffect(() => {
+        if (activeTab !== 'search') return;
+
         const timeoutId = setTimeout(() => {
-            router.get(
-                '/consultation',
-                { search: search || undefined },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                },
-            );
+            if (search.length >= 2 || search.length === 0) {
+                router.get(
+                    '/consultation',
+                    {
+                        search: search || undefined,
+                        department_id: departmentFilter || undefined,
+                    },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                    },
+                );
+            }
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [search]);
+    }, [search, activeTab]);
 
-    const handleSearch = (e: FormEvent) => {
-        e.preventDefault();
-        // Search already triggered by useEffect
+    // Department filter change
+    const handleDepartmentChange = (value: string) => {
+        const newValue = value === 'all' ? '' : value;
+        setDepartmentFilter(newValue);
+
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                department_id: newValue || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
+
+    const handleManualRefresh = () => {
+        router.reload({
+            only: [
+                'awaitingConsultation',
+                'activeConsultations',
+                'totalAwaitingCount',
+                'totalActiveCount',
+            ],
+            onFinish: () => {
+                setLastUpdated(new Date());
+            },
+        });
     };
 
     const openStartDialog = (checkin: PatientCheckin) => {
@@ -209,9 +312,6 @@ export default function ConsultationIndex({
         }
     };
 
-    const hasResults =
-        awaitingConsultation.length > 0 || activeConsultations.length > 0;
-
     return (
         <AppLayout
             breadcrumbs={[{ title: 'Consultation', href: '/consultation' }]}
@@ -219,323 +319,358 @@ export default function ConsultationIndex({
             <Head title="Consultation Dashboard" />
 
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Consultation Dashboard
-                    </h1>
-                    <p className="mt-2 text-gray-600">
-                        Search for patients to start or continue consultations
-                    </p>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                            Consultation Dashboard
+                        </h1>
+                        <p className="mt-1 text-gray-600 dark:text-gray-400">
+                            Manage patient consultations
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-950">
+                            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                {totalAwaitingCount}
+                            </span>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                                Awaiting
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-1.5 dark:bg-green-950">
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                {totalActiveCount}
+                            </span>
+                            <span className="text-sm text-green-700 dark:text-green-300">
+                                Active
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Search Bar */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="relative">
-                            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                            <Input
-                                type="text"
-                                placeholder="Start typing patient name, ID, or phone number..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pl-10"
-                                autoFocus
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="w-full"
+                >
+                    <div className="flex items-center justify-between gap-4">
+                        <TabsList>
+                            <TabsTrigger value="search" className="gap-2">
+                                <Search className="h-4 w-4" />
+                                Search Patient
+                            </TabsTrigger>
+                            <TabsTrigger value="queue" className="gap-2">
+                                <List className="h-4 w-4" />
+                                Patient Queue
+                            </TabsTrigger>
+                        </TabsList>
 
-                {/* Empty State with Counts */}
-                {!initialSearch && (
-                    <Card>
-                        <CardContent className="py-16">
-                            <div className="text-center">
-                                <Stethoscope className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                                <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                                    Search for Patients
-                                </h3>
-                                <p className="mb-6 text-gray-600">
-                                    Type at least 2 characters to search
-                                    patients
-                                </p>
+                        {activeTab === 'queue' && (
+                            <div className="flex items-center gap-3">
+                                <Select
+                                    value={departmentFilter || 'all'}
+                                    onValueChange={handleDepartmentChange}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="All Departments" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            All Departments
+                                        </SelectItem>
+                                        {departments.map((dept) => (
+                                            <SelectItem
+                                                key={dept.id}
+                                                value={dept.id.toString()}
+                                            >
+                                                {dept.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
 
-                                <div className="mt-8 flex justify-center gap-8">
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-blue-600">
-                                            {totalAwaitingCount}
-                                        </div>
-                                        <div className="mt-1 text-sm text-gray-600">
-                                            Awaiting Consultation
-                                        </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleManualRefresh}
+                                    className="gap-2"
+                                >
+                                    <RefreshCw className="h-4 w-4" />
+                                    <span className="text-xs text-muted-foreground">
+                                        {getTimeSinceUpdate()}
+                                    </span>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Search Tab */}
+                    <TabsContent value="search" className="mt-6 space-y-6">
+                        <Card>
+                            <CardContent className="pt-6">
+                                <div className="relative">
+                                    <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search by patient name, ID, or phone number..."
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        className="pl-10"
+                                        autoFocus={activeTab === 'search'}
+                                    />
+                                </div>
+                                {search && search.length < 2 && (
+                                    <p className="mt-2 text-sm text-muted-foreground">
+                                        Type at least 2 characters to search
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Search Results */}
+                        {filters.search && filters.search.length >= 2 && (
+                            <>
+                                {awaitingConsultation.length === 0 &&
+                                activeConsultations.length === 0 ? (
+                                    <Card>
+                                        <CardContent className="py-12">
+                                            <div className="text-center text-gray-500">
+                                                <Search className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+                                                <p className="font-medium">
+                                                    No results found
+                                                </p>
+                                                <p className="mt-1 text-sm">
+                                                    No patients found matching "
+                                                    {filters.search}"
+                                                </p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {activeConsultations.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h2 className="text-lg font-semibold">
+                                                    Active Consultations (
+                                                    {activeConsultations.length})
+                                                </h2>
+                                                <div className="rounded-md border">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Patient</TableHead>
+                                                                <TableHead>ID</TableHead>
+                                                                <TableHead>Age</TableHead>
+                                                                <TableHead>Department</TableHead>
+                                                                <TableHead>Doctor</TableHead>
+                                                                <TableHead>Started</TableHead>
+                                                                <TableHead className="text-right">Action</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {activeConsultations.map((consultation) => (
+                                                                <TableRow key={consultation.id}>
+                                                                    <TableCell className="font-medium">
+                                                                        {consultation.patient_checkin.patient.first_name}{' '}
+                                                                        {consultation.patient_checkin.patient.last_name}
+                                                                        <Badge className="ml-2">In Progress</Badge>
+                                                                    </TableCell>
+                                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
+                                                                    <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
+                                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
+                                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
+                                                                    <TableCell>{formatTime(consultation.started_at)}</TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        <Button size="sm" onClick={() => openContinueDialog(consultation)}>
+                                                                            Continue
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {awaitingConsultation.length > 0 && (
+                                            <div className="space-y-3">
+                                                <h2 className="text-lg font-semibold">
+                                                    Awaiting Consultation (
+                                                    {awaitingConsultation.length})
+                                                </h2>
+                                                <div className="rounded-md border">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Patient</TableHead>
+                                                                <TableHead>ID</TableHead>
+                                                                <TableHead>Age</TableHead>
+                                                                <TableHead>Department</TableHead>
+                                                                <TableHead>Vitals</TableHead>
+                                                                <TableHead>Checked In</TableHead>
+                                                                <TableHead className="text-right">Action</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {awaitingConsultation.map((checkin) => (
+                                                                <TableRow key={checkin.id}>
+                                                                    <TableCell className="font-medium">
+                                                                        {checkin.patient.first_name}{' '}
+                                                                        {checkin.patient.last_name}
+                                                                    </TableCell>
+                                                                    <TableCell>{checkin.patient.patient_number}</TableCell>
+                                                                    <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
+                                                                    <TableCell>{checkin.department.name}</TableCell>
+                                                                    <TableCell>
+                                                                        {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
+                                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                                                                ✓ Taken
+                                                                            </Badge>
+                                                                        ) : (
+                                                                            <Badge variant="outline" className="text-muted-foreground">
+                                                                                Pending
+                                                                            </Badge>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell>{formatTime(checkin.checked_in_at)}</TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        <Button size="sm" onClick={() => openStartDialog(checkin)}>
+                                                                            Start
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-green-600">
-                                            {totalActiveCount}
-                                        </div>
-                                        <div className="mt-1 text-sm text-gray-600">
-                                            Active Consultations
-                                        </div>
-                                    </div>
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+
+                    {/* Queue Tab */}
+                    <TabsContent value="queue" className="mt-6 space-y-6">
+                        {/* Active Consultations Table */}
+                        {activeConsultations.length > 0 && (
+                            <div className="space-y-3">
+                                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                                    Active Consultations ({activeConsultations.length})
+                                </h2>
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Patient</TableHead>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Age</TableHead>
+                                                <TableHead>Department</TableHead>
+                                                <TableHead>Doctor</TableHead>
+                                                <TableHead>Started</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {activeConsultations.map((consultation) => (
+                                                <TableRow key={consultation.id}>
+                                                    <TableCell className="font-medium">
+                                                        {consultation.patient_checkin.patient.first_name}{' '}
+                                                        {consultation.patient_checkin.patient.last_name}
+                                                        <Badge className="ml-2">In Progress</Badge>
+                                                    </TableCell>
+                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
+                                                    <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
+                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
+                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
+                                                    <TableCell>{formatTime(consultation.started_at)}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button size="sm" onClick={() => openContinueDialog(consultation)}>
+                                                            Continue
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        )}
 
-                {/* Less than 2 characters message */}
-                {initialSearch && initialSearch.length < 2 && (
-                    <Card>
-                        <CardContent className="py-16">
-                            <div className="text-center text-gray-500">
-                                <Search className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                                <h3 className="mb-2 text-lg font-semibold text-gray-700">
-                                    Keep Typing...
-                                </h3>
-                                <p>
-                                    Please enter at least 2 characters to search
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Search Results */}
-                {initialSearch && !hasResults && (
-                    <Card>
-                        <CardContent className="py-16">
-                            <div className="text-center text-gray-500">
-                                <Search className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                                <h3 className="mb-2 text-lg font-semibold text-gray-700">
-                                    No Results Found
-                                </h3>
-                                <p>
-                                    No patients found matching "{initialSearch}"
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Results - Awaiting Consultation */}
-                {awaitingConsultation.length > 0 && (
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Awaiting Consultation ({awaitingConsultation.length}
-                            )
-                        </h2>
+                        {/* Awaiting Consultation Table */}
                         <div className="space-y-3">
-                            {awaitingConsultation.map((checkin) => (
-                                <Card
-                                    key={checkin.id}
-                                    className="transition-shadow hover:shadow-md"
-                                >
-                                    <CardContent className="p-6">
-                                        <div className="mb-4 flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="mb-2 flex items-center gap-3">
-                                                    <h3 className="text-lg font-semibold text-gray-900">
-                                                        {
-                                                            checkin.patient
-                                                                .first_name
-                                                        }{' '}
-                                                        {
-                                                            checkin.patient
-                                                                .last_name
-                                                        }
-                                                    </h3>
-                                                    <Badge variant="secondary">
-                                                        Awaiting
-                                                    </Badge>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-600">
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Patient ID:
-                                                        </span>{' '}
-                                                        {
-                                                            checkin.patient
-                                                                .patient_number
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Age:
-                                                        </span>{' '}
-                                                        {calculateAge(
-                                                            checkin.patient
-                                                                .date_of_birth,
-                                                        )}{' '}
-                                                        years
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            DOB:
-                                                        </span>{' '}
-                                                        {formatDate(
-                                                            checkin.patient
-                                                                .date_of_birth,
+                            <h2 className="flex items-center gap-2 text-lg font-semibold">
+                                <Clock className="h-5 w-5 text-blue-600" />
+                                Awaiting Consultation ({awaitingConsultation.length})
+                            </h2>
+                            {awaitingConsultation.length > 0 ? (
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Patient</TableHead>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Age</TableHead>
+                                                <TableHead>Department</TableHead>
+                                                <TableHead>Vitals</TableHead>
+                                                <TableHead>Checked In</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {awaitingConsultation.map((checkin) => (
+                                                <TableRow key={checkin.id}>
+                                                    <TableCell className="font-medium">
+                                                        {checkin.patient.first_name}{' '}
+                                                        {checkin.patient.last_name}
+                                                    </TableCell>
+                                                    <TableCell>{checkin.patient.patient_number}</TableCell>
+                                                    <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
+                                                    <TableCell>{checkin.department.name}</TableCell>
+                                                    <TableCell>
+                                                        {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
+                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                                                ✓ Taken
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-muted-foreground">
+                                                                Pending
+                                                            </Badge>
                                                         )}
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Phone:
-                                                        </span>{' '}
-                                                        {
-                                                            checkin.patient
-                                                                .phone_number
-                                                        }
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Building className="h-4 w-4" />
-                                                        {
-                                                            checkin.department
-                                                                .name
-                                                        }
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-4 w-4" />
-                                                        Checked in:{' '}
-                                                        {formatTime(
-                                                            checkin.checked_in_at,
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {checkin.vital_signs &&
-                                                    checkin.vital_signs.length >
-                                                        0 && (
-                                                        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                                                            ✓ Vitals taken
-                                                        </div>
-                                                    )}
-                                            </div>
-                                            <Button
-                                                onClick={() =>
-                                                    openStartDialog(checkin)
-                                                }
-                                                size="lg"
-                                            >
-                                                Start Consultation
-                                            </Button>
+                                                    </TableCell>
+                                                    <TableCell>{formatTime(checkin.checked_in_at)}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button size="sm" onClick={() => openStartDialog(checkin)}>
+                                                            Start
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            ) : (
+                                <Card>
+                                    <CardContent className="py-12">
+                                        <div className="text-center text-gray-500">
+                                            <Clock className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+                                            <p className="font-medium">
+                                                No patients awaiting consultation
+                                            </p>
+                                            <p className="mt-1 text-sm">
+                                                New check-ins will appear here automatically
+                                            </p>
                                         </div>
                                     </CardContent>
                                 </Card>
-                            ))}
+                            )}
                         </div>
-                    </div>
-                )}
-
-                {/* Results - Active Consultations */}
-                {activeConsultations.length > 0 && (
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Active Consultations ({activeConsultations.length})
-                        </h2>
-                        <div className="space-y-3">
-                            {activeConsultations.map((consultation) => (
-                                <Card
-                                    key={consultation.id}
-                                    className="transition-shadow hover:shadow-md"
-                                >
-                                    <CardContent className="p-6">
-                                        <div className="mb-4 flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="mb-2 flex items-center gap-3">
-                                                    <h3 className="text-lg font-semibold text-gray-900">
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .first_name
-                                                        }{' '}
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .last_name
-                                                        }
-                                                    </h3>
-                                                    <Badge>In Progress</Badge>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-600">
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Patient ID:
-                                                        </span>{' '}
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .patient_number
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Age:
-                                                        </span>{' '}
-                                                        {calculateAge(
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .date_of_birth,
-                                                        )}{' '}
-                                                        years
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            DOB:
-                                                        </span>{' '}
-                                                        {formatDate(
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .date_of_birth,
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">
-                                                            Phone:
-                                                        </span>{' '}
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .phone_number
-                                                        }
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Building className="h-4 w-4" />
-                                                        {consultation
-                                                            .patient_checkin
-                                                            .department?.name ??
-                                                            'Unknown Department'}
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-4 w-4" />
-                                                        Started:{' '}
-                                                        {formatTime(
-                                                            consultation.started_at,
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                onClick={() =>
-                                                    openContinueDialog(
-                                                        consultation,
-                                                    )
-                                                }
-                                                size="lg"
-                                                variant="default"
-                                            >
-                                                Continue Consultation
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                    </TabsContent>
+                </Tabs>
             </div>
 
             {/* Confirmation Dialog */}
@@ -554,69 +689,54 @@ export default function ConsultationIndex({
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
                             <div className="space-y-3 pt-4">
-                                <p className="text-base text-gray-700">
+                                <p className="text-base text-gray-700 dark:text-gray-300">
                                     Please verify patient details before
                                     proceeding:
                                 </p>
                                 {getDialogPatient() && (
-                                    <div className="space-y-2 rounded-lg bg-gray-50 p-4 text-sm">
+                                    <div className="space-y-2 rounded-lg bg-gray-50 p-4 text-sm dark:bg-gray-800">
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Patient Name:
                                             </span>
-                                            <span className="font-semibold text-gray-900">
+                                            <span className="font-semibold text-gray-900 dark:text-gray-100">
                                                 {getDialogPatient()?.first_name}{' '}
                                                 {getDialogPatient()?.last_name}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Patient ID:
                                             </span>
-                                            <span className="text-gray-900">
-                                                {
-                                                    getDialogPatient()
-                                                        ?.patient_number
-                                                }
+                                            <span className="text-gray-900 dark:text-gray-100">
+                                                {getDialogPatient()?.patient_number}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Date of Birth:
                                             </span>
-                                            <span className="text-gray-900">
-                                                {getDialogPatient()
-                                                    ?.date_of_birth &&
-                                                    formatDate(
-                                                        getDialogPatient()!
-                                                            .date_of_birth,
-                                                    )}{' '}
-                                                (
-                                                {getDialogPatient()
-                                                    ?.date_of_birth &&
-                                                    calculateAge(
-                                                        getDialogPatient()!
-                                                            .date_of_birth,
-                                                    )}{' '}
+                                            <span className="text-gray-900 dark:text-gray-100">
+                                                {getDialogPatient()?.date_of_birth &&
+                                                    formatDate(getDialogPatient()!.date_of_birth)}{' '}
+                                                ({getDialogPatient()?.date_of_birth &&
+                                                    calculateAge(getDialogPatient()!.date_of_birth)}{' '}
                                                 years)
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Phone:
                                             </span>
-                                            <span className="text-gray-900">
-                                                {
-                                                    getDialogPatient()
-                                                        ?.phone_number
-                                                }
+                                            <span className="text-gray-900 dark:text-gray-100">
+                                                {getDialogPatient()?.phone_number}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="font-medium text-gray-700">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Department:
                                             </span>
-                                            <span className="text-gray-900">
+                                            <span className="text-gray-900 dark:text-gray-100">
                                                 {getDialogDepartment()?.name}
                                             </span>
                                         </div>
@@ -627,13 +747,8 @@ export default function ConsultationIndex({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirm}
-                            disabled={processing}
-                        >
-                            {processing
-                                ? 'Please wait...'
-                                : 'Confirm & Proceed'}
+                        <AlertDialogAction onClick={handleConfirm}>
+                            Confirm & Proceed
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

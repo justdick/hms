@@ -42,6 +42,8 @@ describe('Consultation Dashboard', function () {
                 ->component('Consultation/Index')
                 ->has('awaitingConsultation', 1)
                 ->where('awaitingConsultation.0.id', $this->patientCheckin->id)
+                ->has('departments')
+                ->has('filters')
             );
     });
 
@@ -77,6 +79,26 @@ describe('Consultation Dashboard', function () {
             ->assertInertia(fn ($page) => $page
                 ->has('activeConsultations', 1)
                 ->where('activeConsultations.0.id', $consultation->id)
+            );
+    });
+
+    it('filters by department when department_id is provided', function () {
+        $response = $this->actingAs($this->doctor)->get('/consultation?department_id='.$this->department->id);
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('awaitingConsultation', 1)
+                ->where('filters.department_id', (string) $this->department->id)
+            );
+    });
+
+    it('filters by search when search query is provided', function () {
+        $response = $this->actingAs($this->doctor)->get('/consultation?search='.$this->patient->first_name);
+
+        $response->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('awaitingConsultation', 1)
+                ->where('filters.search', $this->patient->first_name)
             );
     });
 });

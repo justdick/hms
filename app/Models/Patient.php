@@ -125,14 +125,21 @@ class Patient extends Model
                         ->where('first_name', 'like', "%{$words[1]}%");
                 });
             } else {
-                // Single word: search across all fields including insurance membership ID
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('patient_number', 'like', "%{$search}%")
-                    ->orWhere('phone_number', 'like', "%{$search}%")
-                    ->orWhereHas('insurancePlans', function ($insuranceQuery) use ($search) {
-                        $insuranceQuery->where('membership_id', 'like', "%{$search}%");
-                    });
+                // Check if search looks like a patient/folder number (contains / or starts with digits)
+                $looksLikePatientNumber = preg_match('/^\d+\/\d+$/', $search) || preg_match('/^PAT\d+$/i', $search);
+
+                if ($looksLikePatientNumber) {
+                    // Exact match for patient numbers
+                    $q->where('patient_number', $search);
+                } else {
+                    // Fuzzy search for names, phone numbers, and insurance membership IDs
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhereHas('insurancePlans', function ($insuranceQuery) use ($search) {
+                            $insuranceQuery->where('membership_id', 'like', "%{$search}%");
+                        });
+                }
             }
         });
     }
