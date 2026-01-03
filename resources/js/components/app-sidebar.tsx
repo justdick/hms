@@ -193,53 +193,87 @@ export function AppSidebar() {
             href: dashboard(),
             icon: LayoutGrid,
         },
-        {
+    ];
+
+    // Check-in - requires checkins.view permission
+    if (auth.permissions?.checkins?.view) {
+        mainNavItems.push({
             title: 'Check-in',
             href: '/checkin',
             icon: Stethoscope,
-        },
-        {
+        });
+    }
+
+    // Patients - requires patients.view permission
+    if (auth.permissions?.patients?.view) {
+        mainNavItems.push({
             title: 'Patients',
             href: '/patients',
             icon: Users,
-        },
-        {
+        });
+    }
+
+    // Consultation - requires consultations.view permission
+    if (auth.permissions?.consultations?.view) {
+        mainNavItems.push({
             title: 'Consultation',
             href: '/consultation',
             icon: Stethoscope,
-        },
-        {
+        });
+    }
+
+    // Wards - requires wards.view permission
+    if (auth.permissions?.wards?.view) {
+        mainNavItems.push({
             title: 'Wards',
             href: '/wards',
             icon: Hospital,
-        },
-        {
+        });
+    }
+
+    // Investigations - requires lab or radiology permissions
+    if (investigationsItems.length > 0) {
+        mainNavItems.push({
             title: 'Investigations',
             href: '/lab',
             icon: TestTubes,
-            items:
-                investigationsItems.length > 0
-                    ? investigationsItems
-                    : undefined,
-        },
-        {
+            items: investigationsItems,
+        });
+    }
+
+    // Minor Procedures - requires minor-procedures.view permission
+    if (auth.permissions?.minorProcedures?.view) {
+        mainNavItems.push({
             title: 'Minor Procedures',
             href: '/minor-procedures',
             icon: Bandage,
-        },
-        {
+        });
+    }
+
+    // Pharmacy - requires pharmacy permissions
+    if (pharmacyItems.length > 0) {
+        mainNavItems.push({
             title: 'Pharmacy',
             href: '/pharmacy',
             icon: Pill,
-            items: pharmacyItems.length > 0 ? pharmacyItems : undefined,
-        },
-        {
+            items: pharmacyItems,
+        });
+    }
+
+    // Billing - requires billing permissions
+    const billingItems = buildBillingNavItems(auth.permissions?.billing);
+    if (billingItems && billingItems.length > 0) {
+        mainNavItems.push({
             title: 'Billing',
             href: '/billing',
             icon: CreditCard,
-            items: buildBillingNavItems(auth.permissions?.billing),
-        },
-        {
+            items: billingItems,
+        });
+    }
+
+    // Insurance - requires insurance.view permission
+    if (auth.permissions?.insurance?.view) {
+        mainNavItems.push({
             title: 'Insurance',
             href: '/admin/insurance',
             icon: Shield,
@@ -285,13 +319,17 @@ export function AppSidebar() {
                     icon: TableProperties,
                 },
             ],
-        },
-        {
+        });
+    }
+
+    // Departments - requires departments.view permission
+    if (auth.permissions?.departments?.view) {
+        mainNavItems.push({
             title: 'Departments',
             href: '/departments',
             icon: Building2,
-        },
-    ];
+        });
+    }
 
     // Add Backups menu item if user has backup permissions
     if (auth.permissions?.backups?.view) {

@@ -59,6 +59,27 @@ export interface Auth {
             viewRadiology: boolean;
             uploadExternal: boolean;
         };
+        checkins?: {
+            view: boolean;
+        };
+        patients?: {
+            view: boolean;
+        };
+        consultations?: {
+            view: boolean;
+        };
+        wards?: {
+            view: boolean;
+        };
+        minorProcedures?: {
+            view: boolean;
+        };
+        departments?: {
+            view: boolean;
+        };
+        insurance?: {
+            view: boolean;
+        };
     };
 }
 

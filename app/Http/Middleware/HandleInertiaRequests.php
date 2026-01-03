@@ -101,6 +101,27 @@ class HandleInertiaRequests extends Middleware
                         'viewRadiology' => $request->user()?->can('radiology.view-worklist') ?? false,
                         'uploadExternal' => $request->user()?->can('investigations.upload-external') ?? false,
                     ],
+                    'checkins' => [
+                        'view' => $request->user()?->can('checkins.view-all') || $request->user()?->can('checkins.view-dept') ?? false,
+                    ],
+                    'patients' => [
+                        'view' => $request->user()?->can('patients.view') || $request->user()?->can('patients.view-all') || $request->user()?->can('patients.view-dept') ?? false,
+                    ],
+                    'consultations' => [
+                        'view' => $request->user()?->can('consultations.view-all') || $request->user()?->can('consultations.view-dept') || $request->user()?->can('consultations.view-own') ?? false,
+                    ],
+                    'wards' => [
+                        'view' => $request->user()?->can('wards.view') ?? false,
+                    ],
+                    'minorProcedures' => [
+                        'view' => $request->user()?->can('minor-procedures.view-all') || $request->user()?->can('minor-procedures.view-dept') ?? false,
+                    ],
+                    'departments' => [
+                        'view' => $request->user()?->can('departments.view') ?? false,
+                    ],
+                    'insurance' => [
+                        'view' => $request->user()?->can('insurance.view') ?? false,
+                    ],
                 ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
