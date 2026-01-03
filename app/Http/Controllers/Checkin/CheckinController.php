@@ -114,21 +114,30 @@ class CheckinController extends Controller
             'service_date' => 'nullable|date|before_or_equal:today',
         ]);
 
-        // Check for duplicate CCC for same patient on the same calendar date (excluding cancelled check-ins)
+        // Check for duplicate CCC - must be unique for active (non-completed) claims
+        // NHIS can regenerate same CCC after months/years, so we only block if CCC is in active use
         if (! empty($validated['claim_check_code'])) {
-            $serviceDate = ! empty($validated['service_date'])
-                ? $validated['service_date']
-                : now()->toDateString();
+            // Check if CCC already exists in insurance_claims for an active claim
+            // Active = not yet submitted/approved/paid/rejected (still in workflow)
+            $existingClaim = InsuranceClaim::where('claim_check_code', $validated['claim_check_code'])
+                ->whereIn('status', ['draft', 'pending_vetting', 'vetted'])
+                ->first();
 
-            $duplicateCcc = PatientCheckin::where('patient_id', $validated['patient_id'])
-                ->where('claim_check_code', $validated['claim_check_code'])
-                ->whereDate('service_date', $serviceDate)
-                ->where('status', '!=', 'cancelled')
+            if ($existingClaim) {
+                return back()->withErrors([
+                    'claim_check_code' => 'This CCC is currently in use by an active claim that has not been submitted yet.',
+                ])->withInput();
+            }
+
+            // Also check patient_checkins for active check-ins (not completed/cancelled) that haven't created claims yet
+            $duplicateCcc = PatientCheckin::where('claim_check_code', $validated['claim_check_code'])
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereDoesntHave('insuranceClaim') // No claim created yet
                 ->exists();
 
             if ($duplicateCcc) {
                 return back()->withErrors([
-                    'claim_check_code' => 'This CCC was already used for this patient on this date.',
+                    'claim_check_code' => 'This CCC is currently in use by another active check-in.',
                 ])->withInput();
             }
         }

@@ -303,6 +303,7 @@ class PermissionSeeder extends Seeder
             'patients.view-dept',
             'patients.update',
             'checkins.view-dept',
+            'checkins.create', // Nurses can check-in patients
             'checkins.update',
             'checkins.cancel', // Nurses can cancel check-ins
             'vitals.view-dept',

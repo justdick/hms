@@ -146,6 +146,11 @@ class PatientCheckin extends Model
             'notes' => $reason ? "{$this->notes}\nCancelled: {$reason}" : "{$this->notes}\nCancelled",
         ]);
 
+        // Delete the associated insurance claim to free up the CCC for reuse
+        if ($this->insuranceClaim) {
+            $this->insuranceClaim->delete();
+        }
+
         // Void all pending charges (unpaid charges are forgiven)
         // Keep paid charges as-is (no refund policy)
         $this->charges()
