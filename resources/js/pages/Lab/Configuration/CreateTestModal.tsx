@@ -363,7 +363,7 @@ export default function CreateTestModal({
                                 <AlertDescription className="flex items-center justify-between text-sm">
                                     <span>
                                         {isEditing && editingService?.price
-                                            ? `Current: GHS ${editingService.price.toFixed(2)}`
+                                            ? `Current: GHS ${Number(editingService.price).toFixed(2)}`
                                             : 'Set price after creation'}
                                     </span>
                                     {isEditing && editingService && (
