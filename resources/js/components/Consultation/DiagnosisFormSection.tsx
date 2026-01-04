@@ -24,7 +24,8 @@ interface Props {
     onAdd: (diagnosisId: number, type: 'provisional' | 'principal') => void;
     onDelete: (id: number) => void;
     processing: boolean;
-    consultationStatus: string;
+    isEditable?: boolean;
+    consultationStatus?: string;
 }
 
 export default function DiagnosisFormSection({
@@ -32,8 +33,13 @@ export default function DiagnosisFormSection({
     onAdd,
     onDelete,
     processing,
+    isEditable,
     consultationStatus,
 }: Props) {
+    // isEditable takes precedence (used by consultations with 24hr edit window)
+    // consultationStatus is fallback for ward rounds (only in_progress is editable)
+    const canEdit = isEditable ?? (consultationStatus === 'in_progress');
+
     const [selectedProvisional, setSelectedProvisional] = useState<
         number | null
     >(null);
@@ -81,7 +87,7 @@ export default function DiagnosisFormSection({
                 </div>
 
                 {/* Add Provisional Diagnosis */}
-                {consultationStatus === 'in_progress' && (
+                {canEdit && (
                     <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-blue-800 dark:from-blue-950/20 dark:to-indigo-950/20">
                         <Label className="mb-2 block text-sm font-medium">
                             Add Provisional Diagnosis
@@ -137,7 +143,7 @@ export default function DiagnosisFormSection({
                                             Group: {item.diagnosis.g_drg}
                                         </p>
                                     </div>
-                                    {consultationStatus === 'in_progress' && (
+                                    {canEdit && (
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -172,7 +178,7 @@ export default function DiagnosisFormSection({
                 </div>
 
                 {/* Add Principal Diagnosis */}
-                {consultationStatus === 'in_progress' && (
+                {canEdit && (
                     <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800 dark:from-green-950/20 dark:to-emerald-950/20">
                         <Label className="mb-2 block text-sm font-medium">
                             Add Principal Diagnosis
@@ -228,7 +234,7 @@ export default function DiagnosisFormSection({
                                             Group: {item.diagnosis.g_drg}
                                         </p>
                                     </div>
-                                    {consultationStatus === 'in_progress' && (
+                                    {canEdit && (
                                         <Button
                                             variant="ghost"
                                             size="icon"

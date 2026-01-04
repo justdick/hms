@@ -90,13 +90,15 @@ interface LabOrder {
 interface InvestigationsSectionProps {
     consultationId: number;
     labOrders: LabOrder[];
-    consultationStatus: string;
+    isEditable?: boolean;
+    consultationStatus?: string;
     canUploadExternal?: boolean;
 }
 
 export function InvestigationsSection({
     consultationId,
     labOrders,
+    isEditable,
     consultationStatus,
     canUploadExternal = false,
 }: InvestigationsSectionProps) {
@@ -164,7 +166,9 @@ export function InvestigationsSection({
         });
     };
 
-    const canOrder = consultationStatus === 'in_progress';
+    // isEditable takes precedence (used by consultations with 24hr edit window)
+    // consultationStatus is fallback for ward rounds (only in_progress is editable)
+    const canOrder = isEditable ?? (consultationStatus === 'in_progress');
 
     // Get counts for tab badges
     const labCount = laboratoryOrders.length;

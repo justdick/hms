@@ -480,6 +480,18 @@ export default function ConsultationShow({
     const canUploadExternal =
         auth.permissions?.investigations?.uploadExternal ?? false;
 
+    // Determine if consultation is editable
+    // Editable if: in_progress OR completed within last 24 hours
+    const isEditable = (() => {
+        if (consultation.status === 'in_progress') return true;
+        if (consultation.status === 'completed' && consultation.completed_at) {
+            const completedAt = new Date(consultation.completed_at);
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            return completedAt > twentyFourHoursAgo;
+        }
+        return false;
+    })();
+
     const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -601,7 +613,7 @@ export default function ConsultationShow({
 
     // Auto-save function
     const autoSave = useCallback(async () => {
-        if (!hasUnsavedChanges || consultation.status !== 'in_progress') {
+        if (!hasUnsavedChanges || !isEditable) {
             return;
         }
 
@@ -634,7 +646,7 @@ export default function ConsultationShow({
             setIsSaving(false);
             console.error('Autosave error:', error);
         }
-    }, [hasUnsavedChanges, consultation.id, consultation.status, data]);
+    }, [hasUnsavedChanges, consultation.id, isEditable, data]);
 
     // Track changes and trigger auto-save
     useEffect(() => {
@@ -1243,7 +1255,7 @@ export default function ConsultationShow({
                             }
                             allergies={patientHistory?.allergies || []}
                         />
-                        {consultation.status === 'in_progress' && (
+                        {isEditable && (
                             <>
                                 <Button
                                     onClick={() => setShowCompleteDialog(true)}
@@ -1856,7 +1868,7 @@ export default function ConsultationShow({
                                             })
                                         }
                                         processing={diagnosisProcessing}
-                                        consultationStatus={consultation.status}
+                                        isEditable={isEditable}
                                     />
                                 </CardContent>
                             </Card>
@@ -1898,7 +1910,7 @@ export default function ConsultationShow({
                                         }
                                         processing={prescriptionProcessing}
                                         consultationId={consultation.id}
-                                        consultationStatus={consultation.status}
+                                        isEditable={isEditable}
                                         previousPrescriptions={
                                             patientHistory?.previousPrescriptions
                                         }
@@ -1913,7 +1925,7 @@ export default function ConsultationShow({
                         <InvestigationsSection
                             consultationId={consultation.id}
                             labOrders={consultation.lab_orders}
-                            consultationStatus={consultation.status}
+                            isEditable={isEditable}
                             canUploadExternal={canUploadExternal}
                         />
                     </TabsContent>

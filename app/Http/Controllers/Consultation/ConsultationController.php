@@ -81,6 +81,33 @@ class ConsultationController extends Controller
         $awaitingConsultation = $awaitingQuery->orderBy('checked_in_at')->get();
         $activeConsultations = $activeQuery->orderBy('started_at')->get();
 
+        // Query for completed consultations (last 24 hours)
+        $completedQuery = Consultation::with([
+            'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.department:id,name',
+            'doctor:id,name',
+        ])
+            ->accessibleTo($user)
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', now()->subHours(24));
+
+        // Apply department filter if provided
+        if ($departmentFilter) {
+            $completedQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
+        }
+
+        // Apply search filter if provided
+        if ($search && strlen($search) >= 2) {
+            $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        $completedConsultations = $completedQuery->orderBy('completed_at', 'desc')->limit(50)->get();
+
         // Get departments for filter dropdown (only departments user has access to)
         $departments = Department::active()
             ->opd()
@@ -91,8 +118,10 @@ class ConsultationController extends Controller
         return Inertia::render('Consultation/Index', [
             'awaitingConsultation' => $awaitingConsultation,
             'activeConsultations' => $activeConsultations,
+            'completedConsultations' => $completedConsultations,
             'totalAwaitingCount' => $awaitingConsultation->count(),
             'totalActiveCount' => $activeConsultations->count(),
+            'totalCompletedCount' => $completedConsultations->count(),
             'departments' => $departments,
             'filters' => [
                 'search' => $search,

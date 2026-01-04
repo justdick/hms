@@ -124,7 +124,8 @@ interface Props {
     editingPrescription: Prescription | null;
     processing: boolean;
     consultationId: number;
-    consultationStatus: string;
+    isEditable?: boolean;
+    consultationStatus?: string;
     previousPrescriptions?: PreviousPrescription[];
 }
 
@@ -200,9 +201,14 @@ export default function PrescriptionFormSection({
     editingPrescription,
     processing,
     consultationId,
+    isEditable,
     consultationStatus,
     previousPrescriptions = [],
 }: Props) {
+    // isEditable takes precedence (used by consultations with 24hr edit window)
+    // consultationStatus is fallback for ward rounds (only in_progress is editable)
+    const canEdit = isEditable ?? (consultationStatus === 'in_progress');
+
     const [drugComboOpen, setDrugComboOpen] = useState(false);
     const [manuallyEdited, setManuallyEdited] = useState(false);
     // Smart mode is temporarily disabled - always use classic mode
@@ -600,7 +606,7 @@ export default function PrescriptionFormSection({
     return (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left Column: Add New Prescription Form */}
-            {consultationStatus === 'in_progress' && (
+            {canEdit && (
                 <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-800 dark:from-green-950/20 dark:to-emerald-950/20">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -1326,7 +1332,7 @@ export default function PrescriptionFormSection({
             <div
                 className={cn(
                     'space-y-4',
-                    consultationStatus !== 'in_progress' && 'lg:col-span-2',
+                    !canEdit && 'lg:col-span-2',
                 )}
             >
                 <h3 className="flex items-center gap-2 text-lg font-semibold">
@@ -1393,9 +1399,9 @@ export default function PrescriptionFormSection({
                                                       : 'destructive'
                                             }
                                         >
-                                            {prescription.status.toUpperCase()}
+                                        {prescription.status.toUpperCase()}
                                         </Badge>
-                                        {consultationStatus === 'in_progress' &&
+                                        {canEdit &&
                                             prescription.status ===
                                                 'prescribed' && (
                                                 <>

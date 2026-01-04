@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePoll } from '@inertiajs/react';
-import { Clock, List, RefreshCw, Search } from 'lucide-react';
+import { CheckCircle, Clock, Eye, List, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Patient {
@@ -89,6 +89,26 @@ interface ActiveConsultation {
     };
 }
 
+interface CompletedConsultation {
+    id: number;
+    started_at: string;
+    completed_at: string;
+    status: string;
+    doctor?: Doctor;
+    patient_checkin: {
+        patient: Pick<
+            Patient,
+            | 'id'
+            | 'patient_number'
+            | 'first_name'
+            | 'last_name'
+            | 'date_of_birth'
+            | 'phone_number'
+        >;
+        department: Department;
+    };
+}
+
 interface Filters {
     search?: string;
     department_id?: string;
@@ -97,8 +117,10 @@ interface Filters {
 interface Props {
     awaitingConsultation: PatientCheckin[];
     activeConsultations: ActiveConsultation[];
+    completedConsultations: CompletedConsultation[];
     totalAwaitingCount: number;
     totalActiveCount: number;
+    totalCompletedCount: number;
     departments: Department[];
     filters: Filters;
 }
@@ -106,8 +128,10 @@ interface Props {
 export default function ConsultationIndex({
     awaitingConsultation,
     activeConsultations,
+    completedConsultations,
     totalAwaitingCount,
     totalActiveCount,
+    totalCompletedCount,
     departments,
     filters,
 }: Props) {
@@ -345,6 +369,14 @@ export default function ConsultationIndex({
                                 Active
                             </span>
                         </div>
+                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 dark:bg-gray-800">
+                            <span className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                                {totalCompletedCount}
+                            </span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                Completed
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -362,6 +394,10 @@ export default function ConsultationIndex({
                             <TabsTrigger value="queue" className="gap-2">
                                 <List className="h-4 w-4" />
                                 Patient Queue
+                            </TabsTrigger>
+                            <TabsTrigger value="completed" className="gap-2">
+                                <CheckCircle className="h-4 w-4" />
+                                Completed
                             </TabsTrigger>
                         </TabsList>
 
@@ -399,6 +435,42 @@ export default function ConsultationIndex({
                                     <span className="text-xs text-muted-foreground">
                                         {getTimeSinceUpdate()}
                                     </span>
+                                </Button>
+                            </div>
+                        )}
+
+                        {activeTab === 'completed' && (
+                            <div className="flex items-center gap-3">
+                                <Select
+                                    value={departmentFilter || 'all'}
+                                    onValueChange={handleDepartmentChange}
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="All Departments" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            All Departments
+                                        </SelectItem>
+                                        {departments.map((dept) => (
+                                            <SelectItem
+                                                key={dept.id}
+                                                value={dept.id.toString()}
+                                            >
+                                                {dept.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleManualRefresh}
+                                    className="gap-2"
+                                >
+                                    <RefreshCw className="h-4 w-4" />
+                                    Refresh
                                 </Button>
                             </div>
                         )}
@@ -663,6 +735,78 @@ export default function ConsultationIndex({
                                             </p>
                                             <p className="mt-1 text-sm">
                                                 New check-ins will appear here automatically
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    {/* Completed Tab */}
+                    <TabsContent value="completed" className="mt-6 space-y-6">
+                        <div className="space-y-3">
+                            <h2 className="flex items-center gap-2 text-lg font-semibold">
+                                <CheckCircle className="h-5 w-5 text-gray-600" />
+                                Completed Consultations (Last 24 Hours)
+                            </h2>
+                            {completedConsultations.length > 0 ? (
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Patient</TableHead>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Department</TableHead>
+                                                <TableHead>Doctor</TableHead>
+                                                <TableHead>Completed</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {completedConsultations.map((consultation) => (
+                                                <TableRow key={consultation.id}>
+                                                    <TableCell className="font-medium">
+                                                        {consultation.patient_checkin.patient.first_name}{' '}
+                                                        {consultation.patient_checkin.patient.last_name}
+                                                    </TableCell>
+                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
+                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
+                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">
+                                                            {formatDate(consultation.completed_at)}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {formatTime(consultation.completed_at)}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => router.visit(`/consultation/${consultation.id}`)}
+                                                            className="gap-1"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                            View
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            ) : (
+                                <Card>
+                                    <CardContent className="py-12">
+                                        <div className="text-center text-gray-500">
+                                            <CheckCircle className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+                                            <p className="font-medium">
+                                                No completed consultations
+                                            </p>
+                                            <p className="mt-1 text-sm">
+                                                Completed consultations from the last 24 hours will appear here
                                             </p>
                                         </div>
                                     </CardContent>
