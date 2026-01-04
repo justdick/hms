@@ -259,20 +259,33 @@ class RestoreService
         $this->streamGzipDecompress($filePath, $tempSqlFile);
 
         $tempErrorFile = sys_get_temp_dir().'/'.uniqid('mysql_err_').'.txt';
+        $tempCnfFile = null;
+
+        // Use MySQL options file for password to handle special characters safely
+        if (! empty($password)) {
+            $tempCnfFile = sys_get_temp_dir().'/'.uniqid('mysql_').'.cnf';
+            $cnfContent = "[client]\npassword=\"{$password}\"\n";
+            file_put_contents($tempCnfFile, $cnfContent);
+            // Restrict file permissions (on Unix systems)
+            if (function_exists('chmod')) {
+                @chmod($tempCnfFile, 0600);
+            }
+        }
 
         try {
             // Build mysql command
             $commandParts = [
                 escapeshellarg($mysqlPath),
-                '--host='.escapeshellarg($host),
-                '--port='.escapeshellarg($port),
-                '--user='.escapeshellarg($username),
             ];
 
-            if (! empty($password)) {
-                $commandParts[] = '--password='.escapeshellarg($password);
+            // Add defaults file first if we have a password
+            if ($tempCnfFile) {
+                $commandParts[] = '--defaults-extra-file='.escapeshellarg($tempCnfFile);
             }
 
+            $commandParts[] = '--host='.escapeshellarg($host);
+            $commandParts[] = '--port='.escapeshellarg($port);
+            $commandParts[] = '--user='.escapeshellarg($username);
             $commandParts[] = escapeshellarg($database);
 
             // Redirect input from temp file, errors to separate file
@@ -295,6 +308,9 @@ class RestoreService
             // Clean up temp files
             @unlink($tempSqlFile);
             @unlink($tempErrorFile);
+            if ($tempCnfFile && file_exists($tempCnfFile)) {
+                @unlink($tempCnfFile);
+            }
         }
     }
 

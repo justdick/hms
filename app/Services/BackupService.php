@@ -308,22 +308,35 @@ class BackupService
         // Create temp file for SQL output
         $tempSqlFile = sys_get_temp_dir().'/'.uniqid('mysqldump_').'.sql';
         $tempErrorFile = sys_get_temp_dir().'/'.uniqid('mysqldump_err_').'.txt';
+        $tempCnfFile = null;
+
+        // Use MySQL options file for password to handle special characters safely
+        if (! empty($password)) {
+            $tempCnfFile = sys_get_temp_dir().'/'.uniqid('mysql_').'.cnf';
+            $cnfContent = "[client]\npassword=\"{$password}\"\n";
+            file_put_contents($tempCnfFile, $cnfContent);
+            // Restrict file permissions (on Unix systems)
+            if (function_exists('chmod')) {
+                @chmod($tempCnfFile, 0600);
+            }
+        }
 
         // Build command string for shell execution
         $commandParts = [
             escapeshellarg($mysqldumpPath),
-            '--host='.escapeshellarg($host),
-            '--port='.escapeshellarg($port),
-            '--user='.escapeshellarg($username),
-            '--single-transaction',
-            '--routines',
-            '--triggers',
         ];
 
-        if (! empty($password)) {
-            $commandParts[] = '--password='.escapeshellarg($password);
+        // Add defaults file first if we have a password
+        if ($tempCnfFile) {
+            $commandParts[] = '--defaults-extra-file='.escapeshellarg($tempCnfFile);
         }
 
+        $commandParts[] = '--host='.escapeshellarg($host);
+        $commandParts[] = '--port='.escapeshellarg($port);
+        $commandParts[] = '--user='.escapeshellarg($username);
+        $commandParts[] = '--single-transaction';
+        $commandParts[] = '--routines';
+        $commandParts[] = '--triggers';
         $commandParts[] = escapeshellarg($database);
 
         // Redirect output to temp file, errors to separate file
@@ -332,6 +345,11 @@ class BackupService
         // Execute using exec()
         $returnCode = 0;
         exec($command, $output, $returnCode);
+
+        // Clean up temp config file immediately
+        if ($tempCnfFile && file_exists($tempCnfFile)) {
+            @unlink($tempCnfFile);
+        }
 
         // Check for errors
         $errorOutput = file_exists($tempErrorFile) ? trim(file_get_contents($tempErrorFile)) : '';
