@@ -25,6 +25,7 @@ class VitalSign extends Model
         'height',
         'bmi',
         'oxygen_saturation',
+        'blood_sugar',
         'notes',
         'recorded_at',
         'migrated_from_mittag',
@@ -35,13 +36,14 @@ class VitalSign extends Model
         return [
             'blood_pressure_systolic' => 'decimal:2',
             'blood_pressure_diastolic' => 'decimal:2',
-            'temperature' => 'decimal:2',
+            'temperature' => 'integer',
             'pulse_rate' => 'integer',
             'respiratory_rate' => 'integer',
-            'weight' => 'decimal:2',
+            'weight' => 'integer',
             'height' => 'decimal:2',
             'bmi' => 'decimal:2',
             'oxygen_saturation' => 'integer',
+            'blood_sugar' => 'decimal:1',
             'recorded_at' => 'datetime',
         ];
     }

@@ -35,6 +35,7 @@ interface VitalSigns {
     pulse_rate?: number | null;
     respiratory_rate?: number | null;
     oxygen_saturation?: number | null;
+    blood_sugar?: number | null;
     weight?: number | null;
     height?: number | null;
     notes?: string | null;
@@ -79,6 +80,7 @@ export function RecordVitalsModal({
         pulse_rate: '',
         respiratory_rate: '',
         oxygen_saturation: '',
+        blood_sugar: '',
         weight: '',
         height: '',
         notes: '',
@@ -122,6 +124,7 @@ export function RecordVitalsModal({
                         editVitals.respiratory_rate?.toString() || '',
                     oxygen_saturation:
                         editVitals.oxygen_saturation?.toString() || '',
+                    blood_sugar: editVitals.blood_sugar?.toString() || '',
                     weight: editVitals.weight?.toString() || '',
                     height: editVitals.height?.toString() || '',
                     notes: editVitals.notes || '',
@@ -135,6 +138,7 @@ export function RecordVitalsModal({
                     pulse_rate: '',
                     respiratory_rate: '',
                     oxygen_saturation: '',
+                    blood_sugar: '',
                     weight: '',
                     height: '',
                     notes: '',
@@ -175,7 +179,7 @@ export function RecordVitalsModal({
                 ? parseFloat(formData.blood_pressure_diastolic)
                 : null,
             temperature: formData.temperature
-                ? parseFloat(formData.temperature)
+                ? parseInt(formData.temperature)
                 : null,
             pulse_rate: formData.pulse_rate
                 ? parseInt(formData.pulse_rate)
@@ -187,7 +191,10 @@ export function RecordVitalsModal({
             oxygen_saturation: formData.oxygen_saturation
                 ? parseInt(formData.oxygen_saturation)
                 : null,
-            weight: formData.weight ? parseFloat(formData.weight) : null,
+            blood_sugar: formData.blood_sugar
+                ? parseFloat(formData.blood_sugar)
+                : null,
+            weight: formData.weight ? parseInt(formData.weight) : null,
             height: formData.height ? parseFloat(formData.height) : null,
             notes: formData.notes || null,
         };
@@ -273,7 +280,6 @@ export function RecordVitalsModal({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Systolic"
                                 type="number"
                                 required
                                 className="h-11 text-center text-lg font-semibold"
@@ -289,7 +295,6 @@ export function RecordVitalsModal({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Diastolic"
                                 type="number"
                                 required
                                 className="h-11 text-center text-lg font-semibold"
@@ -320,8 +325,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                step="0.1"
-                                placeholder="37.0"
                                 required
                                 className="text-center"
                             />
@@ -345,7 +348,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="72"
                                 required
                                 className="text-center"
                             />
@@ -369,7 +371,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="16"
                                 required
                                 className="text-center"
                             />
@@ -381,8 +382,8 @@ export function RecordVitalsModal({
                         </div>
                     </div>
 
-                    {/* Row 2: SpO2, Weight, Height */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Row 2: SpO2, Blood Sugar, Weight, Height */}
+                    <div className="grid grid-cols-4 gap-3">
                         <div>
                             <Label className="text-xs text-muted-foreground">
                                 SpO₂ (%)
@@ -396,7 +397,23 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="98"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">
+                                Sugar (mmol/L)
+                            </Label>
+                            <Input
+                                value={formData.blood_sugar}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_sugar',
+                                        e.target.value,
+                                    )
+                                }
+                                type="number"
+                                step="0.1"
                                 className="text-center"
                             />
                         </div>
@@ -410,8 +427,6 @@ export function RecordVitalsModal({
                                     handleInputChange('weight', e.target.value)
                                 }
                                 type="number"
-                                step="0.1"
-                                placeholder="70.0"
                                 className="text-center"
                             />
                         </div>
@@ -426,7 +441,6 @@ export function RecordVitalsModal({
                                 }
                                 type="number"
                                 step="0.1"
-                                placeholder="170"
                                 className="text-center"
                             />
                         </div>

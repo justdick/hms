@@ -35,6 +35,7 @@ interface VitalSigns {
     pulse_rate: number | null;
     respiratory_rate: number | null;
     oxygen_saturation: number | null;
+    blood_sugar: number | null;
     weight: number | null;
     height: number | null;
     notes: string | null;
@@ -75,6 +76,7 @@ export default function VitalsModal({
         pulse_rate: '',
         respiratory_rate: '',
         oxygen_saturation: '',
+        blood_sugar: '',
         weight: '',
         height: '',
         notes: '',
@@ -99,6 +101,7 @@ export default function VitalsModal({
                         existingVitals.respiratory_rate?.toString() || '',
                     oxygen_saturation:
                         existingVitals.oxygen_saturation?.toString() || '',
+                    blood_sugar: existingVitals.blood_sugar?.toString() || '',
                     weight: existingVitals.weight?.toString() || '',
                     height: existingVitals.height?.toString() || '',
                     notes: existingVitals.notes || '',
@@ -111,6 +114,7 @@ export default function VitalsModal({
                     pulse_rate: '',
                     respiratory_rate: '',
                     oxygen_saturation: '',
+                    blood_sugar: '',
                     weight: '',
                     height: '',
                     notes: '',
@@ -152,14 +156,16 @@ export default function VitalsModal({
                 formData.blood_pressure_diastolic,
             );
         if (formData.temperature)
-            submitData.temperature = parseFloat(formData.temperature);
+            submitData.temperature = parseInt(formData.temperature);
         if (formData.pulse_rate)
             submitData.pulse_rate = parseInt(formData.pulse_rate);
         if (formData.respiratory_rate)
             submitData.respiratory_rate = parseInt(formData.respiratory_rate);
         if (formData.oxygen_saturation)
             submitData.oxygen_saturation = parseInt(formData.oxygen_saturation);
-        if (formData.weight) submitData.weight = parseFloat(formData.weight);
+        if (formData.blood_sugar)
+            submitData.blood_sugar = parseFloat(formData.blood_sugar);
+        if (formData.weight) submitData.weight = parseInt(formData.weight);
         if (formData.height) submitData.height = parseFloat(formData.height);
         if (formData.notes) submitData.notes = formData.notes;
 
@@ -234,7 +240,6 @@ export default function VitalsModal({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Systolic"
                                 type="number"
                                 className="h-11 text-center text-lg font-semibold"
                             />
@@ -249,7 +254,6 @@ export default function VitalsModal({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Diastolic"
                                 type="number"
                                 className="h-11 text-center text-lg font-semibold"
                             />
@@ -278,8 +282,6 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
-                                step="0.1"
-                                placeholder="37.0"
                                 className="text-center"
                             />
                         </div>
@@ -296,7 +298,6 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="72"
                                 className="text-center"
                             />
                         </div>
@@ -313,14 +314,13 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="16"
                                 className="text-center"
                             />
                         </div>
                     </div>
 
-                    {/* Row 2: SpO2, Weight, Height */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Row 2: SpO2, Blood Sugar, Weight, Height */}
+                    <div className="grid grid-cols-4 gap-3">
                         <div>
                             <Label className="text-xs text-muted-foreground">
                                 SpO₂ (%)
@@ -334,7 +334,23 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="98"
+                                className="text-center"
+                            />
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">
+                                Sugar (mmol/L)
+                            </Label>
+                            <Input
+                                value={formData.blood_sugar}
+                                onChange={(e) =>
+                                    handleInputChange(
+                                        'blood_sugar',
+                                        e.target.value,
+                                    )
+                                }
+                                type="number"
+                                step="0.1"
                                 className="text-center"
                             />
                         </div>
@@ -348,8 +364,6 @@ export default function VitalsModal({
                                     handleInputChange('weight', e.target.value)
                                 }
                                 type="number"
-                                step="0.1"
-                                placeholder="70.0"
                                 className="text-center"
                             />
                         </div>
@@ -364,7 +378,6 @@ export default function VitalsModal({
                                 }
                                 type="number"
                                 step="0.1"
-                                placeholder="170"
                                 className="text-center"
                             />
                         </div>
