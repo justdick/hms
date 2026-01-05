@@ -184,7 +184,7 @@ class PermissionSeeder extends Seeder
             // Medication Administration Management
             'medications.view' => 'View medication schedules',
             'medications.administer' => 'Administer medications',
-            'medications.delete' => 'Delete medication administrations (within 2 hours)',
+            'medications.delete' => 'Delete medication administrations (within 3 days)',
             'medications.hold' => 'Hold medication administration',
             'medications.refuse' => 'Mark medication as refused',
             'medications.omit' => 'Omit medication administration',

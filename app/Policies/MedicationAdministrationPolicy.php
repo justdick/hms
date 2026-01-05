@@ -38,7 +38,7 @@ class MedicationAdministrationPolicy
 
     /**
      * Determine whether the user can delete medication administrations.
-     * Can only delete within 2 hours of recording.
+     * Can only delete within 3 days of recording.
      */
     public function delete(User $user, MedicationAdministration $medicationAdministration): bool
     {
@@ -46,9 +46,9 @@ class MedicationAdministrationPolicy
             return false;
         }
 
-        // Can only delete if recorded within the last 2 hours
+        // Can only delete if recorded within the last 3 days
         if ($medicationAdministration->administered_at) {
-            return $medicationAdministration->administered_at >= now()->subHours(2);
+            return $medicationAdministration->administered_at >= now()->subDays(3);
         }
 
         return true;

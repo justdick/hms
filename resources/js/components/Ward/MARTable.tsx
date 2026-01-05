@@ -126,12 +126,12 @@ export function MARTable({ administrations, prescriptions, admissionId, canDelet
         return prescriptions.find((p) => p.id === prescriptionId);
     };
 
-    // Check if a record can be deleted (within 2 hours)
+    // Check if a record can be deleted (within 3 days)
     const canDeleteRecord = (record: MedicationAdministration) => {
         if (!canDelete) return false;
         const administeredAt = new Date(record.administered_at);
         const hoursSince = differenceInHours(new Date(), administeredAt);
-        return hoursSince < 2;
+        return hoursSince < 72; // 3 days = 72 hours
     };
 
     // Handle delete confirmation
@@ -315,7 +315,7 @@ export function MARTable({ administrations, prescriptions, admissionId, canDelet
                         size="sm"
                         className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
                         onClick={() => handleDeleteClick(record)}
-                        title="Delete (within 2 hours only)"
+                        title="Delete (within 3 days only)"
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
