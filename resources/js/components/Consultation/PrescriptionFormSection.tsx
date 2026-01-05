@@ -225,8 +225,9 @@ export default function PrescriptionFormSection({
     const selectedDrug = drugs.find((d) => d.id === prescriptionData.drug_id);
 
     // When editing, convert to smart mode with values converted to smart format
+    // Only if smart mode is enabled
     useEffect(() => {
-        if (isEditing && prescriptionData.frequency) {
+        if (isEditing && prescriptionData.frequency && smartModeEnabled) {
             setMode('smart');
             // Generate smart input from existing values
             const parts: string[] = [];
@@ -246,7 +247,7 @@ export default function PrescriptionFormSection({
             setSmartInput(parts.join(' '));
             setParsedResult(null);
         }
-    }, [isEditing]);
+    }, [isEditing, smartModeEnabled]);
 
     // Helper to convert frequency to smart input format
     const frequencyToSmartFormat = (frequency: string): string => {

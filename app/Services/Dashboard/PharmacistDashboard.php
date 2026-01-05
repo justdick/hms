@@ -148,7 +148,13 @@ class PharmacistDashboard extends AbstractDashboardWidget
             ->whereNotNull('drug_id')
             ->with([
                 'drug',
-                'prescribable.patientCheckin.patient',
+                'prescribable' => function ($morphTo) {
+                    $morphTo->morphWith([
+                        \App\Models\Consultation::class => ['patientCheckin.patient'],
+                        \App\Models\WardRound::class => ['patientAdmission.patient'],
+                        \App\Models\PatientAdmission::class => ['patient'],
+                    ]);
+                },
             ])
             ->orderBy('created_at')
             ->limit(10)
