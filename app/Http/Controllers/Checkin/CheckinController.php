@@ -116,11 +116,14 @@ class CheckinController extends Controller
 
         // Check for duplicate CCC - must be unique for active (non-completed) claims
         // NHIS can regenerate same CCC after months/years, so we only block if CCC is in active use
+        // Migrated data from Mittag is excluded - those CCCs can be reused
         if (! empty($validated['claim_check_code'])) {
             // Check if CCC already exists in insurance_claims for an active claim
             // Active = not yet submitted/approved/paid/rejected (still in workflow)
+            // Exclude claims linked to migrated checkins
             $existingClaim = InsuranceClaim::where('claim_check_code', $validated['claim_check_code'])
                 ->whereIn('status', ['draft', 'pending_vetting', 'vetted'])
+                ->whereHas('checkin', fn ($q) => $q->where('migrated_from_mittag', false))
                 ->first();
 
             if ($existingClaim) {
@@ -130,7 +133,9 @@ class CheckinController extends Controller
             }
 
             // Also check patient_checkins for active check-ins (not completed/cancelled) that haven't created claims yet
+            // Exclude migrated checkins - those CCCs can be reused
             $duplicateCcc = PatientCheckin::where('claim_check_code', $validated['claim_check_code'])
+                ->where('migrated_from_mittag', false)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereDoesntHave('insuranceClaim') // No claim created yet
                 ->exists();
