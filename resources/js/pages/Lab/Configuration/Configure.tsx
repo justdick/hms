@@ -173,11 +173,13 @@ export default function LabServiceConfigure({ labService }: Props) {
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
                             <SelectContent>
-                                {param.options?.map((option, i) => (
-                                    <SelectItem key={i} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
+                                {param.options
+                                    ?.filter((option) => option.trim() !== '')
+                                    .map((option, i) => (
+                                        <SelectItem key={i} value={option}>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
                             </SelectContent>
                         </Select>
                     </div>
