@@ -31,16 +31,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('create', WardRound::class);
 
-        $admission->load([
-            'patient',
-            'ward',
-            'admissionConsultation',
-            'activeDiagnoses.diagnosedBy',
-            'vitalSigns' => fn ($q) => $q->latest('recorded_at')->limit(5),
-        ]);
-
-        $patient = $admission->patient;
-
         // Check if there's already an in-progress ward round
         $existingInProgress = WardRound::where('patient_admission_id', $admission->id)
             ->where('status', 'in_progress')
@@ -75,53 +65,11 @@ class WardRoundController extends Controller
             'status' => 'in_progress',
         ]);
 
-        // Get patient's previous ward rounds for this admission
-        $patientHistory = [
-            'previousWardRounds' => WardRound::with([
-                'doctor:id,name',
-            ])
-                ->where('patient_admission_id', $admission->id)
-                ->where('id', '!=', $wardRound->id)
-                ->orderBy('round_datetime', 'desc')
-                ->limit(10)
-                ->get(),
-            'previousPrescriptions' => \App\Models\Prescription::with('prescribable')
-                ->where('prescribable_type', WardRound::class)
-                ->whereHasMorph('prescribable', [WardRound::class], function ($query) use ($admission) {
-                    $query->where('patient_admission_id', $admission->id);
-                })
-                ->orderBy('created_at', 'desc')
-                ->limit(20)
-                ->get(),
-            'allergies' => [], // Could be extended with actual allergy data
-        ];
-
-        // Patient-level medical histories
-        $patientHistories = [
-            'past_medical_surgical_history' => $patient->past_medical_surgical_history ?? '',
-            'drug_history' => $patient->drug_history ?? '',
-            'family_history' => $patient->family_history ?? '',
-            'social_history' => $patient->social_history ?? '',
-        ];
-
-        // Load existing ward round data with relationships
-        $wardRound->load([
-            'doctor:id,name',
-            'diagnoses.diagnosedBy:id,name',
-            'prescriptions.drug',
-            'labOrders.labService',
-        ]);
-
-        return Inertia::render('Ward/WardRoundCreate', [
-            'admission' => $admission,
-            'wardRound' => $wardRound,
-            'dayNumber' => $dayNumber,
-            // Lab services loaded via async search - too many to load upfront
-            'patientHistory' => $patientHistory,
-            'patientHistories' => $patientHistories,
-            'availableDrugs' => \App\Models\Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
-            // Diagnoses loaded via async search - too many to load upfront
-            'availableProcedures' => MinorProcedureType::active()->orderBy('type')->orderBy('name')->get(['id', 'name', 'code', 'type', 'category', 'price']),
+        // Redirect to edit route so auto-save works correctly
+        // (staying on /create would cause new ward rounds to be created on each back() response)
+        return redirect()->route('admissions.ward-rounds.edit', [
+            'admission' => $admission->id,
+            'wardRound' => $wardRound->id,
         ]);
     }
 
@@ -222,16 +170,35 @@ class WardRoundController extends Controller
 
         $validated = $request->validated();
 
-        // Update consultation notes and round date
-        $wardRound->update([
-            'round_datetime' => $validated['round_datetime'] ?? $wardRound->round_datetime,
+        // Only update round_datetime if the date portion actually changed
+        // This preserves the original creation time unless doctor explicitly changes the date
+        $updateData = [
             'presenting_complaint' => $validated['presenting_complaint'] ?? $wardRound->presenting_complaint,
             'history_presenting_complaint' => $validated['history_presenting_complaint'] ?? $wardRound->history_presenting_complaint,
             'on_direct_questioning' => $validated['on_direct_questioning'] ?? $wardRound->on_direct_questioning,
             'examination_findings' => $validated['examination_findings'] ?? $wardRound->examination_findings,
             'assessment_notes' => $validated['assessment_notes'] ?? $wardRound->assessment_notes,
             'plan_notes' => $validated['plan_notes'] ?? $wardRound->plan_notes,
-        ]);
+        ];
+
+        // Check if date was manually changed (compare date portions only)
+        if (isset($validated['round_datetime'])) {
+            $newDate = \Carbon\Carbon::parse($validated['round_datetime'])->startOfDay();
+            $currentDate = \Carbon\Carbon::parse($wardRound->round_datetime)->startOfDay();
+
+            if (! $newDate->equalTo($currentDate)) {
+                // Date changed - update with new date but preserve original time
+                $originalTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+                $updateData['round_datetime'] = $newDate->setTime(
+                    $originalTime->hour,
+                    $originalTime->minute,
+                    $originalTime->second
+                );
+            }
+            // If dates are the same, don't update round_datetime at all
+        }
+
+        $wardRound->update($updateData);
 
         // Update patient medical histories if provided
         $patient = $admission->patient;

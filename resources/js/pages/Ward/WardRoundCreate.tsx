@@ -245,6 +245,7 @@ export default function WardRoundCreate({
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [dateManuallyChanged, setDateManuallyChanged] = useState(false);
     const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Lab order state
@@ -268,7 +269,6 @@ export default function WardRoundCreate({
         special_instructions: '',
     });
 
-    const [showCompleteDialog, setShowCompleteDialog] = useState(false);
     const [deleteDialogState, setDeleteDialogState] = useState<{
         open: boolean;
         type: 'diagnosis' | 'prescription' | 'laborder';
@@ -537,20 +537,22 @@ export default function WardRoundCreate({
         }
     };
 
-    const handleCompleteWardRound = () => {
-        router.post(
-            `/admissions/${admission.id}/ward-rounds/${wardRound.id}/complete`,
-            {
-                ...data,
+    const handleSaveAndExit = () => {
+        // Save current data and navigate back to patient page
+        // Ward round stays in_progress - can be continued later
+        setIsSaving(true);
+        patch(`/admissions/${admission.id}/ward-rounds/${wardRound.id}`, {
+            onSuccess: () => {
+                setIsSaving(false);
+                setHasUnsavedChanges(false);
+                router.visit(
+                    `/wards/${admission.ward.id}/patients/${admission.id}`,
+                );
             },
-            {
-                onSuccess: () => {
-                    router.visit(
-                        `/wards/${admission.ward.id}/patients/${admission.id}`,
-                    );
-                },
+            onError: () => {
+                setIsSaving(false);
             },
-        );
+        });
     };
 
     const formatDateTime = (dateString: string) => {
@@ -744,12 +746,10 @@ export default function WardRoundCreate({
                             allergies={patientHistory?.allergies || []}
                         />
                         <Button
-                            onClick={() => setShowCompleteDialog(true)}
+                            onClick={handleSaveAndExit}
                             variant="outline"
-                            className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
                         >
-                            <Stethoscope className="mr-2 h-4 w-4" />
-                            Complete Ward Round
+                            Save & Exit
                         </Button>
                     </div>
                     <div className="flex items-center gap-2">
@@ -765,6 +765,7 @@ export default function WardRoundCreate({
                             value={data.round_datetime}
                             onChange={(e) => {
                                 setData('round_datetime', e.target.value);
+                                setDateManuallyChanged(true);
                                 setHasUnsavedChanges(true);
                             }}
                             min={admissionDate}
@@ -1354,28 +1355,6 @@ export default function WardRoundCreate({
                     </TabsContent>
                 </Tabs>
             </div>
-
-            {/* Complete Ward Round Dialog */}
-            <AlertDialog
-                open={showCompleteDialog}
-                onOpenChange={setShowCompleteDialog}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Complete Ward Round</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to complete this ward round?
-                            This will save all the information you've entered.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCompleteWardRound}>
-                            Complete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
 
             {/* Delete/Cancel Dialog */}
             <AlertDialog
