@@ -182,11 +182,9 @@ class PermissionSeeder extends Seeder
             'ward_rounds.force_delete' => 'Permanently delete ward rounds',
 
             // Medication Administration Management
-            'view medication administrations' => 'View medication schedules',
-            'administer medications' => 'Administer medications',
-            'delete medication administrations' => 'Delete medication administrations',
-            'medications.view' => 'View medication schedules (legacy)',
-            'medications.administer' => 'Administer medications (legacy)',
+            'medications.view' => 'View medication schedules',
+            'medications.administer' => 'Administer medications',
+            'medications.delete' => 'Delete medication administrations (within 2 hours)',
             'medications.hold' => 'Hold medication administration',
             'medications.refuse' => 'Mark medication as refused',
             'medications.omit' => 'Omit medication administration',
@@ -319,11 +317,9 @@ class PermissionSeeder extends Seeder
             'nursing-notes.update',
             'nursing-notes.delete',
             'ward_rounds.view',
-            'view medication administrations',
-            'administer medications',
-            'delete medication administrations',
             'medications.view',
             'medications.administer',
+            'medications.delete',
             'medications.hold',
             'medications.refuse',
             'medications.omit',
@@ -366,9 +362,8 @@ class PermissionSeeder extends Seeder
             'ward_rounds.view',
             'ward_rounds.create',
             'ward_rounds.update',
-            'view medication administrations',
-            'administer medications',
             'medications.view',
+            'medications.administer',
             'manage prescriptions', // Doctors can discontinue prescriptions
             'investigations.order', // Doctors can order imaging studies
             'investigations.upload-external', // Doctors can upload external imaging

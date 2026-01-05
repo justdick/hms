@@ -254,6 +254,26 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
+     * Delete a medication administration record.
+     * Can only delete within 2 hours of recording.
+     */
+    public function destroy(PatientAdmission $admission, MedicationAdministration $medication)
+    {
+        $this->authorize('delete', $medication);
+
+        // Verify the medication administration belongs to this admission
+        if ($medication->patient_admission_id !== $admission->id) {
+            return back()->withErrors(['medication' => 'This record does not belong to this admission.']);
+        }
+
+        // Record who deleted it before soft deleting
+        $medication->update(['deleted_by_id' => auth()->id()]);
+        $medication->delete();
+
+        return back()->with('success', 'Medication administration record deleted.');
+    }
+
+    /**
      * Get active prescriptions for an admission.
      */
     private function getActivePrescriptions(PatientAdmission $admission)

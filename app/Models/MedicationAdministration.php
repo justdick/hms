@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Medication Administration Record (MAR)
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MedicationAdministration extends Model
 {
     /** @use HasFactory<\Database\Factories\MedicationAdministrationFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'prescription_id',
@@ -29,6 +30,7 @@ class MedicationAdministration extends Model
         'dosage_given',
         'route',
         'notes',
+        'deleted_by_id',
     ];
 
     protected function casts(): array
@@ -51,6 +53,11 @@ class MedicationAdministration extends Model
     public function administeredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'administered_by_id');
+    }
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by_id');
     }
 
     // Status check methods

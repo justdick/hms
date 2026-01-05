@@ -331,6 +331,7 @@ interface Props {
     activeOverride?: ServiceAccessOverride | null;
     can_edit_vitals_timestamp?: boolean;
     can_edit_medication_timestamp?: boolean;
+    can_delete_medication_administration?: boolean;
 }
 
 const NOTE_TYPES = [
@@ -352,6 +353,7 @@ export default function WardPatientShow({
     activeOverride,
     can_edit_vitals_timestamp = false,
     can_edit_medication_timestamp = false,
+    can_delete_medication_administration = false,
 }: Props) {
     const { auth } = usePage<SharedData>().props;
     const canDischarge = auth.permissions?.admissions?.discharge ?? false;
@@ -1177,6 +1179,8 @@ export default function WardPatientShow({
                             <MARTable
                                 administrations={allMedications}
                                 prescriptions={allPrescriptions}
+                                admissionId={admission.id}
+                                canDelete={can_delete_medication_administration}
                             />
                         </div>
                     </TabsContent>

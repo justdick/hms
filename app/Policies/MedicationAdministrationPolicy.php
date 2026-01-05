@@ -17,7 +17,7 @@ class MedicationAdministrationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view medication administrations');
+        return $user->can('medications.view');
     }
 
     /**
@@ -25,7 +25,7 @@ class MedicationAdministrationPolicy
      */
     public function view(User $user, MedicationAdministration $medicationAdministration): bool
     {
-        return $user->can('view medication administrations');
+        return $user->can('medications.view');
     }
 
     /**
@@ -33,7 +33,7 @@ class MedicationAdministrationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('administer medications');
+        return $user->can('medications.administer');
     }
 
     /**
@@ -42,7 +42,7 @@ class MedicationAdministrationPolicy
      */
     public function delete(User $user, MedicationAdministration $medicationAdministration): bool
     {
-        if (! $user->can('delete medication administrations')) {
+        if (! $user->can('medications.delete')) {
             return false;
         }
 

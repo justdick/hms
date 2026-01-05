@@ -106,6 +106,7 @@ class WardPatientController extends Controller
             'scheduleHistory' => $scheduleHistory,
             'can_edit_vitals_timestamp' => $request->user()->can('vitals.edit-timestamp'),
             'can_edit_medication_timestamp' => $request->user()->can('medications.edit-timestamp'),
+            'can_delete_medication_administration' => $request->user()->can('medications.delete'),
         ]);
     }
 

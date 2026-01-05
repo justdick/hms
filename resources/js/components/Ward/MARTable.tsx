@@ -1,5 +1,15 @@
 'use client';
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +29,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { router } from '@inertiajs/react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -30,7 +41,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { format, isToday } from 'date-fns';
+import { differenceInHours, format, isToday } from 'date-fns';
 import {
     ArrowUpDown,
     ChevronDown,
@@ -38,8 +49,10 @@ import {
     ChevronRight,
     Pill,
     Search,
+    Trash2,
 } from 'lucide-react';
 import * as React from 'react';
+import { toast } from 'sonner';
 
 interface Drug {
     id: number;
@@ -74,6 +87,8 @@ export interface MedicationAdministration {
 interface MARTableProps {
     administrations: MedicationAdministration[];
     prescriptions: Prescription[];
+    admissionId: number;
+    canDelete?: boolean;
 }
 
 const statusConfig: Record<
@@ -94,7 +109,7 @@ const statusConfig: Record<
     omitted: { label: 'Omitted', variant: 'outline' },
 };
 
-export function MARTable({ administrations, prescriptions }: MARTableProps) {
+export function MARTable({ administrations, prescriptions, admissionId, canDelete = false }: MARTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         { id: 'administered_at', desc: true },
     ]);
@@ -102,10 +117,49 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
         React.useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [statusFilter, setStatusFilter] = React.useState<string>('all');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
+    const [deletingRecord, setDeletingRecord] = React.useState<MedicationAdministration | null>(null);
+    const [isDeleting, setIsDeleting] = React.useState(false);
 
     // Helper to get prescription details
     const getPrescription = (prescriptionId: number) => {
         return prescriptions.find((p) => p.id === prescriptionId);
+    };
+
+    // Check if a record can be deleted (within 2 hours)
+    const canDeleteRecord = (record: MedicationAdministration) => {
+        if (!canDelete) return false;
+        const administeredAt = new Date(record.administered_at);
+        const hoursSince = differenceInHours(new Date(), administeredAt);
+        return hoursSince < 2;
+    };
+
+    // Handle delete confirmation
+    const handleDeleteClick = (record: MedicationAdministration) => {
+        setDeletingRecord(record);
+        setDeleteConfirmOpen(true);
+    };
+
+    // Handle actual delete
+    const handleConfirmDelete = () => {
+        if (!deletingRecord) return;
+
+        setIsDeleting(true);
+        router.delete(`/admissions/${admissionId}/medications/${deletingRecord.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Medication administration record deleted');
+                setDeleteConfirmOpen(false);
+                setDeletingRecord(null);
+            },
+            onError: (errors: any) => {
+                const errorMessage = errors.medication || 'Failed to delete record';
+                toast.error(errorMessage);
+            },
+            onFinish: () => {
+                setIsDeleting(false);
+            },
+        });
     };
 
     // Filter data by status
@@ -246,6 +300,28 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                 );
             },
         },
+        ...(canDelete ? [{
+            id: 'actions',
+            header: '',
+            cell: ({ row }: { row: { original: MedicationAdministration } }) => {
+                const record = row.original;
+                const deletable = canDeleteRecord(record);
+                
+                if (!deletable) return null;
+                
+                return (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                        onClick={() => handleDeleteClick(record)}
+                        title="Delete (within 2 hours only)"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                );
+            },
+        }] : []),
     ];
 
     const table = useReactTable({
@@ -411,6 +487,36 @@ export function MARTable({ administrations, prescriptions }: MARTableProps) {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Medication Record</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this medication administration record?
+                            {deletingRecord && (
+                                <span className="mt-2 block font-medium text-foreground">
+                                    {getPrescription(deletingRecord.prescription_id)?.drug?.name || 
+                                     getPrescription(deletingRecord.prescription_id)?.medication_name || 
+                                     'Unknown medication'} - {statusConfig[deletingRecord.status]?.label}
+                                </span>
+                            )}
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

@@ -56,6 +56,7 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::post('/{admission}/medications/hold', [MedicationAdministrationController::class, 'hold'])->name('medications.hold');
     Route::post('/{admission}/medications/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
     Route::post('/{admission}/medications/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
+    Route::delete('/{admission}/medications/{medication}', [MedicationAdministrationController::class, 'destroy'])->name('medications.destroy');
 });
 
 // Vitals Alert API Routes (JSON responses for AJAX calls)
