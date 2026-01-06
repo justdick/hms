@@ -60,7 +60,7 @@ export function ConsultationVitalsCard({ vitalSign }: Props) {
             value:
                 vitalSign.blood_pressure_systolic &&
                 vitalSign.blood_pressure_diastolic
-                    ? `${vitalSign.blood_pressure_systolic}/${vitalSign.blood_pressure_diastolic}`
+                    ? `${Math.round(vitalSign.blood_pressure_systolic)}/${Math.round(vitalSign.blood_pressure_diastolic)}`
                     : null,
             unit: 'mmHg',
             show:

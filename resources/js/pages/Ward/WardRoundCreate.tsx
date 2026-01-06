@@ -711,8 +711,8 @@ export default function WardRoundCreate({
                                         BP:{' '}
                                     </span>
                                     <span className="font-medium text-green-900 dark:text-green-100">
-                                        {latestVitals.blood_pressure_systolic}/
-                                        {latestVitals.blood_pressure_diastolic}
+                                        {Math.round(latestVitals.blood_pressure_systolic)}/
+                                        {Math.round(latestVitals.blood_pressure_diastolic)}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
@@ -864,13 +864,13 @@ export default function WardRoundCreate({
                                                     <Activity className="h-5 w-5 text-red-600 dark:text-red-400" />
                                                 </div>
                                                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                                    {
-                                                        latestVitals.blood_pressure_systolic
-                                                    }
+                                                    {Math.round(
+                                                        latestVitals.blood_pressure_systolic,
+                                                    )}
                                                     /
-                                                    {
-                                                        latestVitals.blood_pressure_diastolic
-                                                    }
+                                                    {Math.round(
+                                                        latestVitals.blood_pressure_diastolic,
+                                                    )}
                                                 </p>
                                                 <p className="mt-2 text-xs text-red-700 dark:text-red-300">
                                                     Normal: 90-120/60-80 mmHg
@@ -975,13 +975,13 @@ export default function WardRoundCreate({
                                                                         Pressure
                                                                     </p>
                                                                     <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                                        {
-                                                                            vitals.blood_pressure_systolic
-                                                                        }
+                                                                        {Math.round(
+                                                                            vitals.blood_pressure_systolic,
+                                                                        )}
                                                                         /
-                                                                        {
-                                                                            vitals.blood_pressure_diastolic
-                                                                        }
+                                                                        {Math.round(
+                                                                            vitals.blood_pressure_diastolic,
+                                                                        )}
                                                                     </p>
                                                                 </div>
                                                                 <div>

@@ -346,13 +346,13 @@ export function PreviousVisitModal({ visit, open, onOpenChange }: Props) {
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                                                {
-                                                    latestVitals.blood_pressure_systolic
-                                                }
+                                                {Math.round(
+                                                    latestVitals.blood_pressure_systolic,
+                                                )}
                                                 /
-                                                {
-                                                    latestVitals.blood_pressure_diastolic
-                                                }
+                                                {Math.round(
+                                                    latestVitals.blood_pressure_diastolic,
+                                                )}
                                             </p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                                 Normal: 90-120/60-80 mmHg

@@ -171,12 +171,12 @@ export function RecordVitalsModal({
         setErrors({});
 
         const submitData: Record<string, string | number | null> = {
-            // Required fields - always include them
+            // All fields are optional
             blood_pressure_systolic: formData.blood_pressure_systolic
-                ? parseFloat(formData.blood_pressure_systolic)
+                ? parseInt(formData.blood_pressure_systolic)
                 : null,
             blood_pressure_diastolic: formData.blood_pressure_diastolic
-                ? parseFloat(formData.blood_pressure_diastolic)
+                ? parseInt(formData.blood_pressure_diastolic)
                 : null,
             temperature: formData.temperature
                 ? parseInt(formData.temperature)
@@ -268,8 +268,7 @@ export function RecordVitalsModal({
                     {/* Blood Pressure - prominent */}
                     <div className="rounded-lg border bg-muted/30 p-3">
                         <Label className="mb-2 block text-sm font-medium">
-                            Blood Pressure (mmHg){' '}
-                            <span className="text-destructive">*</span>
+                            Blood Pressure (mmHg)
                         </Label>
                         <div className="flex items-center gap-2">
                             <Input
@@ -281,7 +280,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                required
+                                placeholder="120"
                                 className="h-11 text-center text-lg font-semibold"
                             />
                             <span className="text-xl font-bold text-muted-foreground">
@@ -296,7 +295,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                required
+                                placeholder="80"
                                 className="h-11 text-center text-lg font-semibold"
                             />
                         </div>
@@ -309,12 +308,11 @@ export function RecordVitalsModal({
                         )}
                     </div>
 
-                    {/* Row 1: Temp, Pulse, Resp - all required */}
+                    {/* Row 1: Temp, Pulse, Resp */}
                     <div className="grid grid-cols-3 gap-3">
                         <div>
                             <Label className="text-xs text-muted-foreground">
-                                Temp (°C){' '}
-                                <span className="text-destructive">*</span>
+                                Temp (°C)
                             </Label>
                             <Input
                                 value={formData.temperature}
@@ -325,7 +323,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                required
+                                placeholder="37"
                                 className="text-center"
                             />
                             {errors.temperature && (
@@ -336,8 +334,7 @@ export function RecordVitalsModal({
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">
-                                Pulse (BPM){' '}
-                                <span className="text-destructive">*</span>
+                                Pulse (BPM)
                             </Label>
                             <Input
                                 value={formData.pulse_rate}
@@ -348,7 +345,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                required
+                                placeholder="72"
                                 className="text-center"
                             />
                             {errors.pulse_rate && (
@@ -359,8 +356,7 @@ export function RecordVitalsModal({
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">
-                                Resp (/min){' '}
-                                <span className="text-destructive">*</span>
+                                Resp (/min)
                             </Label>
                             <Input
                                 value={formData.respiratory_rate}
@@ -371,7 +367,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                required
+                                placeholder="16"
                                 className="text-center"
                             />
                             {errors.respiratory_rate && (

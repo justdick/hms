@@ -203,7 +203,7 @@ export default function VitalsOverview({
 
                         <VitalCard
                             title="Blood Pressure"
-                            current={`${latestVitals.blood_pressure_systolic}/${latestVitals.blood_pressure_diastolic}`}
+                            current={`${Math.round(latestVitals.blood_pressure_systolic)}/${Math.round(latestVitals.blood_pressure_diastolic)}`}
                             unit="mmHg"
                             normalRange="<120/80"
                             status={bpStatus}
@@ -284,8 +284,8 @@ export default function VitalsOverview({
                                             </span>
                                             <span>
                                                 BP:{' '}
-                                                {vital.blood_pressure_systolic}/
-                                                {vital.blood_pressure_diastolic}
+                                                {Math.round(vital.blood_pressure_systolic)}/
+                                                {Math.round(vital.blood_pressure_diastolic)}
                                             </span>
                                             <span>HR: {vital.heart_rate}</span>
                                             <span>

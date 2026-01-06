@@ -88,7 +88,7 @@ export default function VitalsRecordingForm({
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="blood_pressure_systolic">
-                            Systolic BP (mmHg) *
+                            Systolic BP (mmHg)
                         </Label>
                         <Input
                             id="blood_pressure_systolic"
@@ -101,7 +101,6 @@ export default function VitalsRecordingForm({
                                     e.target.value,
                                 )
                             }
-                            required
                         />
                         {errors.blood_pressure_systolic && (
                             <p className="text-sm text-destructive">
@@ -112,7 +111,7 @@ export default function VitalsRecordingForm({
 
                     <div className="space-y-2">
                         <Label htmlFor="blood_pressure_diastolic">
-                            Diastolic BP (mmHg) *
+                            Diastolic BP (mmHg)
                         </Label>
                         <Input
                             id="blood_pressure_diastolic"
@@ -125,7 +124,6 @@ export default function VitalsRecordingForm({
                                     e.target.value,
                                 )
                             }
-                            required
                         />
                         {errors.blood_pressure_diastolic && (
                             <p className="text-sm text-destructive">
@@ -138,17 +136,15 @@ export default function VitalsRecordingForm({
                 {/* Temperature and Pulse */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="temperature">Temperature (°C) *</Label>
+                        <Label htmlFor="temperature">Temperature (°C)</Label>
                         <Input
                             id="temperature"
                             type="number"
-                            step="0.1"
-                            placeholder="37.0"
+                            placeholder="37"
                             value={data.temperature}
                             onChange={(e) =>
                                 setData('temperature', e.target.value)
                             }
-                            required
                         />
                         {errors.temperature && (
                             <p className="text-sm text-destructive">
@@ -158,7 +154,7 @@ export default function VitalsRecordingForm({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="pulse_rate">Pulse Rate (bpm) *</Label>
+                        <Label htmlFor="pulse_rate">Pulse Rate (bpm)</Label>
                         <Input
                             id="pulse_rate"
                             type="number"
@@ -167,7 +163,6 @@ export default function VitalsRecordingForm({
                             onChange={(e) =>
                                 setData('pulse_rate', e.target.value)
                             }
-                            required
                         />
                         {errors.pulse_rate && (
                             <p className="text-sm text-destructive">

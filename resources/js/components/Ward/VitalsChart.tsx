@@ -79,6 +79,180 @@ interface IndividualChartProps {
     icon: React.ReactNode;
 }
 
+interface BloodPressureChartProps {
+    systolicData: Array<{ date: string; value: number | undefined }>;
+    diastolicData: Array<{ date: string; value: number | undefined }>;
+    icon: React.ReactNode;
+}
+
+function BloodPressureChart({
+    systolicData,
+    diastolicData,
+    icon,
+}: BloodPressureChartProps) {
+    const chartConfig = {
+        systolic: {
+            label: 'Systolic',
+            color: 'hsl(0, 84%, 60%)', // Red
+        },
+        diastolic: {
+            label: 'Diastolic',
+            color: 'hsl(221, 83%, 53%)', // Blue
+        },
+    } satisfies ChartConfig;
+
+    // Combine data for the chart
+    const combinedData = systolicData.map((item, index) => ({
+        date: item.date,
+        systolic: item.value,
+        diastolic: diastolicData[index]?.value,
+    }));
+
+    // Filter out data points with no values
+    const validData = combinedData.filter(
+        (d) =>
+            (d.systolic !== undefined && d.systolic !== null) ||
+            (d.diastolic !== undefined && d.diastolic !== null),
+    );
+
+    const hasData = validData.length > 0;
+
+    if (!hasData) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        {icon}
+                        Blood Pressure
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex h-[200px] items-center justify-center">
+                        <p className="text-sm text-muted-foreground">
+                            No data recorded
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // Calculate min/max for Y-axis domain with padding
+    const allValues = validData.flatMap((d) =>
+        [d.systolic, d.diastolic].filter(
+            (v) => v !== undefined && v !== null,
+        ) as number[],
+    );
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const padding = (maxValue - minValue) * 0.1 || 10;
+    const yMin = Math.floor(minValue - padding);
+    const yMax = Math.ceil(maxValue + padding);
+
+    const latestSystolic = validData[validData.length - 1]?.systolic;
+    const latestDiastolic = validData[validData.length - 1]?.diastolic;
+    const dateRange =
+        validData.length >= 2
+            ? `${validData[0].date} - ${validData[validData.length - 1].date}`
+            : validData[0]?.date || '';
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    {icon}
+                    Blood Pressure
+                </CardTitle>
+                <CardDescription>{dateRange}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={chartConfig}>
+                    <LineChart
+                        accessibilityLayer
+                        data={combinedData}
+                        margin={{
+                            top: 20,
+                            left: 12,
+                            right: 12,
+                            bottom: 5,
+                        }}
+                    >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => {
+                                const parts = value.split(',');
+                                return parts[0];
+                            }}
+                        />
+                        <YAxis
+                            domain={[yMin, yMax]}
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            width={40}
+                            tickFormatter={(value) => value.toFixed(0)}
+                        />
+                        <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="line" />}
+                        />
+                        <Line
+                            dataKey="systolic"
+                            type="natural"
+                            stroke="var(--color-systolic)"
+                            strokeWidth={2}
+                            dot={{
+                                fill: 'var(--color-systolic)',
+                            }}
+                            activeDot={{
+                                r: 6,
+                            }}
+                        />
+                        <Line
+                            dataKey="diastolic"
+                            type="natural"
+                            stroke="var(--color-diastolic)"
+                            strokeWidth={2}
+                            dot={{
+                                fill: 'var(--color-diastolic)',
+                            }}
+                            activeDot={{
+                                r: 6,
+                            }}
+                        />
+                    </LineChart>
+                </ChartContainer>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-2 text-sm">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: 'hsl(0, 84%, 60%)' }}
+                        />
+                        <span className="text-muted-foreground">Systolic</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: 'hsl(221, 83%, 53%)' }}
+                        />
+                        <span className="text-muted-foreground">Diastolic</span>
+                    </div>
+                </div>
+                <div className="leading-none text-muted-foreground">
+                    Latest reading: {latestSystolic ?? '-'}/
+                    {latestDiastolic ?? '-'} mmHg
+                </div>
+            </CardFooter>
+        </Card>
+    );
+}
+
 function IndividualVitalChart({
     data,
     dataKey,
@@ -322,12 +496,12 @@ export function VitalsChart({ vitals }: Props) {
 
     const systolicData = reversedVitals.map((vital) => ({
         date: formatDateTime(vital.recorded_at),
-        value: vital.blood_pressure_systolic,
+        value: vital.blood_pressure_systolic ? Math.round(vital.blood_pressure_systolic) : vital.blood_pressure_systolic,
     }));
 
     const diastolicData = reversedVitals.map((vital) => ({
         date: formatDateTime(vital.recorded_at),
-        value: vital.blood_pressure_diastolic,
+        value: vital.blood_pressure_diastolic ? Math.round(vital.blood_pressure_diastolic) : vital.blood_pressure_diastolic,
     }));
 
     const pulseData = reversedVitals.map((vital) => ({
@@ -510,29 +684,11 @@ export function VitalsChart({ vitals }: Props) {
                     )}
 
                     {vitalTypeFilter.bloodPressure && (
-                        <>
-                            <IndividualVitalChart
-                                data={systolicData}
-                                dataKey="systolic"
-                                label="Blood Pressure (Systolic)"
-                                color="var(--chart-2)"
-                                unit="mmHg"
-                                icon={
-                                    <Heart className="h-4 w-4 text-chart-2" />
-                                }
-                            />
-
-                            <IndividualVitalChart
-                                data={diastolicData}
-                                dataKey="diastolic"
-                                label="Blood Pressure (Diastolic)"
-                                color="var(--chart-3)"
-                                unit="mmHg"
-                                icon={
-                                    <Heart className="h-4 w-4 text-chart-3" />
-                                }
-                            />
-                        </>
+                        <BloodPressureChart
+                            systolicData={systolicData}
+                            diastolicData={diastolicData}
+                            icon={<Heart className="h-4 w-4 text-red-500" />}
+                        />
                     )}
 
                     {vitalTypeFilter.pulse && (

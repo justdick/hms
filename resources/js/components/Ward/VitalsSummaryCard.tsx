@@ -96,13 +96,13 @@ export function VitalsSummaryCard({
                                                 BP
                                             </p>
                                             <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {
-                                                    latestVital.blood_pressure_systolic
-                                                }
+                                                {Math.round(
+                                                    latestVital.blood_pressure_systolic,
+                                                )}
                                                 /
-                                                {
-                                                    latestVital.blood_pressure_diastolic
-                                                }
+                                                {Math.round(
+                                                    latestVital.blood_pressure_diastolic,
+                                                )}
                                             </p>
                                         </div>
                                     </div>

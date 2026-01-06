@@ -109,8 +109,8 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                                 {vital.blood_pressure_systolic &&
                                 vital.blood_pressure_diastolic ? (
                                     <span className="font-mono">
-                                        {vital.blood_pressure_systolic}/
-                                        {vital.blood_pressure_diastolic}
+                                        {Math.round(vital.blood_pressure_systolic)}/
+                                        {Math.round(vital.blood_pressure_diastolic)}
                                     </span>
                                 ) : (
                                     <span className="text-gray-400 dark:text-gray-500">

@@ -148,11 +148,11 @@ export default function VitalsModal({
         const submitData: Record<string, string | number | null> = {};
 
         if (formData.blood_pressure_systolic)
-            submitData.blood_pressure_systolic = parseFloat(
+            submitData.blood_pressure_systolic = parseInt(
                 formData.blood_pressure_systolic,
             );
         if (formData.blood_pressure_diastolic)
-            submitData.blood_pressure_diastolic = parseFloat(
+            submitData.blood_pressure_diastolic = parseInt(
                 formData.blood_pressure_diastolic,
             );
         if (formData.temperature)

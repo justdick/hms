@@ -81,6 +81,7 @@ interface VitalSigns {
     pulse_rate: number | null; // Note: Database uses pulse_rate, not heart_rate
     respiratory_rate: number | null;
     oxygen_saturation: number | null;
+    blood_sugar: number | null;
     weight: number | null;
     height: number | null;
     notes: string | null;
@@ -1166,23 +1167,23 @@ export default function ConsultationShow({
                                                         BP:{' '}
                                                     </span>
                                                     <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                        {
+                                                        {Math.round(
                                                             consultation
                                                                 .patient_checkin
                                                                 .patient
                                                                 .active_admission
                                                                 .latest_vital_signs[0]
-                                                                .blood_pressure_systolic
-                                                        }
+                                                                .blood_pressure_systolic ?? 0,
+                                                        )}
                                                         /
-                                                        {
+                                                        {Math.round(
                                                             consultation
                                                                 .patient_checkin
                                                                 .patient
                                                                 .active_admission
                                                                 .latest_vital_signs[0]
-                                                                .blood_pressure_diastolic
-                                                        }
+                                                                .blood_pressure_diastolic ?? 0,
+                                                        )}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
@@ -1604,13 +1605,13 @@ export default function ConsultationShow({
                                                     Blood Pressure
                                                 </p>
                                                 <p className="text-xl font-bold text-red-600">
-                                                    {
-                                                        latestVitals.blood_pressure_systolic
-                                                    }
+                                                    {Math.round(
+                                                        latestVitals.blood_pressure_systolic ?? 0,
+                                                    )}
                                                     /
-                                                    {
-                                                        latestVitals.blood_pressure_diastolic
-                                                    }
+                                                    {Math.round(
+                                                        latestVitals.blood_pressure_diastolic ?? 0,
+                                                    )}
                                                 </p>
                                                 <p className="text-xs text-red-700">
                                                     mmHg
@@ -1767,13 +1768,13 @@ export default function ConsultationShow({
                                                                     Pressure
                                                                 </p>
                                                                 <p className="font-medium text-gray-900">
-                                                                    {
-                                                                        vitals.blood_pressure_systolic
-                                                                    }
+                                                                    {Math.round(
+                                                                        vitals.blood_pressure_systolic ?? 0,
+                                                                    )}
                                                                     /
-                                                                    {
-                                                                        vitals.blood_pressure_diastolic
-                                                                    }
+                                                                    {Math.round(
+                                                                        vitals.blood_pressure_diastolic ?? 0,
+                                                                    )}
                                                                 </p>
                                                             </div>
                                                             <div>
