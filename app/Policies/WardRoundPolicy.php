@@ -36,6 +36,17 @@ class WardRoundPolicy
      */
     public function update(User $user, WardRound $wardRound): bool
     {
+        // Admin can update any ward round
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        // Can update any ward round (for senior doctors/supervisors)
+        if ($user->can('ward_rounds.update-any')) {
+            return true;
+        }
+
+        // Must have base update permission for own ward rounds
         if (! $user->can('ward_rounds.update')) {
             return false;
         }

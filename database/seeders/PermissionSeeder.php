@@ -178,6 +178,7 @@ class PermissionSeeder extends Seeder
             'ward_rounds.view' => 'View ward rounds',
             'ward_rounds.create' => 'Record ward rounds',
             'ward_rounds.update' => 'Update own ward rounds (within 24 hours)',
+            'ward_rounds.update-any' => 'Update any ward round (for supervisors)',
             'ward_rounds.delete' => 'Delete ward rounds (admin only)',
             'ward_rounds.restore' => 'Restore deleted ward rounds',
             'ward_rounds.force_delete' => 'Permanently delete ward rounds',
@@ -363,6 +364,7 @@ class PermissionSeeder extends Seeder
             'ward_rounds.view',
             'ward_rounds.create',
             'ward_rounds.update',
+            'ward_rounds.update-any',
             'medications.view',
             'medications.administer',
             'manage prescriptions', // Doctors can discontinue prescriptions
