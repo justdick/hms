@@ -33,6 +33,8 @@ class WardPatientController extends Controller
                         $q->latest()->with('recordedBy:id,name')->limit(1);
                     },
                     'prescriptions.drug',
+                    'labOrders.labService',
+                    'diagnoses.diagnosis', // Include consultation diagnoses
                 ]);
             },
             'vitalSigns' => function ($query) {

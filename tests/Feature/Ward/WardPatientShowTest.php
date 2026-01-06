@@ -420,3 +420,108 @@ it('handles admissions without consultations correctly', function () {
         ->where('admission.consultation', null)
     );
 });
+
+it('includes consultation lab orders in patient show response', function () {
+    $ward = Ward::factory()->create();
+    $bed = Bed::create([
+        'ward_id' => $ward->id,
+        'bed_number' => '01',
+        'status' => 'occupied',
+        'type' => 'standard',
+        'is_active' => true,
+    ]);
+    $patient = Patient::factory()->create();
+
+    $checkin = \App\Models\PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+    ]);
+
+    $consultation = \App\Models\Consultation::factory()->create([
+        'patient_checkin_id' => $checkin->id,
+        'status' => 'completed',
+    ]);
+
+    $labService = \App\Models\LabService::factory()->create([
+        'name' => 'Complete Blood Count',
+        'code' => 'CBC001',
+    ]);
+
+    $labOrder = \App\Models\LabOrder::factory()->create([
+        'orderable_type' => \App\Models\Consultation::class,
+        'orderable_id' => $consultation->id,
+        'lab_service_id' => $labService->id,
+        'status' => 'pending',
+        'priority' => 'routine',
+    ]);
+
+    $admission = PatientAdmission::factory()->create([
+        'patient_id' => $patient->id,
+        'bed_id' => $bed->id,
+        'ward_id' => $ward->id,
+        'consultation_id' => $consultation->id,
+        'status' => 'admitted',
+    ]);
+
+    $response = $this->get(route('wards.patients.show', [$ward, $admission]));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Ward/PatientShow')
+        ->has('admission.consultation.lab_orders', 1)
+        ->where('admission.consultation.lab_orders.0.status', 'pending')
+        ->has('admission.consultation.lab_orders.0.lab_service')
+        ->where('admission.consultation.lab_orders.0.lab_service.name', 'Complete Blood Count')
+    );
+});
+
+it('includes consultation diagnoses in patient show response', function () {
+    $ward = Ward::factory()->create();
+    $bed = Bed::create([
+        'ward_id' => $ward->id,
+        'bed_number' => '01',
+        'status' => 'occupied',
+        'type' => 'standard',
+        'is_active' => true,
+    ]);
+    $patient = Patient::factory()->create();
+
+    $checkin = \App\Models\PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+    ]);
+
+    $consultation = \App\Models\Consultation::factory()->create([
+        'patient_checkin_id' => $checkin->id,
+        'status' => 'completed',
+    ]);
+
+    $diagnosis = \App\Models\Diagnosis::factory()->create([
+        'diagnosis' => 'Malaria',
+        'icd_10' => 'B50.9',
+    ]);
+
+    \App\Models\ConsultationDiagnosis::create([
+        'consultation_id' => $consultation->id,
+        'diagnosis_id' => $diagnosis->id,
+        'type' => 'principal',
+    ]);
+
+    $admission = PatientAdmission::factory()->create([
+        'patient_id' => $patient->id,
+        'bed_id' => $bed->id,
+        'ward_id' => $ward->id,
+        'consultation_id' => $consultation->id,
+        'status' => 'admitted',
+    ]);
+
+    $response = $this->get(route('wards.patients.show', [$ward, $admission]));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Ward/PatientShow')
+        ->has('admission.consultation.diagnoses', 1)
+        ->where('admission.consultation.diagnoses.0.type', 'principal')
+        ->has('admission.consultation.diagnoses.0.diagnosis')
+        ->where('admission.consultation.diagnoses.0.diagnosis.diagnosis', 'Malaria')
+        ->where('admission.consultation.diagnoses.0.diagnosis.icd_10', 'B50.9')
+    );
+});

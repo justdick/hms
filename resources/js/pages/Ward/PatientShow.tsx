@@ -272,6 +272,18 @@ interface WardRound {
     lab_orders?: LabOrder[];
 }
 
+interface DiagnosisRecord {
+    id: number;
+    diagnosis: string;
+    icd_10?: string;
+}
+
+interface ConsultationDiagnosis {
+    id: number;
+    type: string;
+    diagnosis?: DiagnosisRecord;
+}
+
 interface BedType {
     id: number;
     ward_id: number;
@@ -295,9 +307,10 @@ interface Consultation {
     id: number;
     doctor: Doctor;
     chief_complaint?: string;
-    diagnosis?: string;
     patient_checkin?: PatientCheckin;
     prescriptions?: ConsultationPrescription[];
+    lab_orders?: LabOrder[];
+    diagnoses?: ConsultationDiagnosis[];
 }
 
 interface PatientAdmission {
@@ -518,16 +531,18 @@ export default function WardPatientShow({
         ) || []),
     ];
 
-    // Collect all lab orders from ward rounds
+    // Collect all lab orders from consultation and ward rounds
     const allLabOrders = useMemo(() => {
-        return (
-            admission.ward_rounds
-                ?.flatMap((round) => round.lab_orders || [])
-                .sort(
-                    (a, b) =>
-                        new Date(b.ordered_at).getTime() -
-                        new Date(a.ordered_at).getTime(),
-                ) || []
+        const consultationLabs = admission.consultation?.lab_orders || [];
+        const wardRoundLabs =
+            admission.ward_rounds?.flatMap((round) => round.lab_orders || []) ||
+            [];
+
+        // Combine and sort by ordered_at descending
+        return [...consultationLabs, ...wardRoundLabs].sort(
+            (a, b) =>
+                new Date(b.ordered_at).getTime() -
+                new Date(a.ordered_at).getTime(),
         );
     }, [admission]);
 

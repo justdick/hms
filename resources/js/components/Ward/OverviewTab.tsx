@@ -81,6 +81,18 @@ interface WardRoundDiagnosis {
     };
 }
 
+interface DiagnosisRecord {
+    id: number;
+    diagnosis: string;
+    icd_10?: string;
+}
+
+interface ConsultationDiagnosis {
+    id: number;
+    type: string;
+    diagnosis?: DiagnosisRecord;
+}
+
 interface LabService {
     id: number;
     name: string;
@@ -144,9 +156,10 @@ interface Consultation {
     id: number;
     doctor: Doctor;
     chief_complaint?: string;
-    diagnosis?: string;
     patient_checkin?: PatientCheckin;
     prescriptions?: ConsultationPrescription[];
+    lab_orders?: LabOrder[];
+    diagnoses?: ConsultationDiagnosis[];
 }
 
 interface VitalsSchedule {
@@ -176,21 +189,33 @@ interface Props {
 export function OverviewTab({ admission, onNavigateToTab }: Props) {
     // Compute latest diagnosis from consultation or most recent ward round
     const latestDiagnosis = useMemo(() => {
+        // Get ward round diagnoses
         const wardRoundDiagnoses = admission.ward_rounds
             ?.flatMap((round) => round.diagnoses || [])
             .sort((a, b) => b.id - a.id);
 
-        return (
-            wardRoundDiagnoses?.[0] ||
-            (admission.consultation?.diagnosis
-                ? {
-                      diagnosis_name: admission.consultation.diagnosis,
-                      icd_code: null,
-                      diagnosis_type: 'consultation',
-                      diagnosed_by: admission.consultation.doctor,
-                  }
-                : null)
+        // If there are ward round diagnoses, use the most recent one
+        if (wardRoundDiagnoses && wardRoundDiagnoses.length > 0) {
+            return wardRoundDiagnoses[0];
+        }
+
+        // Fall back to consultation diagnoses (principal first, then provisional)
+        const consultationDiagnoses = admission.consultation?.diagnoses || [];
+        const principalDiagnosis = consultationDiagnoses.find(
+            (d) => d.type === 'principal',
         );
+        const firstDiagnosis = principalDiagnosis || consultationDiagnoses[0];
+
+        if (firstDiagnosis?.diagnosis) {
+            return {
+                diagnosis_name: firstDiagnosis.diagnosis.diagnosis,
+                icd_code: firstDiagnosis.diagnosis.icd_10 || null,
+                diagnosis_type: firstDiagnosis.type,
+                diagnosed_by: admission.consultation?.doctor,
+            };
+        }
+
+        return null;
     }, [admission]);
 
     // Compute all prescriptions from consultation and ward rounds
@@ -226,16 +251,17 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
         );
     }, [admission]);
 
-    // Collect all lab orders from ward rounds
+    // Collect all lab orders from consultation and ward rounds
     const allLabOrders = useMemo(() => {
-        return (
-            admission.ward_rounds
-                ?.flatMap((round) => round.lab_orders || [])
-                .sort(
-                    (a, b) =>
-                        new Date(b.ordered_at).getTime() -
-                        new Date(a.ordered_at).getTime(),
-                ) || []
+        const consultationLabs = admission.consultation?.lab_orders || [];
+        const wardRoundLabs =
+            admission.ward_rounds?.flatMap((round) => round.lab_orders || []) ||
+            [];
+
+        return [...consultationLabs, ...wardRoundLabs].sort(
+            (a, b) =>
+                new Date(b.ordered_at).getTime() -
+                new Date(a.ordered_at).getTime(),
         );
     }, [admission]);
 
