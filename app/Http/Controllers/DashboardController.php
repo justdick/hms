@@ -25,6 +25,15 @@ class DashboardController extends Controller
         $user = $request->user();
         $dashboardService = new DashboardService($user);
 
+        // Get date filter parameters
+        $datePreset = $request->input('date_preset', 'today');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Create admin dashboard with date filtering
+        $adminDashboard = new AdminDashboard;
+        $adminDashboard->setDateRange($startDate, $endDate, $datePreset);
+
         // Register all dashboard widgets
         $dashboardService
             ->registerWidget(new ReceptionistDashboard)
@@ -34,7 +43,7 @@ class DashboardController extends Controller
             ->registerWidget(new CashierDashboard)
             ->registerWidget(new FinanceDashboard)
             ->registerWidget(new InsuranceDashboard)
-            ->registerWidget(new AdminDashboard);
+            ->registerWidget($adminDashboard);
 
         // Get visible widgets and quick actions (lightweight, always loaded)
         $visibleWidgets = $dashboardService->getVisibleWidgets();
@@ -46,6 +55,13 @@ class DashboardController extends Controller
             'quickActions' => $quickActions,
             'userRoles' => $user->getRoleNames()->toArray(),
             'userPermissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+
+            // Date filter state
+            'dateFilter' => [
+                'preset' => $datePreset,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+            ],
 
             // Deferred props - heavier data loaded after initial render
             'metrics' => Inertia::defer(fn () => $dashboardService->getMetrics()),

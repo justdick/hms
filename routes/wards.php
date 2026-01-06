@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admission\AdmissionController;
 use App\Http\Controllers\Vitals\VitalSignController;
 use App\Http\Controllers\Ward\BedAssignmentController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
@@ -35,6 +36,10 @@ Route::middleware(['auth'])->prefix('wards')->name('wards.')->group(function () 
 
 // Patient Admission Routes
 Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(function () {
+    // Ward Transfer
+    Route::post('/{admission}/transfer', [AdmissionController::class, 'transfer'])->name('transfer');
+    Route::get('/{admission}/transfers', [AdmissionController::class, 'transferHistory'])->name('transfers.index');
+
     // Bed Assignment
     Route::get('/{admission}/bed-assignment', [BedAssignmentController::class, 'create'])->name('bed-assignment.create');
     Route::post('/{admission}/bed-assignment', [BedAssignmentController::class, 'store'])->name('bed-assignment.store');

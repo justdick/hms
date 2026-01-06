@@ -593,7 +593,7 @@ class PatientController extends Controller
             'doctor:id,name',
             'patientCheckin:id,department_id,checked_in_at',
             'patientCheckin.department:id,name',
-            'diagnoses.diagnosis:id,code,description',
+            'diagnoses.diagnosis:id,code,diagnosis',
             'prescriptions.drug:id,name,generic_name,form,strength',
             'labOrders.labService:id,name,code,is_imaging',
             'procedures.procedureType:id,name,code',
@@ -617,7 +617,7 @@ class PatientController extends Controller
                     'diagnoses' => $consultation->diagnoses->map(fn ($d) => [
                         'type' => $d->type,
                         'code' => $d->diagnosis?->code,
-                        'description' => $d->diagnosis?->description,
+                        'description' => $d->diagnosis?->diagnosis,
                         'notes' => $d->notes,
                     ]),
                     'prescriptions' => $consultation->prescriptions->map(fn ($p) => [
@@ -677,7 +677,7 @@ class PatientController extends Controller
                 'ward:id,name',
                 'bed:id,bed_number',
                 'consultation.doctor:id,name',
-                'diagnoses.diagnosis:id,code,description',
+                'diagnoses.diagnosis:id,code,diagnosis',
             ])
             ->orderByDesc('admitted_at')
             ->limit(20)
@@ -696,7 +696,7 @@ class PatientController extends Controller
                 'diagnoses' => $a->diagnoses->map(fn ($d) => [
                     'type' => $d->type,
                     'code' => $d->diagnosis?->code,
-                    'description' => $d->diagnosis?->description,
+                    'description' => $d->diagnosis?->diagnosis,
                     'is_active' => $d->is_active,
                 ]),
             ]);

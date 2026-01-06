@@ -166,6 +166,7 @@ class PermissionSeeder extends Seeder
             'admissions.update' => 'Update admission information',
             'admissions.discharge' => 'Discharge patients',
             'admissions.transfer' => 'Transfer patients between wards',
+            'admissions.view-transfers' => 'View ward transfer history',
 
             // Nursing Notes Management
             'nursing-notes.view' => 'View nursing notes',

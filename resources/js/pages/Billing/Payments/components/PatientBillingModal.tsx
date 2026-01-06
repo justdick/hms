@@ -36,6 +36,8 @@ import {
     Phone,
     Printer,
     Receipt,
+    Shield,
+    ShieldOff,
     Smartphone,
     User,
     Wallet,
@@ -49,6 +51,11 @@ interface Patient {
     last_name: string;
     patient_number: string;
     phone_number: string;
+    is_insured?: boolean;
+    insurance_plan?: {
+        name: string;
+        provider: string;
+    } | null;
 }
 
 interface Department {
@@ -357,6 +364,25 @@ export function PatientBillingModal({
                                             </p>
                                         )}
                                     </div>
+                                </div>
+                                {/* Insurance Status */}
+                                <div className="text-right">
+                                    {patient.patient.is_insured ? (
+                                        <div className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                            <Shield className="h-3 w-3" />
+                                            Insured
+                                        </div>
+                                    ) : (
+                                        <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                            <ShieldOff className="h-3 w-3" />
+                                            Not Insured
+                                        </div>
+                                    )}
+                                    {patient.patient.insurance_plan && (
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {patient.patient.insurance_plan.provider} - {patient.patient.insurance_plan.name}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 

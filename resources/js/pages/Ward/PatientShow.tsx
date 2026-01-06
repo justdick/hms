@@ -13,13 +13,29 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { DiscontinueMedicationModal } from '@/components/Ward/DiscontinueMedicationModal';
 import { LabsTab } from '@/components/Ward/LabsTab';
@@ -39,15 +55,17 @@ import { VitalsTable } from '@/components/Ward/VitalsTable';
 import { WardRoundModal } from '@/components/Ward/WardRoundModal';
 import { WardRoundsTable } from '@/components/Ward/WardRoundsTable';
 import { WardRoundViewModal } from '@/components/Ward/WardRoundViewModal';
+import { WardTransferModal } from '@/components/Ward/WardTransferModal';
 import AppLayout from '@/layouts/app-layout';
 import { SharedData } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage, Form } from '@inertiajs/react';
 import { isToday } from 'date-fns';
 import {
     Activity,
     AlertCircle,
     AlertTriangle,
     ArrowLeft,
+    ArrowRightLeft,
     Bed as BedIcon,
     Calendar,
     ClipboardList,
@@ -58,6 +76,7 @@ import {
     FlaskConical,
     Heart,
     LayoutDashboard,
+    Loader2,
     LogOut,
     MoreHorizontal,
     Pill,
@@ -332,6 +351,13 @@ interface Props {
     can_edit_vitals_timestamp?: boolean;
     can_edit_medication_timestamp?: boolean;
     can_delete_medication_administration?: boolean;
+    can_transfer?: boolean;
+    availableWards?: Array<{
+        id: number;
+        name: string;
+        code: string;
+        available_beds: number;
+    }>;
 }
 
 const NOTE_TYPES = [
@@ -354,6 +380,8 @@ export default function WardPatientShow({
     can_edit_vitals_timestamp = false,
     can_edit_medication_timestamp = false,
     can_delete_medication_administration = false,
+    can_transfer = false,
+    availableWards = [],
 }: Props) {
     const { auth } = usePage<SharedData>().props;
     const canDischarge = auth.permissions?.admissions?.discharge ?? false;
@@ -368,8 +396,10 @@ export default function WardPatientShow({
     const [wardRoundModalOpen, setWardRoundModalOpen] = useState(false);
     const [medicationPanelOpen, setMedicationPanelOpen] = useState(false);
     const [bedAssignmentModalOpen, setBedAssignmentModalOpen] = useState(false);
+    const [transferModalOpen, setTransferModalOpen] = useState(false);
     const [confirmNewRoundOpen, setConfirmNewRoundOpen] = useState(false);
     const [noteToDelete, setNoteToDelete] = useState<NursingNote | null>(null);
+    const [noteToEdit, setNoteToEdit] = useState<NursingNote | null>(null);
     const [selectedWardRound, setSelectedWardRound] =
         useState<WardRound | null>(null);
     const [wardRoundViewModalOpen, setWardRoundViewModalOpen] = useState(false);
@@ -701,6 +731,17 @@ export default function WardPatientShow({
                                 </Button>
                             </Link>
                         )}
+                        {admission.status === 'admitted' &&
+                            can_transfer &&
+                            availableWards.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setTransferModalOpen(true)}
+                                >
+                                    <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                    Transfer Ward
+                                </Button>
+                            )}
                         {admission.status === 'admitted' && canDischarge && (
                             <Button
                                 variant="destructive"
@@ -1235,10 +1276,7 @@ export default function WardPatientShow({
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => {
-                                                                        // TODO: Implement edit functionality
-                                                                        toast.info(
-                                                                            'Edit functionality coming soon',
-                                                                        );
+                                                                        setNoteToEdit(note);
                                                                     }}
                                                                 >
                                                                     <Edit2 className="h-4 w-4" />
@@ -1458,6 +1496,87 @@ export default function WardPatientShow({
                     </AlertDialogContent>
                 </AlertDialog>
 
+                {/* Edit Nursing Note Dialog */}
+                <Dialog
+                    open={!!noteToEdit}
+                    onOpenChange={(open) => !open && setNoteToEdit(null)}
+                >
+                    <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle>Edit Nursing Note</DialogTitle>
+                            <DialogDescription>
+                                Update the nursing note details
+                            </DialogDescription>
+                        </DialogHeader>
+                        {noteToEdit && (
+                            <Form
+                                action={`/admissions/${admission.id}/nursing-notes/${noteToEdit.id}`}
+                                method="put"
+                                onSuccess={() => {
+                                    toast.success('Nursing note updated successfully');
+                                    setNoteToEdit(null);
+                                }}
+                                onError={() => {
+                                    toast.error('Failed to update nursing note');
+                                }}
+                                className="space-y-4"
+                            >
+                                {({ processing, errors }) => (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-type">Note Type</Label>
+                                            <Select name="type" defaultValue={noteToEdit.type}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="assessment">Assessment</SelectItem>
+                                                    <SelectItem value="care">Care</SelectItem>
+                                                    <SelectItem value="observation">Observation</SelectItem>
+                                                    <SelectItem value="incident">Incident</SelectItem>
+                                                    <SelectItem value="handover">Handover</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.type && (
+                                                <p className="text-sm text-destructive">{errors.type}</p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="edit-note">Note</Label>
+                                            <Textarea
+                                                name="note"
+                                                id="edit-note"
+                                                defaultValue={noteToEdit.note}
+                                                rows={5}
+                                                required
+                                                minLength={10}
+                                            />
+                                            {errors.note && (
+                                                <p className="text-sm text-destructive">{errors.note}</p>
+                                            )}
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => setNoteToEdit(null)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button type="submit" disabled={processing}>
+                                                {processing && (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                )}
+                                                Save Changes
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </Form>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
                 {/* Confirmation Dialog for Deleting Nursing Note */}
                 <AlertDialog
                     open={!!noteToDelete}
@@ -1544,6 +1663,16 @@ export default function WardPatientShow({
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Ward Transfer Modal */}
+                <WardTransferModal
+                    open={transferModalOpen}
+                    onOpenChange={setTransferModalOpen}
+                    admissionId={admission.id}
+                    currentWardName={admission.ward?.name || 'Current Ward'}
+                    patientName={`${admission.patient.first_name} ${admission.patient.last_name}`}
+                    availableWards={availableWards}
+                />
             </div>
         </AppLayout>
     );

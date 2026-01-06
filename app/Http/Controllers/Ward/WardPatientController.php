@@ -107,6 +107,11 @@ class WardPatientController extends Controller
             'can_edit_vitals_timestamp' => $request->user()->can('vitals.edit-timestamp'),
             'can_edit_medication_timestamp' => $request->user()->can('medications.edit-timestamp'),
             'can_delete_medication_administration' => $request->user()->can('medications.delete'),
+            'can_transfer' => $request->user()->can('admissions.transfer'),
+            'availableWards' => WardModel::active()
+                ->available()
+                ->where('id', '!=', $ward->id)
+                ->get(['id', 'name', 'code', 'available_beds']),
         ]);
     }
 

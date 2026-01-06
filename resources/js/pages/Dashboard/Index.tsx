@@ -7,6 +7,11 @@ import { type BreadcrumbItem } from '@/types';
 
 import { DashboardLayout } from '@/components/Dashboard/DashboardLayout';
 import {
+    DateRangeFilter,
+    type DateFilterState,
+    type DatePreset,
+} from '@/components/Dashboard/DateRangeFilter';
+import {
     QuickActions,
     type QuickAction,
 } from '@/components/Dashboard/QuickActions';
@@ -16,6 +21,10 @@ import {
     AdminMetrics,
     type AdminMetricsData,
 } from '@/components/Dashboard/widgets/AdminMetrics';
+import {
+    AttendanceBreakdownChart,
+    type AttendanceBreakdownData,
+} from '@/components/Dashboard/widgets/AttendanceBreakdownChart';
 import {
     InsuranceMetrics,
     type InsuranceMetricsData,
@@ -100,6 +109,8 @@ interface DashboardMetrics {
     totalRevenueToday?: number;
     activeUsersCount?: number;
     totalDepartments?: number;
+    nhisAttendance?: number;
+    nonInsuredAttendance?: number;
 }
 
 interface DashboardLists {
@@ -108,6 +119,7 @@ interface DashboardLists {
     patientFlowTrend?: PatientFlowData[];
     revenueTrend?: RevenueTrendData[];
     departmentActivity?: DepartmentActivityData[];
+    attendanceBreakdown?: AttendanceBreakdownData[];
 }
 
 interface DashboardProps {
@@ -115,6 +127,11 @@ interface DashboardProps {
     quickActions: QuickAction[];
     metrics?: DashboardMetrics;
     lists?: DashboardLists;
+    dateFilter?: {
+        preset: DatePreset;
+        startDate: string | null;
+        endDate: string | null;
+    };
     [key: string]: unknown;
 }
 
@@ -138,14 +155,32 @@ function MetricsSkeleton() {
 const POLLING_INTERVAL = 30000;
 
 export default function Dashboard() {
-    const { visibleWidgets, quickActions, metrics, lists } =
+    const { visibleWidgets, quickActions, metrics, lists, dateFilter } =
         usePage<DashboardProps>().props;
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [currentDateFilter, setCurrentDateFilter] = useState<DateFilterState>(
+        () => ({
+            preset: dateFilter?.preset || 'today',
+            startDate: dateFilter?.startDate || null,
+            endDate: dateFilter?.endDate || null,
+        }),
+    );
 
     const hasWidget = useCallback(
         (id: string) => visibleWidgets.includes(id),
         [visibleWidgets],
     );
+
+    // Update local state when props change
+    useEffect(() => {
+        if (dateFilter) {
+            setCurrentDateFilter({
+                preset: dateFilter.preset || 'today',
+                startDate: dateFilter.startDate || null,
+                endDate: dateFilter.endDate || null,
+            });
+        }
+    }, [dateFilter]);
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -214,6 +249,8 @@ export default function Dashboard() {
         totalRevenueToday: metrics?.totalRevenueToday ?? 0,
         activeUsersCount: metrics?.activeUsersCount ?? 0,
         totalDepartments: metrics?.totalDepartments ?? 0,
+        nhisAttendance: metrics?.nhisAttendance ?? 0,
+        nonInsuredAttendance: metrics?.nonInsuredAttendance ?? 0,
     };
 
     const renderMetrics = () => {
@@ -243,21 +280,30 @@ export default function Dashboard() {
         if (hasWidget('admin_metrics') && lists) {
             return (
                 <div className="space-y-4">
-                    {/* Two charts side by side */}
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {lists.patientFlowTrend && (
-                            <PatientFlowChart data={lists.patientFlowTrend} />
+                    {/* Attendance breakdown and charts */}
+                    <div className="grid gap-4 md:grid-cols-3">
+                        {lists.attendanceBreakdown && (
+                            <AttendanceBreakdownChart
+                                data={lists.attendanceBreakdown}
+                            />
                         )}
+                        {lists.patientFlowTrend && (
+                            <div className="md:col-span-2">
+                                <PatientFlowChart data={lists.patientFlowTrend} />
+                            </div>
+                        )}
+                    </div>
+                    {/* Revenue and department charts */}
+                    <div className="grid gap-4 md:grid-cols-2">
                         {lists.revenueTrend && (
                             <RevenueTrendChart data={lists.revenueTrend} />
                         )}
+                        {lists.departmentActivity && (
+                            <DepartmentActivityChart
+                                data={lists.departmentActivity}
+                            />
+                        )}
                     </div>
-                    {/* Department activity full width */}
-                    {lists.departmentActivity && (
-                        <DepartmentActivityChart
-                            data={lists.departmentActivity}
-                        />
-                    )}
                 </div>
             );
         }
@@ -285,6 +331,24 @@ export default function Dashboard() {
                     </div>
                 )}
                 <DashboardLayout>
+                    {/* Header with Date Filter (only for admin) */}
+                    {hasWidget('admin_metrics') && (
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold tracking-tight">
+                                    Dashboard
+                                </h1>
+                                <p className="text-sm text-muted-foreground">
+                                    Overview of hospital operations
+                                </p>
+                            </div>
+                            <DateRangeFilter
+                                value={currentDateFilter}
+                                onChange={setCurrentDateFilter}
+                            />
+                        </div>
+                    )}
+
                     {/* Stats Cards */}
                     {renderMetrics()}
 

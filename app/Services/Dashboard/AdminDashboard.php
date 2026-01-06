@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\DB;
  */
 class AdminDashboard extends AbstractDashboardWidget
 {
+    protected ?Carbon $startDate = null;
+
+    protected ?Carbon $endDate = null;
+
+    protected string $datePreset = 'today';
+
     /**
      * Get the unique identifier for this widget.
      */
@@ -38,18 +44,80 @@ class AdminDashboard extends AbstractDashboardWidget
     }
 
     /**
+     * Set the date range for filtering metrics.
+     */
+    public function setDateRange(?string $startDate, ?string $endDate, string $preset = 'custom'): self
+    {
+        $this->datePreset = $preset;
+
+        if ($startDate && $endDate) {
+            $this->startDate = Carbon::parse($startDate)->startOfDay();
+            $this->endDate = Carbon::parse($endDate)->endOfDay();
+        } else {
+            // Apply preset
+            [$this->startDate, $this->endDate] = $this->getPresetDateRange($preset);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get date range based on preset.
+     *
+     * @return array{Carbon, Carbon}
+     */
+    protected function getPresetDateRange(string $preset): array
+    {
+        return match ($preset) {
+            'today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+            'week' => [Carbon::now()->startOfWeek()->startOfDay(), Carbon::now()->endOfWeek()->endOfDay()],
+            'month' => [Carbon::now()->startOfMonth()->startOfDay(), Carbon::now()->endOfMonth()->endOfDay()],
+            'year' => [Carbon::now()->startOfYear()->startOfDay(), Carbon::now()->endOfYear()->endOfDay()],
+            default => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+        };
+    }
+
+    /**
+     * Get the current date range.
+     *
+     * @return array{Carbon, Carbon}
+     */
+    protected function getDateRange(): array
+    {
+        if ($this->startDate && $this->endDate) {
+            return [$this->startDate, $this->endDate];
+        }
+
+        return $this->getPresetDateRange('today');
+    }
+
+    /**
+     * Generate cache key suffix based on date range.
+     */
+    protected function getDateCacheKey(): string
+    {
+        [$start, $end] = $this->getDateRange();
+
+        return $start->format('Ymd').'_'.$end->format('Ymd');
+    }
+
+    /**
      * Get metrics data for the admin dashboard.
      *
      * @return array<string, mixed>
      */
     public function getMetrics(User $user): array
     {
+        $dateCacheKey = $this->getDateCacheKey();
+
         // Admin metrics are system-wide aggregates (5 min cache)
         return [
-            'totalPatientsToday' => $this->cacheSystem('total_patients_today', fn () => $this->getTotalPatientsToday()),
-            'totalRevenueToday' => $this->cacheSystem('total_revenue_today', fn () => $this->getTotalRevenueToday()),
+            'totalPatientsToday' => $this->cacheSystem("total_patients_{$dateCacheKey}", fn () => $this->getTotalPatients()),
+            'totalRevenueToday' => $this->cacheSystem("total_revenue_{$dateCacheKey}", fn () => $this->getTotalRevenue()),
             'activeUsersCount' => $this->cacheSystem('active_users_count', fn () => $this->getActiveUsersCount()),
             'totalDepartments' => $this->cacheSystem('total_departments', fn () => $this->getTotalActiveDepartments()),
+            'nhisAttendance' => $this->cacheSystem("nhis_attendance_{$dateCacheKey}", fn () => $this->getNhisAttendance()),
+            'nonInsuredAttendance' => $this->cacheSystem("non_insured_attendance_{$dateCacheKey}", fn () => $this->getNonInsuredAttendance()),
         ];
     }
 
@@ -60,33 +128,142 @@ class AdminDashboard extends AbstractDashboardWidget
      */
     public function getListData(User $user): array
     {
+        $dateCacheKey = $this->getDateCacheKey();
+
         return [
-            'patientFlowTrend' => $this->cacheSystem('patient_flow_trend', fn () => $this->getPatientFlowTrend()),
-            'revenueTrend' => $this->cacheSystem('revenue_trend', fn () => $this->getRevenueTrend()),
-            'departmentActivity' => $this->cacheSystem('department_activity', fn () => $this->getDepartmentActivity()),
+            'patientFlowTrend' => $this->cacheSystem("patient_flow_trend_{$dateCacheKey}", fn () => $this->getPatientFlowTrend()),
+            'revenueTrend' => $this->cacheSystem("revenue_trend_{$dateCacheKey}", fn () => $this->getRevenueTrend()),
+            'departmentActivity' => $this->cacheSystem("department_activity_{$dateCacheKey}", fn () => $this->getDepartmentActivity()),
+            'attendanceBreakdown' => $this->cacheSystem("attendance_breakdown_{$dateCacheKey}", fn () => $this->getAttendanceBreakdown()),
         ];
     }
 
     /**
-     * Get total patients checked in today.
+     * Get total patients checked in within date range.
      */
-    protected function getTotalPatientsToday(): int
+    protected function getTotalPatients(): int
     {
+        [$startDate, $endDate] = $this->getDateRange();
+
         return PatientCheckin::query()
-            ->whereDate('checked_in_at', today())
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
             ->count();
     }
 
     /**
-     * Get total revenue collected today.
+     * Get total revenue collected within date range.
      */
-    protected function getTotalRevenueToday(): float
+    protected function getTotalRevenue(): float
     {
+        [$startDate, $endDate] = $this->getDateRange();
+
         return (float) Charge::query()
-            ->whereDate('paid_at', today())
+            ->whereBetween('paid_at', [$startDate, $endDate])
             ->whereIn('status', ['paid', 'partial'])
             ->notVoided()
             ->sum('paid_amount');
+    }
+
+    /**
+     * Get NHIS (insured) attendance count within date range.
+     */
+    protected function getNhisAttendance(): int
+    {
+        [$startDate, $endDate] = $this->getDateRange();
+
+        return PatientCheckin::query()
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
+                $query->where('is_nhis', true);
+            })
+            ->count();
+    }
+
+    /**
+     * Get non-insured (cash) attendance count within date range.
+     */
+    protected function getNonInsuredAttendance(): int
+    {
+        [$startDate, $endDate] = $this->getDateRange();
+
+        $totalPatients = $this->getTotalPatients();
+        $nhisPatients = $this->getNhisAttendance();
+
+        // Also count patients with non-NHIS insurance as separate category
+        $otherInsuredCount = PatientCheckin::query()
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
+                $query->where('is_nhis', false);
+            })
+            ->count();
+
+        // Non-insured = Total - NHIS - Other Insurance
+        return $totalPatients - $nhisPatients - $otherInsuredCount;
+    }
+
+    /**
+     * Get attendance breakdown by insurance type.
+     *
+     * @return Collection<int, array{type: string, count: int, percentage: float, fill: string}>
+     */
+    protected function getAttendanceBreakdown(): Collection
+    {
+        [$startDate, $endDate] = $this->getDateRange();
+
+        $total = PatientCheckin::query()
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->count();
+
+        if ($total === 0) {
+            return collect([
+                ['type' => 'NHIS', 'label' => 'NHIS', 'count' => 0, 'percentage' => 0, 'fill' => '#10b981'],
+                ['type' => 'other_insurance', 'label' => 'Other Insurance', 'count' => 0, 'percentage' => 0, 'fill' => '#3b82f6'],
+                ['type' => 'cash', 'label' => 'Cash/Non-Insured', 'count' => 0, 'percentage' => 0, 'fill' => '#f59e0b'],
+            ]);
+        }
+
+        // NHIS count
+        $nhisCount = PatientCheckin::query()
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
+                $query->where('is_nhis', true);
+            })
+            ->count();
+
+        // Other insurance count
+        $otherInsuranceCount = PatientCheckin::query()
+            ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
+                $query->where('is_nhis', false);
+            })
+            ->count();
+
+        // Cash/Non-insured count
+        $cashCount = $total - $nhisCount - $otherInsuranceCount;
+
+        return collect([
+            [
+                'type' => 'nhis',
+                'label' => 'NHIS',
+                'count' => $nhisCount,
+                'percentage' => round(($nhisCount / $total) * 100, 1),
+                'fill' => '#10b981', // emerald
+            ],
+            [
+                'type' => 'other_insurance',
+                'label' => 'Other Insurance',
+                'count' => $otherInsuranceCount,
+                'percentage' => round(($otherInsuranceCount / $total) * 100, 1),
+                'fill' => '#3b82f6', // blue
+            ],
+            [
+                'type' => 'cash',
+                'label' => 'Cash/Non-Insured',
+                'count' => $cashCount,
+                'percentage' => round(($cashCount / $total) * 100, 1),
+                'fill' => '#f59e0b', // amber
+            ],
+        ]);
     }
 
     /**
@@ -111,18 +288,27 @@ class AdminDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get patient flow trend for the last 7 days.
+     * Get patient flow trend based on date range.
+     * For single day: shows hourly breakdown
+     * For week/month: shows daily breakdown
+     * For year: shows monthly breakdown
      *
      * @return Collection<int, array{date: string, day: string, checkins: int, consultations: int}>
      */
     protected function getPatientFlowTrend(): Collection
     {
-        $startDate = Carbon::today()->subDays(6);
-        $endDate = Carbon::today();
+        [$startDate, $endDate] = $this->getDateRange();
+        $daysDiff = $startDate->diffInDays($endDate);
+
+        // For single day, show last 7 days for context
+        if ($daysDiff === 0) {
+            $startDate = Carbon::today()->subDays(6);
+            $endDate = Carbon::today();
+        }
 
         // Get check-ins per day
         $checkins = PatientCheckin::query()
-            ->whereBetween('checked_in_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereBetween('checked_in_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
             ->select(
                 DB::raw('DATE(checked_in_at) as date'),
                 DB::raw('COUNT(*) as count')
@@ -133,7 +319,7 @@ class AdminDashboard extends AbstractDashboardWidget
 
         // Get consultations per day
         $consultations = DB::table('consultations')
-            ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereBetween('created_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('COUNT(*) as count')
@@ -142,7 +328,7 @@ class AdminDashboard extends AbstractDashboardWidget
             ->pluck('count', 'date')
             ->toArray();
 
-        // Build the trend data for all 7 days
+        // Build the trend data
         $period = CarbonPeriod::create($startDate, $endDate);
 
         return collect($period)->map(function (Carbon $date) use ($checkins, $consultations) {
@@ -159,18 +345,24 @@ class AdminDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get revenue trend for the last 7 days.
+     * Get revenue trend based on date range.
      *
      * @return Collection<int, array{date: string, day: string, revenue: float}>
      */
     protected function getRevenueTrend(): Collection
     {
-        $startDate = Carbon::today()->subDays(6);
-        $endDate = Carbon::today();
+        [$startDate, $endDate] = $this->getDateRange();
+        $daysDiff = $startDate->diffInDays($endDate);
+
+        // For single day, show last 7 days for context
+        if ($daysDiff === 0) {
+            $startDate = Carbon::today()->subDays(6);
+            $endDate = Carbon::today();
+        }
 
         // Get revenue per day
         $revenue = Charge::query()
-            ->whereBetween('paid_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereBetween('paid_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
             ->whereIn('status', ['paid', 'partial'])
             ->notVoided()
             ->select(
@@ -181,7 +373,7 @@ class AdminDashboard extends AbstractDashboardWidget
             ->pluck('total', 'date')
             ->toArray();
 
-        // Build the trend data for all 7 days
+        // Build the trend data
         $period = CarbonPeriod::create($startDate, $endDate);
 
         return collect($period)->map(function (Carbon $date) use ($revenue) {
@@ -197,13 +389,15 @@ class AdminDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get department activity for today (for horizontal bar chart).
+     * Get department activity within date range.
      *
      * @return Collection<int, array{name: string, checkins: int, color: string}>
      */
     protected function getDepartmentActivity(): Collection
     {
-        $today = today()->toDateString();
+        [$startDate, $endDate] = $this->getDateRange();
+        $startDateStr = $startDate->toDateString();
+        $endDateStr = $endDate->toDateString();
 
         // Vibrant colors for departments
         $colors = [
@@ -229,7 +423,7 @@ class AdminDashboard extends AbstractDashboardWidget
                     SELECT COUNT(*)
                     FROM patient_checkins pc
                     WHERE pc.department_id = departments.id
-                    AND DATE(pc.checked_in_at) = '{$today}'
+                    AND DATE(pc.checked_in_at) BETWEEN '{$startDateStr}' AND '{$endDateStr}'
                 ) as checkins"),
             ])
             ->orderByDesc('checkins')

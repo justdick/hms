@@ -153,6 +153,11 @@ class PatientAdmission extends Model
         return $this->hasMany(Consultation::class, 'admission_id');
     }
 
+    public function wardTransfers(): HasMany
+    {
+        return $this->hasMany(WardTransfer::class);
+    }
+
     public function scopeActive($query): void
     {
         $query->where('status', 'admitted');
@@ -313,5 +318,46 @@ class PatientAdmission extends Model
             '0',
             STR_PAD_LEFT
         );
+    }
+
+    /**
+     * Transfer patient to a different ward.
+     * Releases current bed (if assigned) and moves patient to new ward.
+     * Nurse at new ward will assign bed later.
+     */
+    public function transferToWard(Ward $toWard, User $transferredBy, string $reason, ?string $notes = null): WardTransfer
+    {
+        $fromWard = $this->ward;
+        $fromBed = $this->bed;
+
+        // Create transfer record
+        $transfer = WardTransfer::create([
+            'patient_admission_id' => $this->id,
+            'from_ward_id' => $fromWard->id,
+            'from_bed_id' => $fromBed?->id,
+            'to_ward_id' => $toWard->id,
+            'transfer_reason' => $reason,
+            'transfer_notes' => $notes,
+            'transferred_by_id' => $transferredBy->id,
+            'transferred_at' => now(),
+        ]);
+
+        // Release old bed if assigned
+        if ($fromBed) {
+            $fromBed->markAsAvailable();
+        }
+
+        // Update admission to new ward, clear bed assignment
+        $this->update([
+            'ward_id' => $toWard->id,
+            'bed_id' => null,
+            'bed_assigned_by_id' => null,
+            'bed_assigned_at' => null,
+        ]);
+
+        // Decrement available beds in new ward (nurse will assign specific bed later)
+        $toWard->decrement('available_beds');
+
+        return $transfer;
     }
 }

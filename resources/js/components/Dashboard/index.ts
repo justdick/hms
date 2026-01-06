@@ -8,6 +8,9 @@ export type { MetricCardProps } from './MetricCard';
 export { QuickActions } from './QuickActions';
 export type { QuickAction, QuickActionsProps } from './QuickActions';
 
+export { DateRangeFilter } from './DateRangeFilter';
+export type { DateFilterState, DatePreset } from './DateRangeFilter';
+
 export {
     DashboardContentGrid,
     DashboardLayout,

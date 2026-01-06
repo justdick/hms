@@ -1,4 +1,11 @@
-import { Building2, DollarSign, Users, UsersRound } from 'lucide-react';
+import {
+    Banknote,
+    Building2,
+    DollarSign,
+    ShieldCheck,
+    Users,
+    UsersRound,
+} from 'lucide-react';
 
 import { DashboardMetricsGrid } from '@/components/Dashboard/DashboardLayout';
 import { MetricCard } from '@/components/Dashboard/MetricCard';
@@ -8,6 +15,8 @@ export interface AdminMetricsData {
     totalRevenueToday: number;
     activeUsersCount: number;
     totalDepartments: number;
+    nhisAttendance?: number;
+    nonInsuredAttendance?: number;
 }
 
 export interface AdminMetricsProps {
@@ -36,33 +45,45 @@ export function AdminMetrics({
     usersHref,
 }: AdminMetricsProps) {
     return (
-        <DashboardMetricsGrid columns={4}>
+        <DashboardMetricsGrid columns={6}>
             <MetricCard
-                title="Patients Today"
+                title="Total Attendance"
                 value={metrics.totalPatientsToday}
                 icon={UsersRound}
                 variant="primary"
                 href={patientsHref}
             />
             <MetricCard
-                title="Today's Revenue"
+                title="NHIS Attendance"
+                value={metrics.nhisAttendance ?? 0}
+                icon={ShieldCheck}
+                variant="success"
+            />
+            <MetricCard
+                title="Non-Insured"
+                value={metrics.nonInsuredAttendance ?? 0}
+                icon={Banknote}
+                variant="warning"
+            />
+            <MetricCard
+                title="Revenue"
                 value={formatCurrency(metrics.totalRevenueToday)}
                 icon={DollarSign}
-                variant="success"
+                variant="accent"
                 href={reportsHref}
             />
             <MetricCard
                 title="Active Users"
                 value={metrics.activeUsersCount}
                 icon={Users}
-                variant="accent"
+                variant="info"
                 href={usersHref}
             />
             <MetricCard
                 title="Departments"
                 value={metrics.totalDepartments}
                 icon={Building2}
-                variant="info"
+                variant="default"
             />
         </DashboardMetricsGrid>
     );

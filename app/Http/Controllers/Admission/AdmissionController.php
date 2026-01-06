@@ -93,4 +93,68 @@ class AdmissionController extends Controller
             'wards' => $wards,
         ]);
     }
+
+    /**
+     * Transfer patient to a different ward.
+     */
+    public function transfer(Request $request, PatientAdmission $admission)
+    {
+        $this->authorize('transfer', $admission);
+
+        // Ensure patient is still admitted
+        if ($admission->status !== 'admitted') {
+            return redirect()->back()->withErrors(['error' => 'Cannot transfer a patient who is not currently admitted.']);
+        }
+
+        $request->validate([
+            'to_ward_id' => 'required|exists:wards,id|different:current_ward',
+            'transfer_reason' => 'required|string|max:1000',
+            'transfer_notes' => 'nullable|string|max:2000',
+        ], [
+            'to_ward_id.different' => 'Please select a different ward to transfer to.',
+        ]);
+
+        $toWard = Ward::findOrFail($request->to_ward_id);
+
+        // Check if destination ward has available beds
+        if ($toWard->available_beds <= 0) {
+            return redirect()->back()->withErrors(['to_ward_id' => 'No available beds in the selected ward.']);
+        }
+
+        // Cannot transfer to same ward
+        if ($toWard->id === $admission->ward_id) {
+            return redirect()->back()->withErrors(['to_ward_id' => 'Patient is already in this ward.']);
+        }
+
+        // Capture the old ward before transfer
+        $fromWard = $admission->ward;
+
+        $admission->transferToWard(
+            $toWard,
+            $request->user(),
+            $request->transfer_reason,
+            $request->transfer_notes
+        );
+
+        // Redirect back to the old ward (where the user was working)
+        return redirect()->route('wards.show', $fromWard)
+            ->with('success', "Patient transferred to {$toWard->name} successfully. Bed assignment pending.");
+    }
+
+    /**
+     * Get transfer history for an admission.
+     */
+    public function transferHistory(PatientAdmission $admission)
+    {
+        $this->authorize('viewTransfers', $admission);
+
+        $transfers = $admission->wardTransfers()
+            ->with(['fromWard', 'fromBed', 'toWard', 'transferredBy'])
+            ->orderBy('transferred_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'transfers' => $transfers,
+        ]);
+    }
 }

@@ -77,6 +77,7 @@ class PaymentController extends Controller
                 $q->where('status', 'pending');
             },
             'checkins.department:id,name',
+            'activeInsurance.plan.provider',
         ])
             ->where(function ($q) use ($search) {
                 // Check if search contains multiple words (likely first + last name)
@@ -180,6 +181,11 @@ class PaymentController extends Controller
                         'patient_number' => $patient->patient_number,
                         'phone_number' => $patient->phone_number,
                         'total_owing' => $totalOwing,
+                        'is_insured' => $patient->activeInsurance !== null,
+                        'insurance_plan' => $patient->activeInsurance ? [
+                            'name' => $patient->activeInsurance->plan?->plan_name,
+                            'provider' => $patient->activeInsurance->plan?->provider?->name,
+                        ] : null,
                     ],
                     'total_pending' => $totalPending,
                     'total_patient_owes' => $totalPatientOwes,
