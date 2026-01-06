@@ -1323,15 +1323,10 @@ export default function WardPatientShow({
                                                         {note.note}
                                                     </p>
 
-                                                    <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                                         <span className="flex items-center gap-1">
                                                             <UserCheck className="h-3 w-3" />
                                                             {note.nurse.name}
-                                                        </span>
-                                                        <span>
-                                                            {formatDateTime(
-                                                                note.noted_at,
-                                                            )}
                                                         </span>
                                                     </div>
                                                 </div>
