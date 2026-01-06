@@ -28,7 +28,7 @@ class NursingNoteController extends Controller
         $this->authorize('create', NursingNote::class);
 
         $validated = $request->validate([
-            'type' => 'required|in:assessment,care,observation,incident,handover',
+            'type' => 'required|in:admission,assessment,care,observation,incident,handover',
             'note' => 'required|string|min:10',
             'noted_at' => 'nullable|date',
         ]);
@@ -50,7 +50,7 @@ class NursingNoteController extends Controller
         $this->authorize('update', $nursingNote);
 
         $validated = $request->validate([
-            'type' => 'required|in:assessment,care,observation,incident,handover',
+            'type' => 'required|in:admission,assessment,care,observation,incident,handover',
             'note' => 'required|string|min:10',
             'noted_at' => 'nullable|date',
         ]);

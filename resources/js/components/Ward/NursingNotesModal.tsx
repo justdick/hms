@@ -21,6 +21,7 @@ import {
     ClipboardList,
     Eye,
     Loader2,
+    LogIn,
     Stethoscope,
     UserCheck,
 } from 'lucide-react';
@@ -54,6 +55,7 @@ interface NursingNotesModalProps {
 }
 
 const NOTE_TYPES = [
+    { value: 'admission', label: 'Admission', icon: LogIn },
     { value: 'assessment', label: 'Assessment', icon: Stethoscope },
     { value: 'care', label: 'Care', icon: UserCheck },
     { value: 'observation', label: 'Observation', icon: Eye },

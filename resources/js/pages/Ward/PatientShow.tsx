@@ -77,6 +77,7 @@ import {
     Heart,
     LayoutDashboard,
     Loader2,
+    LogIn,
     LogOut,
     MoreHorizontal,
     Pill,
@@ -198,7 +199,7 @@ interface Nurse {
 
 interface NursingNote {
     id: number;
-    type: 'assessment' | 'care' | 'observation' | 'incident' | 'handover';
+    type: 'admission' | 'assessment' | 'care' | 'observation' | 'incident' | 'handover';
     note: string;
     noted_at: string;
     nurse: Nurse;
@@ -361,6 +362,7 @@ interface Props {
 }
 
 const NOTE_TYPES = [
+    { value: 'admission', label: 'Admission', icon: LogIn },
     { value: 'assessment', label: 'Assessment', icon: Stethoscope },
     { value: 'care', label: 'Care', icon: UserCheck },
     { value: 'observation', label: 'Observation', icon: Eye },
@@ -592,6 +594,8 @@ export default function WardPatientShow({
     ): { badge: string; icon: any; label: string } => {
         const typeConfig = NOTE_TYPES.find((t) => t.value === type);
         const colorMap = {
+            admission:
+                'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
             assessment:
                 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
             care: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -1530,6 +1534,7 @@ export default function WardPatientShow({
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="admission">Admission</SelectItem>
                                                     <SelectItem value="assessment">Assessment</SelectItem>
                                                     <SelectItem value="care">Care</SelectItem>
                                                     <SelectItem value="observation">Observation</SelectItem>
