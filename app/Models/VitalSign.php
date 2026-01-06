@@ -34,9 +34,9 @@ class VitalSign extends Model
     protected function casts(): array
     {
         return [
-            'blood_pressure_systolic' => 'decimal:2',
-            'blood_pressure_diastolic' => 'decimal:2',
-            'temperature' => 'integer',
+            'blood_pressure_systolic' => 'integer',
+            'blood_pressure_diastolic' => 'integer',
+            'temperature' => 'decimal:2',
             'pulse_rate' => 'integer',
             'respiratory_rate' => 'integer',
             'weight' => 'integer',

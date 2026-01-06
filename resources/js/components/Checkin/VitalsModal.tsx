@@ -88,13 +88,13 @@ export default function VitalsModal({
     useEffect(() => {
         if (open && checkin) {
             if (isEditMode && existingVitals) {
+                // Format blood pressure as integers (remove .00)
+                const formatBP = (value: number | null | undefined) => 
+                    value != null ? Math.round(value).toString() : '';
+                
                 setFormData({
-                    blood_pressure_systolic:
-                        existingVitals.blood_pressure_systolic?.toString() ||
-                        '',
-                    blood_pressure_diastolic:
-                        existingVitals.blood_pressure_diastolic?.toString() ||
-                        '',
+                    blood_pressure_systolic: formatBP(existingVitals.blood_pressure_systolic),
+                    blood_pressure_diastolic: formatBP(existingVitals.blood_pressure_diastolic),
                     temperature: existingVitals.temperature?.toString() || '',
                     pulse_rate: existingVitals.pulse_rate?.toString() || '',
                     respiratory_rate:
@@ -156,7 +156,7 @@ export default function VitalsModal({
                 formData.blood_pressure_diastolic,
             );
         if (formData.temperature)
-            submitData.temperature = parseInt(formData.temperature);
+            submitData.temperature = parseFloat(formData.temperature);
         if (formData.pulse_rate)
             submitData.pulse_rate = parseInt(formData.pulse_rate);
         if (formData.respiratory_rate)
@@ -282,7 +282,7 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
-                                step="0.1"
+                                step="0.01"
                                 className="text-center"
                             />
                         </div>

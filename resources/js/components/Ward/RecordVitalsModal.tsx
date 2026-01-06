@@ -113,11 +113,13 @@ export function RecordVitalsModal({
                           .toISOString()
                           .slice(0, 16)
                     : '';
+                // Format blood pressure as integers (remove .00)
+                const formatBP = (value: number | null | undefined) => 
+                    value != null ? Math.round(value).toString() : '';
+                
                 setFormData({
-                    blood_pressure_systolic:
-                        editVitals.blood_pressure_systolic?.toString() || '',
-                    blood_pressure_diastolic:
-                        editVitals.blood_pressure_diastolic?.toString() || '',
+                    blood_pressure_systolic: formatBP(editVitals.blood_pressure_systolic),
+                    blood_pressure_diastolic: formatBP(editVitals.blood_pressure_diastolic),
                     temperature: editVitals.temperature?.toString() || '',
                     pulse_rate: editVitals.pulse_rate?.toString() || '',
                     respiratory_rate:
@@ -179,7 +181,7 @@ export function RecordVitalsModal({
                 ? parseInt(formData.blood_pressure_diastolic)
                 : null,
             temperature: formData.temperature
-                ? parseInt(formData.temperature)
+                ? parseFloat(formData.temperature)
                 : null,
             pulse_rate: formData.pulse_rate
                 ? parseInt(formData.pulse_rate)
@@ -321,7 +323,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                step="0.1"
+                                step="0.01"
                                 className="text-center"
                             />
                             {errors.temperature && (
