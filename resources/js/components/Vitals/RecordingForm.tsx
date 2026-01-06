@@ -93,7 +93,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="blood_pressure_systolic"
                             type="number"
-                            placeholder="120"
                             value={data.blood_pressure_systolic}
                             onChange={(e) =>
                                 setData(
@@ -116,7 +115,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="blood_pressure_diastolic"
                             type="number"
-                            placeholder="80"
                             value={data.blood_pressure_diastolic}
                             onChange={(e) =>
                                 setData(
@@ -140,7 +138,7 @@ export default function VitalsRecordingForm({
                         <Input
                             id="temperature"
                             type="number"
-                            placeholder="37"
+                            step="0.1"
                             value={data.temperature}
                             onChange={(e) =>
                                 setData('temperature', e.target.value)
@@ -158,7 +156,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="pulse_rate"
                             type="number"
-                            placeholder="72"
                             value={data.pulse_rate}
                             onChange={(e) =>
                                 setData('pulse_rate', e.target.value)
@@ -181,7 +178,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="respiratory_rate"
                             type="number"
-                            placeholder="16"
                             value={data.respiratory_rate}
                             onChange={(e) =>
                                 setData('respiratory_rate', e.target.value)
@@ -201,7 +197,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="oxygen_saturation"
                             type="number"
-                            placeholder="98"
                             value={data.oxygen_saturation}
                             onChange={(e) =>
                                 setData('oxygen_saturation', e.target.value)
@@ -222,8 +217,6 @@ export default function VitalsRecordingForm({
                         <Input
                             id="weight"
                             type="number"
-                            step="0.1"
-                            placeholder="70.0"
                             value={data.weight}
                             onChange={(e) => setData('weight', e.target.value)}
                         />
@@ -239,7 +232,7 @@ export default function VitalsRecordingForm({
                         <Input
                             id="height"
                             type="number"
-                            placeholder="170"
+                            step="0.1"
                             value={data.height}
                             onChange={(e) => setData('height', e.target.value)}
                         />

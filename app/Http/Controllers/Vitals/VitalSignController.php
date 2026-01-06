@@ -16,15 +16,15 @@ class VitalSignController extends Controller
 
         $validated = $request->validate([
             'patient_checkin_id' => 'required|exists:patient_checkins,id',
-            'blood_pressure_systolic' => 'nullable|integer|min:40|max:300',
-            'blood_pressure_diastolic' => 'nullable|integer|min:20|max:200',
-            'temperature' => 'nullable|integer|min:30|max:45',
-            'pulse_rate' => 'nullable|integer|min:20|max:300',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'weight' => 'nullable|integer|min:1|max:500',
-            'height' => 'nullable|numeric|min:30|max:250',
-            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
-            'blood_sugar' => 'nullable|numeric|min:1|max:35',
+            'blood_pressure_systolic' => 'nullable|integer',
+            'blood_pressure_diastolic' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'pulse_rate' => 'nullable|integer',
+            'respiratory_rate' => 'nullable|integer',
+            'weight' => 'nullable|integer',
+            'height' => 'nullable|numeric',
+            'oxygen_saturation' => 'nullable|integer',
+            'blood_sugar' => 'nullable|numeric',
             'notes' => 'nullable|string',
         ]);
 
@@ -69,15 +69,15 @@ class VitalSignController extends Controller
         $this->authorize('update', $vitalSign);
 
         $validated = $request->validate([
-            'blood_pressure_systolic' => 'nullable|integer|min:40|max:300',
-            'blood_pressure_diastolic' => 'nullable|integer|min:20|max:200',
-            'temperature' => 'nullable|integer|min:30|max:45',
-            'pulse_rate' => 'nullable|integer|min:20|max:300',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'weight' => 'nullable|integer|min:1|max:500',
-            'height' => 'nullable|numeric|min:30|max:250',
-            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
-            'blood_sugar' => 'nullable|numeric|min:1|max:35',
+            'blood_pressure_systolic' => 'nullable|integer',
+            'blood_pressure_diastolic' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'pulse_rate' => 'nullable|integer',
+            'respiratory_rate' => 'nullable|integer',
+            'weight' => 'nullable|integer',
+            'height' => 'nullable|numeric',
+            'oxygen_saturation' => 'nullable|integer',
+            'blood_sugar' => 'nullable|numeric',
             'notes' => 'nullable|string',
         ]);
 
@@ -104,15 +104,15 @@ class VitalSignController extends Controller
         $this->authorize('create', VitalSign::class);
 
         $rules = [
-            'temperature' => 'nullable|integer|min:30|max:45',
-            'blood_pressure_systolic' => 'nullable|integer|min:40|max:300',
-            'blood_pressure_diastolic' => 'nullable|integer|min:20|max:200',
-            'pulse_rate' => 'nullable|integer|min:20|max:300',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
-            'blood_sugar' => 'nullable|numeric|min:1|max:35',
-            'weight' => 'nullable|integer|min:1|max:500',
-            'height' => 'nullable|numeric|min:30|max:250',
+            'temperature' => 'nullable|numeric',
+            'blood_pressure_systolic' => 'nullable|integer',
+            'blood_pressure_diastolic' => 'nullable|integer',
+            'pulse_rate' => 'nullable|integer',
+            'respiratory_rate' => 'nullable|integer',
+            'oxygen_saturation' => 'nullable|integer',
+            'blood_sugar' => 'nullable|numeric',
+            'weight' => 'nullable|integer',
+            'height' => 'nullable|numeric',
             'notes' => 'nullable|string|max:500',
         ];
 
@@ -160,15 +160,15 @@ class VitalSignController extends Controller
         }
 
         $rules = [
-            'temperature' => 'nullable|integer|min:30|max:45',
-            'blood_pressure_systolic' => 'nullable|integer|min:40|max:300',
-            'blood_pressure_diastolic' => 'nullable|integer|min:20|max:200',
-            'pulse_rate' => 'nullable|integer|min:20|max:300',
-            'respiratory_rate' => 'nullable|integer|min:5|max:60',
-            'oxygen_saturation' => 'nullable|integer|min:50|max:100',
-            'blood_sugar' => 'nullable|numeric|min:1|max:35',
-            'weight' => 'nullable|integer|min:1|max:500',
-            'height' => 'nullable|numeric|min:30|max:250',
+            'temperature' => 'nullable|numeric',
+            'blood_pressure_systolic' => 'nullable|integer',
+            'blood_pressure_diastolic' => 'nullable|integer',
+            'pulse_rate' => 'nullable|integer',
+            'respiratory_rate' => 'nullable|integer',
+            'oxygen_saturation' => 'nullable|integer',
+            'blood_sugar' => 'nullable|numeric',
+            'weight' => 'nullable|integer',
+            'height' => 'nullable|numeric',
             'notes' => 'nullable|string|max:500',
         ];
 

@@ -282,6 +282,7 @@ export default function VitalsModal({
                                     )
                                 }
                                 type="number"
+                                step="0.1"
                                 className="text-center"
                             />
                         </div>

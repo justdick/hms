@@ -280,7 +280,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="120"
                                 className="h-11 text-center text-lg font-semibold"
                             />
                             <span className="text-xl font-bold text-muted-foreground">
@@ -295,7 +294,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="80"
                                 className="h-11 text-center text-lg font-semibold"
                             />
                         </div>
@@ -323,7 +321,7 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="37"
+                                step="0.1"
                                 className="text-center"
                             />
                             {errors.temperature && (
@@ -345,7 +343,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="72"
                                 className="text-center"
                             />
                             {errors.pulse_rate && (
@@ -367,7 +364,6 @@ export function RecordVitalsModal({
                                     )
                                 }
                                 type="number"
-                                placeholder="16"
                                 className="text-center"
                             />
                             {errors.respiratory_rate && (
