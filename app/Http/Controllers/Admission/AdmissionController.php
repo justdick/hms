@@ -26,6 +26,27 @@ class AdmissionController extends Controller
             'admission_notes' => 'nullable|string|max:2000',
         ]);
 
+        // Check if patient already has an active admission from this consultation
+        $existingAdmission = PatientAdmission::where('consultation_id', $consultation->id)
+            ->where('status', 'admitted')
+            ->first();
+
+        if ($existingAdmission) {
+            return redirect()->route('wards.patients.show', [$existingAdmission->ward_id, $existingAdmission->id])
+                ->with('info', "Patient already admitted. Admission Number: {$existingAdmission->admission_number}");
+        }
+
+        // Also check if patient has any active admission (regardless of consultation)
+        $activeAdmission = PatientAdmission::where('patient_id', $consultation->patientCheckin->patient_id)
+            ->where('status', 'admitted')
+            ->first();
+
+        if ($activeAdmission) {
+            return redirect()->back()->withErrors([
+                'admission' => "Patient already has an active admission ({$activeAdmission->admission_number}). Please discharge first before creating a new admission.",
+            ]);
+        }
+
         $ward = Ward::findOrFail($request->ward_id);
 
         // Check if ward has available beds
