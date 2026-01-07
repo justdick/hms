@@ -230,6 +230,26 @@ interface MedicalHistoryData {
         result_values: Record<string, unknown> | null;
         result_notes: string | null;
     }>;
+    theatre_procedures: Array<{
+        id: number;
+        performed_at: string | null;
+        procedure_name: string | null;
+        procedure_code: string | null;
+        category: string | null;
+        doctor: string | null;
+        department: string | null;
+        indication: string | null;
+        assistant: string | null;
+        anaesthetist: string | null;
+        anaesthesia_type: string | null;
+        procedure_subtype: string | null;
+        procedure_steps: string | null;
+        findings: string | null;
+        plan: string | null;
+        comments: string | null;
+        estimated_gestational_age: string | null;
+        parity: string | null;
+    }>;
 }
 
 interface Props {

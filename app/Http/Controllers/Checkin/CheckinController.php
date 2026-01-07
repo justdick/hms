@@ -63,10 +63,15 @@ class CheckinController extends Controller
         $nhisSettings = NhisSettings::getInstance();
         $nhisCredentials = null;
         if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
-            $nhisCredentials = [
-                'username' => $nhisSettings->nhia_username,
-                'password' => $nhisSettings->nhia_password,
-            ];
+            try {
+                $nhisCredentials = [
+                    'username' => $nhisSettings->nhia_username,
+                    'password' => $nhisSettings->nhia_password,
+                ];
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Password was encrypted with a different APP_KEY, skip credentials
+                $nhisCredentials = null;
+            }
         }
 
         return Inertia::render('Checkin/Index', [

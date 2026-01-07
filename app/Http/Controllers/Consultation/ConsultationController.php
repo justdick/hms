@@ -165,7 +165,7 @@ class ConsultationController extends Controller
                     // Only include laboratory tests (non-imaging) in previous consultations
                     $query->laboratory();
                 },
-                'labOrders.labService:id,name,code,category,price,sample_type,is_imaging',
+                'labOrders.labService:id,name,code,category,price,sample_type,is_imaging,test_parameters',
                 'labOrders.orderedBy:id,name',
             ])
                 ->whereHas('patientCheckin', function ($query) use ($patient) {

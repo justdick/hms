@@ -14,6 +14,18 @@ interface LabService {
     name: string;
     code: string;
     price: number;
+    test_parameters?: {
+        parameters: Array<{
+            name: string;
+            label: string;
+            type: string;
+            unit?: string;
+            normal_range?: {
+                min?: number;
+                max?: number;
+            };
+        }>;
+    };
 }
 
 interface LabOrder {
@@ -93,12 +105,48 @@ export function LabResultsDisplay({ order }: Props) {
     const results = Object.entries(order.result_values).map(
         ([key, result]: [string, any]) => {
             const isObject = typeof result === 'object' && result !== null;
+            const value = isObject ? result.value : result;
+            const unit = isObject ? result.unit : '';
+            
+            // Try to get range from result, or fall back to test parameters
+            let range = isObject ? result.range : '';
+            let flag = isObject ? result.flag : 'normal';
+            
+            // If no range in result, try to get from test parameters
+            if (!range && order.lab_service?.test_parameters?.parameters) {
+                const param = order.lab_service.test_parameters.parameters.find(
+                    p => p.name === key || p.name.toLowerCase() === key.toLowerCase()
+                );
+                if (param?.normal_range) {
+                    const { min, max } = param.normal_range;
+                    if (min !== undefined && max !== undefined) {
+                        range = `${min}-${max}`;
+                    } else if (min !== undefined) {
+                        range = `>${min}`;
+                    } else if (max !== undefined) {
+                        range = `<${max}`;
+                    }
+                    
+                    // Also calculate flag if not set
+                    if (flag === 'normal' && param.type === 'numeric') {
+                        const numValue = parseFloat(String(value));
+                        if (!isNaN(numValue)) {
+                            if (min !== undefined && numValue < min) {
+                                flag = 'low';
+                            } else if (max !== undefined && numValue > max) {
+                                flag = 'high';
+                            }
+                        }
+                    }
+                }
+            }
+            
             return {
                 parameter: key.replace(/_/g, ' '),
-                value: isObject ? result.value : result,
-                unit: isObject ? result.unit : '',
-                range: isObject ? result.range : '',
-                flag: isObject ? result.flag : 'normal',
+                value,
+                unit,
+                range,
+                flag,
             };
         },
     );

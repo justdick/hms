@@ -68,6 +68,18 @@ interface LabService {
     category: string;
     price: number | null;
     sample_type: string;
+    test_parameters?: {
+        parameters: Array<{
+            name: string;
+            label: string;
+            type: string;
+            unit?: string;
+            normal_range?: {
+                min?: number;
+                max?: number;
+            };
+        }>;
+    };
 }
 
 interface LabOrder {
@@ -268,12 +280,39 @@ const LabResultsModal = ({
                                                 const unit = isObject
                                                     ? result.unit
                                                     : '';
-                                                const range = isObject
-                                                    ? result.range
-                                                    : '';
-                                                const flag = isObject
-                                                    ? result.flag
-                                                    : 'normal';
+                                                
+                                                // Try to get range from result, or fall back to test parameters
+                                                let range = isObject ? result.range : '';
+                                                let flag = isObject ? result.flag : 'normal';
+                                                
+                                                // If no range in result, try to get from test parameters
+                                                if (!range && order.lab_service.test_parameters?.parameters) {
+                                                    const param = order.lab_service.test_parameters.parameters.find(
+                                                        p => p.name === key || p.name.toLowerCase() === key.toLowerCase()
+                                                    );
+                                                    if (param?.normal_range) {
+                                                        const { min, max } = param.normal_range;
+                                                        if (min !== undefined && max !== undefined) {
+                                                            range = `${min}-${max}`;
+                                                        } else if (min !== undefined) {
+                                                            range = `>${min}`;
+                                                        } else if (max !== undefined) {
+                                                            range = `<${max}`;
+                                                        }
+                                                        
+                                                        // Also calculate flag if not set
+                                                        if (flag === 'normal' && param.type === 'numeric') {
+                                                            const numValue = parseFloat(String(value));
+                                                            if (!isNaN(numValue)) {
+                                                                if (min !== undefined && numValue < min) {
+                                                                    flag = 'low';
+                                                                } else if (max !== undefined && numValue > max) {
+                                                                    flag = 'high';
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
 
                                                 const getValueColor = (
                                                     flag?: string,

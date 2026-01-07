@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -6,19 +7,29 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Activity,
     Beaker,
     Calendar,
     ClipboardList,
+    Eye,
     FileText,
     Heart,
     Hospital,
     Pill,
+    Scissors,
     Stethoscope,
+    Thermometer,
     Users,
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Diagnosis {
     type: string;
@@ -48,12 +59,37 @@ interface LabOrder {
     service_name: string | null;
     code: string | null;
     is_imaging: boolean;
+    test_parameters?: {
+        parameters: Array<{
+            name: string;
+            label: string;
+            type: string;
+            unit?: string;
+            normal_range?: {
+                min?: number;
+                max?: number;
+            };
+        }>;
+    } | null;
     status?: string;
     ordered_by?: string | null;
     ordered_at?: string | null;
     result_entered_at: string | null;
     result_values: Record<string, unknown> | null;
     result_notes: string | null;
+}
+
+interface ConsultationVitals {
+    blood_pressure: string | null;
+    temperature: number | null;
+    pulse_rate: number | null;
+    respiratory_rate: number | null;
+    oxygen_saturation: number | null;
+    weight: number | null;
+    height: number | null;
+    bmi: number | null;
+    recorded_at: string | null;
+    recorded_by: string | null;
 }
 
 interface Procedure {
@@ -72,6 +108,7 @@ interface Consultation {
     examination_findings: string | null;
     assessment_notes: string | null;
     plan_notes: string | null;
+    vitals: ConsultationVitals | null;
     diagnoses: Diagnosis[];
     prescriptions: Prescription[];
     lab_orders: LabOrder[];
@@ -114,12 +151,34 @@ interface BackgroundHistory {
     social_history: string | null;
 }
 
+interface TheatreProcedure {
+    id: number;
+    performed_at: string | null;
+    procedure_name: string | null;
+    procedure_code: string | null;
+    category: string | null;
+    doctor: string | null;
+    department: string | null;
+    indication: string | null;
+    assistant: string | null;
+    anaesthetist: string | null;
+    anaesthesia_type: string | null;
+    procedure_subtype: string | null;
+    procedure_steps: string | null;
+    findings: string | null;
+    plan: string | null;
+    comments: string | null;
+    estimated_gestational_age: string | null;
+    parity: string | null;
+}
+
 interface MedicalHistory {
     consultations: Consultation[];
     vitals: VitalSign[];
     admissions: Admission[];
     prescriptions: Prescription[];
     lab_results: LabOrder[];
+    theatre_procedures: TheatreProcedure[];
 }
 
 interface Props {
@@ -131,6 +190,8 @@ export default function MedicalHistoryTab({
     backgroundHistory,
     medicalHistory,
 }: Props) {
+    const [selectedLabResult, setSelectedLabResult] = useState<LabOrder | null>(null);
+
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -176,8 +237,8 @@ export default function MedicalHistoryTab({
         backgroundHistory.social_history;
 
     return (
-        <Tabs defaultValue="background" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="consultations" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="background" className="gap-1.5 text-xs">
                     <FileText className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Background</span>
@@ -186,17 +247,9 @@ export default function MedicalHistoryTab({
                     <Stethoscope className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Consultations</span>
                 </TabsTrigger>
-                <TabsTrigger value="vitals" className="gap-1.5 text-xs">
-                    <Activity className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Vitals</span>
-                </TabsTrigger>
-                <TabsTrigger value="prescriptions" className="gap-1.5 text-xs">
-                    <Pill className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Prescriptions</span>
-                </TabsTrigger>
-                <TabsTrigger value="labs" className="gap-1.5 text-xs">
-                    <Beaker className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Lab Results</span>
+                <TabsTrigger value="theatre" className="gap-1.5 text-xs">
+                    <Scissors className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Theatre</span>
                 </TabsTrigger>
                 <TabsTrigger value="admissions" className="gap-1.5 text-xs">
                     <Hospital className="h-3.5 w-3.5" />
@@ -302,6 +355,66 @@ export default function MedicalHistoryTab({
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
+                                    {/* Vitals at this visit */}
+                                    {consultation.vitals && (
+                                        <div className="rounded-lg bg-muted/50 p-3">
+                                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                <Thermometer className="h-3.5 w-3.5" />
+                                                Vitals at Visit
+                                            </h4>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                                                {consultation.vitals.blood_pressure && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">BP:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.blood_pressure}</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.temperature && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Temp:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.temperature}°C</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.pulse_rate && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Pulse:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.pulse_rate}</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.respiratory_rate && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">RR:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.respiratory_rate}</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.oxygen_saturation && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">SpO2:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.oxygen_saturation}%</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.weight && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Weight:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.weight}kg</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.height && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Height:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.height}cm</span>
+                                                    </div>
+                                                )}
+                                                {consultation.vitals.bmi && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">BMI:</span>{' '}
+                                                        <span className="font-medium">{consultation.vitals.bmi}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Diagnoses */}
                                     {consultation.diagnoses.length > 0 && (
                                         <div>
@@ -400,6 +513,17 @@ export default function MedicalHistoryTab({
                                                         >
                                                             {l.status}
                                                         </Badge>
+                                                        {l.status === 'completed' && l.result_values && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 px-2 text-xs"
+                                                                onClick={() => setSelectedLabResult(l)}
+                                                            >
+                                                                <Eye className="h-3 w-3 mr-1" />
+                                                                View Results
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -418,213 +542,127 @@ export default function MedicalHistoryTab({
                 )}
             </TabsContent>
 
-            {/* Vitals Tab */}
-            <TabsContent value="vitals" className="space-y-4">
-                {medicalHistory?.vitals && medicalHistory.vitals.length > 0 ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <Activity className="h-4 w-4" />
-                                Vital Signs History
-                            </CardTitle>
-                            <CardDescription>
-                                {medicalHistory.vitals.length} records
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b">
-                                            <th className="text-left py-2 px-2 font-medium">Date</th>
-                                            <th className="text-left py-2 px-2 font-medium">BP</th>
-                                            <th className="text-left py-2 px-2 font-medium">Temp</th>
-                                            <th className="text-left py-2 px-2 font-medium">Pulse</th>
-                                            <th className="text-left py-2 px-2 font-medium">RR</th>
-                                            <th className="text-left py-2 px-2 font-medium">SpO2</th>
-                                            <th className="text-left py-2 px-2 font-medium">Weight</th>
-                                            <th className="text-left py-2 px-2 font-medium">BMI</th>
-                                            <th className="text-left py-2 px-2 font-medium">By</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {medicalHistory.vitals.map((v) => (
-                                            <tr key={v.id} className="border-b last:border-0">
-                                                <td className="py-2 px-2 whitespace-nowrap">
-                                                    {formatDate(v.recorded_at)}
-                                                </td>
-                                                <td className="py-2 px-2">{v.blood_pressure}</td>
-                                                <td className="py-2 px-2">
-                                                    {v.temperature ? `${v.temperature}°C` : '-'}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {v.pulse_rate ?? '-'}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {v.respiratory_rate ?? '-'}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {v.oxygen_saturation ? `${v.oxygen_saturation}%` : '-'}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {v.weight ? `${v.weight}kg` : '-'}
-                                                </td>
-                                                <td className="py-2 px-2">{v.bmi ?? '-'}</td>
-                                                <td className="py-2 px-2 text-muted-foreground">
-                                                    {v.recorded_by}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <EmptyState
-                        icon={Activity}
-                        title="No Vitals Recorded"
-                        description="No vital signs have been recorded"
-                    />
-                )}
-            </TabsContent>
-
-            {/* Prescriptions Tab */}
-            <TabsContent value="prescriptions" className="space-y-4">
-                {medicalHistory?.prescriptions &&
-                medicalHistory.prescriptions.length > 0 ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <Pill className="h-4 w-4" />
-                                Prescription History
-                            </CardTitle>
-                            <CardDescription>
-                                {medicalHistory.prescriptions.length} prescriptions
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b">
-                                            <th className="text-left py-2 px-2 font-medium">Date</th>
-                                            <th className="text-left py-2 px-2 font-medium">Medication</th>
-                                            <th className="text-left py-2 px-2 font-medium">Dosage</th>
-                                            <th className="text-left py-2 px-2 font-medium">Frequency</th>
-                                            <th className="text-left py-2 px-2 font-medium">Duration</th>
-                                            <th className="text-left py-2 px-2 font-medium">Qty</th>
-                                            <th className="text-left py-2 px-2 font-medium">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {medicalHistory.prescriptions.map((p) => (
-                                            <tr key={p.id} className="border-b last:border-0">
-                                                <td className="py-2 px-2 whitespace-nowrap">
-                                                    {formatDate(p.date || null)}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    <div>
-                                                        <span className="font-medium">{p.drug_name}</span>
-                                                        {p.generic_name && (
-                                                            <span className="text-muted-foreground text-xs block">
-                                                                {p.generic_name}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {p.dose_quantity}
-                                                    {p.form && ` ${p.form}`}
-                                                    {p.strength && ` (${p.strength})`}
-                                                </td>
-                                                <td className="py-2 px-2">{p.frequency || '-'}</td>
-                                                <td className="py-2 px-2">{p.duration || '-'}</td>
-                                                <td className="py-2 px-2">{p.quantity || '-'}</td>
-                                                <td className="py-2 px-2">
-                                                    <Badge variant={getStatusBadgeVariant(p.status)}>
-                                                        {p.status}
-                                                    </Badge>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <EmptyState
-                        icon={Pill}
-                        title="No Prescriptions"
-                        description="No prescription records found"
-                    />
-                )}
-            </TabsContent>
-
-            {/* Lab Results Tab */}
-            <TabsContent value="labs" className="space-y-4">
-                {medicalHistory?.lab_results &&
-                medicalHistory.lab_results.length > 0 ? (
+            {/* Theatre Procedures Tab */}
+            <TabsContent value="theatre" className="space-y-4">
+                {medicalHistory?.theatre_procedures &&
+                medicalHistory.theatre_procedures.length > 0 ? (
                     <div className="space-y-4">
-                        {medicalHistory.lab_results.map((lab) => (
-                            <Card key={lab.id}>
+                        {medicalHistory.theatre_procedures.map((procedure) => (
+                            <Card key={procedure.id}>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <CardTitle className="text-base flex items-center gap-2">
-                                                {lab.is_imaging ? (
-                                                    <FileText className="h-4 w-4" />
-                                                ) : (
-                                                    <Beaker className="h-4 w-4" />
-                                                )}
-                                                {lab.service_name}
-                                                {lab.code && (
+                                                <Scissors className="h-4 w-4" />
+                                                {procedure.procedure_name || 'Procedure'}
+                                                {procedure.procedure_code && (
                                                     <span className="text-muted-foreground text-sm font-normal">
-                                                        ({lab.code})
+                                                        ({procedure.procedure_code})
                                                     </span>
                                                 )}
                                             </CardTitle>
-                                            <CardDescription className="mt-1">
-                                                {formatDateTime(lab.result_entered_at)}
-                                                {lab.ordered_by && ` • Ordered by ${lab.ordered_by}`}
+                                            <CardDescription className="flex items-center gap-2 mt-1">
+                                                <Calendar className="h-3.5 w-3.5" />
+                                                {formatDateTime(procedure.performed_at)}
+                                                {procedure.doctor && (
+                                                    <span>• Dr. {procedure.doctor}</span>
+                                                )}
                                             </CardDescription>
                                         </div>
-                                        <Badge variant={lab.is_imaging ? 'secondary' : 'default'}>
-                                            {lab.is_imaging ? 'Imaging' : 'Laboratory'}
-                                        </Badge>
+                                        {procedure.category && (
+                                            <Badge variant="secondary">
+                                                {procedure.category}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </CardHeader>
-                                <CardContent>
-                                    {lab.result_values &&
-                                    Object.keys(lab.result_values).length > 0 ? (
-                                        <div className="space-y-2">
-                                            <h4 className="text-sm font-medium">Results</h4>
-                                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                                {Object.entries(lab.result_values).map(
-                                                    ([key, value]) => (
-                                                        <div
-                                                            key={key}
-                                                            className="rounded-lg border p-2"
-                                                        >
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {key}
-                                                            </span>
-                                                            <p className="font-medium">
-                                                                {String(value)}
-                                                            </p>
-                                                        </div>
-                                                    ),
+                                <CardContent className="space-y-4">
+                                    {/* Procedure Team */}
+                                    <div className="grid gap-3 sm:grid-cols-3 text-sm">
+                                        {procedure.assistant && (
+                                            <div>
+                                                <span className="text-muted-foreground">Assistant:</span>{' '}
+                                                <span className="font-medium">{procedure.assistant}</span>
+                                            </div>
+                                        )}
+                                        {procedure.anaesthetist && (
+                                            <div>
+                                                <span className="text-muted-foreground">Anaesthetist:</span>{' '}
+                                                <span className="font-medium">{procedure.anaesthetist}</span>
+                                            </div>
+                                        )}
+                                        {procedure.anaesthesia_type && (
+                                            <div>
+                                                <span className="text-muted-foreground">Anaesthesia:</span>{' '}
+                                                <span className="font-medium capitalize">{procedure.anaesthesia_type}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Obstetric Info (if applicable) */}
+                                    {(procedure.estimated_gestational_age || procedure.parity || procedure.procedure_subtype) && (
+                                        <div className="rounded-lg bg-muted/50 p-3">
+                                            <h4 className="text-sm font-medium mb-2">Obstetric Details</h4>
+                                            <div className="grid gap-2 sm:grid-cols-3 text-sm">
+                                                {procedure.procedure_subtype && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Type:</span>{' '}
+                                                        <span className="font-medium">{procedure.procedure_subtype}</span>
+                                                    </div>
+                                                )}
+                                                {procedure.estimated_gestational_age && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Gestational Age:</span>{' '}
+                                                        <span className="font-medium">{procedure.estimated_gestational_age}</span>
+                                                    </div>
+                                                )}
+                                                {procedure.parity && (
+                                                    <div>
+                                                        <span className="text-muted-foreground">Parity:</span>{' '}
+                                                        <span className="font-medium">{procedure.parity}</span>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
-                                    ) : null}
-                                    {lab.result_notes && (
-                                        <div className="mt-3">
-                                            <h4 className="text-sm font-medium mb-1">Notes</h4>
-                                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                                {lab.result_notes}
-                                            </p>
+                                    )}
+
+                                    {/* Indication */}
+                                    {procedure.indication && (
+                                        <div className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Indication:</span>
+                                            <p className="mt-1">{procedure.indication}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Procedure Steps */}
+                                    {procedure.procedure_steps && (
+                                        <div className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Procedure Steps:</span>
+                                            <p className="mt-1 whitespace-pre-wrap">{procedure.procedure_steps}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Findings */}
+                                    {procedure.findings && (
+                                        <div className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Findings:</span>
+                                            <p className="mt-1 whitespace-pre-wrap">{procedure.findings}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Plan */}
+                                    {procedure.plan && (
+                                        <div className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Plan:</span>
+                                            <p className="mt-1 whitespace-pre-wrap">{procedure.plan}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Comments */}
+                                    {procedure.comments && (
+                                        <div className="text-sm">
+                                            <span className="font-medium text-muted-foreground">Comments:</span>
+                                            <p className="mt-1 whitespace-pre-wrap">{procedure.comments}</p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -633,9 +671,9 @@ export default function MedicalHistoryTab({
                     </div>
                 ) : (
                     <EmptyState
-                        icon={Beaker}
-                        title="No Lab Results"
-                        description="No laboratory or imaging results found"
+                        icon={Scissors}
+                        title="No Theatre Procedures"
+                        description="No surgical/theatre procedure records found"
                     />
                 )}
             </TabsContent>
@@ -731,6 +769,126 @@ export default function MedicalHistoryTab({
                     />
                 )}
             </TabsContent>
+
+            {/* Lab Results Modal */}
+            <Dialog open={!!selectedLabResult} onOpenChange={() => setSelectedLabResult(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {selectedLabResult?.is_imaging ? (
+                                <FileText className="h-5 w-5" />
+                            ) : (
+                                <Beaker className="h-5 w-5" />
+                            )}
+                            {selectedLabResult?.service_name}
+                            {selectedLabResult?.code && (
+                                <span className="text-muted-foreground text-sm font-normal">
+                                    ({selectedLabResult.code})
+                                </span>
+                            )}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="text-sm text-muted-foreground">
+                            {selectedLabResult?.result_entered_at && (
+                                <span>Results entered: {formatDateTime(selectedLabResult.result_entered_at)}</span>
+                            )}
+                        </div>
+                        
+                        {selectedLabResult?.result_values &&
+                        Object.keys(selectedLabResult.result_values).length > 0 ? (
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-medium">Results</h4>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {Object.entries(selectedLabResult.result_values).map(
+                                        ([key, result]) => {
+                                            const isObject = typeof result === 'object' && result !== null;
+                                            const value = isObject ? (result as Record<string, unknown>).value : result;
+                                            const unit = isObject ? String((result as Record<string, unknown>).unit || '') : '';
+                                            
+                                            let range: string = isObject ? String((result as Record<string, unknown>).range || '') : '';
+                                            let flag = isObject ? ((result as Record<string, unknown>).flag as string) : 'normal';
+                                            
+                                            if (!range && selectedLabResult.test_parameters?.parameters) {
+                                                const param = selectedLabResult.test_parameters.parameters.find(
+                                                    p => p.name === key || p.name.toLowerCase() === key.toLowerCase()
+                                                );
+                                                if (param?.normal_range) {
+                                                    const { min, max } = param.normal_range;
+                                                    if (min !== undefined && max !== undefined) {
+                                                        range = `${min}-${max}`;
+                                                    } else if (min !== undefined) {
+                                                        range = `>${min}`;
+                                                    } else if (max !== undefined) {
+                                                        range = `<${max}`;
+                                                    }
+                                                    
+                                                    if (flag === 'normal' && param.type === 'numeric') {
+                                                        const numValue = parseFloat(String(value));
+                                                        if (!isNaN(numValue)) {
+                                                            if (min !== undefined && numValue < min) {
+                                                                flag = 'low';
+                                                            } else if (max !== undefined && numValue > max) {
+                                                                flag = 'high';
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            
+                                            const getFlagColor = (f: string) => {
+                                                switch (f) {
+                                                    case 'high':
+                                                    case 'critical':
+                                                        return 'text-red-600 dark:text-red-400';
+                                                    case 'low':
+                                                        return 'text-orange-600 dark:text-orange-400';
+                                                    default:
+                                                        return '';
+                                                }
+                                            };
+                                            
+                                            return (
+                                                <div
+                                                    key={key}
+                                                    className="rounded-lg border p-2"
+                                                >
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {key.replace(/_/g, ' ')}
+                                                    </span>
+                                                    <p className={`font-medium ${getFlagColor(flag)}`}>
+                                                        {String(value)}
+                                                        {unit && <span className="text-muted-foreground font-normal ml-1">{unit}</span>}
+                                                    </p>
+                                                    {range && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Ref: {range}
+                                                        </span>
+                                                    )}
+                                                    {flag && flag !== 'normal' && (
+                                                        <span className={`text-xs ml-2 font-medium ${getFlagColor(flag)}`}>
+                                                            ({flag.toUpperCase()})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        },
+                                    )}
+                                </div>
+                            </div>
+                        ) : null}
+                        
+                        {selectedLabResult?.result_notes && (
+                            <div>
+                                <h4 className="text-sm font-medium mb-1">Notes</h4>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                    {selectedLabResult.result_notes}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Tabs>
     );
 }

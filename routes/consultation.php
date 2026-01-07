@@ -7,11 +7,13 @@ use App\Http\Controllers\Consultation\ConsultationTransferController;
 use App\Http\Controllers\Consultation\DiagnosisController;
 use App\Http\Controllers\Consultation\LabOrderController;
 use App\Http\Controllers\Consultation\PrescriptionParserController;
+use App\Http\Controllers\Consultation\ProcedureSearchController;
 use Illuminate\Support\Facades\Route;
 
-// API route for prescription parsing (used by Smart Prescription Input)
-Route::middleware(['auth'])->prefix('api')->group(function () {
-    Route::post('/prescriptions/parse', [PrescriptionParserController::class, 'parse'])->name('api.prescriptions.parse');
+// Procedure search and template endpoints for Theatre tab (JSON responses)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/procedures/search', [ProcedureSearchController::class, 'search'])->name('procedures.search');
+    Route::get('/procedures/{procedure}/template', [ProcedureSearchController::class, 'template'])->name('procedures.template');
 });
 
 Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->group(function () {

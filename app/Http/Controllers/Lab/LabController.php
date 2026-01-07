@@ -193,7 +193,7 @@ class LabController extends Controller
             'labOrders' => function ($query) {
                 // Don't show cancelled orders by default
                 $query->where('status', '!=', 'cancelled')
-                    ->with(['labService', 'orderedBy:id,name']);
+                    ->with(['labService:id,name,code,price,test_parameters', 'orderedBy:id,name']);
             },
         ]);
 
@@ -215,7 +215,7 @@ class LabController extends Controller
             'labOrders' => function ($query) {
                 // Don't show cancelled orders by default
                 $query->where('status', '!=', 'cancelled')
-                    ->with(['labService', 'orderedBy:id,name']);
+                    ->with(['labService:id,name,code,price,test_parameters', 'orderedBy:id,name']);
             },
         ]);
 
@@ -279,6 +279,35 @@ class LabController extends Controller
             $validated['result_values'] ?? null,
             $validated['result_notes'] ?? null
         );
+
+        // Check if there are other pending lab orders for the same patient
+        $patientId = null;
+        if ($labOrder->orderable instanceof \App\Models\Consultation) {
+            $patientId = $labOrder->orderable->patientCheckin?->patient_id;
+        } elseif ($labOrder->orderable instanceof \App\Models\WardRound) {
+            $patientId = $labOrder->orderable->patientAdmission?->patient_id;
+        }
+
+        if ($patientId) {
+            $nextPendingOrder = LabOrder::where('id', '!=', $labOrder->id)
+                ->whereIn('status', ['ordered', 'sample_collected', 'in_progress'])
+                ->where(function ($query) use ($patientId) {
+                    $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patientId) {
+                        $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patientId));
+                    })
+                        ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patientId) {
+                            $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patientId));
+                        });
+                })
+                ->orderByRaw("FIELD(priority, 'stat', 'urgent', 'routine')")
+                ->first();
+
+            if ($nextPendingOrder) {
+                return redirect()
+                    ->route('lab.orders.show', $nextPendingOrder)
+                    ->with('success', 'Test results entered successfully. Here is the next pending test for this patient.');
+            }
+        }
 
         return redirect()
             ->route('lab.index')

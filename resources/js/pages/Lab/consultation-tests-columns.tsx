@@ -179,10 +179,57 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
 
     const handleCompleteTest = () => {
         setIsProcessing(true);
+
+        // Transform result values to include unit, range, and flag from test parameters
+        const parameters = test.lab_service.test_parameters?.parameters;
+        let transformedResults: Record<string, any> = {};
+
+        if (parameters && parameters.length > 0) {
+            parameters.forEach((param) => {
+                const rawValue = resultValues[param.name];
+                if (rawValue !== undefined && rawValue !== '') {
+                    const numericValue = param.type === 'numeric' ? parseFloat(String(rawValue)) : rawValue;
+                    
+                    // Determine flag based on normal range
+                    let flag = 'normal';
+                    if (param.type === 'numeric' && param.normal_range) {
+                        const value = parseFloat(String(rawValue));
+                        if (param.normal_range.min !== undefined && value < param.normal_range.min) {
+                            flag = 'low';
+                        } else if (param.normal_range.max !== undefined && value > param.normal_range.max) {
+                            flag = 'high';
+                        }
+                    }
+
+                    // Build range string
+                    let rangeStr = '';
+                    if (param.normal_range) {
+                        if (param.normal_range.min !== undefined && param.normal_range.max !== undefined) {
+                            rangeStr = `${param.normal_range.min}-${param.normal_range.max}`;
+                        } else if (param.normal_range.min !== undefined) {
+                            rangeStr = `>${param.normal_range.min}`;
+                        } else if (param.normal_range.max !== undefined) {
+                            rangeStr = `<${param.normal_range.max}`;
+                        }
+                    }
+
+                    transformedResults[param.name] = {
+                        value: numericValue,
+                        unit: param.unit || '',
+                        range: rangeStr,
+                        flag: flag,
+                    };
+                }
+            });
+        } else {
+            // No parameters configured, use raw values
+            transformedResults = resultValues;
+        }
+
         router.patch(
             lab.orders.complete.url(test.id),
             {
-                result_values: resultValues,
+                result_values: transformedResults,
                 result_notes: resultNotes,
             },
             {

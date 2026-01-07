@@ -1,4 +1,4 @@
-import { ServiceBlockAlert } from '@/components/Billing/ServiceBlockAlert';
+import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import { PrescriptionStatusBadge } from '@/components/Pharmacy/PrescriptionStatusBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';

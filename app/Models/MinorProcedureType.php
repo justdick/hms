@@ -49,6 +49,15 @@ class MinorProcedureType extends Model
             ->where('item_type', 'procedure');
     }
 
+    /**
+     * Get the active template for this procedure type.
+     */
+    public function template(): HasOne
+    {
+        return $this->hasOne(ProcedureTemplate::class)
+            ->where('is_active', true);
+    }
+
     public function scopeActive($query): void
     {
         $query->where('is_active', true);

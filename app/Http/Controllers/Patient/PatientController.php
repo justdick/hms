@@ -203,10 +203,14 @@ class PatientController extends Controller
         $nhisSettings = \App\Models\NhisSettings::getInstance();
         $nhisCredentials = null;
         if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
-            $nhisCredentials = [
-                'username' => $nhisSettings->nhia_username,
-                'password' => $nhisSettings->nhia_password,
-            ];
+            try {
+                $nhisCredentials = [
+                    'username' => $nhisSettings->nhia_username,
+                    'password' => $nhisSettings->nhia_password,
+                ];
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Password was encrypted with different APP_KEY, ignore
+            }
         }
 
         return inertia('Patients/Index', [
@@ -588,14 +592,15 @@ class PatientController extends Controller
      */
     private function getMedicalHistory(Patient $patient): array
     {
-        // Get consultations with all related data
+        // Get consultations with all related data including vitals from the check-in
         $consultations = \App\Models\Consultation::with([
             'doctor:id,name',
             'patientCheckin:id,department_id,checked_in_at',
             'patientCheckin.department:id,name',
+            'patientCheckin.vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
             'diagnoses.diagnosis:id,code,diagnosis',
             'prescriptions.drug:id,name,generic_name,form,strength',
-            'labOrders.labService:id,name,code,is_imaging',
+            'labOrders.labService:id,name,code,is_imaging,test_parameters',
             'procedures.procedureType:id,name,code',
         ])
             ->whereHas('patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
@@ -604,6 +609,9 @@ class PatientController extends Controller
             ->limit(50)
             ->get()
             ->map(function ($consultation) {
+                // Get vitals from the check-in (usually just one, but could be multiple)
+                $vitals = $consultation->patientCheckin?->vitalSigns?->first();
+
                 return [
                     'id' => $consultation->id,
                     'date' => $consultation->started_at?->format('Y-m-d H:i'),
@@ -614,6 +622,19 @@ class PatientController extends Controller
                     'examination_findings' => $consultation->examination_findings,
                     'assessment_notes' => $consultation->assessment_notes,
                     'plan_notes' => $consultation->plan_notes,
+                    // Include vitals from this visit
+                    'vitals' => $vitals ? [
+                        'blood_pressure' => $vitals->blood_pressure,
+                        'temperature' => $vitals->temperature,
+                        'pulse_rate' => $vitals->pulse_rate,
+                        'respiratory_rate' => $vitals->respiratory_rate,
+                        'oxygen_saturation' => $vitals->oxygen_saturation,
+                        'weight' => $vitals->weight,
+                        'height' => $vitals->height,
+                        'bmi' => $vitals->bmi,
+                        'recorded_at' => $vitals->recorded_at?->format('Y-m-d H:i'),
+                        'recorded_by' => $vitals->recordedBy?->name,
+                    ] : null,
                     'diagnoses' => $consultation->diagnoses->map(fn ($d) => [
                         'type' => $d->type,
                         'code' => $d->diagnosis?->code,
@@ -633,9 +654,11 @@ class PatientController extends Controller
                         'status' => $p->status,
                     ]),
                     'lab_orders' => $consultation->labOrders->map(fn ($l) => [
+                        'id' => $l->id,
                         'service_name' => $l->labService?->name,
                         'code' => $l->labService?->code,
                         'is_imaging' => $l->labService?->is_imaging,
+                        'test_parameters' => $l->labService?->test_parameters,
                         'status' => $l->status,
                         'result_values' => $l->result_values,
                         'result_notes' => $l->result_notes,
@@ -677,7 +700,7 @@ class PatientController extends Controller
                 'ward:id,name',
                 'bed:id,bed_number',
                 'consultation.doctor:id,name',
-                'diagnoses.diagnosis:id,code,diagnosis',
+                'diagnoses',
             ])
             ->orderByDesc('admitted_at')
             ->limit(20)
@@ -694,9 +717,9 @@ class PatientController extends Controller
                 'discharge_notes' => $a->discharge_notes,
                 'admitting_doctor' => $a->consultation?->doctor?->name,
                 'diagnoses' => $a->diagnoses->map(fn ($d) => [
-                    'type' => $d->type,
-                    'code' => $d->diagnosis?->code,
-                    'description' => $d->diagnosis?->diagnosis,
+                    'type' => $d->diagnosis_type,
+                    'code' => $d->icd_code,
+                    'description' => $d->diagnosis_name,
                     'is_active' => $d->is_active,
                 ]),
             ]);
@@ -719,24 +742,36 @@ class PatientController extends Controller
             ->orderByDesc('created_at')
             ->limit(100)
             ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'date' => $p->created_at?->format('Y-m-d H:i'),
-                'drug_name' => $p->drug?->name ?? $p->medication_name,
-                'generic_name' => $p->drug?->generic_name,
-                'form' => $p->drug?->form ?? $p->dosage_form,
-                'strength' => $p->drug?->strength,
-                'dose_quantity' => $p->dose_quantity,
-                'frequency' => $p->frequency,
-                'duration' => $p->duration,
-                'quantity' => $p->quantity,
-                'instructions' => $p->instructions,
-                'status' => $p->status,
-            ]);
+            ->map(function ($p) {
+                // Get the actual date from the consultation or ward round
+                $date = null;
+                if ($p->prescribable instanceof \App\Models\Consultation) {
+                    $date = $p->prescribable->started_at ?? $p->prescribable->created_at;
+                } elseif ($p->prescribable instanceof \App\Models\WardRound) {
+                    $date = $p->prescribable->round_date ?? $p->prescribable->created_at;
+                } else {
+                    $date = $p->created_at;
+                }
+
+                return [
+                    'id' => $p->id,
+                    'date' => $date?->format('Y-m-d H:i'),
+                    'drug_name' => $p->drug?->name ?? $p->medication_name,
+                    'generic_name' => $p->drug?->generic_name,
+                    'form' => $p->drug?->form ?? $p->dosage_form,
+                    'strength' => $p->drug?->strength,
+                    'dose_quantity' => $p->dose_quantity,
+                    'frequency' => $p->frequency,
+                    'duration' => $p->duration,
+                    'quantity' => $p->quantity,
+                    'instructions' => $p->instructions,
+                    'status' => $p->status,
+                ];
+            });
 
         // Get all lab results
         $allLabResults = \App\Models\LabOrder::with([
-            'labService:id,name,code,is_imaging',
+            'labService:id,name,code,is_imaging,test_parameters',
             'orderedBy:id,name',
         ])
             ->where(function ($query) use ($patient) {
@@ -756,6 +791,7 @@ class PatientController extends Controller
                 'service_name' => $l->labService?->name,
                 'code' => $l->labService?->code,
                 'is_imaging' => $l->labService?->is_imaging,
+                'test_parameters' => $l->labService?->test_parameters,
                 'ordered_by' => $l->orderedBy?->name,
                 'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
                 'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
@@ -769,7 +805,44 @@ class PatientController extends Controller
             'admissions' => $admissions,
             'prescriptions' => $allPrescriptions,
             'lab_results' => $allLabResults,
+            'theatre_procedures' => $this->getTheatreProcedures($patient),
         ];
+    }
+
+    /**
+     * Get theatre/surgical procedures for a patient
+     */
+    private function getTheatreProcedures(Patient $patient): \Illuminate\Support\Collection
+    {
+        return \App\Models\ConsultationProcedure::with([
+            'procedureType:id,name,code,category',
+            'doctor:id,name',
+            'consultation.patientCheckin.department:id,name',
+        ])
+            ->whereHas('consultation.patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
+            ->orderByDesc('performed_at')
+            ->limit(50)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'performed_at' => $p->performed_at?->format('Y-m-d H:i'),
+                'procedure_name' => $p->procedureType?->name,
+                'procedure_code' => $p->procedureType?->code,
+                'category' => $p->procedureType?->category,
+                'doctor' => $p->doctor?->name,
+                'department' => $p->consultation?->patientCheckin?->department?->name,
+                'indication' => $p->indication,
+                'assistant' => $p->assistant,
+                'anaesthetist' => $p->anaesthetist,
+                'anaesthesia_type' => $p->anaesthesia_type,
+                'procedure_subtype' => $p->procedure_subtype,
+                'procedure_steps' => $p->procedure_steps,
+                'findings' => $p->findings,
+                'plan' => $p->plan,
+                'comments' => $p->comments,
+                'estimated_gestational_age' => $p->estimated_gestational_age,
+                'parity' => $p->parity,
+            ]);
     }
 
     private function generatePatientNumber(): string

@@ -141,7 +141,7 @@ class WardRoundController extends Controller
             'doctor:id,name',
             'diagnoses.diagnosedBy:id,name',
             'prescriptions.drug',
-            'labOrders.labService',
+            'labOrders.labService:id,name,code,price,test_parameters',
             'procedures.procedureType',
             'procedures.doctor:id,name',
         ]);

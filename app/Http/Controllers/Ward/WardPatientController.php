@@ -33,7 +33,7 @@ class WardPatientController extends Controller
                         $q->latest()->with('recordedBy:id,name')->limit(1);
                     },
                     'prescriptions.drug',
-                    'labOrders.labService',
+                    'labOrders.labService:id,name,code,price,test_parameters',
                     'diagnoses.diagnosis', // Include consultation diagnoses
                 ]);
             },
@@ -52,7 +52,7 @@ class WardPatientController extends Controller
                     'doctor:id,name',
                     'diagnoses',
                     'prescriptions.drug',
-                    'labOrders.labService',
+                    'labOrders.labService:id,name,code,price,test_parameters',
                     'procedures.procedureType',
                     'procedures.doctor:id,name',
                 ])
