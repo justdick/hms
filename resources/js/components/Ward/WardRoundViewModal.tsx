@@ -473,17 +473,13 @@ export function WardRoundViewModal({
                                                                     </p>
                                                                     {prescription
                                                                         .drug
-                                                                        ?.strength && (
+                                                                        ?.form && (
                                                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                                                             {
                                                                                 prescription
                                                                                     .drug
-                                                                                    .strength
+                                                                                    .form
                                                                             }
-                                                                            {prescription
-                                                                                .drug
-                                                                                .form &&
-                                                                                ` (${prescription.drug.form})`}
                                                                         </p>
                                                                     )}
                                                                 </div>

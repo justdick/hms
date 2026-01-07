@@ -82,9 +82,11 @@ export function MedicationHistoryCard({
                                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                                     {prescription.drug?.name ||
                                         prescription.medication_name}
-                                    {prescription.drug?.strength && (
+                                    {(prescription.dose_quantity ||
+                                        prescription.dosage) && (
                                         <span className="ml-1 text-sm font-normal text-muted-foreground">
-                                            {prescription.drug.strength}
+                                            ({prescription.dose_quantity ||
+                                                prescription.dosage})
                                         </span>
                                     )}
                                 </h4>
@@ -117,14 +119,10 @@ export function MedicationHistoryCard({
                                     </span>
                                 </div>
                             )}
-                            {(prescription.dosage ||
-                                prescription.dose_quantity) && (
+                            {prescription.drug?.form && (
                                 <div className="flex items-center gap-1">
-                                    <span className="text-xs">Dose:</span>
-                                    <span>
-                                        {prescription.dosage ||
-                                            prescription.dose_quantity}
-                                    </span>
+                                    <span className="text-xs">Form:</span>
+                                    <span>{prescription.drug.form}</span>
                                 </div>
                             )}
                         </div>

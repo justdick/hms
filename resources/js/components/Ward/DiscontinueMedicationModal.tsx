@@ -85,8 +85,9 @@ export function DiscontinueMedicationModal({
                     <DialogDescription>
                         {prescription.drug?.name ||
                             prescription.medication_name}
-                        {prescription.drug?.strength &&
-                            ` ${prescription.drug.strength}`}
+                        {(prescription.dose_quantity ||
+                            prescription.dosage) &&
+                            ` - ${prescription.dose_quantity || prescription.dosage}`}
                     </DialogDescription>
                 </DialogHeader>
 

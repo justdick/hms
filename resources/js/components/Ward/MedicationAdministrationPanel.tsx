@@ -197,16 +197,6 @@ export function MedicationAdministrationPanel({
                                                         {prescription.drug
                                                             ?.name ||
                                                             prescription.medication_name}
-                                                        {prescription.drug
-                                                            ?.strength && (
-                                                            <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                                                {
-                                                                    prescription
-                                                                        .drug
-                                                                        .strength
-                                                                }
-                                                            </span>
-                                                        )}
                                                     </CardTitle>
                                                     <p className="mt-1 text-sm text-muted-foreground">
                                                         {prescription.dose_quantity ||
@@ -505,8 +495,9 @@ function GiveMedicationDialog({
                         <DialogDescription>
                             {prescription.drug?.name ||
                                 prescription.medication_name}
-                            {prescription.drug?.strength &&
-                                ` ${prescription.drug.strength}`}
+                            {(prescription.dose_quantity ||
+                                prescription.dosage) &&
+                                ` - ${prescription.dose_quantity || prescription.dosage}`}
                         </DialogDescription>
                     </DialogHeader>
 

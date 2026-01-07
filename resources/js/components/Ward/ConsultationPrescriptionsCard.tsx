@@ -56,7 +56,7 @@ export function ConsultationPrescriptionsCard({ prescriptions }: Props) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Medication</TableHead>
-                                    <TableHead>Dosage Form</TableHead>
+                                    <TableHead>Dose</TableHead>
                                     <TableHead>Frequency</TableHead>
                                     <TableHead>Duration</TableHead>
                                     <TableHead>Instructions</TableHead>
@@ -72,21 +72,17 @@ export function ConsultationPrescriptionsCard({ prescriptions }: Props) {
                                                         prescription.medication_name
                                                     }
                                                 </p>
-                                                {prescription.drug && (
+                                                {prescription.drug?.form && (
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {prescription.drug
-                                                            .form &&
-                                                            prescription.drug
-                                                                .form}
-                                                        {prescription.drug
-                                                            .strength &&
-                                                            ` • ${prescription.drug.strength}`}
+                                                        {prescription.drug.form}
                                                     </p>
                                                 )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {prescription.dosage_form || '-'}
+                                            {prescription.dose_quantity ||
+                                                prescription.dosage_form ||
+                                                '-'}
                                         </TableCell>
                                         <TableCell>
                                             {prescription.frequency}

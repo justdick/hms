@@ -70,9 +70,9 @@ export const medicationHistoryColumns = (
                         {prescription.drug?.name ||
                             prescription.medication_name}
                     </div>
-                    {prescription.drug?.strength && (
+                    {(prescription.dose_quantity || prescription.dosage) && (
                         <div className="text-sm text-muted-foreground">
-                            {prescription.drug.strength}
+                            Dose: {prescription.dose_quantity || prescription.dosage}
                         </div>
                     )}
                 </div>

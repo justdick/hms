@@ -224,9 +224,9 @@ export function MARTable({ administrations, prescriptions, admissionId, canDelet
                                 prescription?.medication_name ||
                                 'Unknown'}
                         </div>
-                        {prescription?.drug?.strength && (
+                        {prescription?.dose_quantity && (
                             <div className="text-xs text-muted-foreground">
-                                {prescription.drug.strength}
+                                {prescription.dose_quantity}
                             </div>
                         )}
                     </div>
