@@ -83,6 +83,7 @@ export default function CheckinModal({
     const [notes, setNotes] = useState('');
     const [serviceDate, setServiceDate] = useState('');
     const [checkingInsurance, setCheckingInsurance] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Get today's date in YYYY-MM-DD format for date input
     const today = new Date().toISOString().split('T')[0];
@@ -99,6 +100,7 @@ export default function CheckinModal({
             setSelectedDepartment('');
             setNotes('');
             setServiceDate('');
+            setIsSubmitting(false);
         }
     }, [open, patient]);
 
@@ -176,6 +178,13 @@ export default function CheckinModal({
             return;
         }
 
+        // Prevent double submission
+        if (isSubmitting) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
         const formData: Record<string, string | number | boolean> = {
             patient_id: patient.id,
             department_id: selectedDepartment,
@@ -198,9 +207,11 @@ export default function CheckinModal({
         router.post('/checkin/checkins', formData, {
             onSuccess: () => {
                 toast.success('Patient checked in successfully');
+                setIsSubmitting(false);
                 onSuccess();
             },
             onError: (errors) => {
+                setIsSubmitting(false);
                 if (errors.claim_check_code) {
                     toast.error(errors.claim_check_code);
                 } else {
@@ -426,6 +437,7 @@ export default function CheckinModal({
                                         variant="outline"
                                         size="sm"
                                         onClick={handleModalClose}
+                                        disabled={isSubmitting}
                                     >
                                         Cancel
                                     </Button>
@@ -445,13 +457,14 @@ export default function CheckinModal({
                                         }}
                                         disabled={
                                             checkingInsurance ||
-                                            departments.length === 0
+                                            departments.length === 0 ||
+                                            isSubmitting
                                         }
                                     >
-                                        {checkingInsurance && (
+                                        {(checkingInsurance || isSubmitting) && (
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         )}
-                                        Check-in
+                                        {isSubmitting ? 'Checking in...' : 'Check-in'}
                                     </Button>
                                 </div>
                             </div>

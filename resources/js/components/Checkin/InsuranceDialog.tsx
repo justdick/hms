@@ -125,6 +125,7 @@ export default function InsuranceDialog({
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
     const [isSyncingDates, setIsSyncingDates] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // NHIS Extension hook
     const { isVerifying, cccData, startVerification, clearCccData } =
@@ -191,6 +192,7 @@ export default function InsuranceDialog({
             setClaimCheckCode('');
             setError('');
             setIsSyncingDates(false);
+            setIsSubmitting(false);
             clearCccData();
         }
     }, [open, clearCccData]);
@@ -251,13 +253,22 @@ export default function InsuranceDialog({
             return;
         }
 
+        if (isSubmitting) {
+            return;
+        }
+
         setError('');
+        setIsSubmitting(true);
         onUseInsurance(claimCheckCode.trim());
     };
 
     const handleUseCash = () => {
+        if (isSubmitting) {
+            return;
+        }
         setClaimCheckCode('');
         setError('');
+        setIsSubmitting(true);
         onUseCash();
     };
 
@@ -500,12 +511,15 @@ export default function InsuranceDialog({
                             size="sm"
                             className="w-full"
                             disabled={
-                                !canUseInsurance || !claimCheckCode.trim()
+                                !canUseInsurance || !claimCheckCode.trim() || isSubmitting
                             }
                         >
-                            <Shield className="mr-2 h-3 w-3" />
-                            Check-in with{' '}
-                            {isNhisProvider ? 'NHIS' : 'Insurance'}
+                            {isSubmitting ? (
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            ) : (
+                                <Shield className="mr-2 h-3 w-3" />
+                            )}
+                            {isSubmitting ? 'Checking in...' : `Check-in with ${isNhisProvider ? 'NHIS' : 'Insurance'}`}
                         </Button>
                     </div>
 
@@ -520,7 +534,11 @@ export default function InsuranceDialog({
                             variant="outline"
                             size="sm"
                             className="w-full"
+                            disabled={isSubmitting}
                         >
+                            {isSubmitting ? (
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            ) : null}
                             Proceed without Insurance
                         </Button>
                     </div>
@@ -531,6 +549,7 @@ export default function InsuranceDialog({
                             onClick={handleModalClose}
                             variant="ghost"
                             size="sm"
+                            disabled={isSubmitting}
                         >
                             Cancel
                         </Button>

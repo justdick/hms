@@ -55,6 +55,24 @@ import {
     UserPlus,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+interface InsuranceProvider {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    plan: InsurancePlan;
+}
 
 interface Patient {
     id: number;
@@ -66,6 +84,7 @@ interface Patient {
     phone_number: string;
     email?: string;
     age?: number;
+    active_insurance?: PatientInsurance | null;
 }
 
 interface Department {
@@ -250,6 +269,17 @@ interface ProcedureType {
 interface ConsultationProcedure {
     id: number;
     procedure_type: ProcedureType;
+    indication: string | null;
+    assistant: string | null;
+    anaesthetist: string | null;
+    anaesthesia_type: string | null;
+    estimated_gestational_age: string | null;
+    parity: string | null;
+    procedure_subtype: string | null;
+    procedure_steps: string | null;
+    template_selections: Record<string, string> | null;
+    findings: string | null;
+    plan: string | null;
     comments: string | null;
     performed_at: string;
     doctor: {
@@ -477,9 +507,19 @@ export default function ConsultationShow({
     activeOverride,
     can,
 }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, flash } = usePage<SharedData>().props;
     const canUploadExternal =
         auth.permissions?.investigations?.uploadExternal ?? false;
+
+    // Handle flash messages
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     // Determine if consultation is editable
     // Editable if: in_progress OR completed within last 24 hours
@@ -500,6 +540,7 @@ export default function ConsultationShow({
 
     // Vitals modal state
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
+    const [vitalsModalMode, setVitalsModalMode] = useState<'create' | 'edit'>('edit');
 
     // Lab order state
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
@@ -1020,6 +1061,19 @@ export default function ConsultationShow({
                                         })}
                                     </span>
                                 </div>
+                                <Separator
+                                    orientation="vertical"
+                                    className="h-4"
+                                />
+                                {consultation.patient_checkin.patient.active_insurance ? (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                        {consultation.patient_checkin.patient.active_insurance.plan.provider.code}
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                        Cash
+                                    </Badge>
+                                )}
                             </div>
                         </div>
 
@@ -1585,15 +1639,16 @@ export default function ConsultationShow({
                                             </p>
                                         )}
                                     </div>
-                                    {can?.editVitals && latestVitals && (
+                                    {can?.editVitals && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() =>
-                                                setVitalsModalOpen(true)
-                                            }
+                                            onClick={() => {
+                                                setVitalsModalMode(latestVitals ? 'edit' : 'create');
+                                                setVitalsModalOpen(true);
+                                            }}
                                         >
-                                            Edit Vitals
+                                            {latestVitals ? 'Edit Vitals' : 'Add Vitals'}
                                         </Button>
                                     )}
                                 </CardHeader>
@@ -2035,7 +2090,7 @@ export default function ConsultationShow({
                     setVitalsModalOpen(false);
                     router.reload();
                 }}
-                mode="edit"
+                mode={vitalsModalMode}
             />
         </AppLayout>
     );
