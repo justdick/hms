@@ -18,6 +18,23 @@ import {
 } from './consultation-tests-columns';
 import { LabOrdersDataTable } from './lab-orders-data-table';
 
+interface InsuranceProvider {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    plan: InsurancePlan;
+}
+
 interface Patient {
     id: number;
     patient_number: string;
@@ -26,6 +43,7 @@ interface Patient {
     phone_number?: string;
     date_of_birth: string;
     gender: string;
+    active_insurance?: PatientInsurance | null;
 }
 
 interface PatientCheckin {
@@ -119,10 +137,22 @@ export default function ConsultationShow({ consultation, labOrders }: Props) {
                                 Lab Tests - {patient.first_name}{' '}
                                 {patient.last_name}
                             </h1>
-                            <p className="text-muted-foreground">
-                                {labOrders.length} test
-                                {labOrders.length !== 1 ? 's' : ''} ordered
-                            </p>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <span>
+                                    {labOrders.length} test
+                                    {labOrders.length !== 1 ? 's' : ''} ordered
+                                </span>
+                                <span>•</span>
+                                {patient.active_insurance ? (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                        {patient.active_insurance.plan.provider.code}
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                        Cash
+                                    </Badge>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

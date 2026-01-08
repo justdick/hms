@@ -57,17 +57,19 @@ export function MedicationHistoryTab({
     const [filter, setFilter] = useState<FilterType>('all');
     const [viewType, setViewType] = useState<ViewType>('table');
 
-    // Filter prescriptions based on selected filter
-    const filteredPrescriptions = prescriptions.filter((prescription) => {
-        if (filter === 'all') return true;
-        if (filter === 'active')
-            return (
-                (prescription.status === 'active' || !prescription.status) &&
-                !prescription.discontinued_at
-            );
-        if (filter === 'discontinued') return !!prescription.discontinued_at;
-        return true;
-    });
+    // Filter prescriptions based on selected filter and sort by newest first
+    const filteredPrescriptions = prescriptions
+        .filter((prescription) => {
+            if (filter === 'all') return true;
+            if (filter === 'active')
+                return (
+                    (prescription.status === 'active' || !prescription.status) &&
+                    !prescription.discontinued_at
+                );
+            if (filter === 'discontinued') return !!prescription.discontinued_at;
+            return true;
+        })
+        .sort((a, b) => b.id - a.id);
 
     return (
         <div className="space-y-4">

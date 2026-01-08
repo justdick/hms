@@ -132,6 +132,7 @@ interface Props {
 // Helper function to parse frequency to get daily count
 function parseFrequency(frequency: string): number | null {
     const frequencyMap: { [key: string]: number } = {
+        'STAT (Immediately)': 1, // Single dose
         'Once daily': 1,
         'Twice daily (BID)': 2,
         'Three times daily (TID)': 3,
@@ -140,7 +141,6 @@ function parseFrequency(frequency: string): number | null {
         'Every 6 hours': 4,
         'Every 8 hours': 3,
         'Every 12 hours': 2,
-        'At bedtime': 1,
     };
     return frequencyMap[frequency] || null;
 }
@@ -252,7 +252,8 @@ export default function PrescriptionFormSection({
     // Helper to convert frequency to smart input format
     const frequencyToSmartFormat = (frequency: string): string => {
         const map: { [key: string]: string } = {
-            'Once daily': '1 daily',
+            'STAT (Immediately)': 'STAT',
+            'Once daily': 'OD',
             'Twice daily (BID)': 'BD',
             'Three times daily (TID)': 'TDS',
             'Four times daily (QID)': 'QID',
@@ -260,10 +261,7 @@ export default function PrescriptionFormSection({
             'Every 6 hours': 'Q6H',
             'Every 8 hours': 'Q8H',
             'Every 12 hours': 'Q12H',
-            'At bedtime': 'nocte',
             'As needed (PRN)': 'PRN',
-            'Before meals': 'AC',
-            'After meals': 'PC',
         };
         return map[frequency] || frequency;
     };
@@ -444,6 +442,18 @@ export default function PrescriptionFormSection({
     useEffect(() => {
         setManuallyEdited(false);
     }, [selectedDrug?.id]);
+
+    // Auto-set duration to "Single dose" when STAT is selected
+    useEffect(() => {
+        if (prescriptionData.frequency === 'STAT (Immediately)') {
+            setPrescriptionData('duration', 'Single dose');
+            // For STAT, quantity = dose quantity (single dose)
+            const doseQuantity = prescriptionData.dose_quantity
+                ? parseInt(prescriptionData.dose_quantity)
+                : 1;
+            setPrescriptionData('quantity_to_dispense', doseQuantity);
+        }
+    }, [prescriptionData.frequency, prescriptionData.dose_quantity, setPrescriptionData]);
 
     // Drug selector component (shared between modes)
     const DrugSelector = (
@@ -956,6 +966,9 @@ export default function PrescriptionFormSection({
                                                     <SelectValue placeholder="Select" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="STAT (Immediately)">
+                                                        STAT (Immediately)
+                                                    </SelectItem>
                                                     <SelectItem value="Once daily">
                                                         Once daily
                                                     </SelectItem>
@@ -983,20 +996,11 @@ export default function PrescriptionFormSection({
                                                     <SelectItem value="As needed (PRN)">
                                                         As needed (PRN)
                                                     </SelectItem>
-                                                    <SelectItem value="Before meals">
-                                                        Before meals
-                                                    </SelectItem>
-                                                    <SelectItem value="After meals">
-                                                        After meals
-                                                    </SelectItem>
-                                                    <SelectItem value="At bedtime">
-                                                        At bedtime
-                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
-                                        {/* Duration */}
+                                        {/* Duration - disabled for STAT */}
                                         <div className="space-y-2">
                                             <Label htmlFor="duration">
                                                 Duration *
@@ -1012,11 +1016,15 @@ export default function PrescriptionFormSection({
                                                     )
                                                 }
                                                 required
+                                                disabled={prescriptionData.frequency === 'STAT (Immediately)'}
                                             >
                                                 <SelectTrigger id="duration">
                                                     <SelectValue placeholder="Select" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="Single dose">
+                                                        Single dose
+                                                    </SelectItem>
                                                     <SelectItem value="1 day">
                                                         1 day
                                                     </SelectItem>
@@ -1346,7 +1354,7 @@ export default function PrescriptionFormSection({
 
                 {prescriptions.length > 0 ? (
                     <div className="space-y-3">
-                        {prescriptions.map((prescription) => (
+                        {[...prescriptions].sort((a, b) => b.id - a.id).map((prescription) => (
                             <div
                                 key={prescription.id}
                                 className="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800"

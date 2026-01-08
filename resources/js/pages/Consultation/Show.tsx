@@ -244,7 +244,7 @@ interface PatientAdmission {
     id: number;
     ward: Ward;
     bed_number?: string;
-    admission_date: string;
+    admitted_at: string;
     discharge_date?: string;
     admission_reason: string;
     admission_notes?: string;
@@ -954,18 +954,24 @@ export default function ConsultationShow({
     };
 
     const getStatusBadge = (status: string) => {
-        const variants = {
-            in_progress: 'default',
-            completed: 'outline',
-            paused: 'secondary',
-        } as const;
+        if (status === 'completed') {
+            return (
+                <Badge className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700">
+                    COMPLETED
+                </Badge>
+            );
+        }
+
+        if (status === 'in_progress') {
+            return (
+                <Badge className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700">
+                    IN PROGRESS
+                </Badge>
+            );
+        }
 
         return (
-            <Badge
-                variant={
-                    variants[status as keyof typeof variants] || 'secondary'
-                }
-            >
+            <Badge variant="secondary">
                 {status.replace('_', ' ').toUpperCase()}
             </Badge>
         );
@@ -1155,13 +1161,17 @@ export default function ConsultationShow({
                                                     Admitted:{' '}
                                                 </span>
                                                 <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                    {formatDateTime(
+                                                    {new Date(
                                                         consultation
                                                             .patient_checkin
                                                             .patient
                                                             .active_admission
-                                                            .admission_date,
-                                                    )}
+                                                            .admitted_at,
+                                                    ).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    })}
                                                 </span>
                                             </div>
                                         </div>
@@ -1310,7 +1320,9 @@ export default function ConsultationShow({
                             }
                             allergies={patientHistory?.allergies || []}
                         />
-                        {isEditable && (
+                        {isEditable &&
+                            !consultation.patient_checkin.patient
+                                .active_admission && (
                             <>
                                 <Button
                                     onClick={() => setShowCompleteDialog(true)}
@@ -1319,70 +1331,75 @@ export default function ConsultationShow({
                                 >
                                     Complete Consultation
                                 </Button>
-                                {!consultation.patient_checkin.patient
-                                    .active_admission && (
-                                    <Dialog
-                                        open={showAdmissionModal}
-                                        onOpenChange={setShowAdmissionModal}
-                                    >
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
-                                            >
-                                                <UserPlus className="mr-2 h-4 w-4" />
+                                <Dialog
+                                    open={showAdmissionModal}
+                                    onOpenChange={setShowAdmissionModal}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
+                                        >
+                                            <UserPlus className="mr-2 h-4 w-4" />
+                                            Admit Patient
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>
                                                 Admit Patient
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-md">
-                                            <DialogHeader>
-                                                <DialogTitle>
-                                                    Admit Patient
-                                                </DialogTitle>
-                                            </DialogHeader>
-                                            <form
-                                                onSubmit={handleAdmissionSubmit}
-                                                className="space-y-4"
-                                            >
-                                                <div>
-                                                    <Label htmlFor="ward_id">
-                                                        Select Ward
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            admissionData.ward_id
-                                                        }
-                                                        onValueChange={
-                                                            handleWardChange
-                                                        }
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Choose a ward" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {availableWards.map(
-                                                                (ward) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            ward.id
-                                                                        }
-                                                                        value={ward.id.toString()}
-                                                                    >
-                                                                        {
-                                                                            ward.name
-                                                                        }{' '}
-                                                                        (
-                                                                        {
-                                                                            ward.available_beds
-                                                                        }{' '}
-                                                                        beds
-                                                                        available)
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                            </DialogTitle>
+                                        </DialogHeader>
+                                        <form
+                                            onSubmit={handleAdmissionSubmit}
+                                            className="space-y-4"
+                                        >
+                                            <div>
+                                                <Label htmlFor="ward_id">
+                                                    Select Ward
+                                                </Label>
+                                                <Select
+                                                    value={
+                                                        admissionData.ward_id
+                                                    }
+                                                    onValueChange={
+                                                        handleWardChange
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Choose a ward" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableWards.map(
+                                                            (ward) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        ward.id
+                                                                    }
+                                                                    value={ward.id.toString()}
+                                                                >
+                                                                    {ward.name}{' '}
+                                                                    {ward.available_beds > 0 ? (
+                                                                        <span className="text-green-600">
+                                                                            ({ward.available_beds} beds available)
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-orange-600">
+                                                                            (Full - overflow)
+                                                                        </span>
+                                                                    )}
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                                {admissionData.ward_id && 
+                                                    availableWards.find(w => w.id.toString() === admissionData.ward_id)?.available_beds === 0 && (
+                                                    <p className="mt-1 text-sm text-orange-600">
+                                                        ⚠️ This ward is full. Patient will be admitted as overflow.
+                                                    </p>
+                                                )}
+                                            </div>
 
                                                 <div>
                                                     <Label htmlFor="admission_notes">
@@ -1434,7 +1451,6 @@ export default function ConsultationShow({
                                             </form>
                                         </DialogContent>
                                     </Dialog>
-                                )}
 
                                 <Dialog
                                     open={showTransferModal}

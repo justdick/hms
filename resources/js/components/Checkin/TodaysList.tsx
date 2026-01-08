@@ -496,10 +496,11 @@ export default function TodaysList({
                                                     •{' '}
                                                     {new Date(
                                                         checkin.checked_in_at,
-                                                    ).toLocaleDateString()}{' '}
-                                                    {new Date(
-                                                        checkin.checked_in_at,
-                                                    ).toLocaleTimeString()}
+                                                    ).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    })}
                                                 </span>
                                                 {canUpdateDate && (
                                                     <button

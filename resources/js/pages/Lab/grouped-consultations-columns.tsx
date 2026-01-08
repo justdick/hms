@@ -22,12 +22,30 @@ import {
     Timer,
 } from 'lucide-react';
 
+interface InsuranceProvider {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    plan: InsurancePlan;
+}
+
 interface Patient {
     id: number;
     patient_number: string;
     first_name: string;
     last_name: string;
     phone_number?: string;
+    active_insurance?: PatientInsurance | null;
 }
 
 interface Test {
@@ -205,6 +223,22 @@ export const groupedConsultationColumns: ColumnDef<GroupedConsultation>[] = [
             const nameA = `${patientA.first_name} ${patientA.last_name}`;
             const nameB = `${patientB.first_name} ${patientB.last_name}`;
             return nameA.localeCompare(nameB);
+        },
+    },
+    {
+        id: 'insurance',
+        header: 'Insurance',
+        cell: ({ row }) => {
+            const insurance = row.original.patient.active_insurance;
+            return insurance ? (
+                <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                    {insurance.plan.provider.code}
+                </Badge>
+            ) : (
+                <Badge variant="outline" className="text-muted-foreground">
+                    Cash
+                </Badge>
+            );
         },
     },
     {

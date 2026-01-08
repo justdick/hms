@@ -153,7 +153,7 @@ export function MedicationHistoryCard({
 
                         {/* Instructions */}
                         {prescription.instructions && (
-                            <p className="text-sm text-muted-foreground italic">
+                            <p className="text-sm text-amber-600 dark:text-amber-400 italic">
                                 {prescription.instructions}
                             </p>
                         )}

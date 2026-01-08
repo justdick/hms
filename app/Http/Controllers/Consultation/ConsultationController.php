@@ -36,6 +36,7 @@ class ConsultationController extends Controller
         // Base query for awaiting consultation
         $awaitingQuery = PatientCheckin::with([
             'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patient.activeInsurance.plan.provider:id,name,code',
             'department:id,name',
             'vitalSigns' => function ($query) {
                 $query->latest()->limit(1);
@@ -48,6 +49,7 @@ class ConsultationController extends Controller
         // Base query for active consultations
         $activeQuery = Consultation::with([
             'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
             'patientCheckin.department:id,name',
             'doctor:id,name',
         ])
@@ -84,6 +86,7 @@ class ConsultationController extends Controller
         // Query for completed consultations (last 24 hours)
         $completedQuery = Consultation::with([
             'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
             'patientCheckin.department:id,name',
             'doctor:id,name',
         ])
@@ -136,6 +139,8 @@ class ConsultationController extends Controller
 
         $consultation->load([
             'patientCheckin.patient',
+            'patientCheckin.patient.activeAdmission.ward',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
             'patientCheckin.department',
             'patientCheckin.vitalSigns' => function ($query) {
                 $query->latest();
@@ -264,7 +269,7 @@ class ConsultationController extends Controller
             // Lab services loaded via async search - too many to load upfront
             'patientHistory' => $patientHistory,
             'patientHistories' => $patientHistories,
-            'availableWards' => Ward::active()->available()->get(['id', 'name', 'code', 'available_beds']),
+            'availableWards' => Ward::active()->get(['id', 'name', 'code', 'available_beds']),
             'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type', 'bottle_size']),
             'availableDepartments' => Department::active()->opd()->get(['id', 'name', 'code']),
             // Diagnoses loaded via async search - too many to load upfront
@@ -510,6 +515,18 @@ class ConsultationController extends Controller
     public function complete(Request $request, Consultation $consultation)
     {
         $this->authorize('complete', $consultation);
+
+        // Validate that both principal and provisional diagnoses exist
+        $principalCount = $consultation->principalDiagnoses()->count();
+        $provisionalCount = $consultation->provisionalDiagnoses()->count();
+
+        if ($principalCount === 0) {
+            return redirect()->back()->with('error', 'Please add at least one Principal diagnosis before completing the consultation.');
+        }
+
+        if ($provisionalCount === 0) {
+            return redirect()->back()->with('error', 'Please add at least one Secondary (Provisional) diagnosis before completing the consultation.');
+        }
 
         $consultation->update([
             'status' => 'completed',

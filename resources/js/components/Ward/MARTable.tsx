@@ -66,6 +66,7 @@ interface Prescription {
     medication_name: string;
     dose_quantity?: string;
     frequency?: string;
+    instructions?: string;
 }
 
 interface User {
@@ -227,6 +228,11 @@ export function MARTable({ administrations, prescriptions, admissionId, canDelet
                         {prescription?.dose_quantity && (
                             <div className="text-xs text-muted-foreground">
                                 {prescription.dose_quantity}
+                            </div>
+                        )}
+                        {prescription?.instructions && (
+                            <div className="text-xs text-amber-600 dark:text-amber-400 italic">
+                                {prescription.instructions}
                             </div>
                         )}
                     </div>

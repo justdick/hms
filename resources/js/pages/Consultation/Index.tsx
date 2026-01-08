@@ -48,6 +48,27 @@ interface Department {
     code?: string;
 }
 
+interface InsuranceProvider {
+    id: number;
+    name: string;
+    code: string;
+}
+
+interface InsurancePlan {
+    id: number;
+    name: string;
+    provider: InsuranceProvider;
+}
+
+interface PatientInsurance {
+    id: number;
+    plan: InsurancePlan;
+}
+
+interface PatientWithInsurance extends Patient {
+    active_insurance?: PatientInsurance | null;
+}
+
 interface VitalSigns {
     temperature: number;
     blood_pressure_systolic: number;
@@ -58,7 +79,7 @@ interface VitalSigns {
 
 interface PatientCheckin {
     id: number;
-    patient: Patient;
+    patient: PatientWithInsurance;
     department: Department;
     checked_in_at: string;
     status: string;
@@ -84,7 +105,7 @@ interface ActiveConsultation {
             | 'last_name'
             | 'date_of_birth'
             | 'phone_number'
-        >;
+        > & { active_insurance?: PatientInsurance | null };
         department: Department;
     };
 }
@@ -104,7 +125,7 @@ interface CompletedConsultation {
             | 'last_name'
             | 'date_of_birth'
             | 'phone_number'
-        >;
+        > & { active_insurance?: PatientInsurance | null };
         department: Department;
     };
 }
@@ -582,7 +603,7 @@ export default function ConsultationIndex({
                                                                 <TableHead>Age</TableHead>
                                                                 <TableHead>Department</TableHead>
                                                                 <TableHead>Vitals</TableHead>
-                                                                <TableHead>Checked In</TableHead>
+                                                                <TableHead>Insurance</TableHead>
                                                                 <TableHead className="text-right">Action</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
@@ -607,7 +628,17 @@ export default function ConsultationIndex({
                                                                             </Badge>
                                                                         )}
                                                                     </TableCell>
-                                                                    <TableCell>{formatTime(checkin.checked_in_at)}</TableCell>
+                                                                    <TableCell>
+                                                                        {checkin.patient.active_insurance ? (
+                                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                                                                {checkin.patient.active_insurance.plan.provider.code}
+                                                                            </Badge>
+                                                                        ) : (
+                                                                            <Badge variant="outline" className="text-muted-foreground">
+                                                                                Cash
+                                                                            </Badge>
+                                                                        )}
+                                                                    </TableCell>
                                                                     <TableCell className="text-right">
                                                                         <Button size="sm" onClick={() => openStartDialog(checkin)}>
                                                                             Start
@@ -689,7 +720,7 @@ export default function ConsultationIndex({
                                                 <TableHead>Age</TableHead>
                                                 <TableHead>Department</TableHead>
                                                 <TableHead>Vitals</TableHead>
-                                                <TableHead>Checked In</TableHead>
+                                                <TableHead>Insurance</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -714,7 +745,17 @@ export default function ConsultationIndex({
                                                             </Badge>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell>{formatTime(checkin.checked_in_at)}</TableCell>
+                                                    <TableCell>
+                                                        {checkin.patient.active_insurance ? (
+                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                                                {checkin.patient.active_insurance.plan.provider.code}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-muted-foreground">
+                                                                Cash
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell className="text-right">
                                                         <Button size="sm" onClick={() => openStartDialog(checkin)}>
                                                             Start
@@ -759,7 +800,7 @@ export default function ConsultationIndex({
                                                 <TableHead>ID</TableHead>
                                                 <TableHead>Department</TableHead>
                                                 <TableHead>Doctor</TableHead>
-                                                <TableHead>Completed</TableHead>
+                                                <TableHead>Insurance</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -774,12 +815,15 @@ export default function ConsultationIndex({
                                                     <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
                                                     <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
                                                     <TableCell>
-                                                        <div className="text-sm">
-                                                            {formatDate(consultation.completed_at)}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {formatTime(consultation.completed_at)}
-                                                        </div>
+                                                        {consultation.patient_checkin.patient.active_insurance ? (
+                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                                                {consultation.patient_checkin.patient.active_insurance.plan.provider.code}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-muted-foreground">
+                                                                Cash
+                                                            </Badge>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <Button

@@ -420,10 +420,18 @@ class CheckinController extends Controller
         // Include credentials for extension mode (only if user has permission)
         $credentials = null;
         if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
-            $credentials = [
-                'username' => $nhisSettings->nhia_username,
-                'password' => $nhisSettings->nhia_password, // Decrypted automatically by model
-            ];
+            try {
+                $credentials = [
+                    'username' => $nhisSettings->nhia_username,
+                    'password' => $nhisSettings->nhia_password, // Decrypted automatically by model
+                ];
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Password was encrypted with different key, skip credentials
+                \Log::warning('Failed to decrypt NHIA password for facility', [
+                    'error' => $e->getMessage(),
+                ]);
+                $credentials = null;
+            }
         }
 
         if (! $activeInsurance) {

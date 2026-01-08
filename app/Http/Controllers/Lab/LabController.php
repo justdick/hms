@@ -136,7 +136,14 @@ class LabController extends Controller
             return [
                 'orderable_type' => $orderableType,
                 'orderable_id' => $orderableId,
-                'patient' => $patient,
+                'patient' => [
+                    'id' => $patient->id,
+                    'patient_number' => $patient->patient_number,
+                    'first_name' => $patient->first_name,
+                    'last_name' => $patient->last_name,
+                    'phone_number' => $patient->phone_number,
+                    'active_insurance' => $patient->activeInsurance?->load('plan.provider'),
+                ],
                 'patient_number' => $patient->patient_number,
                 'context' => $context,
                 'ordered_at' => $firstOrder->ordered_at,
@@ -190,6 +197,7 @@ class LabController extends Controller
     {
         $consultation->load([
             'patientCheckin.patient:id,patient_number,first_name,last_name,phone_number,date_of_birth,gender',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
             'labOrders' => function ($query) {
                 // Don't show cancelled orders by default
                 $query->where('status', '!=', 'cancelled')
@@ -210,6 +218,7 @@ class LabController extends Controller
     {
         $wardRound->load([
             'patientAdmission.patient:id,patient_number,first_name,last_name,phone_number,date_of_birth,gender',
+            'patientAdmission.patient.activeInsurance.plan.provider:id,name,code',
             'patientAdmission.ward:id,name,code',
             'doctor:id,name',
             'labOrders' => function ($query) {

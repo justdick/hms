@@ -15,6 +15,14 @@ class NhisSettings extends Model
         'auto_open_portal',
     ];
 
+    /**
+     * Hide sensitive fields from serialization.
+     * Password is manually included only when needed with proper error handling.
+     */
+    protected $hidden = [
+        'nhia_password',
+    ];
+
     protected function casts(): array
     {
         return [

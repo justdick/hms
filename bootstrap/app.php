@@ -33,8 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Append EnsurePasswordChanged to the auth middleware group
-        $middleware->appendToGroup('auth', [
+        // Redirect unauthenticated users to login page
+        $middleware->redirectGuestsTo('/login');
+
+        // Create 'auth' middleware group with Authenticate + EnsurePasswordChanged
+        $middleware->group('auth', [
+            \Illuminate\Auth\Middleware\Authenticate::class,
             EnsurePasswordChanged::class,
         ]);
 
