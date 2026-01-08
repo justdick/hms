@@ -124,6 +124,11 @@ export interface ThemeConfig {
     branding: ThemeBranding;
 }
 
+export interface Features {
+    bedManagement: boolean;
+    vitalsAlerts: boolean;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -136,6 +141,7 @@ export interface SharedData {
         info?: string;
     };
     theme?: ThemeConfig;
+    features?: Features;
     [key: string]: unknown;
 }
 

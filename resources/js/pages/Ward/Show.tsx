@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
 import { useVitalsAlerts } from '@/hooks/use-vitals-alerts';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Activity,
     AlertCircle,
@@ -88,20 +88,23 @@ export default function WardShow({
     admissions,
     filters = {},
 }: Props) {
+    const { features } = usePage().props as { features?: { bedManagement?: boolean } };
+    const bedManagementEnabled = features?.bedManagement ?? false;
+
     const [bedModalOpen, setBedModalOpen] = useState(false);
     const [selectedAdmission, setSelectedAdmission] =
         useState<WardPatientData | null>(null);
     const [isChangingBed, setIsChangingBed] = useState(false);
 
     // Fetch vitals alerts for this ward (toasts are handled globally in AppLayout)
-    const { alerts } = useVitalsAlerts({
+    useVitalsAlerts({
         wardId: ward.id,
         pollingInterval: 30000,
         enabled: true,
     });
 
-    // Create columns with wardId
-    const columns = createWardPatientsColumns(ward.id);
+    // Create columns with wardId and bed management flag
+    const columns = createWardPatientsColumns(ward.id, bedManagementEnabled);
 
     // Get current admissions for bed display
     const currentAdmissions = admissions.data;
@@ -161,16 +164,6 @@ export default function WardShow({
         return Math.round((occupied / ward.total_beds) * 100);
     };
 
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
-
     return (
         <AppLayout
             breadcrumbs={[
@@ -225,29 +218,39 @@ export default function WardShow({
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+                    {bedManagementEnabled && (
+                        <>
+                            <StatCard
+                                label="Total Beds"
+                                value={ward.total_beds}
+                                icon={<Bed className="h-4 w-4" />}
+                                variant="info"
+                            />
+                            <StatCard
+                                label="Available"
+                                value={ward.available_beds}
+                                icon={<Users className="h-4 w-4" />}
+                                variant="success"
+                            />
+                            <StatCard
+                                label="Occupied"
+                                value={ward.total_beds - ward.available_beds}
+                                icon={<User className="h-4 w-4" />}
+                                variant="error"
+                            />
+                            <StatCard
+                                label="Occupancy"
+                                value={`${getOccupancyRate()}%`}
+                                icon={<Activity className="h-4 w-4" />}
+                                variant="default"
+                            />
+                        </>
+                    )}
                     <StatCard
-                        label="Total Beds"
-                        value={ward.total_beds}
-                        icon={<Bed className="h-4 w-4" />}
-                        variant="info"
-                    />
-                    <StatCard
-                        label="Available"
-                        value={ward.available_beds}
+                        label="Total Patients"
+                        value={stats.total_patients}
                         icon={<Users className="h-4 w-4" />}
-                        variant="success"
-                    />
-                    <StatCard
-                        label="Occupied"
-                        value={ward.total_beds - ward.available_beds}
-                        icon={<User className="h-4 w-4" />}
-                        variant="error"
-                    />
-                    <StatCard
-                        label="Occupancy"
-                        value={`${getOccupancyRate()}%`}
-                        icon={<Activity className="h-4 w-4" />}
-                        variant="default"
+                        variant="info"
                     />
                     <StatCard
                         label="Pending Meds"
@@ -278,17 +281,20 @@ export default function WardShow({
                             <Users className="h-4 w-4" />
                             Current Patients ({admissions.total})
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="beds"
-                            className="flex items-center gap-2"
-                        >
-                            <Bed className="h-4 w-4" />
-                            Beds
-                        </TabsTrigger>
+                        {bedManagementEnabled && (
+                            <TabsTrigger
+                                value="beds"
+                                className="flex items-center gap-2"
+                            >
+                                <Bed className="h-4 w-4" />
+                                Beds
+                            </TabsTrigger>
+                        )}
                     </TabsList>
 
                     {/* Beds Tab */}
-                    <TabsContent value="beds">
+                    {bedManagementEnabled && (
+                        <TabsContent value="beds">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Bed Management</CardTitle>
@@ -387,6 +393,7 @@ export default function WardShow({
                             </CardContent>
                         </Card>
                     </TabsContent>
+                    )}
 
                     {/* Current Patients Tab */}
                     <TabsContent value="patients">
@@ -410,7 +417,7 @@ export default function WardShow({
             </div>
 
             {/* Bed Assignment Modal */}
-            {selectedAdmission && (
+            {bedManagementEnabled && selectedAdmission && (
                 <BedAssignmentModal
                     open={bedModalOpen}
                     onClose={handleBedModalClose}

@@ -53,12 +53,16 @@ class Bed extends Model
     public function markAsOccupied(): void
     {
         $this->update(['status' => 'occupied']);
-        $this->ward->updateBedCounts();
+        if (config('features.bed_management')) {
+            $this->ward->updateBedCounts();
+        }
     }
 
     public function markAsAvailable(): void
     {
         $this->update(['status' => 'available']);
-        $this->ward->updateBedCounts();
+        if (config('features.bed_management')) {
+            $this->ward->updateBedCounts();
+        }
     }
 }

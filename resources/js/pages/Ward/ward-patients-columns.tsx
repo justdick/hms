@@ -145,7 +145,9 @@ const calculateVitalsStatus = (
 
 export const createWardPatientsColumns = (
     wardId: number,
-): ColumnDef<WardPatientData>[] => [
+    bedManagementEnabled: boolean = true,
+): ColumnDef<WardPatientData>[] => {
+    const columns: ColumnDef<WardPatientData>[] = [
     {
         accessorKey: 'patient',
         id: 'patient',
@@ -218,82 +220,6 @@ export const createWardPatientsColumns = (
                 {row.original.patient.patient_number}
             </Link>
         ),
-    },
-    {
-        accessorKey: 'bed',
-        id: 'bed',
-        header: 'Bed',
-        cell: ({ row, table }) => {
-            const admission = row.original;
-            const onBedAction = (table.options.meta as any)?.onBedAction;
-
-            const handleRemoveBed = () => {
-                if (
-                    confirm(
-                        'Are you sure you want to remove the bed assignment?',
-                    )
-                ) {
-                    router.delete(
-                        `/admissions/${admission.id}/bed-assignment`,
-                        {
-                            preserveScroll: true,
-                        },
-                    );
-                }
-            };
-
-            return (
-                <div className="flex items-center gap-2">
-                    {admission.bed ? (
-                        <>
-                            <Bed className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                            <span className="font-medium">
-                                {admission.bed.bed_number}
-                            </span>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0"
-                                    >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            onBedAction?.(admission, 'change')
-                                        }
-                                    >
-                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                        Change Bed
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={handleRemoveBed}
-                                        className="text-red-600 focus:text-red-600"
-                                    >
-                                        <X className="mr-2 h-4 w-4" />
-                                        Remove Bed
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </>
-                    ) : (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => onBedAction?.(admission, 'assign')}
-                        >
-                            <Plus className="mr-1 h-3 w-3" />
-                            Assign
-                        </Button>
-                    )}
-                </div>
-            );
-        },
     },
     {
         accessorKey: 'doctor',
@@ -484,3 +410,86 @@ export const createWardPatientsColumns = (
         },
     },
 ];
+
+    // Add bed column only if bed management is enabled
+    if (bedManagementEnabled) {
+        columns.splice(2, 0, {
+            accessorKey: 'bed',
+            id: 'bed',
+            header: 'Bed',
+            cell: ({ row, table }) => {
+                const admission = row.original;
+                const onBedAction = (table.options.meta as any)?.onBedAction;
+
+                const handleRemoveBed = () => {
+                    if (
+                        confirm(
+                            'Are you sure you want to remove the bed assignment?',
+                        )
+                    ) {
+                        router.delete(
+                            `/admissions/${admission.id}/bed-assignment`,
+                            {
+                                preserveScroll: true,
+                            },
+                        );
+                    }
+                };
+
+                return (
+                    <div className="flex items-center gap-2">
+                        {admission.bed ? (
+                            <>
+                                <Bed className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                <span className="font-medium">
+                                    {admission.bed.bed_number}
+                                </span>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0"
+                                        >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                onBedAction?.(admission, 'change')
+                                            }
+                                        >
+                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                            Change Bed
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={handleRemoveBed}
+                                            className="text-red-600 focus:text-red-600"
+                                        >
+                                            <X className="mr-2 h-4 w-4" />
+                                            Remove Bed
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => onBedAction?.(admission, 'assign')}
+                            >
+                                <Plus className="mr-1 h-3 w-3" />
+                                Assign
+                            </Button>
+                        )}
+                    </div>
+                );
+            },
+        });
+    }
+
+    return columns;
+};

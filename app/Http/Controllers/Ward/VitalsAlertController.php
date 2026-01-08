@@ -16,6 +16,13 @@ class VitalsAlertController extends Controller
 
     public function active(Request $request): JsonResponse
     {
+        // Return empty alerts if vitals alerts feature is disabled
+        if (! config('features.vitals_alerts')) {
+            return response()->json([
+                'alerts' => [],
+            ]);
+        }
+
         $user = $request->user();
 
         // Get active alerts for user's wards

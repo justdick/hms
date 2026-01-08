@@ -507,9 +507,10 @@ export default function ConsultationShow({
     activeOverride,
     can,
 }: Props) {
-    const { auth, flash } = usePage<SharedData>().props;
+    const { auth, flash, features } = usePage<SharedData>().props;
     const canUploadExternal =
         auth.permissions?.investigations?.uploadExternal ?? false;
+    const bedManagementEnabled = features?.bedManagement ?? false;
 
     // Handle flash messages
     useEffect(() => {
@@ -1378,22 +1379,27 @@ export default function ConsultationShow({
                                                                     }
                                                                     value={ward.id.toString()}
                                                                 >
-                                                                    {ward.name}{' '}
-                                                                    {ward.available_beds > 0 ? (
-                                                                        <span className="text-green-600">
-                                                                            ({ward.available_beds} beds available)
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-orange-600">
-                                                                            (Full - overflow)
-                                                                        </span>
+                                                                    {ward.name}
+                                                                    {bedManagementEnabled && (
+                                                                        <>
+                                                                            {' '}
+                                                                            {ward.available_beds > 0 ? (
+                                                                                <span className="text-green-600">
+                                                                                    ({ward.available_beds} beds available)
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span className="text-orange-600">
+                                                                                    (Full - overflow)
+                                                                                </span>
+                                                                            )}
+                                                                        </>
                                                                     )}
                                                                 </SelectItem>
                                                             ),
                                                         )}
                                                     </SelectContent>
                                                 </Select>
-                                                {admissionData.ward_id && 
+                                                {bedManagementEnabled && admissionData.ward_id && 
                                                     availableWards.find(w => w.id.toString() === admissionData.ward_id)?.available_beds === 0 && (
                                                     <p className="mt-1 text-sm text-orange-600">
                                                         ⚠️ This ward is full. Patient will be admitted as overflow.

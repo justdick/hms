@@ -12,7 +12,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule auto-cancellation of old incomplete check-ins
-Schedule::command('checkins:cancel-old')->dailyAt('00:30');
+// DISABLED: We want to keep old check-ins for historical purposes
+// Schedule::command('checkins:cancel-old')->dailyAt('00:30');
 
 // Schedule auto-completion of consultations older than 24 hours
 Schedule::command('consultations:auto-complete')->hourly();
@@ -69,17 +70,33 @@ Schedule::call(function () {
 })->everyMinute()->name('scheduled-backup');
 
 // Handle custom cron expression for backups
-Schedule::job(new CreateBackupJob)->when(function () {
+// Runs every minute but only executes if custom cron matches
+Schedule::call(function () {
     $settings = BackupSettings::getInstance();
 
-    return $settings->schedule_enabled
-        && $settings->schedule_frequency === 'custom'
-        && ! empty($settings->cron_expression);
-})->cron(function () {
+    if (! $settings->schedule_enabled || $settings->schedule_frequency !== 'custom') {
+        return;
+    }
+
+    CreateBackupJob::dispatch();
+})->when(function () {
     $settings = BackupSettings::getInstance();
 
-    return $settings->cron_expression ?? '0 2 * * *'; // Default to 2 AM daily
-})->name('scheduled-backup-custom');
+    if (! $settings->schedule_enabled || $settings->schedule_frequency !== 'custom') {
+        return false;
+    }
+
+    $cronExpression = $settings->cron_expression ?? '0 2 * * *';
+
+    // Check if current time matches the cron expression
+    try {
+        $cron = new \Cron\CronExpression($cronExpression);
+
+        return $cron->isDue();
+    } catch (\Exception $e) {
+        return false;
+    }
+})->everyMinute()->name('scheduled-backup-custom');
 
 // Schedule backup cleanup (retention policy) - runs daily at 3 AM
 Schedule::job(new CleanupBackupsJob)->dailyAt('03:00')->name('backup-cleanup');

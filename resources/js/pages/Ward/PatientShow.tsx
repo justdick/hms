@@ -398,8 +398,9 @@ export default function WardPatientShow({
     can_transfer = false,
     availableWards = [],
 }: Props) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, features } = usePage<SharedData>().props;
     const canDischarge = auth.permissions?.admissions?.discharge ?? false;
+    const bedManagementEnabled = features?.bedManagement ?? false;
 
     const [activeTab, setActiveTab] = useState('overview');
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
@@ -817,56 +818,59 @@ export default function WardPatientShow({
                     <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 transition-all hover:shadow-md dark:border-purple-800 dark:bg-purple-950">
                         <div className="mb-2 flex items-center justify-between">
                             <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                                Ward & Bed
+                                {bedManagementEnabled ? 'Ward & Bed' : 'Ward'}
                             </p>
-                            {admission.bed ? (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-6 px-2 text-purple-600 hover:bg-purple-100 hover:text-purple-700 dark:text-purple-400 dark:hover:bg-purple-900"
-                                        >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={loadBedData}>
-                                            <RefreshCw className="mr-2 h-4 w-4" />
-                                            Change Bed
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onClick={handleRemoveBed}
-                                            className="text-red-600 focus:text-red-600"
-                                        >
-                                            <X className="mr-2 h-4 w-4" />
-                                            Remove Bed
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    variant="default"
-                                    className="h-6 bg-orange-500 px-2 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
-                                    onClick={loadBedData}
-                                >
-                                    <BedIcon className="mr-1 h-3 w-3" />
-                                    Assign Bed
-                                </Button>
+                            {bedManagementEnabled && (
+                                admission.bed ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-6 px-2 text-purple-600 hover:bg-purple-100 hover:text-purple-700 dark:text-purple-400 dark:hover:bg-purple-900"
+                                            >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={loadBedData}>
+                                                <RefreshCw className="mr-2 h-4 w-4" />
+                                                Change Bed
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                onClick={handleRemoveBed}
+                                                className="text-red-600 focus:text-red-600"
+                                            >
+                                                <X className="mr-2 h-4 w-4" />
+                                                Remove Bed
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        variant="default"
+                                        className="h-6 bg-orange-500 px-2 text-white hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
+                                        onClick={loadBedData}
+                                    >
+                                        <BedIcon className="mr-1 h-3 w-3" />
+                                        Assign Bed
+                                    </Button>
+                                )
                             )}
                         </div>
                         <div className="space-y-1">
-                            <p className="font-semibold text-purple-700 dark:text-purple-300">
-                                {admission.bed
-                                    ? `Bed ${admission.bed.bed_number}`
-                                    : 'No bed assigned'}
-                            </p>
+                            {bedManagementEnabled && (
+                                <p className="font-semibold text-purple-700 dark:text-purple-300">
+                                    {admission.bed
+                                        ? `Bed ${admission.bed.bed_number}`
+                                        : 'No bed assigned'}
+                                </p>
+                            )}
                             {admission.ward && (
-                                <p className="text-sm text-purple-600 dark:text-purple-400">
-                                    {admission.ward.name} ({admission.ward.code}
-                                    )
+                                <p className={`text-purple-600 dark:text-purple-400 ${bedManagementEnabled ? 'text-sm' : 'font-semibold text-purple-700 dark:text-purple-300'}`}>
+                                    {admission.ward.name} ({admission.ward.code})
                                 </p>
                             )}
                         </div>
@@ -1430,15 +1434,17 @@ export default function WardPatientShow({
                     canEditTimestamp={can_edit_medication_timestamp}
                 />
 
-                <BedAssignmentModal
-                    open={bedAssignmentModalOpen}
-                    onClose={() => setBedAssignmentModalOpen(false)}
-                    admission={admission}
-                    availableBeds={availableBeds}
-                    allBeds={allBeds}
-                    hasAvailableBeds={hasAvailableBeds}
-                    isChangingBed={!!admission.bed}
-                />
+                {bedManagementEnabled && (
+                    <BedAssignmentModal
+                        open={bedAssignmentModalOpen}
+                        onClose={() => setBedAssignmentModalOpen(false)}
+                        admission={admission}
+                        availableBeds={availableBeds}
+                        allBeds={allBeds}
+                        hasAvailableBeds={hasAvailableBeds}
+                        isChangingBed={!!admission.bed}
+                    />
+                )}
 
                 <WardRoundViewModal
                     open={wardRoundViewModalOpen}

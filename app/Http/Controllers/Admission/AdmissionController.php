@@ -49,10 +49,8 @@ class AdmissionController extends Controller
 
         $ward = Ward::findOrFail($request->ward_id);
 
-        // Check if ward has available beds
-        if ($ward->available_beds <= 0) {
-            return redirect()->back()->withErrors(['ward_id' => 'No available beds in the selected ward.']);
-        }
+        // Note: We allow admission even if ward is full - hospitals can't turn away patients
+        // Nurses will manage bed assignments and overflow situations
 
         // Use consultation's service_date for admitted_at to maintain date consistency
         // This ensures backdated consultations result in backdated admissions
@@ -72,8 +70,10 @@ class AdmissionController extends Controller
             'admitted_at' => $admittedAt,
         ]);
 
-        // Decrease available beds count (nurses will assign specific bed later)
-        $ward->decrement('available_beds');
+        // Decrease available beds count only if bed management is enabled
+        if (config('features.bed_management')) {
+            $ward->decrement('available_beds');
+        }
 
         // Update consultation status
         $consultation->update(['status' => 'completed', 'completed_at' => now()]);
@@ -106,8 +106,8 @@ class AdmissionController extends Controller
 
     public function getAvailableWards()
     {
+        // Show all active wards - admission allowed even if full
         $wards = Ward::active()
-            ->available()
             ->get(['id', 'name', 'code', 'available_beds']);
 
         return response()->json([
@@ -137,10 +137,8 @@ class AdmissionController extends Controller
 
         $toWard = Ward::findOrFail($request->to_ward_id);
 
-        // Check if destination ward has available beds
-        if ($toWard->available_beds <= 0) {
-            return redirect()->back()->withErrors(['to_ward_id' => 'No available beds in the selected ward.']);
-        }
+        // Note: We allow transfer even if destination ward is full
+        // Nurses will manage bed assignments and overflow situations
 
         // Cannot transfer to same ward
         if ($toWard->id === $admission->ward_id) {

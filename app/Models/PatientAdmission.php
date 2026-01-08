@@ -355,8 +355,10 @@ class PatientAdmission extends Model
             'bed_assigned_at' => null,
         ]);
 
-        // Decrement available beds in new ward (nurse will assign specific bed later)
-        $toWard->decrement('available_beds');
+        // Decrement available beds in new ward only if bed management is enabled
+        if (config('features.bed_management')) {
+            $toWard->decrement('available_beds');
+        }
 
         return $transfer;
     }

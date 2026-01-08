@@ -27,6 +27,13 @@ class CheckDueVitalsCommand extends Command
      */
     public function handle(VitalsAlertService $alertService): int
     {
+        // Skip if vitals alerts feature is disabled
+        if (! config('features.vitals_alerts')) {
+            $this->info('Vitals alerts feature is disabled. Skipping.');
+
+            return Command::SUCCESS;
+        }
+
         $now = now();
         $gracePeriodEnd = $now->copy()->subMinutes(15);
 

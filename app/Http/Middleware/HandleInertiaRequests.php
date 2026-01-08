@@ -134,6 +134,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'patient' => $request->session()->get('patient'),
             'theme' => fn () => app(ThemeSettingService::class)->getThemeWithFallback(),
+            'features' => [
+                'bedManagement' => config('features.bed_management'),
+                'vitalsAlerts' => config('features.vitals_alerts'),
+            ],
         ];
     }
 }
