@@ -147,6 +147,10 @@ class AdminDashboard extends AbstractDashboardWidget
 
         return PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->count();
     }
 
@@ -173,6 +177,10 @@ class AdminDashboard extends AbstractDashboardWidget
 
         return PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
                 $query->where('is_nhis', true);
             })
@@ -212,6 +220,10 @@ class AdminDashboard extends AbstractDashboardWidget
 
         $total = PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->count();
 
         if ($total === 0) {
@@ -225,6 +237,10 @@ class AdminDashboard extends AbstractDashboardWidget
         // NHIS count
         $nhisCount = PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
                 $query->where('is_nhis', true);
             })
@@ -233,6 +249,10 @@ class AdminDashboard extends AbstractDashboardWidget
         // Other insurance count
         $otherInsuranceCount = PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
                 $query->where('is_nhis', false);
             })
@@ -306,9 +326,13 @@ class AdminDashboard extends AbstractDashboardWidget
             $endDate = Carbon::today();
         }
 
-        // Get check-ins per day
+        // Get check-ins per day (exclude migrated records)
         $checkins = PatientCheckin::query()
             ->whereBetween('checked_in_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->select(
                 DB::raw('DATE(checked_in_at) as date'),
                 DB::raw('COUNT(*) as count')
@@ -317,9 +341,13 @@ class AdminDashboard extends AbstractDashboardWidget
             ->pluck('count', 'date')
             ->toArray();
 
-        // Get consultations per day
+        // Get consultations per day (exclude migrated records)
         $consultations = DB::table('consultations')
             ->whereBetween('created_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('COUNT(*) as count')
@@ -424,6 +452,7 @@ class AdminDashboard extends AbstractDashboardWidget
                     FROM patient_checkins pc
                     WHERE pc.department_id = departments.id
                     AND DATE(pc.checked_in_at) BETWEEN '{$startDateStr}' AND '{$endDateStr}'
+                    AND (pc.migrated_from_mittag = 0 OR pc.migrated_from_mittag IS NULL)
                 ) as checkins"),
             ])
             ->orderByDesc('checkins')

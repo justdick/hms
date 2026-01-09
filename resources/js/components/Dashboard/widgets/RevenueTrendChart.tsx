@@ -26,6 +26,7 @@ export interface RevenueTrendData {
 export interface RevenueTrendChartProps {
     data: RevenueTrendData[];
     className?: string;
+    dateLabel?: string;
 }
 
 const chartConfig = {
@@ -50,7 +51,7 @@ function formatFullCurrency(amount: number): string {
     }).format(amount);
 }
 
-export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
+export function RevenueTrendChart({ data, className, dateLabel }: RevenueTrendChartProps) {
     const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
     const avgRevenue = data.length > 0 ? totalRevenue / data.length : 0;
 
@@ -69,6 +70,11 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
     const trendPercent =
         previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 0;
 
+    // Generate dynamic label from data if not provided
+    const displayLabel = dateLabel || (data.length > 0 
+        ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
+        : 'No data');
+
     return (
         <Card className={cn('', className)}>
             <CardHeader className="pb-2">
@@ -79,7 +85,7 @@ export function RevenueTrendChart({ data, className }: RevenueTrendChartProps) {
                             <CardTitle className="text-base font-semibold">
                                 Revenue Trend
                             </CardTitle>
-                            <CardDescription>Last 7 days</CardDescription>
+                            <CardDescription>{displayLabel}</CardDescription>
                         </div>
                     </div>
                     <div className="text-right">

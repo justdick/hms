@@ -29,6 +29,7 @@ export interface PatientFlowData {
 export interface PatientFlowChartProps {
     data: PatientFlowData[];
     className?: string;
+    dateLabel?: string;
 }
 
 const chartConfig = {
@@ -42,12 +43,17 @@ const chartConfig = {
     },
 } satisfies ChartConfig;
 
-export function PatientFlowChart({ data, className }: PatientFlowChartProps) {
+export function PatientFlowChart({ data, className, dateLabel }: PatientFlowChartProps) {
     const totalCheckins = data.reduce((sum, d) => sum + d.checkins, 0);
     const totalConsultations = data.reduce(
         (sum, d) => sum + d.consultations,
         0,
     );
+
+    // Generate dynamic label from data if not provided
+    const displayLabel = dateLabel || (data.length > 0 
+        ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
+        : 'No data');
 
     return (
         <Card className={cn('', className)}>
@@ -59,7 +65,7 @@ export function PatientFlowChart({ data, className }: PatientFlowChartProps) {
                             <CardTitle className="text-base font-semibold">
                                 Patient Flow
                             </CardTitle>
-                            <CardDescription>Last 7 days trend</CardDescription>
+                            <CardDescription>{displayLabel}</CardDescription>
                         </div>
                     </div>
                     <div className="flex gap-4 text-sm">
