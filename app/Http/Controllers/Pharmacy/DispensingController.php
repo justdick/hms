@@ -58,10 +58,17 @@ class DispensingController extends Controller
         // Don't pre-limit patient search - let the EXISTS filter narrow it down first
         $patients = Patient::query()
             ->where(function ($q) use ($query) {
-                $q->where('patient_number', 'like', "%{$query}%")
-                    ->orWhere('phone_number', 'like', "%{$query}%")
-                    ->orWhere('first_name', 'like', "%{$query}%")
-                    ->orWhere('last_name', 'like', "%{$query}%");
+                // For patient numbers (contains /), use exact or starts-with match
+                // to avoid "61/2022" matching "1661/2022", "3561/2022", etc.
+                if (str_contains($query, '/')) {
+                    $q->where('patient_number', $query)
+                        ->orWhere('patient_number', 'like', "{$query}%");
+                } else {
+                    $q->where('patient_number', 'like', "%{$query}%")
+                        ->orWhere('phone_number', 'like', "%{$query}%")
+                        ->orWhere('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%");
+                }
             })
             ->where(function ($q) use ($dateConstraint) {
                 // Use EXISTS subqueries instead of nested whereHas for better performance
@@ -202,6 +209,13 @@ class DispensingController extends Controller
                     $status = 'completed';
                 }
 
+                // Get the earliest prescription/supply date for display
+                $earliestPrescriptionDate = $allPrescriptions->min('created_at');
+                $earliestSupplyDate = $allSupplies->min('created_at');
+                $earliestDate = collect([$earliestPrescriptionDate, $earliestSupplyDate])
+                    ->filter()
+                    ->min();
+
                 return [
                     'id' => $patient->id,
                     'patient_number' => $patient->patient_number,
@@ -222,11 +236,15 @@ class DispensingController extends Controller
                     'total_items' => $totalItems,
                     'total_needs_review' => $totalNeedsReview,
                     'total_ready_to_dispense' => $totalReadyToDispense,
+                    // Date info
+                    'earliest_date' => $earliestDate?->toIso8601String(),
+                    'earliest_date_formatted' => $earliestDate?->format('M d, Y'),
+                    'earliest_date_relative' => $earliestDate?->diffForHumans(),
                 ];
             })
             ->filter(fn ($patient) => $patient['total_items'] > 0); // Only include patients with items
 
-        return response()->json($patients->values());
+        return response()->json($patients->values()->toArray());
     }
 
     public function show(Patient $patient, Request $request)

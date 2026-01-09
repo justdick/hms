@@ -88,6 +88,7 @@ interface Props {
     onOpenChange: (open: boolean) => void;
     patient: Patient;
     prescriptionsData: PrescriptionData[];
+    suppliesData?: any[]; // TODO: Add proper type when supplies dispensing is implemented
 }
 
 export function DispenseModal({
@@ -95,6 +96,7 @@ export function DispenseModal({
     onOpenChange,
     patient,
     prescriptionsData,
+    suppliesData,
 }: Props) {
     const [dispensing, setDispensing] = useState<Set<number>>(new Set());
 

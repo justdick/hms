@@ -40,6 +40,10 @@ interface SearchResult {
     total_items: number;
     total_needs_review: number;
     total_ready_to_dispense: number;
+    // Date info
+    earliest_date: string | null;
+    earliest_date_formatted: string | null;
+    earliest_date_relative: string | null;
 }
 
 interface Props {
@@ -316,6 +320,14 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                             <Phone className="h-3 w-3" />
                                                                             {
                                                                                 patient.phone_number
+                                                                            }
+                                                                        </span>
+                                                                    )}
+                                                                    {patient.earliest_date_formatted && (
+                                                                        <span className="flex items-center gap-1" title={patient.earliest_date_relative || ''}>
+                                                                            <Calendar className="h-3 w-3" />
+                                                                            {
+                                                                                patient.earliest_date_formatted
                                                                             }
                                                                         </span>
                                                                     )}
