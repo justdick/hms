@@ -128,16 +128,28 @@ class CheckinController extends Controller
             ])->withInput();
         }
 
+        // Use provided service_date or default to today (needed for CCC validation)
+        $serviceDate = ! empty($validated['service_date'])
+            ? $validated['service_date']
+            : now()->toDateString();
+
         // Check for duplicate CCC - must be unique for active (non-completed) claims
+        // EXCEPTION: Same patient can reuse the same CCC for multi-department same-day check-ins
         // NHIS can regenerate same CCC after months/years, so we only block if CCC is in active use
         // Migrated data from Mittag is excluded - those CCCs can be reused
         if (! empty($validated['claim_check_code'])) {
             // Check if CCC already exists in insurance_claims for an active claim
             // Active = not yet submitted/approved/paid/rejected (still in workflow)
             // Exclude claims linked to migrated checkins
+            // Allow same patient same day (multi-department visits share CCC)
             $existingClaim = InsuranceClaim::where('claim_check_code', $validated['claim_check_code'])
                 ->whereIn('status', ['draft', 'pending_vetting', 'vetted'])
                 ->whereHas('checkin', fn ($q) => $q->where('migrated_from_mittag', false))
+                ->where(function ($query) use ($validated, $serviceDate) {
+                    // Block if different patient OR different service date
+                    $query->where('patient_id', '!=', $validated['patient_id'])
+                        ->orWhereHas('checkin', fn ($q) => $q->whereDate('service_date', '!=', $serviceDate));
+                })
                 ->first();
 
             if ($existingClaim) {
@@ -148,10 +160,16 @@ class CheckinController extends Controller
 
             // Also check patient_checkins for active check-ins (not completed/cancelled) that haven't created claims yet
             // Exclude migrated checkins - those CCCs can be reused
+            // Allow same patient same day (multi-department visits share CCC)
             $duplicateCcc = PatientCheckin::where('claim_check_code', $validated['claim_check_code'])
                 ->where('migrated_from_mittag', false)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereDoesntHave('insuranceClaim') // No claim created yet
+                ->where(function ($query) use ($validated, $serviceDate) {
+                    // Block if different patient OR different service date
+                    $query->where('patient_id', '!=', $validated['patient_id'])
+                        ->orWhereDate('service_date', '!=', $serviceDate);
+                })
                 ->exists();
 
             if ($duplicateCcc) {
@@ -168,11 +186,6 @@ class CheckinController extends Controller
                 'patient_id' => 'Patient not found. Please search for a valid patient.',
             ])->withInput();
         }
-
-        // Use provided service_date or default to today
-        $serviceDate = ! empty($validated['service_date'])
-            ? $validated['service_date']
-            : now()->toDateString();
 
         // Check for same-department same-day check-in (BLOCK)
         // This allows multi-department same-day check-ins while preventing duplicates to the same department
