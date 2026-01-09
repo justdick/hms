@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
             'consultations.update-own' => 'Update own consultations only',
             'consultations.complete' => 'Complete consultations',
             'consultations.delete' => 'Delete consultations',
+            'consultations.filter-by-date' => 'Filter consultation queue by date (view historical check-ins)',
 
             // Diagnosis Management
             'diagnoses.view' => 'View patient diagnoses',

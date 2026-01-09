@@ -117,7 +117,16 @@ class CheckinController extends Controller
                 'max:50',
             ],
             'service_date' => 'nullable|date|before_or_equal:today',
+            'confirm_admission_override' => 'nullable|boolean',
         ]);
+
+        // Validate department exists and get its name for error messages
+        $department = Department::find($validated['department_id']);
+        if (! $department) {
+            return back()->withErrors([
+                'department_id' => 'Invalid department selected. Please choose a valid department.',
+            ])->withInput();
+        }
 
         // Check for duplicate CCC - must be unique for active (non-completed) claims
         // NHIS can regenerate same CCC after months/years, so we only block if CCC is in active use
@@ -152,13 +161,43 @@ class CheckinController extends Controller
             }
         }
 
-        $patient = Patient::with('activeInsurance.plan.provider')->find($validated['patient_id']);
+        $patient = Patient::with(['activeInsurance.plan.provider', 'activeAdmission.ward'])->find($validated['patient_id']);
 
-        // Check if patient is currently admitted
-        $activeAdmission = $patient->activeAdmission;
-        if ($activeAdmission) {
+        if (! $patient) {
             return back()->withErrors([
-                'patient_id' => 'Patient is currently admitted and cannot check in for outpatient services.',
+                'patient_id' => 'Patient not found. Please search for a valid patient.',
+            ])->withInput();
+        }
+
+        // Use provided service_date or default to today
+        $serviceDate = ! empty($validated['service_date'])
+            ? $validated['service_date']
+            : now()->toDateString();
+
+        // Check for same-department same-day check-in (BLOCK)
+        // This allows multi-department same-day check-ins while preventing duplicates to the same department
+        $sameDeptCheckin = PatientCheckin::where('patient_id', $validated['patient_id'])
+            ->where('department_id', $validated['department_id'])
+            ->whereDate('service_date', $serviceDate)
+            ->whereNotIn('status', ['cancelled'])
+            ->first();
+
+        if ($sameDeptCheckin) {
+            return back()->withErrors([
+                'department_id' => "Patient already checked in to {$department->name} today. Please select a different department.",
+            ])->withInput();
+        }
+
+        // Check if patient is currently admitted (WARN, allow proceed with confirmation)
+        $activeAdmission = $patient->activeAdmission;
+        if ($activeAdmission && ! $request->boolean('confirm_admission_override')) {
+            return back()->withErrors([
+                'admission_warning' => true,
+            ])->with('admission_details', [
+                'id' => $activeAdmission->id,
+                'admission_number' => $activeAdmission->admission_number,
+                'ward' => $activeAdmission->ward->name ?? 'Unknown Ward',
+                'admitted_at' => $activeAdmission->admitted_at?->toIso8601String(),
             ])->withInput();
         }
 
@@ -182,25 +221,24 @@ class CheckinController extends Controller
             ]);
         }
 
-        // Check if patient has an incomplete check-in (regardless of date)
+        // Check if patient has an incomplete check-in to a DIFFERENT department (regardless of date)
+        // Same-department same-day is already blocked above, so this catches incomplete check-ins to other departments
         $incompleteCheckin = PatientCheckin::where('patient_id', $validated['patient_id'])
             ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
             ->first();
 
         if ($incompleteCheckin) {
+            $incompleteDept = $incompleteCheckin->department;
+
             return back()->withErrors([
-                'patient_id' => "Patient has an incomplete check-in (Status: {$incompleteCheckin->status}) that needs to be completed or cancelled first.",
+                'patient_id' => "Patient has an incomplete check-in at {$incompleteDept->name} (Status: {$incompleteCheckin->status}) that needs to be completed or cancelled first.",
             ])->with('existing_checkin', [
                 'id' => $incompleteCheckin->id,
                 'checked_in_at' => $incompleteCheckin->checked_in_at,
                 'status' => $incompleteCheckin->status,
+                'department' => $incompleteDept->name,
             ])->withInput();
         }
-
-        // Use provided service_date or default to today
-        $serviceDate = ! empty($validated['service_date'])
-            ? $validated['service_date']
-            : now()->toDateString();
 
         $checkin = PatientCheckin::create([
             'patient_id' => $validated['patient_id'],
@@ -211,6 +249,7 @@ class CheckinController extends Controller
             'status' => 'checked_in',
             'notes' => $validated['notes'] ?? null,
             'claim_check_code' => $validated['claim_check_code'] ?? null,
+            'created_during_admission' => $activeAdmission ? true : false,
         ]);
 
         $checkin->load(['patient', 'department', 'checkedInBy']);
@@ -481,6 +520,45 @@ class CheckinController extends Controller
                 'auto_open_portal' => $nhisSettings->auto_open_portal,
                 'credentials' => $credentials,
             ],
+        ]);
+    }
+
+    /**
+     * Get existing same-day CCC for a patient.
+     * Used to auto-populate CCC field for multi-department same-day check-ins.
+     */
+    public function getSameDayCcc(Patient $patient, Request $request)
+    {
+        $this->authorize('viewAny', PatientCheckin::class);
+
+        $validated = $request->validate([
+            'service_date' => 'nullable|date',
+        ]);
+
+        // Use provided service_date or default to today
+        $serviceDate = ! empty($validated['service_date'])
+            ? $validated['service_date']
+            : now()->toDateString();
+
+        // Look for existing same-day check-in with a CCC
+        $existingCheckin = PatientCheckin::where('patient_id', $patient->id)
+            ->whereDate('service_date', $serviceDate)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereNotNull('claim_check_code')
+            ->where('claim_check_code', '!=', '')
+            ->first();
+
+        if ($existingCheckin) {
+            return response()->json([
+                'has_same_day_ccc' => true,
+                'claim_check_code' => $existingCheckin->claim_check_code,
+                'department' => $existingCheckin->department->name ?? 'Unknown',
+                'checked_in_at' => $existingCheckin->checked_in_at?->toIso8601String(),
+            ]);
+        }
+
+        return response()->json([
+            'has_same_day_ccc' => false,
         ]);
     }
 }

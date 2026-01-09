@@ -875,23 +875,16 @@ export default function ConsultationShow({
     };
 
     const handleCompleteConsultation = () => {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/consultation/${consultation.id}/complete`;
-
-        const csrfToken = document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
+        router.post(
+            `/consultation/${consultation.id}/complete`,
+            {},
+            {
+                preserveScroll: true,
+                onError: () => {
+                    // Errors will be shown via flash messages
+                },
+            },
+        );
     };
 
     const handleDelete = () => {

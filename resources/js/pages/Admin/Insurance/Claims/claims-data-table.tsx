@@ -37,8 +37,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { useDebouncedCallback } from 'use-debounce';
+import {
+    DateFilterPresets,
+    DateFilterValue,
+} from '@/components/ui/date-filter-presets';
 
 interface PaginationLink {
     url: string | null;
@@ -65,11 +70,36 @@ interface Filters {
     date_to?: string;
 }
 
+// Type for claim data with claim_check_code
+interface ClaimData {
+    claim_check_code?: string | null;
+    [key: string]: unknown;
+}
+
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     pagination: PaginationData;
     filters: Filters;
+}
+
+/**
+ * Determines if a row should be highlighted as part of a CCC group.
+ * A row is highlighted if it shares the same CCC with its previous or next neighbor.
+ * _Requirements: 4.3, 4.4_
+ */
+function shouldHighlightCccGroup<TData extends ClaimData>(
+    data: TData[],
+    index: number,
+): boolean {
+    const currentCcc = data[index]?.claim_check_code;
+    if (!currentCcc) return false;
+
+    const prevCcc = index > 0 ? data[index - 1]?.claim_check_code : null;
+    const nextCcc =
+        index < data.length - 1 ? data[index + 1]?.claim_check_code : null;
+
+    return currentCcc === prevCcc || currentCcc === nextCcc;
 }
 
 const statusOptions = [
@@ -160,6 +190,35 @@ export function ClaimsDataTable<TData, TValue>({
         );
     };
 
+    /**
+     * Handle date filter changes from DateFilterPresets component.
+     * Sends date_from and date_to to the server for filtering.
+     * _Requirements: 5.1, 5.4, 5.5, 5.7_
+     */
+    const handleDateFilterChange = (dateFilter: DateFilterValue) => {
+        router.get(
+            window.location.pathname,
+            {
+                ...filters,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    // Derive date filter value from filters prop
+    const dateFilterValue: DateFilterValue = React.useMemo(() => {
+        if (filters.date_from || filters.date_to) {
+            return {
+                from: filters.date_from,
+                to: filters.date_to,
+                preset: 'custom', // Assume custom if dates are set from URL
+            };
+        }
+        return {};
+    }, [filters.date_from, filters.date_to]);
+
     // Find prev/next links from pagination
     const prevLink = pagination.links.find((link) =>
         link.label.includes('Previous'),
@@ -215,6 +274,12 @@ export function ClaimsDataTable<TData, TValue>({
                     </SelectContent>
                 </Select>
 
+                {/* Date Filter - Requirements: 5.1, 5.4, 5.5, 5.7 */}
+                <DateFilterPresets
+                    value={dateFilterValue}
+                    onChange={handleDateFilterChange}
+                />
+
                 {/* Column Visibility */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -267,24 +332,34 @@ export function ClaimsDataTable<TData, TValue>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                    className="hover:bg-muted/50"
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            table.getRowModel().rows.map((row, index) => {
+                                const isGrouped = shouldHighlightCccGroup(
+                                    data as ClaimData[],
+                                    index,
+                                );
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={
+                                            row.getIsSelected() && 'selected'
+                                        }
+                                        className={cn(
+                                            'hover:bg-muted/50',
+                                            isGrouped &&
+                                                'bg-blue-50/50 border-l-2 border-l-blue-400 dark:bg-blue-950/20',
+                                        )}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                );
+                            })
                         ) : (
                             <TableRow>
                                 <TableCell
@@ -295,7 +370,7 @@ export function ClaimsDataTable<TData, TValue>({
                                         <ClipboardList className="h-8 w-8 text-muted-foreground" />
                                         <div>No claims found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {filters.search || filters.status
+                                            {filters.search || filters.status || filters.date_from || filters.date_to
                                                 ? 'Try adjusting your filters.'
                                                 : 'Insurance claims will appear here.'}
                                         </div>

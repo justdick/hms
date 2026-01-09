@@ -16,12 +16,14 @@ import {
     CheckCircle2,
     CreditCard,
     ExternalLink,
+    Info,
     Loader2,
     RefreshCw,
     Shield,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import CccMismatchWarningDialog from './CccMismatchWarningDialog';
 
 interface InsuranceInfo {
     id: number;
@@ -60,6 +62,8 @@ interface InsuranceDialogProps {
     onUseCash: () => void;
     onUseInsurance: (claimCheckCode: string) => void;
     nhisSettings?: NhisSettings;
+    patientId: number;
+    serviceDate?: string;
 }
 
 /**
@@ -121,11 +125,24 @@ export default function InsuranceDialog({
     onUseCash,
     onUseInsurance,
     nhisSettings,
+    patientId,
+    serviceDate,
 }: InsuranceDialogProps) {
     const [claimCheckCode, setClaimCheckCode] = useState('');
     const [error, setError] = useState('');
     const [isSyncingDates, setIsSyncingDates] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Same-day CCC state
+    const [sameDayCcc, setSameDayCcc] = useState<{
+        ccc: string;
+        department: string;
+    } | null>(null);
+    const [isLoadingSameDayCcc, setIsLoadingSameDayCcc] = useState(false);
+    const [cccMismatchWarning, setCccMismatchWarning] = useState<{
+        show: boolean;
+        enteredCcc: string;
+    }>({ show: false, enteredCcc: '' });
 
     // NHIS Extension hook
     const { isVerifying, cccData, startVerification, clearCccData } =
@@ -173,6 +190,13 @@ export default function InsuranceDialog({
         }
     }, [cccData, isInactiveFromNhis]);
 
+    // Fetch same-day CCC when dialog opens
+    useEffect(() => {
+        if (open && patientId) {
+            fetchSameDayCcc();
+        }
+    }, [open, patientId, serviceDate]);
+
     // Auto-sync dates when they differ (even for INACTIVE memberships)
     useEffect(() => {
         if (
@@ -193,9 +217,58 @@ export default function InsuranceDialog({
             setError('');
             setIsSyncingDates(false);
             setIsSubmitting(false);
+            setSameDayCcc(null);
+            setCccMismatchWarning({ show: false, enteredCcc: '' });
             clearCccData();
         }
     }, [open, clearCccData]);
+
+    const fetchSameDayCcc = async () => {
+        setIsLoadingSameDayCcc(true);
+        try {
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
+
+            const params = new URLSearchParams();
+            if (serviceDate) {
+                params.append('service_date', serviceDate);
+            }
+
+            const response = await fetch(
+                `/checkin/checkins/patients/${patientId}/same-day-ccc?${params.toString()}`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                    },
+                    credentials: 'same-origin',
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to check same-day CCC');
+            }
+
+            const data = await response.json();
+
+            if (data.has_same_day_ccc) {
+                setSameDayCcc({
+                    ccc: data.claim_check_code,
+                    department: data.department,
+                });
+                // Auto-populate the CCC field with the existing same-day CCC
+                setClaimCheckCode(data.claim_check_code);
+            } else {
+                setSameDayCcc(null);
+            }
+        } catch (error) {
+            console.error('Error checking same-day CCC:', error);
+        } finally {
+            setIsLoadingSameDayCcc(false);
+        }
+    };
 
     const syncInsuranceDates = () => {
         if (!nhisStartDate || !nhisEndDate) return;
@@ -257,9 +330,41 @@ export default function InsuranceDialog({
             return;
         }
 
+        // Check for CCC mismatch with existing same-day CCC
+        if (sameDayCcc && claimCheckCode.trim() !== sameDayCcc.ccc) {
+            setCccMismatchWarning({
+                show: true,
+                enteredCcc: claimCheckCode.trim(),
+            });
+            return;
+        }
+
         setError('');
         setIsSubmitting(true);
         onUseInsurance(claimCheckCode.trim());
+    };
+
+    const handleCccMismatchConfirm = () => {
+        // User chose to use the different CCC anyway
+        setCccMismatchWarning({ show: false, enteredCcc: '' });
+        setError('');
+        setIsSubmitting(true);
+        onUseInsurance(cccMismatchWarning.enteredCcc);
+    };
+
+    const handleUseSameDayCcc = () => {
+        // User chose to use the existing same-day CCC
+        if (sameDayCcc) {
+            setClaimCheckCode(sameDayCcc.ccc);
+            setCccMismatchWarning({ show: false, enteredCcc: '' });
+            setError('');
+            setIsSubmitting(true);
+            onUseInsurance(sameDayCcc.ccc);
+        }
+    };
+
+    const handleCccMismatchClose = () => {
+        setCccMismatchWarning({ show: false, enteredCcc: '' });
     };
 
     const handleUseCash = () => {
@@ -468,6 +573,32 @@ export default function InsuranceDialog({
                             </>
                         )}
 
+                        {/* Same-day CCC Info */}
+                        {isLoadingSameDayCcc && (
+                            <div className="flex items-center gap-2 rounded-md bg-muted p-2 text-xs text-muted-foreground">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Checking for existing same-day CCC...
+                            </div>
+                        )}
+
+                        {!isLoadingSameDayCcc && sameDayCcc && (
+                            <div className="rounded-md border border-blue-200 bg-blue-50 p-2 dark:border-blue-800 dark:bg-blue-950/20">
+                                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                                    <Info className="h-3 w-3" />
+                                    <span className="text-xs font-medium">
+                                        Same-day CCC found
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-500">
+                                    Patient checked in to {sameDayCcc.department} today with CCC:{' '}
+                                    <span className="font-mono font-medium">{sameDayCcc.ccc}</span>
+                                </p>
+                                <p className="mt-1 text-xs text-blue-600/80 dark:text-blue-500/80">
+                                    This CCC has been auto-filled. NHIS requires the same CCC for all visits on the same day.
+                                </p>
+                            </div>
+                        )}
+
                         {/* CCC Input Field */}
                         <div className="space-y-1">
                             <Label
@@ -482,7 +613,9 @@ export default function InsuranceDialog({
                                 placeholder={
                                     isExtensionMode
                                         ? 'Auto-fills after verification...'
-                                        : 'Enter CCC...'
+                                        : sameDayCcc
+                                          ? 'Using same-day CCC...'
+                                          : 'Enter CCC...'
                                 }
                                 value={claimCheckCode}
                                 onChange={(e) => {
@@ -494,9 +627,11 @@ export default function InsuranceDialog({
                                 className={`h-9 ${
                                     error
                                         ? 'border-destructive'
-                                        : cccData?.ccc && !isExpiredFromNhis
-                                          ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
-                                          : ''
+                                        : sameDayCcc && claimCheckCode === sameDayCcc.ccc
+                                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+                                          : cccData?.ccc && !isExpiredFromNhis
+                                            ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                            : ''
                                 }`}
                             />
                             {error && (
@@ -556,6 +691,19 @@ export default function InsuranceDialog({
                     </div>
                 </div>
             </DialogContent>
+
+            {/* CCC Mismatch Warning Dialog */}
+            {sameDayCcc && (
+                <CccMismatchWarningDialog
+                    open={cccMismatchWarning.show}
+                    onClose={handleCccMismatchClose}
+                    onConfirm={handleCccMismatchConfirm}
+                    onUseSameDayCcc={handleUseSameDayCcc}
+                    existingCcc={sameDayCcc.ccc}
+                    enteredCcc={cccMismatchWarning.enteredCcc}
+                    department={sameDayCcc.department}
+                />
+            )}
         </Dialog>
     );
 }

@@ -31,7 +31,7 @@ export function MedicationHistoryTable({
     onDiscontinue,
 }: MedicationHistoryTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
-        { id: 'start_date', desc: true },
+        { id: 'created_at', desc: true },
     ]);
 
     const table = useReactTable({

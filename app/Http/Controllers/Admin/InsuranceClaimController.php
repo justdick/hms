@@ -67,10 +67,15 @@ class InsuranceClaimController extends Controller
             });
         }
 
-        // Sort by date of attendance (newest first by default)
+        // Sort by claim_check_code first (for CCC grouping), then by date_of_attendance
+        // This ensures same-day claims with the same CCC appear together
         $sortBy = $request->get('sort_by', 'date_of_attendance');
         $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+
+        // Primary sort by claim_check_code to group same-CCC claims together
+        $query->orderBy('claim_check_code', 'asc')
+            ->orderBy($sortBy, $sortOrder)
+            ->orderBy('id', 'asc');
 
         $perPage = $request->input('per_page', 5);
         $paginated = $query->paginate($perPage)->withQueryString();

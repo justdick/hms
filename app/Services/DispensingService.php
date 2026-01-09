@@ -240,6 +240,7 @@ class DispensingService
             ->with(['drug', 'charge', 'consultation'])
             ->whereIn('status', ['prescribed', 'reviewed'])
             ->whereNotNull('drug_id')
+            ->where('migrated_from_mittag', false)
             ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
@@ -252,6 +253,7 @@ class DispensingService
             ->with(['drug', 'charge', 'prescribable.patientAdmission'])
             ->whereIn('status', ['prescribed', 'reviewed'])
             ->whereNotNull('drug_id')
+            ->where('migrated_from_mittag', false)
             ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
@@ -283,6 +285,7 @@ class DispensingService
             ->with(['drug', 'charge', 'reviewedBy', 'dispensing'])
             ->where('status', 'reviewed')
             ->whereNotNull('drug_id')
+            ->where('migrated_from_mittag', false)
             ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 
@@ -295,6 +298,7 @@ class DispensingService
             ->with(['drug', 'charge', 'reviewedBy', 'dispensing', 'prescribable.patientAdmission'])
             ->where('status', 'reviewed')
             ->whereNotNull('drug_id')
+            ->where('migrated_from_mittag', false)
             ->when($dateConstraint, fn ($q) => $q->where('created_at', '>=', $dateConstraint))
             ->get();
 

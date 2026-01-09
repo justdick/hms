@@ -11,6 +11,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    DateFilterPresets,
+    DateFilterValue,
+    calculateDateRange,
+} from '@/components/ui/date-filter-presets';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -82,6 +87,7 @@ interface PatientCheckin {
     patient: PatientWithInsurance;
     department: Department;
     checked_in_at: string;
+    service_date: string;
     status: string;
     vital_signs?: VitalSigns[];
 }
@@ -107,6 +113,7 @@ interface ActiveConsultation {
             | 'phone_number'
         > & { active_insurance?: PatientInsurance | null };
         department: Department;
+        service_date: string;
     };
 }
 
@@ -127,12 +134,15 @@ interface CompletedConsultation {
             | 'phone_number'
         > & { active_insurance?: PatientInsurance | null };
         department: Department;
+        service_date: string;
     };
 }
 
 interface Filters {
     search?: string;
     department_id?: string;
+    date_from?: string;
+    date_to?: string;
 }
 
 interface Props {
@@ -144,6 +154,7 @@ interface Props {
     totalCompletedCount: number;
     departments: Department[];
     filters: Filters;
+    canFilterByDate: boolean;
 }
 
 export default function ConsultationIndex({
@@ -155,12 +166,30 @@ export default function ConsultationIndex({
     totalCompletedCount,
     departments,
     filters,
+    canFilterByDate,
 }: Props) {
     const [activeTab, setActiveTab] = useState<string>('search');
     const [search, setSearch] = useState(filters.search || '');
     const [departmentFilter, setDepartmentFilter] = useState(
         filters.department_id || '',
     );
+    // Initialize date filter - default to "today" preset
+    const [dateFilter, setDateFilter] = useState<DateFilterValue>(() => {
+        if (filters.date_from || filters.date_to) {
+            // Check if it matches a preset
+            const todayRange = calculateDateRange('today');
+            if (
+                filters.date_from === todayRange.from &&
+                filters.date_to === todayRange.to
+            ) {
+                return { preset: 'today', from: filters.date_from, to: filters.date_to };
+            }
+            return { preset: 'custom', from: filters.date_from, to: filters.date_to };
+        }
+        // Default to today
+        const todayRange = calculateDateRange('today');
+        return { preset: 'today', ...todayRange };
+    });
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
@@ -250,6 +279,8 @@ export default function ConsultationIndex({
                     {
                         search: search || undefined,
                         department_id: departmentFilter || undefined,
+                        date_from: dateFilter.from || undefined,
+                        date_to: dateFilter.to || undefined,
                     },
                     {
                         preserveState: true,
@@ -273,6 +304,28 @@ export default function ConsultationIndex({
             {
                 search: search || undefined,
                 department_id: newValue || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
+
+    // Date filter change
+    const handleDateFilterChange = (value: DateFilterValue) => {
+        setDateFilter(value);
+
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                department_id: departmentFilter || undefined,
+                date_from: value.from || undefined,
+                date_to: value.to || undefined,
             },
             {
                 preserveState: true,
@@ -424,6 +477,12 @@ export default function ConsultationIndex({
 
                         {activeTab === 'queue' && (
                             <div className="flex items-center gap-3">
+                                {canFilterByDate && (
+                                    <DateFilterPresets
+                                        value={dateFilter}
+                                        onChange={handleDateFilterChange}
+                                    />
+                                )}
                                 <Select
                                     value={departmentFilter || 'all'}
                                     onValueChange={handleDepartmentChange}
@@ -462,6 +521,12 @@ export default function ConsultationIndex({
 
                         {activeTab === 'completed' && (
                             <div className="flex items-center gap-3">
+                                {canFilterByDate && (
+                                    <DateFilterPresets
+                                        value={dateFilter}
+                                        onChange={handleDateFilterChange}
+                                    />
+                                )}
                                 <Select
                                     value={departmentFilter || 'all'}
                                     onValueChange={handleDepartmentChange}
@@ -558,7 +623,7 @@ export default function ConsultationIndex({
                                                                 <TableHead>Age</TableHead>
                                                                 <TableHead>Department</TableHead>
                                                                 <TableHead>Doctor</TableHead>
-                                                                <TableHead>Started</TableHead>
+                                                                <TableHead>Date</TableHead>
                                                                 <TableHead className="text-right">Action</TableHead>
                                                             </TableRow>
                                                         </TableHeader>
@@ -574,7 +639,7 @@ export default function ConsultationIndex({
                                                                     <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
                                                                     <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
                                                                     <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
-                                                                    <TableCell>{formatTime(consultation.started_at)}</TableCell>
+                                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
                                                                     <TableCell className="text-right">
                                                                         <Button size="sm" onClick={() => openContinueDialog(consultation)}>
                                                                             Continue
@@ -602,6 +667,7 @@ export default function ConsultationIndex({
                                                                 <TableHead>ID</TableHead>
                                                                 <TableHead>Age</TableHead>
                                                                 <TableHead>Department</TableHead>
+                                                                <TableHead>Date</TableHead>
                                                                 <TableHead>Vitals</TableHead>
                                                                 <TableHead>Insurance</TableHead>
                                                                 <TableHead className="text-right">Action</TableHead>
@@ -617,6 +683,7 @@ export default function ConsultationIndex({
                                                                     <TableCell>{checkin.patient.patient_number}</TableCell>
                                                                     <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
                                                                     <TableCell>{checkin.department.name}</TableCell>
+                                                                    <TableCell>{formatDate(checkin.service_date)}</TableCell>
                                                                     <TableCell>
                                                                         {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
                                                                             <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
@@ -674,7 +741,7 @@ export default function ConsultationIndex({
                                                 <TableHead>Age</TableHead>
                                                 <TableHead>Department</TableHead>
                                                 <TableHead>Doctor</TableHead>
-                                                <TableHead>Started</TableHead>
+                                                <TableHead>Date</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -690,7 +757,7 @@ export default function ConsultationIndex({
                                                     <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
                                                     <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
                                                     <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
-                                                    <TableCell>{formatTime(consultation.started_at)}</TableCell>
+                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
                                                     <TableCell className="text-right">
                                                         <Button size="sm" onClick={() => openContinueDialog(consultation)}>
                                                             Continue
@@ -719,6 +786,7 @@ export default function ConsultationIndex({
                                                 <TableHead>ID</TableHead>
                                                 <TableHead>Age</TableHead>
                                                 <TableHead>Department</TableHead>
+                                                <TableHead>Date</TableHead>
                                                 <TableHead>Vitals</TableHead>
                                                 <TableHead>Insurance</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
@@ -734,6 +802,7 @@ export default function ConsultationIndex({
                                                     <TableCell>{checkin.patient.patient_number}</TableCell>
                                                     <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
                                                     <TableCell>{checkin.department.name}</TableCell>
+                                                    <TableCell>{formatDate(checkin.service_date)}</TableCell>
                                                     <TableCell>
                                                         {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
                                                             <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
@@ -789,7 +858,7 @@ export default function ConsultationIndex({
                         <div className="space-y-3">
                             <h2 className="flex items-center gap-2 text-lg font-semibold">
                                 <CheckCircle className="h-5 w-5 text-gray-600" />
-                                Completed Consultations (Last 24 Hours)
+                                Completed Consultations{!canFilterByDate && ' (Last 24 Hours)'}
                             </h2>
                             {completedConsultations.length > 0 ? (
                                 <div className="rounded-md border">
@@ -800,6 +869,7 @@ export default function ConsultationIndex({
                                                 <TableHead>ID</TableHead>
                                                 <TableHead>Department</TableHead>
                                                 <TableHead>Doctor</TableHead>
+                                                <TableHead>Date</TableHead>
                                                 <TableHead>Insurance</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
@@ -814,6 +884,7 @@ export default function ConsultationIndex({
                                                     <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
                                                     <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
                                                     <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
+                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
                                                     <TableCell>
                                                         {consultation.patient_checkin.patient.active_insurance ? (
                                                             <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
@@ -850,7 +921,9 @@ export default function ConsultationIndex({
                                                 No completed consultations
                                             </p>
                                             <p className="mt-1 text-sm">
-                                                Completed consultations from the last 24 hours will appear here
+                                                {canFilterByDate
+                                                    ? 'Completed consultations for the selected date will appear here'
+                                                    : 'Completed consultations from the last 24 hours will appear here'}
                                             </p>
                                         </div>
                                     </CardContent>

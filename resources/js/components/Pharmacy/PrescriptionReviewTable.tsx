@@ -106,6 +106,12 @@ export function PrescriptionReviewTable({
                 <TableBody>
                     {prescriptionsData.map((pd, index) => {
                         const review = reviews[index];
+                        
+                        // Skip if review doesn't exist (arrays out of sync)
+                        if (!review) {
+                            return null;
+                        }
+                        
                         const rowError = getErrorForRow(index);
                         const needsReason = review.action === 'cancel';
                         const isPartial = review.action === 'partial';
@@ -169,6 +175,11 @@ export function PrescriptionReviewTable({
                                         <div className="text-xs text-muted-foreground">
                                             {pd.prescription.duration}
                                         </div>
+                                        {pd.prescription.instructions && (
+                                            <div className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-400 italic">
+                                                {pd.prescription.instructions}
+                                            </div>
+                                        )}
                                     </div>
                                 </TableCell>
 
@@ -331,6 +342,12 @@ export function MobileReviewCards({
         <div className="space-y-4">
             {prescriptionsData.map((pd, index) => {
                 const review = reviews[index];
+                
+                // Skip if review doesn't exist (arrays out of sync)
+                if (!review) {
+                    return null;
+                }
+                
                 const rowError = getErrorForRow(index);
                 const needsReason = review.action === 'cancel';
                 const isPartial = review.action === 'partial';
@@ -381,6 +398,11 @@ export function MobileReviewCards({
                                 {pd.prescription.frequency} ·{' '}
                                 {pd.prescription.duration}
                             </p>
+                            {pd.prescription.instructions && (
+                                <p className="mt-1 text-sm font-medium text-amber-600 dark:text-amber-400 italic">
+                                    {pd.prescription.instructions}
+                                </p>
+                            )}
                         </div>
 
                         {/* Prescribed & Stock */}

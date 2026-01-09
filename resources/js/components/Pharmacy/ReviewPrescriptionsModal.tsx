@@ -34,6 +34,7 @@ interface Prescription {
     frequency: string;
     duration: string;
     status: string;
+    instructions?: string;
     dispensing_notes?: string;
 }
 

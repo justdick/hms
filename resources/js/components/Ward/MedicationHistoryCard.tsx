@@ -33,7 +33,7 @@ interface Prescription {
     route?: string;
     instructions?: string;
     status?: string;
-    start_date?: string;
+    created_at?: string;
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
@@ -108,12 +108,12 @@ export function MedicationHistoryCard({
                                     <span>{prescription.duration}</span>
                                 </div>
                             )}
-                            {prescription.start_date && (
+                            {prescription.created_at && (
                                 <div className="flex items-center gap-1">
-                                    <span className="text-xs">Started:</span>
+                                    <span className="text-xs">Prescribed:</span>
                                     <span>
                                         {format(
-                                            new Date(prescription.start_date),
+                                            new Date(prescription.created_at),
                                             'MMM d, yyyy',
                                         )}
                                     </span>

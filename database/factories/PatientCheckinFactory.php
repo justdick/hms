@@ -31,6 +31,7 @@ class PatientCheckinFactory extends Factory
             'consultation_completed_at' => null,
             'status' => fake()->randomElement(['checked_in', 'vitals_taken', 'awaiting_consultation']),
             'notes' => fake()->optional()->sentence(),
+            'created_during_admission' => false,
         ];
     }
 
@@ -45,6 +46,13 @@ class PatientCheckinFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'awaiting_consultation',
+        ]);
+    }
+
+    public function createdDuringAdmission(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_during_admission' => true,
         ]);
     }
 }

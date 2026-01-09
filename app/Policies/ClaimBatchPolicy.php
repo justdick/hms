@@ -109,13 +109,9 @@ class ClaimBatchPolicy
      */
     private function checkPermission(User $user, string $permission): bool
     {
-        // Check if user has system admin permission first
-        try {
-            if ($user->hasPermissionTo('system.admin')) {
-                return true;
-            }
-        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist $e) {
-            // system.admin permission doesn't exist, continue checking specific permission
+        // Check if user has Admin role first (more reliable than checking system.admin permission)
+        if ($user->hasRole('Admin')) {
+            return true;
         }
 
         // Check if the specific permission exists before checking

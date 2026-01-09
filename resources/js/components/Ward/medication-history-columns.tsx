@@ -33,7 +33,7 @@ export interface MedicationHistoryRow {
     route?: string;
     instructions?: string;
     status?: string;
-    start_date?: string;
+    created_at?: string;
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
@@ -103,7 +103,7 @@ export const medicationHistoryColumns = (
         },
     },
     {
-        accessorKey: 'start_date',
+        accessorKey: 'created_at',
         header: ({ column }) => {
             return (
                 <Button
@@ -113,17 +113,17 @@ export const medicationHistoryColumns = (
                     }
                     className="hover:bg-transparent"
                 >
-                    Start Date
+                    Prescribed At
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             );
         },
         cell: ({ row }) => {
-            const startDate = row.original.start_date;
+            const createdAt = row.original.created_at;
             return (
                 <div className="text-sm">
-                    {startDate
-                        ? format(new Date(startDate), 'MMM d, yyyy')
+                    {createdAt
+                        ? format(new Date(createdAt), 'MMM d, yyyy')
                         : '-'}
                 </div>
             );

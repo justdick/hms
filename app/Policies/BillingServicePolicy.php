@@ -12,7 +12,7 @@ class BillingServicePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('billing.view-all') || $user->hasPermissionTo('system.admin');
+        return $user->hasRole('Admin') || $this->hasPermissionSafe($user, 'billing.view-all');
     }
 
     /**
@@ -20,7 +20,7 @@ class BillingServicePolicy
      */
     public function view(User $user, BillingService $billingService): bool
     {
-        return $user->hasPermissionTo('billing.view-all') || $user->hasPermissionTo('system.admin');
+        return $user->hasRole('Admin') || $this->hasPermissionSafe($user, 'billing.view-all');
     }
 
     /**
@@ -28,7 +28,7 @@ class BillingServicePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('system.admin');
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -36,7 +36,7 @@ class BillingServicePolicy
      */
     public function update(User $user, BillingService $billingService): bool
     {
-        return $user->hasPermissionTo('system.admin');
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -44,7 +44,7 @@ class BillingServicePolicy
      */
     public function delete(User $user, BillingService $billingService): bool
     {
-        return $user->hasPermissionTo('system.admin');
+        return $user->hasRole('Admin');
     }
 
     /**
@@ -61,5 +61,17 @@ class BillingServicePolicy
     public function forceDelete(User $user, BillingService $billingService): bool
     {
         return false;
+    }
+
+    /**
+     * Safely check if user has permission without throwing exception.
+     */
+    private function hasPermissionSafe(User $user, string $permission): bool
+    {
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist $e) {
+            return false;
+        }
     }
 }

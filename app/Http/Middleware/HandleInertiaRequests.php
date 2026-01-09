@@ -131,6 +131,7 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
                 'temporary_password' => $request->session()->get('temporary_password'),
+                'admission_details' => $request->session()->get('admission_details'),
             ],
             'patient' => $request->session()->get('patient'),
             'theme' => fn () => app(ThemeSettingService::class)->getThemeWithFallback(),

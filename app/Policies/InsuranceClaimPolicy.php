@@ -141,8 +141,8 @@ class InsuranceClaimPolicy
 
     private function checkPermission(User $user, string $permission): bool
     {
-        // Check if user has system admin permission first
-        if ($user->hasPermissionTo('system.admin')) {
+        // Check if user has Admin role first (more reliable than checking system.admin permission)
+        if ($user->hasRole('Admin')) {
             return true;
         }
 

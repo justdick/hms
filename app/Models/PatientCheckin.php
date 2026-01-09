@@ -26,6 +26,7 @@ class PatientCheckin extends Model
         'notes',
         'claim_check_code',
         'migrated_from_mittag',
+        'created_during_admission',
     ];
 
     protected function casts(): array
@@ -37,6 +38,7 @@ class PatientCheckin extends Model
             'consultation_started_at' => 'datetime',
             'consultation_completed_at' => 'datetime',
             'status' => 'string',
+            'created_during_admission' => 'boolean',
         ];
     }
 

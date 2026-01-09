@@ -29,6 +29,27 @@ class ConsultationController extends Controller
         $search = $request->input('search');
         $departmentFilter = $request->input('department_id');
 
+        // Check if user has permission to filter by date
+        $canFilterByDate = $user->can('consultations.filter-by-date');
+
+        // Date filtering
+        $dateFrom = null;
+        $dateTo = null;
+
+        if ($canFilterByDate) {
+            // User has permission - use provided filters or default to today
+            $dateFrom = $request->input('date_from');
+            $dateTo = $request->input('date_to');
+
+            // If no date filter provided, default to today
+            if (! $dateFrom && ! $dateTo) {
+                $dateFrom = now()->toDateString();
+                $dateTo = now()->toDateString();
+            }
+        }
+        // If user doesn't have permission, $dateFrom and $dateTo remain null
+        // The queries will use the original behavior (no filter for awaiting/active, last 24h for completed)
+
         // Exclude Minor Procedures department from consultation queue
         $minorProceduresDept = Department::where('code', 'ZOOM')->first();
         $excludeDeptId = $minorProceduresDept?->id;
@@ -46,6 +67,16 @@ class ConsultationController extends Controller
             ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
             ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId));
 
+        // Apply date filter to awaiting queue only if user has permission and filter is set
+        if ($canFilterByDate && ($dateFrom || $dateTo)) {
+            if ($dateFrom) {
+                $awaitingQuery->whereDate('service_date', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $awaitingQuery->whereDate('service_date', '<=', $dateTo);
+            }
+        }
+
         // Base query for active consultations
         $activeQuery = Consultation::with([
             'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
@@ -55,6 +86,18 @@ class ConsultationController extends Controller
         ])
             ->accessibleTo($user)
             ->inProgress();
+
+        // Apply date filter to active consultations only if user has permission and filter is set
+        if ($canFilterByDate && ($dateFrom || $dateTo)) {
+            $activeQuery->whereHas('patientCheckin', function ($q) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $q->whereDate('service_date', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('service_date', '<=', $dateTo);
+                }
+            });
+        }
 
         // Apply department filter if provided
         if ($departmentFilter) {
@@ -83,7 +126,7 @@ class ConsultationController extends Controller
         $awaitingConsultation = $awaitingQuery->orderBy('checked_in_at')->get();
         $activeConsultations = $activeQuery->orderBy('started_at')->get();
 
-        // Query for completed consultations (last 24 hours)
+        // Query for completed consultations
         $completedQuery = Consultation::with([
             'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
             'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
@@ -91,8 +134,23 @@ class ConsultationController extends Controller
             'doctor:id,name',
         ])
             ->accessibleTo($user)
-            ->where('status', 'completed')
-            ->where('completed_at', '>=', now()->subHours(24));
+            ->where('status', 'completed');
+
+        // Apply date filter to completed consultations
+        if ($canFilterByDate && ($dateFrom || $dateTo)) {
+            // User has permission and filter is set - filter by service_date
+            $completedQuery->whereHas('patientCheckin', function ($q) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $q->whereDate('service_date', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('service_date', '<=', $dateTo);
+                }
+            });
+        } else {
+            // User doesn't have permission - use original behavior (last 24 hours)
+            $completedQuery->where('completed_at', '>=', now()->subHours(24));
+        }
 
         // Apply department filter if provided
         if ($departmentFilter) {
@@ -129,7 +187,10 @@ class ConsultationController extends Controller
             'filters' => [
                 'search' => $search,
                 'department_id' => $departmentFilter,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
             ],
+            'canFilterByDate' => $canFilterByDate,
         ]);
     }
 

@@ -7,10 +7,11 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Calendar, Loader2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import AdmissionWarningDialog from './AdmissionWarningDialog';
 import InsuranceDialog from './InsuranceDialog';
 
 interface Patient {
@@ -59,6 +60,13 @@ interface NhisSettings {
     } | null;
 }
 
+interface AdmissionDetails {
+    id: number;
+    admission_number: string;
+    ward: string;
+    admitted_at: string;
+}
+
 interface CheckinModalProps {
     open: boolean;
     onClose: () => void;
@@ -84,6 +92,23 @@ export default function CheckinModal({
     const [serviceDate, setServiceDate] = useState('');
     const [checkingInsurance, setCheckingInsurance] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Admission warning state
+    const [admissionWarning, setAdmissionWarning] = useState<{
+        show: boolean;
+        admission: AdmissionDetails | null;
+        pendingCheckinData: {
+            hasInsurance: boolean;
+            claimCheckCode: string | null;
+        } | null;
+    }>({ show: false, admission: null, pendingCheckinData: null });
+
+    // Get flash data from Inertia page props
+    const { props } = usePage<{
+        flash?: {
+            admission_details?: AdmissionDetails;
+        };
+    }>();
 
     // Get today's date in YYYY-MM-DD format for date input
     const today = new Date().toISOString().split('T')[0];
@@ -101,6 +126,7 @@ export default function CheckinModal({
             setNotes('');
             setServiceDate('');
             setIsSubmitting(false);
+            setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
         }
     }, [open, patient]);
 
@@ -172,6 +198,7 @@ export default function CheckinModal({
     const submitCheckin = (
         hasInsurance: boolean,
         claimCheckCode: string | null,
+        confirmAdmissionOverride: boolean = false,
     ) => {
         if (!patient || !selectedDepartment) {
             toast.error('Please select a department');
@@ -204,21 +231,68 @@ export default function CheckinModal({
             formData.claim_check_code = claimCheckCode;
         }
 
+        // Include admission override confirmation if user confirmed
+        if (confirmAdmissionOverride) {
+            formData.confirm_admission_override = true;
+        }
+
         router.post('/checkin/checkins', formData, {
             onSuccess: () => {
                 toast.success('Patient checked in successfully');
                 setIsSubmitting(false);
+                setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
                 onSuccess();
             },
             onError: (errors) => {
                 setIsSubmitting(false);
-                if (errors.claim_check_code) {
+                
+                // Handle admission warning - show dialog instead of error
+                if (errors.admission_warning) {
+                    // Get admission details from flash session
+                    const admissionDetails = props.flash?.admission_details;
+                    if (admissionDetails) {
+                        setAdmissionWarning({
+                            show: true,
+                            admission: admissionDetails,
+                            pendingCheckinData: { hasInsurance, claimCheckCode },
+                        });
+                        return;
+                    }
+                }
+                
+                // Display specific error messages based on field
+                // Priority: department_id > claim_check_code > patient_id > other errors
+                if (errors.department_id) {
+                    toast.error(errors.department_id);
+                } else if (errors.claim_check_code) {
                     toast.error(errors.claim_check_code);
+                } else if (errors.patient_id) {
+                    toast.error(errors.patient_id);
                 } else {
-                    toast.error('Failed to check in patient');
+                    // Fallback to first available error message
+                    const firstError = Object.values(errors)[0];
+                    if (firstError && typeof firstError === 'string') {
+                        toast.error(firstError);
+                    } else {
+                        toast.error('Check-in failed. Please review the form and try again.');
+                    }
                 }
             },
         });
+    };
+
+    const handleAdmissionWarningConfirm = () => {
+        if (admissionWarning.pendingCheckinData) {
+            submitCheckin(
+                admissionWarning.pendingCheckinData.hasInsurance,
+                admissionWarning.pendingCheckinData.claimCheckCode,
+                true, // confirmAdmissionOverride
+            );
+        }
+    };
+
+    const handleAdmissionWarningClose = () => {
+        setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
     };
 
     const handleModalClose = () => {
@@ -474,7 +548,7 @@ export default function CheckinModal({
             </Dialog>
 
             {/* Insurance Dialog */}
-            {insuranceInfo && (
+            {insuranceInfo && patient && (
                 <InsuranceDialog
                     open={insuranceDialogOpen}
                     onClose={() => setInsuranceDialogOpen(false)}
@@ -482,8 +556,19 @@ export default function CheckinModal({
                     onUseCash={handleUseCash}
                     onUseInsurance={handleUseInsurance}
                     nhisSettings={nhisSettings ?? undefined}
+                    patientId={patient.id}
+                    serviceDate={serviceDate || today}
                 />
             )}
+
+            {/* Admission Warning Dialog */}
+            <AdmissionWarningDialog
+                open={admissionWarning.show}
+                onClose={handleAdmissionWarningClose}
+                onConfirm={handleAdmissionWarningConfirm}
+                admission={admissionWarning.admission}
+                isSubmitting={isSubmitting}
+            />
         </>
     );
 }

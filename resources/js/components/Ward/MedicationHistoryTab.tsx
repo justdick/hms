@@ -34,7 +34,7 @@ interface Prescription {
     route?: string;
     instructions?: string;
     status?: string;
-    start_date?: string;
+    created_at?: string;
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
