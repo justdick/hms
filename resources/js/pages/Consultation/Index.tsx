@@ -476,7 +476,7 @@ export default function ConsultationIndex({
                         </TabsList>
 
                         {activeTab === 'queue' && (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/50">
                                 {canFilterByDate && (
                                     <DateFilterPresets
                                         value={dateFilter}
@@ -487,7 +487,7 @@ export default function ConsultationIndex({
                                     value={departmentFilter || 'all'}
                                     onValueChange={handleDepartmentChange}
                                 >
-                                    <SelectTrigger className="w-[180px]">
+                                    <SelectTrigger className="w-[180px] border-blue-300 bg-white dark:border-blue-700 dark:bg-blue-900">
                                         <SelectValue placeholder="All Departments" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -509,7 +509,7 @@ export default function ConsultationIndex({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleManualRefresh}
-                                    className="gap-2"
+                                    className="gap-2 border-blue-300 bg-white hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900 dark:hover:bg-blue-800"
                                 >
                                     <RefreshCw className="h-4 w-4" />
                                     <span className="text-xs text-muted-foreground">
@@ -520,7 +520,7 @@ export default function ConsultationIndex({
                         )}
 
                         {activeTab === 'completed' && (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/50">
                                 {canFilterByDate && (
                                     <DateFilterPresets
                                         value={dateFilter}
@@ -531,7 +531,7 @@ export default function ConsultationIndex({
                                     value={departmentFilter || 'all'}
                                     onValueChange={handleDepartmentChange}
                                 >
-                                    <SelectTrigger className="w-[180px]">
+                                    <SelectTrigger className="w-[180px] border-green-300 bg-white dark:border-green-700 dark:bg-green-900">
                                         <SelectValue placeholder="All Departments" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -553,7 +553,7 @@ export default function ConsultationIndex({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleManualRefresh}
-                                    className="gap-2"
+                                    className="gap-2 border-green-300 bg-white hover:bg-green-100 dark:border-green-700 dark:bg-green-900 dark:hover:bg-green-800"
                                 >
                                     <RefreshCw className="h-4 w-4" />
                                     Refresh
