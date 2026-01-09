@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { router, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Calendar, Loader2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -102,13 +102,6 @@ export default function CheckinModal({
             claimCheckCode: string | null;
         } | null;
     }>({ show: false, admission: null, pendingCheckinData: null });
-
-    // Get flash data from Inertia page props
-    const { props } = usePage<{
-        flash?: {
-            admission_details?: AdmissionDetails;
-        };
-    }>();
 
     // Get today's date in YYYY-MM-DD format for date input
     const today = new Date().toISOString().split('T')[0];
@@ -247,16 +240,22 @@ export default function CheckinModal({
                 setIsSubmitting(false);
                 
                 // Handle admission warning - show dialog instead of error
+                // The admission details are passed as JSON in the error value
                 if (errors.admission_warning) {
-                    // Get admission details from flash session
-                    const admissionDetails = props.flash?.admission_details;
-                    if (admissionDetails) {
-                        setAdmissionWarning({
-                            show: true,
-                            admission: admissionDetails,
-                            pendingCheckinData: { hasInsurance, claimCheckCode },
-                        });
-                        return;
+                    try {
+                        const admissionDetails = typeof errors.admission_warning === 'string' 
+                            ? JSON.parse(errors.admission_warning)
+                            : null;
+                        if (admissionDetails) {
+                            setAdmissionWarning({
+                                show: true,
+                                admission: admissionDetails,
+                                pendingCheckinData: { hasInsurance, claimCheckCode },
+                            });
+                            return;
+                        }
+                    } catch {
+                        // If parsing fails, fall through to generic error handling
                     }
                 }
                 

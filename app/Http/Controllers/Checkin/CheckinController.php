@@ -191,13 +191,17 @@ class CheckinController extends Controller
         // Check if patient is currently admitted (WARN, allow proceed with confirmation)
         $activeAdmission = $patient->activeAdmission;
         if ($activeAdmission && ! $request->boolean('confirm_admission_override')) {
-            return back()->withErrors([
-                'admission_warning' => true,
-            ])->with('admission_details', [
+            // Pass admission details as JSON in the error message so frontend can parse it
+            // This avoids timing issues with flash data not being available in onError callback
+            $admissionDetails = json_encode([
                 'id' => $activeAdmission->id,
                 'admission_number' => $activeAdmission->admission_number,
                 'ward' => $activeAdmission->ward->name ?? 'Unknown Ward',
                 'admitted_at' => $activeAdmission->admitted_at?->toIso8601String(),
+            ]);
+
+            return back()->withErrors([
+                'admission_warning' => $admissionDetails,
             ])->withInput();
         }
 
