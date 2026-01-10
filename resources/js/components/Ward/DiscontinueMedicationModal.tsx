@@ -23,6 +23,8 @@ interface Prescription {
     id: number;
     drug?: Drug;
     medication_name: string;
+    dosage?: string;
+    dose_quantity?: string;
     frequency?: string;
     duration?: string;
 }
