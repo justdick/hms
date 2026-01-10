@@ -62,7 +62,9 @@ class PermissionSeeder extends Seeder
             'prescriptions.create' => 'Create prescriptions',
             'prescriptions.update' => 'Edit prescriptions',
             'prescriptions.delete' => 'Delete prescriptions',
-            'manage prescriptions' => 'Manage prescriptions (discontinue, etc.)',
+            'prescriptions.discontinue' => 'Discontinue prescriptions',
+            'prescriptions.resume' => 'Resume discontinued prescriptions',
+            'manage prescriptions' => 'Manage prescriptions (legacy)',
 
             // Lab Order Management
             'lab-orders.view-all' => 'View all lab orders',
@@ -349,6 +351,8 @@ class PermissionSeeder extends Seeder
             'prescriptions.view',
             'prescriptions.create',
             'prescriptions.update',
+            'prescriptions.discontinue',
+            'prescriptions.resume',
             'lab-orders.view-dept',
             'lab-orders.create',
             'lab-orders.update',

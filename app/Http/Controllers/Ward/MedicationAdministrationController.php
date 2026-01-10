@@ -274,6 +274,48 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
+     * Discontinue a prescription.
+     * This stops the medication from appearing in the MAR slide-over.
+     */
+    public function discontinue(Request $request, Prescription $prescription)
+    {
+        $this->authorize('prescriptions.discontinue');
+
+        $validated = $request->validate([
+            'reason' => 'required|string|min:5|max:500',
+        ]);
+
+        // Check if already discontinued
+        if ($prescription->isDiscontinued()) {
+            return back()->withErrors(['reason' => 'This prescription has already been discontinued.']);
+        }
+
+        // Discontinue the prescription
+        $prescription->discontinue(auth()->user(), $validated['reason']);
+
+        return back()->with('success', 'Medication discontinued successfully.');
+    }
+
+    /**
+     * Resume a discontinued prescription.
+     * This allows the medication to appear in the MAR slide-over again.
+     */
+    public function resume(Request $request, Prescription $prescription)
+    {
+        $this->authorize('prescriptions.resume');
+
+        // Check if not discontinued
+        if (! $prescription->isDiscontinued()) {
+            return back()->withErrors(['error' => 'This prescription is not discontinued.']);
+        }
+
+        // Resume the prescription (clears discontinuation fields and records audit)
+        $prescription->resume(auth()->user());
+
+        return back()->with('success', 'Medication resumed successfully.');
+    }
+
+    /**
      * Get active prescriptions for an admission.
      */
     private function getActivePrescriptions(PatientAdmission $admission)
@@ -286,7 +328,7 @@ class MedicationAdministrationController extends Controller
                 $query->where('patient_admission_id', $admission->id);
             }
         )
-            ->whereNull('discontinued_at')
+            ->active()
             ->with(['drug:id,name,strength,drug_code'])
             ->get();
 
@@ -294,7 +336,7 @@ class MedicationAdministrationController extends Controller
         $consultationPrescriptions = collect();
         if ($admission->consultation_id) {
             $consultationPrescriptions = Prescription::where('consultation_id', $admission->consultation_id)
-                ->whereNull('discontinued_at')
+                ->active()
                 ->with(['drug:id,name,strength,drug_code'])
                 ->get();
         }

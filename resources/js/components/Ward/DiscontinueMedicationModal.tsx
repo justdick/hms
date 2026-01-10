@@ -52,13 +52,16 @@ export function DiscontinueMedicationModal({
         setSubmitting(true);
 
         router.post(
-            `/api/prescriptions/${prescription.id}/discontinue`,
+            `/admissions/prescriptions/${prescription.id}/discontinue`,
             { reason },
             {
+                preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Medication discontinued successfully');
                     setReason('');
                     onClose();
+                    // Force page refresh to get updated prescription data
+                    router.reload();
                 },
                 onError: (errors) => {
                     toast.error(

@@ -49,9 +49,6 @@ class Prescription extends Model
         'reviewed_at',
         'dispensing_notes',
         'external_reason',
-        'discontinued_at',
-        'discontinued_by_id',
-        'discontinuation_reason',
         'migrated_from_mittag',
     ];
 
@@ -61,8 +58,66 @@ class Prescription extends Model
             'status' => 'string',
             'is_unpriced' => 'boolean',
             'reviewed_at' => 'datetime',
-            'discontinued_at' => 'datetime',
         ];
+    }
+
+    protected $appends = [
+        'discontinued_at',
+        'discontinued_by',
+        'discontinuation_reason',
+    ];
+
+    /**
+     * Get the discontinued_at timestamp from the latest discontinue action.
+     * Returns null if not discontinued or if resumed after.
+     */
+    public function getDiscontinuedAtAttribute(): ?string
+    {
+        if (! $this->isDiscontinued()) {
+            return null;
+        }
+
+        $latestDiscontinue = $this->statusChanges()
+            ->where('action', 'discontinued')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestDiscontinue?->performed_at?->toISOString();
+    }
+
+    /**
+     * Get the user who discontinued this prescription.
+     */
+    public function getDiscontinuedByAttribute(): ?array
+    {
+        if (! $this->isDiscontinued()) {
+            return null;
+        }
+
+        $latestDiscontinue = $this->statusChanges()
+            ->where('action', 'discontinued')
+            ->with('performedBy:id,name')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestDiscontinue?->performedBy?->only(['id', 'name']);
+    }
+
+    /**
+     * Get the discontinuation reason.
+     */
+    public function getDiscontinuationReasonAttribute(): ?string
+    {
+        if (! $this->isDiscontinued()) {
+            return null;
+        }
+
+        $latestDiscontinue = $this->statusChanges()
+            ->where('action', 'discontinued')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestDiscontinue?->reason;
     }
 
     public function prescribable(): MorphTo
@@ -110,9 +165,14 @@ class Prescription extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    public function discontinuedBy(): BelongsTo
+    public function statusChanges(): HasMany
     {
-        return $this->belongsTo(User::class, 'discontinued_by_id');
+        return $this->hasMany(PrescriptionStatusChange::class)->orderBy('performed_at', 'desc');
+    }
+
+    public function latestStatusChange(): HasOne
+    {
+        return $this->hasOne(PrescriptionStatusChange::class)->latestOfMany('performed_at');
     }
 
     public function dispensing(): HasOne
@@ -221,26 +281,45 @@ class Prescription extends Model
 
     public function scopeActive($query): void
     {
-        $query->whereNull('discontinued_at');
+        // Active = no status changes OR latest status change is 'resumed'
+        $query->where(function ($q) {
+            $q->whereDoesntHave('statusChanges')
+                ->orWhereHas('latestStatusChange', function ($sq) {
+                    $sq->where('action', 'resumed');
+                });
+        });
     }
 
     public function discontinue(User $user, ?string $reason = null): void
     {
-        $this->update([
-            'discontinued_at' => now(),
-            'discontinued_by_id' => $user->id,
-            'discontinuation_reason' => $reason,
+        $this->statusChanges()->create([
+            'action' => 'discontinued',
+            'performed_by_id' => $user->id,
+            'performed_at' => now(),
+            'reason' => $reason,
         ]);
     }
 
     public function isDiscontinued(): bool
     {
-        return $this->discontinued_at !== null;
+        $latest = $this->latestStatusChange;
+
+        return $latest && $latest->action === 'discontinued';
     }
 
     public function canBeDiscontinued(): bool
     {
         return ! $this->isDiscontinued();
+    }
+
+    public function resume(User $user, ?string $reason = null): void
+    {
+        $this->statusChanges()->create([
+            'action' => 'resumed',
+            'performed_by_id' => $user->id,
+            'performed_at' => now(),
+            'reason' => $reason,
+        ]);
     }
 
     /**

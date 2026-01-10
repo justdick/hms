@@ -68,6 +68,7 @@ interface Prescription {
     discontinued_at?: string;
     today_administration_count?: number;
     expected_doses_per_day?: number;
+    created_at?: string;
 }
 
 interface MedicationAdministration {
@@ -206,6 +207,19 @@ export function MedicationAdministrationPanel({
                                                         •{' '}
                                                         {prescription.duration}
                                                     </p>
+                                                    {prescription.created_at && (
+                                                        <p className="mt-1 text-xs">
+                                                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                                                Prescribed:{' '}
+                                                                {format(
+                                                                    new Date(
+                                                                        prescription.created_at,
+                                                                    ),
+                                                                    'MMM d, yyyy',
+                                                                )}
+                                                            </span>
+                                                        </p>
+                                                    )}
                                                     {prescription.instructions && (
                                                         <p className="mt-1 text-xs text-muted-foreground italic">
                                                             {

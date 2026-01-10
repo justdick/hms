@@ -62,6 +62,14 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::post('/{admission}/medications/refuse', [MedicationAdministrationController::class, 'refuse'])->name('medications.refuse');
     Route::post('/{admission}/medications/omit', [MedicationAdministrationController::class, 'omit'])->name('medications.omit');
     Route::delete('/{admission}/medications/{medication}', [MedicationAdministrationController::class, 'destroy'])->name('medications.destroy');
+
+    // Prescription discontinuation and resumption
+    Route::post('/prescriptions/{prescription}/discontinue', [MedicationAdministrationController::class, 'discontinue'])
+        ->name('prescriptions.discontinue')
+        ->middleware('can:prescriptions.discontinue');
+    Route::post('/prescriptions/{prescription}/resume', [MedicationAdministrationController::class, 'resume'])
+        ->name('prescriptions.resume')
+        ->middleware('can:prescriptions.resume');
 });
 
 // Vitals Alert API Routes (JSON responses for AJAX calls)

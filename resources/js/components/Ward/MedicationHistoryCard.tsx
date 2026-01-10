@@ -8,7 +8,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
-import { Calendar, Clock, MoreVertical, Pill, XCircle } from 'lucide-react';
+import { Calendar, Clock, MoreVertical, Pill, PlayCircle, XCircle } from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -42,11 +42,13 @@ interface Prescription {
 interface MedicationHistoryCardProps {
     prescription: Prescription;
     onDiscontinue: (prescriptionId: number) => void;
+    onResume?: (prescriptionId: number) => void;
 }
 
 export function MedicationHistoryCard({
     prescription,
     onDiscontinue,
+    onResume,
 }: MedicationHistoryCardProps) {
     const isDiscontinued = !!prescription.discontinued_at;
 
@@ -160,14 +162,24 @@ export function MedicationHistoryCard({
                     </div>
 
                     {/* Action Buttons */}
-                    {!isDiscontinued && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {isDiscontinued ? (
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        onResume?.(prescription.id)
+                                    }
+                                    className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                                >
+                                    <PlayCircle className="mr-2 h-4 w-4" />
+                                    Resume
+                                </DropdownMenuItem>
+                            ) : (
                                 <DropdownMenuItem
                                     onClick={() =>
                                         onDiscontinue(prescription.id)
@@ -177,9 +189,9 @@ export function MedicationHistoryCard({
                                     <XCircle className="mr-2 h-4 w-4" />
                                     Discontinue
                                 </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </CardContent>
         </Card>

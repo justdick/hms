@@ -1361,6 +1361,22 @@ export default function WardPatientShow({
                                 setSelectedPrescription(prescription || null);
                                 setDiscontinueModalOpen(true);
                             }}
+                            onResume={(prescriptionId) => {
+                                router.post(
+                                    `/admissions/prescriptions/${prescriptionId}/resume`,
+                                    {},
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            toast.success('Medication resumed successfully');
+                                            router.reload();
+                                        },
+                                        onError: () => {
+                                            toast.error('Failed to resume medication');
+                                        },
+                                    },
+                                );
+                            }}
                         />
                     </TabsContent>
 

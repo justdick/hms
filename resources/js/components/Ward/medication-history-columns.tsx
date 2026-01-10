@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, MoreVertical, Pill, XCircle } from 'lucide-react';
+import { ArrowUpDown, MoreVertical, Pill, PlayCircle, XCircle } from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -41,6 +41,7 @@ export interface MedicationHistoryRow {
 
 interface ColumnActions {
     onDiscontinue: (prescriptionId: number) => void;
+    onResume?: (prescriptionId: number) => void;
 }
 
 export const medicationHistoryColumns = (
@@ -166,10 +167,6 @@ export const medicationHistoryColumns = (
             const prescription = row.original;
             const isDiscontinued = !!prescription.discontinued_at;
 
-            if (isDiscontinued) {
-                return null;
-            }
-
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -178,15 +175,27 @@ export const medicationHistoryColumns = (
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={() =>
-                                actions.onDiscontinue(prescription.id)
-                            }
-                            className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                        >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Discontinue
-                        </DropdownMenuItem>
+                        {isDiscontinued ? (
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    actions.onResume?.(prescription.id)
+                                }
+                                className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                            >
+                                <PlayCircle className="mr-2 h-4 w-4" />
+                                Resume
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    actions.onDiscontinue(prescription.id)
+                                }
+                                className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Discontinue
+                            </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             );

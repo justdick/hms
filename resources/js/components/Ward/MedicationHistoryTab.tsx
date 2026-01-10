@@ -44,6 +44,7 @@ interface MedicationHistoryTabProps {
     patientAdmissionId: number;
     prescriptions: Prescription[];
     onDiscontinue: (prescriptionId: number) => void;
+    onResume?: (prescriptionId: number) => void;
 }
 
 type FilterType = 'all' | 'active' | 'discontinued';
@@ -53,6 +54,7 @@ export function MedicationHistoryTab({
     patientAdmissionId,
     prescriptions,
     onDiscontinue,
+    onResume,
 }: MedicationHistoryTabProps) {
     const [filter, setFilter] = useState<FilterType>('all');
     const [viewType, setViewType] = useState<ViewType>('table');
@@ -131,6 +133,7 @@ export function MedicationHistoryTab({
                 <MedicationHistoryTable
                     prescriptions={filteredPrescriptions}
                     onDiscontinue={onDiscontinue}
+                    onResume={onResume}
                 />
             ) : (
                 <div className="space-y-3">
@@ -139,6 +142,7 @@ export function MedicationHistoryTab({
                             key={prescription.id}
                             prescription={prescription}
                             onDiscontinue={onDiscontinue}
+                            onResume={onResume}
                         />
                     ))}
                 </div>
