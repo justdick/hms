@@ -5,8 +5,13 @@ use App\Models\PatientAdmission;
 use App\Models\User;
 use App\Models\Ward;
 use App\Models\WardTransfer;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
+    // Create permissions
+    Permission::firstOrCreate(['name' => 'admissions.transfer']);
+    Permission::firstOrCreate(['name' => 'admissions.view']);
+
     // Create a user with transfer permission
     $this->user = User::factory()->create();
     $this->user->givePermissionTo('admissions.transfer');
@@ -14,15 +19,20 @@ beforeEach(function () {
 });
 
 it('can transfer a patient to another ward', function () {
+    // Enable bed management for this test
+    config(['features.bed_management' => true]);
+
     // Create source ward with bed
     $sourceWard = Ward::factory()->create([
         'name' => 'General Ward',
         'available_beds' => 5,
         'total_beds' => 10,
     ]);
-    $sourceBed = Bed::factory()->create([
+    $sourceBed = Bed::create([
         'ward_id' => $sourceWard->id,
+        'bed_number' => 'B001',
         'status' => 'occupied',
+        'is_active' => true,
     ]);
 
     // Create destination ward
@@ -59,13 +69,13 @@ it('can transfer a patient to another ward', function () {
     $sourceBed->refresh();
     expect($sourceBed->status)->toBe('available');
 
-    // Verify destination ward bed count decreased
+    // Verify destination ward bed count decreased (only when bed management enabled)
     $destWard->refresh();
     expect($destWard->available_beds)->toBe(2);
 
     // Verify transfer record was created
-    expect(WardTransfer::count())->toBe(1);
-    $transfer = WardTransfer::first();
+    $transfer = WardTransfer::where('patient_admission_id', $admission->id)->first();
+    expect($transfer)->not->toBeNull();
     expect($transfer->from_ward_id)->toBe($sourceWard->id);
     expect($transfer->from_bed_id)->toBe($sourceBed->id);
     expect($transfer->to_ward_id)->toBe($destWard->id);
@@ -88,7 +98,8 @@ it('cannot transfer to same ward', function () {
     $response->assertSessionHasErrors('to_ward_id');
 });
 
-it('cannot transfer to ward with no available beds', function () {
+it('can transfer to ward even with no available beds', function () {
+    // Hospitals can't turn away patients - transfer should always be allowed
     $sourceWard = Ward::factory()->create(['available_beds' => 5]);
     $destWard = Ward::factory()->create(['available_beds' => 0]);
 
@@ -103,7 +114,11 @@ it('cannot transfer to ward with no available beds', function () {
             'transfer_reason' => 'Test reason',
         ]);
 
-    $response->assertSessionHasErrors('to_ward_id');
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    $admission->refresh();
+    expect($admission->ward_id)->toBe($destWard->id);
 });
 
 it('cannot transfer discharged patient', function () {
@@ -186,6 +201,7 @@ it('can transfer patient without bed assignment', function () {
     expect($admission->ward_id)->toBe($destWard->id);
 
     // Verify transfer record has null from_bed_id
-    $transfer = WardTransfer::first();
+    $transfer = WardTransfer::where('patient_admission_id', $admission->id)->first();
+    expect($transfer)->not->toBeNull();
     expect($transfer->from_bed_id)->toBeNull();
 });

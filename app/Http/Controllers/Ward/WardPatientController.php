@@ -111,7 +111,6 @@ class WardPatientController extends Controller
             'can_delete_medication_administration' => $request->user()->can('medications.delete'),
             'can_transfer' => $request->user()->can('admissions.transfer'),
             'availableWards' => WardModel::active()
-                ->available()
                 ->where('id', '!=', $ward->id)
                 ->get(['id', 'name', 'code', 'available_beds']),
         ]);
