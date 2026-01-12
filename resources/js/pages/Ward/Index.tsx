@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Bed,
     Building2,
@@ -44,6 +45,9 @@ interface Props {
 }
 
 export default function WardIndex({ wards }: Props) {
+    const { features } = usePage<SharedData>().props;
+    const bedManagementEnabled = features?.bedManagement ?? false;
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<
         'all' | 'active' | 'inactive'
@@ -137,7 +141,7 @@ export default function WardIndex({ wards }: Props) {
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${bedManagementEnabled ? 'lg:grid-cols-5' : 'lg:grid-cols-3'}`}>
                     <StatCard
                         label="Total Wards"
                         value={wards.length}
@@ -150,20 +154,24 @@ export default function WardIndex({ wards }: Props) {
                         icon={<Sparkles className="h-4 w-4" />}
                         variant="success"
                     />
-                    <StatCard
-                        label="Total Beds"
-                        value={wards.reduce((sum, w) => sum + w.total_beds, 0)}
-                        icon={<Bed className="h-4 w-4" />}
-                    />
-                    <StatCard
-                        label="Available Beds"
-                        value={wards.reduce(
-                            (sum, w) => sum + w.available_beds,
-                            0,
-                        )}
-                        icon={<Bed className="h-4 w-4" />}
-                        variant="success"
-                    />
+                    {bedManagementEnabled && (
+                        <>
+                            <StatCard
+                                label="Total Beds"
+                                value={wards.reduce((sum, w) => sum + w.total_beds, 0)}
+                                icon={<Bed className="h-4 w-4" />}
+                            />
+                            <StatCard
+                                label="Available Beds"
+                                value={wards.reduce(
+                                    (sum, w) => sum + w.available_beds,
+                                    0,
+                                )}
+                                icon={<Bed className="h-4 w-4" />}
+                                variant="success"
+                            />
+                        </>
+                    )}
                     <StatCard
                         label="Admitted Patients"
                         value={wards.reduce(
@@ -296,57 +304,61 @@ export default function WardIndex({ wards }: Props) {
                                                     </div>
                                                 </div>
 
-                                                {/* Bed Status Grid */}
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    <div className="rounded-lg bg-blue-50 p-2 text-center dark:bg-blue-900/10">
-                                                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                            {ward.total_beds}
-                                                        </p>
-                                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                            Total Beds
-                                                        </span>
-                                                    </div>
-                                                    <div className="rounded-lg bg-green-50 p-2 text-center dark:bg-green-900/10">
-                                                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                                                            {
-                                                                bedStatus.available
-                                                            }
-                                                        </p>
-                                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                            Available
-                                                        </span>
-                                                    </div>
-                                                    <div className="rounded-lg bg-orange-50 p-2 text-center dark:bg-orange-900/10">
-                                                        <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                                                            {bedStatus.occupied}
-                                                        </p>
-                                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                            Occupied
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                {/* Bed Status Grid - Only show when bed management is enabled */}
+                                                {bedManagementEnabled && (
+                                                    <>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div className="rounded-lg bg-blue-50 p-2 text-center dark:bg-blue-900/10">
+                                                                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                                                    {ward.total_beds}
+                                                                </p>
+                                                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                                    Total Beds
+                                                                </span>
+                                                            </div>
+                                                            <div className="rounded-lg bg-green-50 p-2 text-center dark:bg-green-900/10">
+                                                                <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                                                    {
+                                                                        bedStatus.available
+                                                                    }
+                                                                </p>
+                                                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                                    Available
+                                                                </span>
+                                                            </div>
+                                                            <div className="rounded-lg bg-orange-50 p-2 text-center dark:bg-orange-900/10">
+                                                                <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                                                    {bedStatus.occupied}
+                                                                </p>
+                                                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                                    Occupied
+                                                                </span>
+                                                            </div>
+                                                        </div>
 
-                                                {/* Occupancy Bar */}
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                            Occupancy Rate
-                                                        </span>
-                                                        <span
-                                                            className={`text-sm font-bold ${getOccupancyColor(occupancyRate)}`}
-                                                        >
-                                                            {occupancyRate}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                                                        <div
-                                                            className={`h-full transition-all ${getOccupancyBgColor(occupancyRate)}`}
-                                                            style={{
-                                                                width: `${occupancyRate}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
+                                                        {/* Occupancy Bar */}
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                                    Occupancy Rate
+                                                                </span>
+                                                                <span
+                                                                    className={`text-sm font-bold ${getOccupancyColor(occupancyRate)}`}
+                                                                >
+                                                                    {occupancyRate}%
+                                                                </span>
+                                                            </div>
+                                                            <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                                                <div
+                                                                    className={`h-full transition-all ${getOccupancyBgColor(occupancyRate)}`}
+                                                                    style={{
+                                                                        width: `${occupancyRate}%`,
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </CardContent>
                                         </Link>
 
