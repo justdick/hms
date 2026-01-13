@@ -136,47 +136,57 @@ class CheckinController extends Controller
         // Check for duplicate CCC - must be unique for active (non-completed) claims
         // EXCEPTION: Same patient can reuse the same CCC for multi-department same-day check-ins
         // NHIS can regenerate same CCC after months/years, so we only block if CCC is in active use
+        // NHIA can reuse CCCs across different membership IDs, so we only block if:
+        // 1. Same CCC + Same membership ID + active claim (prevents duplicate for same member)
+        // 2. Same CCC + Same patient + Same day with active check-in (prevents accidental double check-in)
         // Migrated data from Mittag is excluded - those CCCs can be reused
         if (! empty($validated['claim_check_code'])) {
-            // Check if CCC already exists in insurance_claims for an active claim
+            $patient = Patient::with('activeInsurance')->find($validated['patient_id']);
+            $membershipId = $patient?->activeInsurance?->membership_id;
+
+            // Check if CCC already exists in insurance_claims for an active claim with SAME membership ID
             // Active = not yet submitted/approved/paid/rejected (still in workflow)
             // Exclude claims linked to migrated checkins
             // Allow same patient same day (multi-department visits share CCC)
-            $existingClaim = InsuranceClaim::where('claim_check_code', $validated['claim_check_code'])
-                ->whereIn('status', ['draft', 'pending_vetting', 'vetted'])
-                ->whereHas('checkin', fn ($q) => $q->where('migrated_from_mittag', false))
-                ->where(function ($query) use ($validated, $serviceDate) {
-                    // Block if different patient OR different service date
-                    $query->where('patient_id', '!=', $validated['patient_id'])
-                        ->orWhereHas('checkin', fn ($q) => $q->whereDate('service_date', '!=', $serviceDate));
-                })
-                ->first();
+            if ($membershipId) {
+                $existingClaim = InsuranceClaim::where('claim_check_code', $validated['claim_check_code'])
+                    ->where('membership_id', $membershipId) // Same membership ID
+                    ->whereIn('status', ['draft', 'pending_vetting', 'vetted'])
+                    ->whereHas('checkin', fn ($q) => $q->where('migrated_from_mittag', false))
+                    ->where(function ($query) use ($validated, $serviceDate) {
+                        // Block if different service date (same patient same day is OK for multi-dept)
+                        $query->where('patient_id', '!=', $validated['patient_id'])
+                            ->orWhereHas('checkin', fn ($q) => $q->whereDate('service_date', '!=', $serviceDate));
+                    })
+                    ->first();
 
-            if ($existingClaim) {
-                return back()->withErrors([
-                    'claim_check_code' => 'This CCC is currently in use by an active claim that has not been submitted yet.',
-                ])->withInput();
+                if ($existingClaim) {
+                    return back()->withErrors([
+                        'claim_check_code' => 'This CCC is currently in use by an active claim for this member that has not been submitted yet.',
+                    ])->withInput();
+                }
             }
 
             // Also check patient_checkins for active check-ins (not completed/cancelled) that haven't created claims yet
+            // Only block for SAME patient (different patients can have same CCC from NHIA)
             // Exclude migrated checkins - those CCCs can be reused
             // Allow same patient same day (multi-department visits share CCC)
             $duplicateCcc = PatientCheckin::where('claim_check_code', $validated['claim_check_code'])
+                ->where('patient_id', $validated['patient_id']) // Same patient only
                 ->where('migrated_from_mittag', false)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereDoesntHave('insuranceClaim') // No claim created yet
-                ->where(function ($query) use ($validated, $serviceDate) {
-                    // Block if different patient OR different service date
-                    $query->where('patient_id', '!=', $validated['patient_id'])
-                        ->orWhereDate('service_date', '!=', $serviceDate);
-                })
+                ->whereDate('service_date', '!=', $serviceDate) // Different day
                 ->exists();
 
             if ($duplicateCcc) {
                 return back()->withErrors([
-                    'claim_check_code' => 'This CCC is currently in use by another active check-in.',
+                    'claim_check_code' => 'This CCC is currently in use by another active check-in for this patient.',
                 ])->withInput();
             }
+
+            // Clear the patient variable so it's fetched fresh below with all relationships
+            unset($patient);
         }
 
         $patient = Patient::with(['activeInsurance.plan.provider', 'activeAdmission.ward'])->find($validated['patient_id']);
