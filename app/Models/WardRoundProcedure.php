@@ -14,6 +14,17 @@ class WardRoundProcedure extends Model
         'ward_round_id',
         'doctor_id',
         'minor_procedure_type_id',
+        'indication',
+        'assistant',
+        'anaesthetist',
+        'anaesthesia_type',
+        'estimated_gestational_age',
+        'parity',
+        'procedure_subtype',
+        'procedure_steps',
+        'template_selections',
+        'findings',
+        'plan',
         'comments',
         'performed_at',
     ];
@@ -22,6 +33,7 @@ class WardRoundProcedure extends Model
     {
         return [
             'performed_at' => 'datetime',
+            'template_selections' => 'array',
         ];
     }
 

@@ -73,6 +73,17 @@ interface ProcedureType {
 interface WardRoundProcedure {
     id: number;
     procedure_type: ProcedureType;
+    indication: string | null;
+    assistant: string | null;
+    anaesthetist: string | null;
+    anaesthesia_type: string | null;
+    estimated_gestational_age: string | null;
+    parity: string | null;
+    procedure_subtype: string | null;
+    procedure_steps: string | null;
+    template_selections: Record<string, string> | null;
+    findings: string | null;
+    plan: string | null;
     comments: string | null;
     performed_at: string;
     doctor: {
@@ -697,101 +708,142 @@ export function WardRoundViewModal({
                             <TabsContent value="theatre" className="mt-4">
                                 {wardRound.procedures &&
                                 wardRound.procedures.length > 0 ? (
-                                    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <table className="w-full">
-                                            <thead className="bg-gray-50 dark:bg-gray-800">
-                                                <tr>
-                                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase dark:text-gray-300">
-                                                        Procedure
-                                                    </th>
-                                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase dark:text-gray-300">
-                                                        Type
-                                                    </th>
-                                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase dark:text-gray-300">
-                                                        Comments
-                                                    </th>
-                                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase dark:text-gray-300">
-                                                        Performed By
-                                                    </th>
-                                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase dark:text-gray-300">
-                                                        Date/Time
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                                {wardRound.procedures.map(
-                                                    (procedure) => (
-                                                        <tr
-                                                            key={procedure.id}
-                                                            className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                        >
-                                                            <td className="px-4 py-3">
-                                                                <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                                    {
-                                                                        procedure
-                                                                            .procedure_type
-                                                                            .name
-                                                                    }
-                                                                </div>
-                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    {
-                                                                        procedure
-                                                                            .procedure_type
-                                                                            .code
-                                                                    }
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-3">
+                                    <div className="space-y-4">
+                                        {wardRound.procedures.map(
+                                            (procedure) => (
+                                                <div
+                                                    key={procedure.id}
+                                                    className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+                                                >
+                                                    {/* Header */}
+                                                    <div className="mb-3 flex items-start justify-between">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                                    {procedure.procedure_type.name}
+                                                                </span>
                                                                 <Badge
                                                                     variant="outline"
                                                                     className={
-                                                                        procedure
-                                                                            .procedure_type
-                                                                            .type ===
-                                                                        'major'
+                                                                        procedure.procedure_type.type === 'major'
                                                                             ? 'border-purple-200 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
                                                                             : 'border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
                                                                     }
                                                                 >
-                                                                    {procedure
-                                                                        .procedure_type
-                                                                        .type ===
-                                                                    'major'
-                                                                        ? 'Major'
-                                                                        : 'Minor'}
+                                                                    {procedure.procedure_type.type === 'major' ? 'Major' : 'Minor'}
                                                                 </Badge>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {procedure.comments ? (
-                                                                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                        {
-                                                                            procedure.comments
-                                                                        }
-                                                                    </p>
-                                                                ) : (
-                                                                    <span className="text-sm text-gray-400 dark:text-gray-500">
-                                                                        No
-                                                                        comments
-                                                                    </span>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {procedure.procedure_type.code}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+                                                            {formatDateTime(procedure.performed_at)}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Indication */}
+                                                    {procedure.indication && (
+                                                        <div className="mb-3">
+                                                            <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                                                                Indication
+                                                            </span>
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                {procedure.indication}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Obstetric Info */}
+                                                    {(procedure.estimated_gestational_age || procedure.parity || procedure.procedure_subtype) && (
+                                                        <div className="mb-3 rounded-md border border-purple-200 bg-purple-50 p-2 dark:border-purple-800 dark:bg-purple-900/20">
+                                                            <div className="grid grid-cols-3 gap-2 text-sm">
+                                                                {procedure.estimated_gestational_age && (
+                                                                    <div>
+                                                                        <span className="text-xs text-purple-600 dark:text-purple-400">GA:</span>{' '}
+                                                                        <span className="text-purple-900 dark:text-purple-100">{procedure.estimated_gestational_age}</span>
+                                                                    </div>
                                                                 )}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                                                {
-                                                                    procedure
-                                                                        .doctor
-                                                                        .name
-                                                                }
-                                                            </td>
-                                                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                                                {formatDateTime(
-                                                                    procedure.performed_at,
+                                                                {procedure.parity && (
+                                                                    <div>
+                                                                        <span className="text-xs text-purple-600 dark:text-purple-400">Parity:</span>{' '}
+                                                                        <span className="text-purple-900 dark:text-purple-100">{procedure.parity}</span>
+                                                                    </div>
                                                                 )}
-                                                            </td>
-                                                        </tr>
-                                                    ),
-                                                )}
-                                            </tbody>
-                                        </table>
+                                                                {procedure.procedure_subtype && (
+                                                                    <div>
+                                                                        <span className="text-xs text-purple-600 dark:text-purple-400">Type:</span>{' '}
+                                                                        <span className="text-purple-900 dark:text-purple-100">{procedure.procedure_subtype}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Team Info */}
+                                                    <div className="mb-3 grid grid-cols-4 gap-2 text-sm">
+                                                        <div>
+                                                            <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Surgeon</span>
+                                                            <p className="text-gray-700 dark:text-gray-300">{procedure.doctor.name}</p>
+                                                        </div>
+                                                        {procedure.assistant && (
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Assistant</span>
+                                                                <p className="text-gray-700 dark:text-gray-300">{procedure.assistant}</p>
+                                                            </div>
+                                                        )}
+                                                        {procedure.anaesthetist && (
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Anaesthetist</span>
+                                                                <p className="text-gray-700 dark:text-gray-300">{procedure.anaesthetist}</p>
+                                                            </div>
+                                                        )}
+                                                        {procedure.anaesthesia_type && (
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Anaesthesia</span>
+                                                                <p className="text-gray-700 capitalize dark:text-gray-300">{procedure.anaesthesia_type}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Procedure Steps */}
+                                                    {procedure.procedure_steps && (
+                                                        <div className="mb-3">
+                                                            <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                                                                Procedure Steps
+                                                            </span>
+                                                            <p className="mt-1 whitespace-pre-wrap rounded-md border bg-gray-50 p-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                                {procedure.procedure_steps}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Findings & Plan */}
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        {procedure.findings && (
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Findings</span>
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300">{procedure.findings}</p>
+                                                            </div>
+                                                        )}
+                                                        {procedure.plan && (
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Plan</span>
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300">{procedure.plan}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Comments */}
+                                                    {procedure.comments && (
+                                                        <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
+                                                            <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Notes</span>
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">{procedure.comments}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ),
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="py-8 text-center">
