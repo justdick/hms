@@ -102,7 +102,7 @@ export default function AsyncProcedureSearch({
             return (
                 <span className="flex items-center gap-2">
                     <span className="truncate">{selectedProcedure.name}</span>
-                    <Badge variant="outline" className="text-xs shrink-0">
+                    <Badge variant="outline" className="shrink-0 text-xs">
                         {selectedProcedure.code}
                     </Badge>
                 </span>
@@ -194,7 +194,7 @@ export default function AsyncProcedureSearch({
                                                 {procedure.has_template && (
                                                     <Badge
                                                         variant="secondary"
-                                                        className="text-xs gap-1"
+                                                        className="gap-1 text-xs"
                                                     >
                                                         <FileText className="h-3 w-3" />
                                                         Template

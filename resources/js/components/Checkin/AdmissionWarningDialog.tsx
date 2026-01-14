@@ -105,7 +105,10 @@ export default function AdmissionWarningDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="gap-2 sm:gap-0">
-                    <AlertDialogCancel onClick={onClose} disabled={isSubmitting}>
+                    <AlertDialogCancel
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                    >
                         Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -116,7 +119,9 @@ export default function AdmissionWarningDialog({
                         disabled={isSubmitting}
                         className="bg-amber-600 hover:bg-amber-700"
                     >
-                        {isSubmitting ? 'Checking in...' : 'Proceed with Check-in'}
+                        {isSubmitting
+                            ? 'Checking in...'
+                            : 'Proceed with Check-in'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

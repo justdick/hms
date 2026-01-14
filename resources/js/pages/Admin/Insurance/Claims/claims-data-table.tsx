@@ -16,6 +16,10 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
+    DateFilterPresets,
+    DateFilterValue,
+} from '@/components/ui/date-filter-presets';
+import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
@@ -40,10 +44,6 @@ import {
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { useDebouncedCallback } from 'use-debounce';
-import {
-    DateFilterPresets,
-    DateFilterValue,
-} from '@/components/ui/date-filter-presets';
 
 interface PaginationLink {
     url: string | null;
@@ -346,7 +346,7 @@ export function ClaimsDataTable<TData, TValue>({
                                         className={cn(
                                             'hover:bg-muted/50',
                                             isGrouped &&
-                                                'bg-blue-50/50 border-l-2 border-l-blue-400 dark:bg-blue-950/20',
+                                                'border-l-2 border-l-blue-400 bg-blue-50/50 dark:bg-blue-950/20',
                                         )}
                                     >
                                         {row.getVisibleCells().map((cell) => (
@@ -370,7 +370,10 @@ export function ClaimsDataTable<TData, TValue>({
                                         <ClipboardList className="h-8 w-8 text-muted-foreground" />
                                         <div>No claims found.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {filters.search || filters.status || filters.date_from || filters.date_to
+                                            {filters.search ||
+                                            filters.status ||
+                                            filters.date_from ||
+                                            filters.date_to
                                                 ? 'Try adjusting your filters.'
                                                 : 'Insurance claims will appear here.'}
                                         </div>

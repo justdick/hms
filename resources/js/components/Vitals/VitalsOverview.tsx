@@ -284,8 +284,13 @@ export default function VitalsOverview({
                                             </span>
                                             <span>
                                                 BP:{' '}
-                                                {Math.round(vital.blood_pressure_systolic)}/
-                                                {Math.round(vital.blood_pressure_diastolic)}
+                                                {Math.round(
+                                                    vital.blood_pressure_systolic,
+                                                )}
+                                                /
+                                                {Math.round(
+                                                    vital.blood_pressure_diastolic,
+                                                )}
                                             </span>
                                             <span>HR: {vital.heart_rate}</span>
                                             <span>

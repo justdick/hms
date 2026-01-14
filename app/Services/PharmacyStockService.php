@@ -13,8 +13,9 @@ class PharmacyStockService
 {
     /**
      * Check if sufficient stock is available for a drug.
+     * For injections/vials where quantity is null, returns stock info without availability check.
      */
-    public function checkAvailability(Drug $drug, int $quantity): array
+    public function checkAvailability(Drug $drug, ?int $quantity): array
     {
         $cacheKey = "drug_stock_{$drug->id}";
 
@@ -27,6 +28,16 @@ class PharmacyStockService
                 })
                 ->sum('quantity_remaining');
         });
+
+        // For injections/vials where quantity is null, pharmacist determines at dispensing
+        if ($quantity === null) {
+            return [
+                'available' => $inStock > 0,
+                'in_stock' => $inStock,
+                'shortage' => 0,
+                'quantity_pending' => true, // Flag to indicate pharmacist must enter quantity
+            ];
+        }
 
         $available = $inStock >= $quantity;
         $shortage = $available ? 0 : $quantity - $inStock;

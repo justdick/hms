@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-    Activity,
     Beaker,
     Calendar,
     ClipboardList,
@@ -190,7 +189,9 @@ export default function MedicalHistoryTab({
     backgroundHistory,
     medicalHistory,
 }: Props) {
-    const [selectedLabResult, setSelectedLabResult] = useState<LabOrder | null>(null);
+    const [selectedLabResult, setSelectedLabResult] = useState<LabOrder | null>(
+        null,
+    );
 
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';
@@ -271,7 +272,9 @@ export default function MedicalHistoryTab({
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                        {backgroundHistory.past_medical_surgical_history}
+                                        {
+                                            backgroundHistory.past_medical_surgical_history
+                                        }
                                     </p>
                                 </CardContent>
                             </Card>
@@ -342,13 +345,19 @@ export default function MedicalHistoryTab({
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <CardTitle className="text-base">
-                                                {consultation.department || 'Consultation'}
+                                                {consultation.department ||
+                                                    'Consultation'}
                                             </CardTitle>
-                                            <CardDescription className="flex items-center gap-2 mt-1">
+                                            <CardDescription className="mt-1 flex items-center gap-2">
                                                 <Calendar className="h-3.5 w-3.5" />
-                                                {formatDateTime(consultation.date)}
+                                                {formatDateTime(
+                                                    consultation.date,
+                                                )}
                                                 {consultation.doctor && (
-                                                    <span>• Dr. {consultation.doctor}</span>
+                                                    <span>
+                                                        • Dr.{' '}
+                                                        {consultation.doctor}
+                                                    </span>
                                                 )}
                                             </CardDescription>
                                         </div>
@@ -358,57 +367,129 @@ export default function MedicalHistoryTab({
                                     {/* Vitals at this visit */}
                                     {consultation.vitals && (
                                         <div className="rounded-lg bg-muted/50 p-3">
-                                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                            <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
                                                 <Thermometer className="h-3.5 w-3.5" />
                                                 Vitals at Visit
                                             </h4>
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                                                {consultation.vitals.blood_pressure && (
+                                            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                {consultation.vitals
+                                                    .blood_pressure && (
                                                     <div>
-                                                        <span className="text-muted-foreground">BP:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.blood_pressure}</span>
+                                                        <span className="text-muted-foreground">
+                                                            BP:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .blood_pressure
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
-                                                {consultation.vitals.temperature && (
+                                                {consultation.vitals
+                                                    .temperature && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Temp:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.temperature}°C</span>
+                                                        <span className="text-muted-foreground">
+                                                            Temp:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .temperature
+                                                            }
+                                                            °C
+                                                        </span>
                                                     </div>
                                                 )}
-                                                {consultation.vitals.pulse_rate && (
+                                                {consultation.vitals
+                                                    .pulse_rate && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Pulse:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.pulse_rate}</span>
+                                                        <span className="text-muted-foreground">
+                                                            Pulse:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .pulse_rate
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
-                                                {consultation.vitals.respiratory_rate && (
+                                                {consultation.vitals
+                                                    .respiratory_rate && (
                                                     <div>
-                                                        <span className="text-muted-foreground">RR:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.respiratory_rate}</span>
+                                                        <span className="text-muted-foreground">
+                                                            RR:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .respiratory_rate
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
-                                                {consultation.vitals.oxygen_saturation && (
+                                                {consultation.vitals
+                                                    .oxygen_saturation && (
                                                     <div>
-                                                        <span className="text-muted-foreground">SpO2:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.oxygen_saturation}%</span>
+                                                        <span className="text-muted-foreground">
+                                                            SpO2:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .oxygen_saturation
+                                                            }
+                                                            %
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {consultation.vitals.weight && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Weight:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.weight}kg</span>
+                                                        <span className="text-muted-foreground">
+                                                            Weight:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .weight
+                                                            }
+                                                            kg
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {consultation.vitals.height && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Height:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.height}cm</span>
+                                                        <span className="text-muted-foreground">
+                                                            Height:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals
+                                                                    .height
+                                                            }
+                                                            cm
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {consultation.vitals.bmi && (
                                                     <div>
-                                                        <span className="text-muted-foreground">BMI:</span>{' '}
-                                                        <span className="font-medium">{consultation.vitals.bmi}</span>
+                                                        <span className="text-muted-foreground">
+                                                            BMI:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .vitals.bmi
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
@@ -418,17 +499,27 @@ export default function MedicalHistoryTab({
                                     {/* Diagnoses */}
                                     {consultation.diagnoses.length > 0 && (
                                         <div>
-                                            <h4 className="text-sm font-medium mb-2">Diagnoses</h4>
+                                            <h4 className="mb-2 text-sm font-medium">
+                                                Diagnoses
+                                            </h4>
                                             <div className="flex flex-wrap gap-2">
-                                                {consultation.diagnoses.map((d, idx) => (
-                                                    <Badge
-                                                        key={idx}
-                                                        variant={d.type === 'principal' ? 'default' : 'secondary'}
-                                                    >
-                                                        {d.code && `${d.code}: `}
-                                                        {d.description}
-                                                    </Badge>
-                                                ))}
+                                                {consultation.diagnoses.map(
+                                                    (d, idx) => (
+                                                        <Badge
+                                                            key={idx}
+                                                            variant={
+                                                                d.type ===
+                                                                'principal'
+                                                                    ? 'default'
+                                                                    : 'secondary'
+                                                            }
+                                                        >
+                                                            {d.code &&
+                                                                `${d.code}: `}
+                                                            {d.description}
+                                                        </Badge>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -440,7 +531,11 @@ export default function MedicalHistoryTab({
                                                 <span className="font-medium text-muted-foreground">
                                                     Presenting Complaint:
                                                 </span>
-                                                <p className="mt-1">{consultation.presenting_complaint}</p>
+                                                <p className="mt-1">
+                                                    {
+                                                        consultation.presenting_complaint
+                                                    }
+                                                </p>
                                             </div>
                                         )}
                                         {consultation.examination_findings && (
@@ -448,7 +543,11 @@ export default function MedicalHistoryTab({
                                                 <span className="font-medium text-muted-foreground">
                                                     Examination:
                                                 </span>
-                                                <p className="mt-1">{consultation.examination_findings}</p>
+                                                <p className="mt-1">
+                                                    {
+                                                        consultation.examination_findings
+                                                    }
+                                                </p>
                                             </div>
                                         )}
                                         {consultation.assessment_notes && (
@@ -456,7 +555,11 @@ export default function MedicalHistoryTab({
                                                 <span className="font-medium text-muted-foreground">
                                                     Assessment:
                                                 </span>
-                                                <p className="mt-1">{consultation.assessment_notes}</p>
+                                                <p className="mt-1">
+                                                    {
+                                                        consultation.assessment_notes
+                                                    }
+                                                </p>
                                             </div>
                                         )}
                                         {consultation.plan_notes && (
@@ -464,7 +567,9 @@ export default function MedicalHistoryTab({
                                                 <span className="font-medium text-muted-foreground">
                                                     Plan:
                                                 </span>
-                                                <p className="mt-1">{consultation.plan_notes}</p>
+                                                <p className="mt-1">
+                                                    {consultation.plan_notes}
+                                                </p>
                                             </div>
                                         )}
                                     </div>
@@ -472,23 +577,31 @@ export default function MedicalHistoryTab({
                                     {/* Prescriptions in this consultation */}
                                     {consultation.prescriptions.length > 0 && (
                                         <div>
-                                            <h4 className="text-sm font-medium mb-2">Prescriptions</h4>
+                                            <h4 className="mb-2 text-sm font-medium">
+                                                Prescriptions
+                                            </h4>
                                             <div className="space-y-1">
-                                                {consultation.prescriptions.map((p, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="text-sm flex items-center gap-2"
-                                                    >
-                                                        <Pill className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        <span>
-                                                            {p.drug_name}
-                                                            {p.strength && ` ${p.strength}`}
-                                                            {p.dose_quantity && ` - ${p.dose_quantity}`}
-                                                            {p.frequency && ` ${p.frequency}`}
-                                                            {p.duration && ` x ${p.duration}`}
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                                {consultation.prescriptions.map(
+                                                    (p, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-center gap-2 text-sm"
+                                                        >
+                                                            <Pill className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span>
+                                                                {p.drug_name}
+                                                                {p.strength &&
+                                                                    ` ${p.strength}`}
+                                                                {p.dose_quantity &&
+                                                                    ` - ${p.dose_quantity}`}
+                                                                {p.frequency &&
+                                                                    ` ${p.frequency}`}
+                                                                {p.duration &&
+                                                                    ` x ${p.duration}`}
+                                                            </span>
+                                                        </div>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -496,36 +609,50 @@ export default function MedicalHistoryTab({
                                     {/* Lab orders in this consultation */}
                                     {consultation.lab_orders.length > 0 && (
                                         <div>
-                                            <h4 className="text-sm font-medium mb-2">
+                                            <h4 className="mb-2 text-sm font-medium">
                                                 Lab / Imaging Orders
                                             </h4>
                                             <div className="space-y-1">
-                                                {consultation.lab_orders.map((l, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="text-sm flex items-center gap-2"
-                                                    >
-                                                        <Beaker className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        <span>{l.service_name}</span>
-                                                        <Badge
-                                                            variant={getStatusBadgeVariant(l.status || '')}
-                                                            className="text-xs"
+                                                {consultation.lab_orders.map(
+                                                    (l, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-center gap-2 text-sm"
                                                         >
-                                                            {l.status}
-                                                        </Badge>
-                                                        {l.status === 'completed' && l.result_values && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-6 px-2 text-xs"
-                                                                onClick={() => setSelectedLabResult(l)}
+                                                            <Beaker className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            <span>
+                                                                {l.service_name}
+                                                            </span>
+                                                            <Badge
+                                                                variant={getStatusBadgeVariant(
+                                                                    l.status ||
+                                                                        '',
+                                                                )}
+                                                                className="text-xs"
                                                             >
-                                                                <Eye className="h-3 w-3 mr-1" />
-                                                                View Results
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                                {l.status}
+                                                            </Badge>
+                                                            {l.status ===
+                                                                'completed' &&
+                                                                l.result_values && (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 px-2 text-xs"
+                                                                        onClick={() =>
+                                                                            setSelectedLabResult(
+                                                                                l,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Eye className="mr-1 h-3 w-3" />
+                                                                        View
+                                                                        Results
+                                                                    </Button>
+                                                                )}
+                                                        </div>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -552,20 +679,29 @@ export default function MedicalHistoryTab({
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <CardTitle className="text-base flex items-center gap-2">
+                                            <CardTitle className="flex items-center gap-2 text-base">
                                                 <Scissors className="h-4 w-4" />
-                                                {procedure.procedure_name || 'Procedure'}
+                                                {procedure.procedure_name ||
+                                                    'Procedure'}
                                                 {procedure.procedure_code && (
-                                                    <span className="text-muted-foreground text-sm font-normal">
-                                                        ({procedure.procedure_code})
+                                                    <span className="text-sm font-normal text-muted-foreground">
+                                                        (
+                                                        {
+                                                            procedure.procedure_code
+                                                        }
+                                                        )
                                                     </span>
                                                 )}
                                             </CardTitle>
-                                            <CardDescription className="flex items-center gap-2 mt-1">
+                                            <CardDescription className="mt-1 flex items-center gap-2">
                                                 <Calendar className="h-3.5 w-3.5" />
-                                                {formatDateTime(procedure.performed_at)}
+                                                {formatDateTime(
+                                                    procedure.performed_at,
+                                                )}
                                                 {procedure.doctor && (
-                                                    <span>• Dr. {procedure.doctor}</span>
+                                                    <span>
+                                                        • Dr. {procedure.doctor}
+                                                    </span>
                                                 )}
                                             </CardDescription>
                                         </div>
@@ -578,48 +714,80 @@ export default function MedicalHistoryTab({
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {/* Procedure Team */}
-                                    <div className="grid gap-3 sm:grid-cols-3 text-sm">
+                                    <div className="grid gap-3 text-sm sm:grid-cols-3">
                                         {procedure.assistant && (
                                             <div>
-                                                <span className="text-muted-foreground">Assistant:</span>{' '}
-                                                <span className="font-medium">{procedure.assistant}</span>
+                                                <span className="text-muted-foreground">
+                                                    Assistant:
+                                                </span>{' '}
+                                                <span className="font-medium">
+                                                    {procedure.assistant}
+                                                </span>
                                             </div>
                                         )}
                                         {procedure.anaesthetist && (
                                             <div>
-                                                <span className="text-muted-foreground">Anaesthetist:</span>{' '}
-                                                <span className="font-medium">{procedure.anaesthetist}</span>
+                                                <span className="text-muted-foreground">
+                                                    Anaesthetist:
+                                                </span>{' '}
+                                                <span className="font-medium">
+                                                    {procedure.anaesthetist}
+                                                </span>
                                             </div>
                                         )}
                                         {procedure.anaesthesia_type && (
                                             <div>
-                                                <span className="text-muted-foreground">Anaesthesia:</span>{' '}
-                                                <span className="font-medium capitalize">{procedure.anaesthesia_type}</span>
+                                                <span className="text-muted-foreground">
+                                                    Anaesthesia:
+                                                </span>{' '}
+                                                <span className="font-medium capitalize">
+                                                    {procedure.anaesthesia_type}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Obstetric Info (if applicable) */}
-                                    {(procedure.estimated_gestational_age || procedure.parity || procedure.procedure_subtype) && (
+                                    {(procedure.estimated_gestational_age ||
+                                        procedure.parity ||
+                                        procedure.procedure_subtype) && (
                                         <div className="rounded-lg bg-muted/50 p-3">
-                                            <h4 className="text-sm font-medium mb-2">Obstetric Details</h4>
-                                            <div className="grid gap-2 sm:grid-cols-3 text-sm">
+                                            <h4 className="mb-2 text-sm font-medium">
+                                                Obstetric Details
+                                            </h4>
+                                            <div className="grid gap-2 text-sm sm:grid-cols-3">
                                                 {procedure.procedure_subtype && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Type:</span>{' '}
-                                                        <span className="font-medium">{procedure.procedure_subtype}</span>
+                                                        <span className="text-muted-foreground">
+                                                            Type:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                procedure.procedure_subtype
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {procedure.estimated_gestational_age && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Gestational Age:</span>{' '}
-                                                        <span className="font-medium">{procedure.estimated_gestational_age}</span>
+                                                        <span className="text-muted-foreground">
+                                                            Gestational Age:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {
+                                                                procedure.estimated_gestational_age
+                                                            }
+                                                        </span>
                                                     </div>
                                                 )}
                                                 {procedure.parity && (
                                                     <div>
-                                                        <span className="text-muted-foreground">Parity:</span>{' '}
-                                                        <span className="font-medium">{procedure.parity}</span>
+                                                        <span className="text-muted-foreground">
+                                                            Parity:
+                                                        </span>{' '}
+                                                        <span className="font-medium">
+                                                            {procedure.parity}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
@@ -629,40 +797,60 @@ export default function MedicalHistoryTab({
                                     {/* Indication */}
                                     {procedure.indication && (
                                         <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">Indication:</span>
-                                            <p className="mt-1">{procedure.indication}</p>
+                                            <span className="font-medium text-muted-foreground">
+                                                Indication:
+                                            </span>
+                                            <p className="mt-1">
+                                                {procedure.indication}
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Procedure Steps */}
                                     {procedure.procedure_steps && (
                                         <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">Procedure Steps:</span>
-                                            <p className="mt-1 whitespace-pre-wrap">{procedure.procedure_steps}</p>
+                                            <span className="font-medium text-muted-foreground">
+                                                Procedure Steps:
+                                            </span>
+                                            <p className="mt-1 whitespace-pre-wrap">
+                                                {procedure.procedure_steps}
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Findings */}
                                     {procedure.findings && (
                                         <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">Findings:</span>
-                                            <p className="mt-1 whitespace-pre-wrap">{procedure.findings}</p>
+                                            <span className="font-medium text-muted-foreground">
+                                                Findings:
+                                            </span>
+                                            <p className="mt-1 whitespace-pre-wrap">
+                                                {procedure.findings}
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Plan */}
                                     {procedure.plan && (
                                         <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">Plan:</span>
-                                            <p className="mt-1 whitespace-pre-wrap">{procedure.plan}</p>
+                                            <span className="font-medium text-muted-foreground">
+                                                Plan:
+                                            </span>
+                                            <p className="mt-1 whitespace-pre-wrap">
+                                                {procedure.plan}
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Comments */}
                                     {procedure.comments && (
                                         <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">Comments:</span>
-                                            <p className="mt-1 whitespace-pre-wrap">{procedure.comments}</p>
+                                            <span className="font-medium text-muted-foreground">
+                                                Comments:
+                                            </span>
+                                            <p className="mt-1 whitespace-pre-wrap">
+                                                {procedure.comments}
+                                            </p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -692,23 +880,34 @@ export default function MedicalHistoryTab({
                                                 {admission.admission_number}
                                             </CardTitle>
                                             <CardDescription className="mt-1">
-                                                {formatDateTime(admission.admitted_at)}
+                                                {formatDateTime(
+                                                    admission.admitted_at,
+                                                )}
                                                 {admission.discharged_at &&
                                                     ` - ${formatDateTime(admission.discharged_at)}`}
                                             </CardDescription>
                                         </div>
-                                        <Badge variant={getStatusBadgeVariant(admission.status)}>
+                                        <Badge
+                                            variant={getStatusBadgeVariant(
+                                                admission.status,
+                                            )}
+                                        >
                                             {admission.status}
                                         </Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                                    <div className="grid gap-3 text-sm sm:grid-cols-2">
                                         {admission.ward && (
                                             <div>
-                                                <span className="text-muted-foreground">Ward:</span>{' '}
-                                                <span className="font-medium">{admission.ward}</span>
-                                                {admission.bed && ` (Bed ${admission.bed})`}
+                                                <span className="text-muted-foreground">
+                                                    Ward:
+                                                </span>{' '}
+                                                <span className="font-medium">
+                                                    {admission.ward}
+                                                </span>
+                                                {admission.bed &&
+                                                    ` (Bed ${admission.bed})`}
                                             </div>
                                         )}
                                         {admission.admitting_doctor && (
@@ -717,7 +916,8 @@ export default function MedicalHistoryTab({
                                                     Admitting Doctor:
                                                 </span>{' '}
                                                 <span className="font-medium">
-                                                    Dr. {admission.admitting_doctor}
+                                                    Dr.{' '}
+                                                    {admission.admitting_doctor}
                                                 </span>
                                             </div>
                                         )}
@@ -725,8 +925,12 @@ export default function MedicalHistoryTab({
 
                                     {admission.admission_reason && (
                                         <div className="text-sm">
-                                            <span className="text-muted-foreground">Reason:</span>
-                                            <p className="mt-1">{admission.admission_reason}</p>
+                                            <span className="text-muted-foreground">
+                                                Reason:
+                                            </span>
+                                            <p className="mt-1">
+                                                {admission.admission_reason}
+                                            </p>
                                         </div>
                                     )}
 
@@ -735,16 +939,23 @@ export default function MedicalHistoryTab({
                                             <span className="text-sm text-muted-foreground">
                                                 Diagnoses:
                                             </span>
-                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                {admission.diagnoses.map((d, idx) => (
-                                                    <Badge
-                                                        key={idx}
-                                                        variant={d.is_active ? 'default' : 'outline'}
-                                                    >
-                                                        {d.code && `${d.code}: `}
-                                                        {d.description}
-                                                    </Badge>
-                                                ))}
+                                            <div className="mt-1 flex flex-wrap gap-2">
+                                                {admission.diagnoses.map(
+                                                    (d, idx) => (
+                                                        <Badge
+                                                            key={idx}
+                                                            variant={
+                                                                d.is_active
+                                                                    ? 'default'
+                                                                    : 'outline'
+                                                            }
+                                                        >
+                                                            {d.code &&
+                                                                `${d.code}: `}
+                                                            {d.description}
+                                                        </Badge>
+                                                    ),
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -754,7 +965,9 @@ export default function MedicalHistoryTab({
                                             <span className="text-muted-foreground">
                                                 Discharge Notes:
                                             </span>
-                                            <p className="mt-1">{admission.discharge_notes}</p>
+                                            <p className="mt-1">
+                                                {admission.discharge_notes}
+                                            </p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -771,7 +984,10 @@ export default function MedicalHistoryTab({
             </TabsContent>
 
             {/* Lab Results Modal */}
-            <Dialog open={!!selectedLabResult} onOpenChange={() => setSelectedLabResult(null)}>
+            <Dialog
+                open={!!selectedLabResult}
+                onOpenChange={() => setSelectedLabResult(null)}
+            >
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -782,7 +998,7 @@ export default function MedicalHistoryTab({
                             )}
                             {selectedLabResult?.service_name}
                             {selectedLabResult?.code && (
-                                <span className="text-muted-foreground text-sm font-normal">
+                                <span className="text-sm font-normal text-muted-foreground">
                                     ({selectedLabResult.code})
                                 </span>
                             )}
@@ -791,97 +1007,170 @@ export default function MedicalHistoryTab({
                     <div className="space-y-4">
                         <div className="text-sm text-muted-foreground">
                             {selectedLabResult?.result_entered_at && (
-                                <span>Results entered: {formatDateTime(selectedLabResult.result_entered_at)}</span>
+                                <span>
+                                    Results entered:{' '}
+                                    {formatDateTime(
+                                        selectedLabResult.result_entered_at,
+                                    )}
+                                </span>
                             )}
                         </div>
-                        
+
                         {selectedLabResult?.result_values &&
-                        Object.keys(selectedLabResult.result_values).length > 0 ? (
+                        Object.keys(selectedLabResult.result_values).length >
+                            0 ? (
                             <div className="space-y-2">
                                 <h4 className="text-sm font-medium">Results</h4>
                                 <div className="grid gap-2 sm:grid-cols-2">
-                                    {Object.entries(selectedLabResult.result_values).map(
-                                        ([key, result]) => {
-                                            const isObject = typeof result === 'object' && result !== null;
-                                            const value = isObject ? (result as Record<string, unknown>).value : result;
-                                            const unit = isObject ? String((result as Record<string, unknown>).unit || '') : '';
-                                            
-                                            let range: string = isObject ? String((result as Record<string, unknown>).range || '') : '';
-                                            let flag = isObject ? ((result as Record<string, unknown>).flag as string) : 'normal';
-                                            
-                                            if (!range && selectedLabResult.test_parameters?.parameters) {
-                                                const param = selectedLabResult.test_parameters.parameters.find(
-                                                    p => p.name === key || p.name.toLowerCase() === key.toLowerCase()
+                                    {Object.entries(
+                                        selectedLabResult.result_values,
+                                    ).map(([key, result]) => {
+                                        const isObject =
+                                            typeof result === 'object' &&
+                                            result !== null;
+                                        const value = isObject
+                                            ? (
+                                                  result as Record<
+                                                      string,
+                                                      unknown
+                                                  >
+                                              ).value
+                                            : result;
+                                        const unit = isObject
+                                            ? String(
+                                                  (
+                                                      result as Record<
+                                                          string,
+                                                          unknown
+                                                      >
+                                                  ).unit || '',
+                                              )
+                                            : '';
+
+                                        let range: string = isObject
+                                            ? String(
+                                                  (
+                                                      result as Record<
+                                                          string,
+                                                          unknown
+                                                      >
+                                                  ).range || '',
+                                              )
+                                            : '';
+                                        let flag = isObject
+                                            ? ((
+                                                  result as Record<
+                                                      string,
+                                                      unknown
+                                                  >
+                                              ).flag as string)
+                                            : 'normal';
+
+                                        if (
+                                            !range &&
+                                            selectedLabResult.test_parameters
+                                                ?.parameters
+                                        ) {
+                                            const param =
+                                                selectedLabResult.test_parameters.parameters.find(
+                                                    (p) =>
+                                                        p.name === key ||
+                                                        p.name.toLowerCase() ===
+                                                            key.toLowerCase(),
                                                 );
-                                                if (param?.normal_range) {
-                                                    const { min, max } = param.normal_range;
-                                                    if (min !== undefined && max !== undefined) {
-                                                        range = `${min}-${max}`;
-                                                    } else if (min !== undefined) {
-                                                        range = `>${min}`;
-                                                    } else if (max !== undefined) {
-                                                        range = `<${max}`;
-                                                    }
-                                                    
-                                                    if (flag === 'normal' && param.type === 'numeric') {
-                                                        const numValue = parseFloat(String(value));
-                                                        if (!isNaN(numValue)) {
-                                                            if (min !== undefined && numValue < min) {
-                                                                flag = 'low';
-                                                            } else if (max !== undefined && numValue > max) {
-                                                                flag = 'high';
-                                                            }
+                                            if (param?.normal_range) {
+                                                const { min, max } =
+                                                    param.normal_range;
+                                                if (
+                                                    min !== undefined &&
+                                                    max !== undefined
+                                                ) {
+                                                    range = `${min}-${max}`;
+                                                } else if (min !== undefined) {
+                                                    range = `>${min}`;
+                                                } else if (max !== undefined) {
+                                                    range = `<${max}`;
+                                                }
+
+                                                if (
+                                                    flag === 'normal' &&
+                                                    param.type === 'numeric'
+                                                ) {
+                                                    const numValue = parseFloat(
+                                                        String(value),
+                                                    );
+                                                    if (!isNaN(numValue)) {
+                                                        if (
+                                                            min !== undefined &&
+                                                            numValue < min
+                                                        ) {
+                                                            flag = 'low';
+                                                        } else if (
+                                                            max !== undefined &&
+                                                            numValue > max
+                                                        ) {
+                                                            flag = 'high';
                                                         }
                                                     }
                                                 }
                                             }
-                                            
-                                            const getFlagColor = (f: string) => {
-                                                switch (f) {
-                                                    case 'high':
-                                                    case 'critical':
-                                                        return 'text-red-600 dark:text-red-400';
-                                                    case 'low':
-                                                        return 'text-orange-600 dark:text-orange-400';
-                                                    default:
-                                                        return '';
-                                                }
-                                            };
-                                            
-                                            return (
-                                                <div
-                                                    key={key}
-                                                    className="rounded-lg border p-2"
+                                        }
+
+                                        const getFlagColor = (f: string) => {
+                                            switch (f) {
+                                                case 'high':
+                                                case 'critical':
+                                                    return 'text-red-600 dark:text-red-400';
+                                                case 'low':
+                                                    return 'text-orange-600 dark:text-orange-400';
+                                                default:
+                                                    return '';
+                                            }
+                                        };
+
+                                        return (
+                                            <div
+                                                key={key}
+                                                className="rounded-lg border p-2"
+                                            >
+                                                <span className="text-xs text-muted-foreground">
+                                                    {key.replace(/_/g, ' ')}
+                                                </span>
+                                                <p
+                                                    className={`font-medium ${getFlagColor(flag)}`}
                                                 >
+                                                    {String(value)}
+                                                    {unit && (
+                                                        <span className="ml-1 font-normal text-muted-foreground">
+                                                            {unit}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                                {range && (
                                                     <span className="text-xs text-muted-foreground">
-                                                        {key.replace(/_/g, ' ')}
+                                                        Ref: {range}
                                                     </span>
-                                                    <p className={`font-medium ${getFlagColor(flag)}`}>
-                                                        {String(value)}
-                                                        {unit && <span className="text-muted-foreground font-normal ml-1">{unit}</span>}
-                                                    </p>
-                                                    {range && (
-                                                        <span className="text-xs text-muted-foreground">
-                                                            Ref: {range}
-                                                        </span>
-                                                    )}
-                                                    {flag && flag !== 'normal' && (
-                                                        <span className={`text-xs ml-2 font-medium ${getFlagColor(flag)}`}>
-                                                            ({flag.toUpperCase()})
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            );
-                                        },
-                                    )}
+                                                )}
+                                                {flag && flag !== 'normal' && (
+                                                    <span
+                                                        className={`ml-2 text-xs font-medium ${getFlagColor(flag)}`}
+                                                    >
+                                                        ({flag.toUpperCase()})
+                                                    </span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ) : null}
-                        
+
                         {selectedLabResult?.result_notes && (
                             <div>
-                                <h4 className="text-sm font-medium mb-1">Notes</h4>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                <h4 className="mb-1 text-sm font-medium">
+                                    Notes
+                                </h4>
+                                <p className="text-sm whitespace-pre-wrap text-muted-foreground">
                                     {selectedLabResult.result_notes}
                                 </p>
                             </div>
@@ -909,7 +1198,9 @@ function EmptyState({
                     <Icon className="h-8 w-8 text-muted-foreground/50" />
                 </div>
                 <p className="mt-4 text-sm font-medium">{title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    {description}
+                </p>
             </CardContent>
         </Card>
     );

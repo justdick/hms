@@ -89,12 +89,16 @@ export default function VitalsModal({
         if (open && checkin) {
             if (isEditMode && existingVitals) {
                 // Format blood pressure as integers (remove .00)
-                const formatBP = (value: number | null | undefined) => 
+                const formatBP = (value: number | null | undefined) =>
                     value != null ? Math.round(value).toString() : '';
-                
+
                 setFormData({
-                    blood_pressure_systolic: formatBP(existingVitals.blood_pressure_systolic),
-                    blood_pressure_diastolic: formatBP(existingVitals.blood_pressure_diastolic),
+                    blood_pressure_systolic: formatBP(
+                        existingVitals.blood_pressure_systolic,
+                    ),
+                    blood_pressure_diastolic: formatBP(
+                        existingVitals.blood_pressure_diastolic,
+                    ),
                     temperature: existingVitals.temperature?.toString() || '',
                     pulse_rate: existingVitals.pulse_rate?.toString() || '',
                     respiratory_rate:

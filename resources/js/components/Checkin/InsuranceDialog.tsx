@@ -590,11 +590,15 @@ export default function InsuranceDialog({
                                     </span>
                                 </div>
                                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-500">
-                                    Patient checked in to {sameDayCcc.department} today with CCC:{' '}
-                                    <span className="font-mono font-medium">{sameDayCcc.ccc}</span>
+                                    Patient checked in to{' '}
+                                    {sameDayCcc.department} today with CCC:{' '}
+                                    <span className="font-mono font-medium">
+                                        {sameDayCcc.ccc}
+                                    </span>
                                 </p>
                                 <p className="mt-1 text-xs text-blue-600/80 dark:text-blue-500/80">
-                                    This CCC has been auto-filled. NHIS requires the same CCC for all visits on the same day.
+                                    This CCC has been auto-filled. NHIS requires
+                                    the same CCC for all visits on the same day.
                                 </p>
                             </div>
                         )}
@@ -627,7 +631,8 @@ export default function InsuranceDialog({
                                 className={`h-9 ${
                                     error
                                         ? 'border-destructive'
-                                        : sameDayCcc && claimCheckCode === sameDayCcc.ccc
+                                        : sameDayCcc &&
+                                            claimCheckCode === sameDayCcc.ccc
                                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
                                           : cccData?.ccc && !isExpiredFromNhis
                                             ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
@@ -646,7 +651,9 @@ export default function InsuranceDialog({
                             size="sm"
                             className="w-full"
                             disabled={
-                                !canUseInsurance || !claimCheckCode.trim() || isSubmitting
+                                !canUseInsurance ||
+                                !claimCheckCode.trim() ||
+                                isSubmitting
                             }
                         >
                             {isSubmitting ? (
@@ -654,7 +661,9 @@ export default function InsuranceDialog({
                             ) : (
                                 <Shield className="mr-2 h-3 w-3" />
                             )}
-                            {isSubmitting ? 'Checking in...' : `Check-in with ${isNhisProvider ? 'NHIS' : 'Insurance'}`}
+                            {isSubmitting
+                                ? 'Checking in...'
+                                : `Check-in with ${isNhisProvider ? 'NHIS' : 'Insurance'}`}
                         </Button>
                     </div>
 

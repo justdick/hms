@@ -43,7 +43,11 @@ const chartConfig = {
     },
 } satisfies ChartConfig;
 
-export function PatientFlowChart({ data, className, dateLabel }: PatientFlowChartProps) {
+export function PatientFlowChart({
+    data,
+    className,
+    dateLabel,
+}: PatientFlowChartProps) {
     const totalCheckins = data.reduce((sum, d) => sum + d.checkins, 0);
     const totalConsultations = data.reduce(
         (sum, d) => sum + d.consultations,
@@ -51,9 +55,11 @@ export function PatientFlowChart({ data, className, dateLabel }: PatientFlowChar
     );
 
     // Generate dynamic label from data if not provided
-    const displayLabel = dateLabel || (data.length > 0 
-        ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
-        : 'No data');
+    const displayLabel =
+        dateLabel ||
+        (data.length > 0
+            ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
+            : 'No data');
 
     return (
         <Card className={cn('', className)}>

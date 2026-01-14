@@ -88,7 +88,9 @@ export default function WardShow({
     admissions,
     filters = {},
 }: Props) {
-    const { features } = usePage().props as { features?: { bedManagement?: boolean } };
+    const { features } = usePage().props as {
+        features?: { bedManagement?: boolean };
+    };
     const bedManagementEnabled = features?.bedManagement ?? false;
 
     const [bedModalOpen, setBedModalOpen] = useState(false);
@@ -295,104 +297,107 @@ export default function WardShow({
                     {/* Beds Tab */}
                     {bedManagementEnabled && (
                         <TabsContent value="beds">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Bed Management</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {ward.beds.length > 0 ? (
-                                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                                        {ward.beds
-                                            .sort((a, b) =>
-                                                a.bed_number.localeCompare(
-                                                    b.bed_number,
-                                                ),
-                                            )
-                                            .map((bed) => {
-                                                const currentPatient =
-                                                    currentAdmissions.find(
-                                                        (admission) =>
-                                                            admission.bed_id ===
-                                                            bed.id,
-                                                    );
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Bed Management</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {ward.beds.length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                                            {ward.beds
+                                                .sort((a, b) =>
+                                                    a.bed_number.localeCompare(
+                                                        b.bed_number,
+                                                    ),
+                                                )
+                                                .map((bed) => {
+                                                    const currentPatient =
+                                                        currentAdmissions.find(
+                                                            (admission) =>
+                                                                admission.bed_id ===
+                                                                bed.id,
+                                                        );
 
-                                                const bedContent = (
-                                                    <div className="text-center">
-                                                        <div className="mb-2 flex justify-center">
-                                                            {getBedTypeIcon(
-                                                                bed.type,
+                                                    const bedContent = (
+                                                        <div className="text-center">
+                                                            <div className="mb-2 flex justify-center">
+                                                                {getBedTypeIcon(
+                                                                    bed.type,
+                                                                )}
+                                                            </div>
+                                                            <div className="text-sm font-semibold">
+                                                                Bed{' '}
+                                                                {bed.bed_number}
+                                                            </div>
+                                                            <div className="text-xs text-gray-600 capitalize dark:text-gray-400">
+                                                                {bed.type}
+                                                            </div>
+                                                            <div className="mt-2">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`text-xs ${getBedStatusColor(bed.status).split(' ')[1]} ${getBedStatusColor(bed.status).split(' ')[2]}`}
+                                                                >
+                                                                    {bed.status}
+                                                                </Badge>
+                                                            </div>
+                                                            {currentPatient && (
+                                                                <div className="bg-opacity-50 dark:bg-opacity-50 mt-2 rounded bg-white p-2 text-xs dark:bg-gray-900">
+                                                                    <div className="font-medium dark:text-gray-100">
+                                                                        {
+                                                                            currentPatient
+                                                                                .patient
+                                                                                .first_name
+                                                                        }{' '}
+                                                                        {
+                                                                            currentPatient
+                                                                                .patient
+                                                                                .last_name
+                                                                        }
+                                                                    </div>
+                                                                    <div className="text-gray-600 dark:text-gray-400">
+                                                                        {
+                                                                            currentPatient.admission_number
+                                                                        }
+                                                                    </div>
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <div className="text-sm font-semibold">
-                                                            Bed {bed.bed_number}
-                                                        </div>
-                                                        <div className="text-xs text-gray-600 capitalize dark:text-gray-400">
-                                                            {bed.type}
-                                                        </div>
-                                                        <div className="mt-2">
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={`text-xs ${getBedStatusColor(bed.status).split(' ')[1]} ${getBedStatusColor(bed.status).split(' ')[2]}`}
-                                                            >
-                                                                {bed.status}
-                                                            </Badge>
-                                                        </div>
-                                                        {currentPatient && (
-                                                            <div className="bg-opacity-50 dark:bg-opacity-50 mt-2 rounded bg-white p-2 text-xs dark:bg-gray-900">
-                                                                <div className="font-medium dark:text-gray-100">
-                                                                    {
-                                                                        currentPatient
-                                                                            .patient
-                                                                            .first_name
-                                                                    }{' '}
-                                                                    {
-                                                                        currentPatient
-                                                                            .patient
-                                                                            .last_name
-                                                                    }
-                                                                </div>
-                                                                <div className="text-gray-600 dark:text-gray-400">
-                                                                    {
-                                                                        currentPatient.admission_number
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
+                                                    );
 
-                                                // If bed is occupied, make it clickable to go to patient page
-                                                if (currentPatient) {
+                                                    // If bed is occupied, make it clickable to go to patient page
+                                                    if (currentPatient) {
+                                                        return (
+                                                            <Link
+                                                                key={bed.id}
+                                                                href={`/wards/${ward.id}/patients/${currentPatient.id}`}
+                                                                className={`relative block rounded-lg border-2 p-4 transition-transform hover:scale-105 hover:shadow-lg ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''} cursor-pointer`}
+                                                            >
+                                                                {bedContent}
+                                                            </Link>
+                                                        );
+                                                    }
+
                                                     return (
-                                                        <Link
+                                                        <div
                                                             key={bed.id}
-                                                            href={`/wards/${ward.id}/patients/${currentPatient.id}`}
-                                                            className={`relative block rounded-lg border-2 p-4 transition-transform hover:scale-105 hover:shadow-lg ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''} cursor-pointer`}
+                                                            className={`relative rounded-lg border-2 p-4 ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''}`}
                                                         >
                                                             {bedContent}
-                                                        </Link>
+                                                        </div>
                                                     );
-                                                }
-
-                                                return (
-                                                    <div
-                                                        key={bed.id}
-                                                        className={`relative rounded-lg border-2 p-4 ${getBedStatusColor(bed.status)} ${!bed.is_active ? 'opacity-50' : ''}`}
-                                                    >
-                                                        {bedContent}
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                                        <Bed className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                        <p>No beds configured for this ward</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                                                })}
+                                        </div>
+                                    ) : (
+                                        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                                            <Bed className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                                            <p>
+                                                No beds configured for this ward
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
                     )}
 
                     {/* Current Patients Tab */}

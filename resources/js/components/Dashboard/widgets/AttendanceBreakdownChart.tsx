@@ -77,7 +77,11 @@ export function AttendanceBreakdownChart({
                                 </Pie>
                                 <Tooltip
                                     content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
+                                        if (
+                                            active &&
+                                            payload &&
+                                            payload.length
+                                        ) {
                                             const item = payload[0]
                                                 .payload as AttendanceBreakdownData;
                                             return (

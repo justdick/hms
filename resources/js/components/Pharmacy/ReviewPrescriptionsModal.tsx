@@ -28,7 +28,7 @@ interface Prescription {
     id: number;
     drug_id: number;
     drug: Drug;
-    quantity: number;
+    quantity: number | null; // null for injections - pharmacist determines at dispensing
     quantity_to_dispense?: number;
     dose_quantity?: string;
     frequency: string;
@@ -42,6 +42,7 @@ interface StockStatus {
     available: boolean;
     in_stock: number;
     shortage: number;
+    quantity_pending?: boolean; // For injections where pharmacist determines quantity
 }
 
 interface PrescriptionData {
@@ -111,17 +112,26 @@ export function ReviewPrescriptionsModal({
             let quantityToDispense: number | null = pd.prescription.quantity;
             let reason = '';
 
+            // For injections/vials where quantity is null, pharmacist must enter quantity
+            const isQuantityPending =
+                pd.prescription.quantity === null ||
+                pd.stock_status.quantity_pending;
+
             if (isReviewed) {
                 // Already reviewed - use existing values
                 quantityToDispense =
                     pd.prescription.quantity_to_dispense ||
                     pd.prescription.quantity;
-                if (quantityToDispense < pd.prescription.quantity) {
+                if (
+                    quantityToDispense !== null &&
+                    pd.prescription.quantity !== null &&
+                    quantityToDispense < pd.prescription.quantity
+                ) {
                     action = 'partial';
                 }
             } else {
                 // Not yet reviewed - apply smart defaults
-                // Priority: unpriced > out of stock > partial stock > keep
+                // Priority: unpriced > out of stock > quantity pending (injections) > partial stock > keep
                 if (pd.is_unpriced) {
                     // Unpriced drug - default to external
                     action = 'external';
@@ -132,7 +142,13 @@ export function ReviewPrescriptionsModal({
                     // Out of stock - default to external
                     action = 'external';
                     quantityToDispense = null;
+                } else if (isQuantityPending) {
+                    // Injection/vial - pharmacist must enter quantity, leave empty to force entry
+                    action = 'keep';
+                    quantityToDispense = null;
+                    // No reason needed - the UI shows "Injection - enter qty" hint
                 } else if (
+                    pd.prescription.quantity !== null &&
                     pd.stock_status.in_stock < pd.prescription.quantity
                 ) {
                     // Partial stock available - default to partial with available qty
@@ -203,9 +219,12 @@ export function ReviewPrescriptionsModal({
         newReviews[index] = { ...newReviews[index], [field]: value };
 
         if (field === 'action') {
+            const prescribedQty =
+                prescriptionsData[index].prescription.quantity;
+
             if (value === 'keep') {
-                newReviews[index].quantity_to_dispense =
-                    prescriptionsData[index].prescription.quantity;
+                // For injections (null quantity), keep null to force pharmacist entry
+                newReviews[index].quantity_to_dispense = prescribedQty;
             } else if (value === 'partial') {
                 // Prefill with max available stock (pharmacist can reduce if needed)
                 newReviews[index].quantity_to_dispense =
@@ -324,32 +343,42 @@ export function ReviewPrescriptionsModal({
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {errors && Object.keys(errors).length > 0 && (
-                        <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
-                            <CardContent className="pt-6">
-                                <div className="flex items-start gap-2">
-                                    <AlertCircle className="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400" />
-                                    <div>
-                                        <p className="mb-2 font-medium text-red-600 dark:text-red-400">
-                                            Please fix the following errors:
-                                        </p>
-                                        <ul className="list-disc space-y-1 pl-5 text-sm text-red-600 dark:text-red-400">
-                                            {Object.entries(errors)
-                                                .filter(
-                                                    ([key]) =>
-                                                        !key.startsWith(
-                                                            'reviews.',
-                                                        ),
-                                                )
-                                                .map(([key, error]) => (
-                                                    <li key={key}>{error}</li>
-                                                ))}
-                                        </ul>
+                    {errors &&
+                        Object.keys(errors).filter(
+                            (key) =>
+                                !key.startsWith('reviews.') &&
+                                !key.startsWith('supply_reviews.'),
+                        ).length > 0 && (
+                            <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-start gap-2">
+                                        <AlertCircle className="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400" />
+                                        <div>
+                                            <p className="mb-2 font-medium text-red-600 dark:text-red-400">
+                                                Please fix the following errors:
+                                            </p>
+                                            <ul className="list-disc space-y-1 pl-5 text-sm text-red-600 dark:text-red-400">
+                                                {Object.entries(errors)
+                                                    .filter(
+                                                        ([key]) =>
+                                                            !key.startsWith(
+                                                                'reviews.',
+                                                            ) &&
+                                                            !key.startsWith(
+                                                                'supply_reviews.',
+                                                            ),
+                                                    )
+                                                    .map(([key, error]) => (
+                                                        <li key={key}>
+                                                            {error}
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                </CardContent>
+                            </Card>
+                        )}
 
                     <ScrollArea className="h-[calc(90vh-16rem)]">
                         <div className="space-y-6 pr-4">

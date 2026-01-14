@@ -231,7 +231,10 @@ export const groupedConsultationColumns: ColumnDef<GroupedConsultation>[] = [
         cell: ({ row }) => {
             const insurance = row.original.patient.active_insurance;
             return insurance ? (
-                <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                >
                     {insurance.plan.provider.code}
                 </Badge>
             ) : (

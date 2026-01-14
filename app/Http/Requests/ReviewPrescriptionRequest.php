@@ -37,12 +37,14 @@ class ReviewPrescriptionRequest extends FormRequest
         return [
             'reviews.*.action.required' => 'Review action is required for each prescription.',
             'reviews.*.action.in' => 'Invalid review action. Must be: keep, partial, external, or cancel.',
-            'reviews.*.quantity_to_dispense.required_if' => 'Quantity is required for partial dispensing.',
+            'reviews.*.quantity_to_dispense.required_if' => 'Quantity to dispense is required.',
+            'reviews.*.quantity_to_dispense.min' => 'Quantity to dispense must be at least 1.',
             'reviews.*.reason.required_if' => 'Reason is required when cancelling a prescription.',
 
             'supply_reviews.*.action.required' => 'Review action is required for each supply.',
             'supply_reviews.*.action.in' => 'Invalid review action. Must be: keep, partial, external, or cancel.',
-            'supply_reviews.*.quantity_to_dispense.required_if' => 'Quantity is required for partial dispensing.',
+            'supply_reviews.*.quantity_to_dispense.required_if' => 'Quantity to dispense is required.',
+            'supply_reviews.*.quantity_to_dispense.min' => 'Quantity to dispense must be at least 0.01.',
             'supply_reviews.*.reason.required_if' => 'Reason is required when cancelling a supply.',
         ];
     }

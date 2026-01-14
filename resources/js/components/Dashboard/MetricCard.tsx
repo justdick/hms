@@ -46,7 +46,8 @@ const metricIconVariants = cva(
 );
 
 export interface MetricCardProps
-    extends React.ComponentProps<'div'>,
+    extends
+        React.ComponentProps<'div'>,
         VariantProps<typeof metricCardVariants> {
     title: string;
     value: number | string;

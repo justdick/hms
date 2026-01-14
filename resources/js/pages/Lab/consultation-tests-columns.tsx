@@ -150,7 +150,9 @@ const formatDateTime = (dateString: string) => {
 const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
     const [showResultsDialog, setShowResultsDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
-    const [resultValues, setResultValues] = useState<Record<string, string | number | boolean>>(test.result_values || {});
+    const [resultValues, setResultValues] = useState<
+        Record<string, string | number | boolean>
+    >(test.result_values || {});
     const [resultNotes, setResultNotes] = useState(test.result_notes || '');
     const [cancelReason, setCancelReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -188,15 +190,24 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
             parameters.forEach((param) => {
                 const rawValue = resultValues[param.name];
                 if (rawValue !== undefined && rawValue !== '') {
-                    const numericValue = param.type === 'numeric' ? parseFloat(String(rawValue)) : rawValue;
-                    
+                    const numericValue =
+                        param.type === 'numeric'
+                            ? parseFloat(String(rawValue))
+                            : rawValue;
+
                     // Determine flag based on normal range
                     let flag = 'normal';
                     if (param.type === 'numeric' && param.normal_range) {
                         const value = parseFloat(String(rawValue));
-                        if (param.normal_range.min !== undefined && value < param.normal_range.min) {
+                        if (
+                            param.normal_range.min !== undefined &&
+                            value < param.normal_range.min
+                        ) {
                             flag = 'low';
-                        } else if (param.normal_range.max !== undefined && value > param.normal_range.max) {
+                        } else if (
+                            param.normal_range.max !== undefined &&
+                            value > param.normal_range.max
+                        ) {
                             flag = 'high';
                         }
                     }
@@ -204,7 +215,10 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                     // Build range string
                     let rangeStr = '';
                     if (param.normal_range) {
-                        if (param.normal_range.min !== undefined && param.normal_range.max !== undefined) {
+                        if (
+                            param.normal_range.min !== undefined &&
+                            param.normal_range.max !== undefined
+                        ) {
                             rangeStr = `${param.normal_range.min}-${param.normal_range.max}`;
                         } else if (param.normal_range.min !== undefined) {
                             rangeStr = `>${param.normal_range.min}`;
@@ -368,7 +382,7 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                             key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
@@ -403,12 +417,16 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                         }),
                                                                     )
                                                                 }
-                                                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                                                onWheel={(e) =>
+                                                                    (
+                                                                        e.target as HTMLInputElement
+                                                                    ).blur()
+                                                                }
                                                                 className={cn(
                                                                     '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
                                                                     isOutOfRange
                                                                         ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                                                        : ''
+                                                                        : '',
                                                                 )}
                                                                 disabled={
                                                                     isCompleted
@@ -448,7 +466,7 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                             key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
@@ -576,7 +594,7 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                     isCompleted
                                                                 }
                                                             />
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >

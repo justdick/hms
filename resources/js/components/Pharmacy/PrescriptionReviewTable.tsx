@@ -17,6 +17,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { AlertCircle } from 'lucide-react';
 import { StockIndicator } from './StockIndicator';
+import { format } from 'date-fns';
 
 interface Drug {
     id: number;
@@ -30,18 +31,20 @@ interface Prescription {
     id: number;
     drug_id: number;
     drug: Drug;
-    quantity: number;
+    quantity: number | null; // null for injections - pharmacist determines at dispensing
     dose_quantity?: string;
     frequency: string;
     duration: string;
     status: string;
     instructions?: string;
+    created_at?: string;
 }
 
 interface StockStatus {
     available: boolean;
     in_stock: number;
     shortage: number;
+    quantity_pending?: boolean; // For injections where pharmacist determines quantity
 }
 
 interface PrescriptionData {
@@ -77,10 +80,20 @@ export function PrescriptionReviewTable({
     onUpdateReview,
     errors,
 }: Props) {
-    const getErrorForRow = (index: number) => {
+    const getErrorForRow = (index: number, field?: string) => {
         if (!errors) return null;
+        if (field) {
+            // Get error for specific field
+            const key = `reviews.${index}.${field}`;
+            return errors[key] || null;
+        }
+        // Get any error for the row (excluding quantity errors which are shown separately)
         const reviewErrors = Object.keys(errors)
-            .filter((key) => key.startsWith(`reviews.${index}.`))
+            .filter(
+                (key) =>
+                    key.startsWith(`reviews.${index}.`) &&
+                    !key.includes('quantity_to_dispense'),
+            )
             .map((key) => errors[key]);
         return reviewErrors.length > 0 ? reviewErrors[0] : null;
     };
@@ -106,13 +119,18 @@ export function PrescriptionReviewTable({
                 <TableBody>
                     {prescriptionsData.map((pd, index) => {
                         const review = reviews[index];
-                        
+
                         // Skip if review doesn't exist (arrays out of sync)
                         if (!review) {
                             return null;
                         }
-                        
+
                         const rowError = getErrorForRow(index);
+                        const qtyError = getErrorForRow(
+                            index,
+                            'quantity_to_dispense',
+                        );
+                        const hasAnyError = rowError || qtyError;
                         const needsReason = review.action === 'cancel';
                         const isPartial = review.action === 'partial';
 
@@ -120,7 +138,7 @@ export function PrescriptionReviewTable({
                             <TableRow
                                 key={pd.prescription.id}
                                 className={
-                                    rowError
+                                    hasAnyError
                                         ? 'bg-red-50 dark:bg-red-950/20'
                                         : ''
                                 }
@@ -136,8 +154,14 @@ export function PrescriptionReviewTable({
                                                 {pd.prescription.drug.strength}
                                             </div>
                                         )}
-                                        <div className="mt-1 text-xs text-muted-foreground">
-                                            {pd.prescription.drug.form}
+                                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                                            <span>{pd.prescription.drug.form}</span>
+                                            {pd.prescription.created_at && (
+                                                <>
+                                                    <span>·</span>
+                                                    <span className="font-medium text-blue-600 dark:text-blue-400">{format(new Date(pd.prescription.created_at), 'dd MMM yyyy')}</span>
+                                                </>
+                                            )}
                                         </div>
                                         {pd.is_unpriced && (
                                             <div className="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
@@ -176,7 +200,7 @@ export function PrescriptionReviewTable({
                                             {pd.prescription.duration}
                                         </div>
                                         {pd.prescription.instructions && (
-                                            <div className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-400 italic">
+                                            <div className="mt-1 text-xs font-medium text-amber-600 italic dark:text-amber-400">
                                                 {pd.prescription.instructions}
                                             </div>
                                         )}
@@ -186,10 +210,24 @@ export function PrescriptionReviewTable({
                                 {/* Prescribed Quantity */}
                                 <TableCell>
                                     <div className="text-sm font-semibold">
-                                        {pd.prescription.quantity}
-                                        <span className="ml-1 text-xs text-muted-foreground">
-                                            {pd.prescription.drug.unit_type}
-                                        </span>
+                                        {pd.prescription.quantity !== null ? (
+                                            <>
+                                                {pd.prescription.quantity}
+                                                <span className="ml-1 text-xs text-muted-foreground">
+                                                    {
+                                                        pd.prescription.drug
+                                                            .unit_type
+                                                    }
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span className="text-amber-600 dark:text-amber-400">
+                                                TBD
+                                                <span className="ml-1 text-xs text-muted-foreground">
+                                                    (pharmacist to enter)
+                                                </span>
+                                            </span>
+                                        )}
                                     </div>
                                 </TableCell>
 
@@ -218,18 +256,51 @@ export function PrescriptionReviewTable({
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="keep">
-                                                Keep - Full Qty
-                                            </SelectItem>
-                                            <SelectItem value="partial">
-                                                Partial
-                                            </SelectItem>
-                                            <SelectItem value="external">
-                                                External
-                                            </SelectItem>
-                                            <SelectItem value="cancel">
-                                                Cancel
-                                            </SelectItem>
+                                            {pd.prescription.quantity ===
+                                            null ? (
+                                                // Injection/vial - no prescribed qty, pharmacist enters qty
+                                                <>
+                                                    <SelectItem value="keep">
+                                                        Dispense
+                                                    </SelectItem>
+                                                    <SelectItem value="external">
+                                                        External
+                                                    </SelectItem>
+                                                    <SelectItem value="cancel">
+                                                        Cancel
+                                                    </SelectItem>
+                                                </>
+                                            ) : pd.prescription.drug
+                                                  .unit_type === 'bottle' ? (
+                                                // Bottle (syrup) - no partial allowed, always 1 bottle
+                                                <>
+                                                    <SelectItem value="keep">
+                                                        Keep - Full Qty
+                                                    </SelectItem>
+                                                    <SelectItem value="external">
+                                                        External
+                                                    </SelectItem>
+                                                    <SelectItem value="cancel">
+                                                        Cancel
+                                                    </SelectItem>
+                                                </>
+                                            ) : (
+                                                // Regular prescription (tablets, etc.) - partial allowed
+                                                <>
+                                                    <SelectItem value="keep">
+                                                        Keep - Full Qty
+                                                    </SelectItem>
+                                                    <SelectItem value="partial">
+                                                        Partial
+                                                    </SelectItem>
+                                                    <SelectItem value="external">
+                                                        External
+                                                    </SelectItem>
+                                                    <SelectItem value="cancel">
+                                                        Cancel
+                                                    </SelectItem>
+                                                </>
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </TableCell>
@@ -242,7 +313,8 @@ export function PrescriptionReviewTable({
                                         max={
                                             isPartial
                                                 ? pd.max_dispensable
-                                                : pd.prescription.quantity
+                                                : (pd.prescription.quantity ??
+                                                  pd.max_dispensable)
                                         }
                                         value={
                                             review.quantity_to_dispense || ''
@@ -254,15 +326,43 @@ export function PrescriptionReviewTable({
                                                 parseInt(e.target.value),
                                             )
                                         }
+                                        onWheel={(e) => e.currentTarget.blur()}
                                         disabled={
-                                            !isPartial &&
-                                            review.action === 'keep'
+                                            review.action === 'external' ||
+                                            review.action === 'cancel' ||
+                                            (!isPartial &&
+                                                review.action === 'keep' &&
+                                                pd.prescription.quantity !==
+                                                    null)
                                         }
-                                        className="w-full"
+                                        className={`w-full ${getErrorForRow(index, 'quantity_to_dispense') ? 'border-red-300 dark:border-red-700' : ''}`}
                                     />
                                     {isPartial && (
                                         <div className="mt-1 text-xs text-muted-foreground">
                                             Max: {pd.max_dispensable}
+                                        </div>
+                                    )}
+                                    {pd.prescription.quantity === null &&
+                                        review.action !== 'external' &&
+                                        review.action !== 'cancel' &&
+                                        !getErrorForRow(
+                                            index,
+                                            'quantity_to_dispense',
+                                        ) && (
+                                            <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                                Injection - enter qty
+                                            </div>
+                                        )}
+                                    {getErrorForRow(
+                                        index,
+                                        'quantity_to_dispense',
+                                    ) && (
+                                        <div className="mt-1 flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {getErrorForRow(
+                                                index,
+                                                'quantity_to_dispense',
+                                            )}
                                         </div>
                                     )}
                                 </TableCell>
@@ -330,10 +430,18 @@ export function MobileReviewCards({
     onUpdateReview,
     errors,
 }: MobileReviewCardProps) {
-    const getErrorForRow = (index: number) => {
+    const getErrorForRow = (index: number, field?: string) => {
         if (!errors) return null;
+        if (field) {
+            const key = `reviews.${index}.${field}`;
+            return errors[key] || null;
+        }
         const reviewErrors = Object.keys(errors)
-            .filter((key) => key.startsWith(`reviews.${index}.`))
+            .filter(
+                (key) =>
+                    key.startsWith(`reviews.${index}.`) &&
+                    !key.includes('quantity_to_dispense'),
+            )
             .map((key) => errors[key]);
         return reviewErrors.length > 0 ? reviewErrors[0] : null;
     };
@@ -342,13 +450,15 @@ export function MobileReviewCards({
         <div className="space-y-4">
             {prescriptionsData.map((pd, index) => {
                 const review = reviews[index];
-                
+
                 // Skip if review doesn't exist (arrays out of sync)
                 if (!review) {
                     return null;
                 }
-                
+
                 const rowError = getErrorForRow(index);
+                const qtyError = getErrorForRow(index, 'quantity_to_dispense');
+                const hasAnyError = rowError || qtyError;
                 const needsReason = review.action === 'cancel';
                 const isPartial = review.action === 'partial';
 
@@ -356,7 +466,7 @@ export function MobileReviewCards({
                     <div
                         key={pd.prescription.id}
                         className={`space-y-3 rounded-lg border p-4 dark:border-gray-800 ${
-                            rowError
+                            hasAnyError
                                 ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950/20'
                                 : ''
                         }`}
@@ -380,6 +490,12 @@ export function MobileReviewCards({
                                 )}
                             </div>
                             <p className="text-sm text-muted-foreground">
+                                {pd.prescription.drug.form}
+                                {pd.prescription.created_at && (
+                                    <> · <span className="font-medium text-blue-600 dark:text-blue-400">{format(new Date(pd.prescription.created_at), 'dd MMM yyyy')}</span></>
+                                )}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
                                 {pd.prescription.dose_quantity && (
                                     <>
                                         {pd.prescription.dose_quantity}{' '}
@@ -399,7 +515,7 @@ export function MobileReviewCards({
                                 {pd.prescription.duration}
                             </p>
                             {pd.prescription.instructions && (
-                                <p className="mt-1 text-sm font-medium text-amber-600 dark:text-amber-400 italic">
+                                <p className="mt-1 text-sm font-medium text-amber-600 italic dark:text-amber-400">
                                     {pd.prescription.instructions}
                                 </p>
                             )}
@@ -412,8 +528,16 @@ export function MobileReviewCards({
                                     Prescribed
                                 </div>
                                 <div className="font-semibold">
-                                    {pd.prescription.quantity}{' '}
-                                    {pd.prescription.drug.unit_type}
+                                    {pd.prescription.quantity !== null ? (
+                                        <>
+                                            {pd.prescription.quantity}{' '}
+                                            {pd.prescription.drug.unit_type}
+                                        </>
+                                    ) : (
+                                        <span className="text-amber-600 dark:text-amber-400">
+                                            TBD (pharmacist to enter)
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <StockIndicator
@@ -438,18 +562,50 @@ export function MobileReviewCards({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="keep">
-                                        Keep - Full Quantity
-                                    </SelectItem>
-                                    <SelectItem value="partial">
-                                        Partial
-                                    </SelectItem>
-                                    <SelectItem value="external">
-                                        External
-                                    </SelectItem>
-                                    <SelectItem value="cancel">
-                                        Cancel
-                                    </SelectItem>
+                                    {pd.prescription.quantity === null ? (
+                                        // Injection/vial - no prescribed qty, pharmacist enters qty
+                                        <>
+                                            <SelectItem value="keep">
+                                                Dispense
+                                            </SelectItem>
+                                            <SelectItem value="external">
+                                                External
+                                            </SelectItem>
+                                            <SelectItem value="cancel">
+                                                Cancel
+                                            </SelectItem>
+                                        </>
+                                    ) : pd.prescription.drug.unit_type ===
+                                      'bottle' ? (
+                                        // Bottle (syrup) - no partial allowed
+                                        <>
+                                            <SelectItem value="keep">
+                                                Keep - Full Quantity
+                                            </SelectItem>
+                                            <SelectItem value="external">
+                                                External
+                                            </SelectItem>
+                                            <SelectItem value="cancel">
+                                                Cancel
+                                            </SelectItem>
+                                        </>
+                                    ) : (
+                                        // Regular prescription (tablets, etc.)
+                                        <>
+                                            <SelectItem value="keep">
+                                                Keep - Full Quantity
+                                            </SelectItem>
+                                            <SelectItem value="partial">
+                                                Partial
+                                            </SelectItem>
+                                            <SelectItem value="external">
+                                                External
+                                            </SelectItem>
+                                            <SelectItem value="cancel">
+                                                Cancel
+                                            </SelectItem>
+                                        </>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -466,7 +622,8 @@ export function MobileReviewCards({
                                     max={
                                         isPartial
                                             ? pd.max_dispensable
-                                            : pd.prescription.quantity
+                                            : (pd.prescription.quantity ??
+                                              pd.max_dispensable)
                                     }
                                     value={review.quantity_to_dispense || ''}
                                     onChange={(e) =>
@@ -476,11 +633,33 @@ export function MobileReviewCards({
                                             parseInt(e.target.value),
                                         )
                                     }
-                                    disabled={!isPartial}
+                                    onWheel={(e) => e.currentTarget.blur()}
+                                    disabled={
+                                        !isPartial &&
+                                        pd.prescription.quantity !== null
+                                    }
+                                    className={
+                                        qtyError
+                                            ? 'border-red-300 dark:border-red-700'
+                                            : ''
+                                    }
                                 />
                                 {isPartial && (
                                     <p className="text-xs text-muted-foreground">
                                         Maximum available: {pd.max_dispensable}
+                                    </p>
+                                )}
+                                {pd.prescription.quantity === null &&
+                                    !qtyError && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                            Injection - enter quantity to
+                                            dispense
+                                        </p>
+                                    )}
+                                {qtyError && (
+                                    <p className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {qtyError}
                                     </p>
                                 )}
                             </div>

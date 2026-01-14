@@ -94,8 +94,13 @@ export function HistoricalVitalsTable({ vitals }: Props) {
                                     </TableCell>
                                     <TableCell>
                                         <span className="font-mono">
-                                            {Math.round(vital.blood_pressure_systolic)}/
-                                            {Math.round(vital.blood_pressure_diastolic)}
+                                            {Math.round(
+                                                vital.blood_pressure_systolic,
+                                            )}
+                                            /
+                                            {Math.round(
+                                                vital.blood_pressure_diastolic,
+                                            )}
                                         </span>
                                     </TableCell>
                                     <TableCell>

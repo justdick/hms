@@ -298,15 +298,24 @@ export default function LabShow({
             parameters.forEach((param) => {
                 const rawValue = resultValues[param.name];
                 if (rawValue !== undefined && rawValue !== '') {
-                    const numericValue = param.type === 'numeric' ? parseFloat(rawValue) : rawValue;
-                    
+                    const numericValue =
+                        param.type === 'numeric'
+                            ? parseFloat(rawValue)
+                            : rawValue;
+
                     // Determine flag based on normal range
                     let flag = 'normal';
                     if (param.type === 'numeric' && param.normal_range) {
                         const value = parseFloat(rawValue);
-                        if (param.normal_range.min !== undefined && value < param.normal_range.min) {
+                        if (
+                            param.normal_range.min !== undefined &&
+                            value < param.normal_range.min
+                        ) {
                             flag = 'low';
-                        } else if (param.normal_range.max !== undefined && value > param.normal_range.max) {
+                        } else if (
+                            param.normal_range.max !== undefined &&
+                            value > param.normal_range.max
+                        ) {
                             flag = 'high';
                         }
                     }
@@ -314,7 +323,10 @@ export default function LabShow({
                     // Build range string
                     let rangeStr = '';
                     if (param.normal_range) {
-                        if (param.normal_range.min !== undefined && param.normal_range.max !== undefined) {
+                        if (
+                            param.normal_range.min !== undefined &&
+                            param.normal_range.max !== undefined
+                        ) {
                             rangeStr = `${param.normal_range.min}-${param.normal_range.max}`;
                         } else if (param.normal_range.min !== undefined) {
                             rangeStr = `>${param.normal_range.min}`;
@@ -862,7 +874,7 @@ export default function LabShow({
                                                             key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
@@ -897,12 +909,16 @@ export default function LabShow({
                                                                         }),
                                                                     )
                                                                 }
-                                                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                                                                onWheel={(e) =>
+                                                                    (
+                                                                        e.target as HTMLInputElement
+                                                                    ).blur()
+                                                                }
                                                                 className={cn(
                                                                     '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
                                                                     isOutOfRange
                                                                         ? 'border-red-500 bg-red-50'
-                                                                        : ''
+                                                                        : '',
                                                                 )}
                                                             />
                                                             {param.normal_range && (
@@ -939,7 +955,7 @@ export default function LabShow({
                                                             key={param.name}
                                                             className="space-y-2"
                                                         >
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >
@@ -1058,7 +1074,7 @@ export default function LabShow({
                                                                     )
                                                                 }
                                                             />
-                                                            <Label 
+                                                            <Label
                                                                 htmlFor={`param-${index}-${param.name}`}
                                                                 className="text-sm font-medium"
                                                             >

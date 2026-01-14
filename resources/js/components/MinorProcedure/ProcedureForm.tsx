@@ -467,7 +467,11 @@ export default function ProcedureForm({
                                                                             </Badge>
                                                                         </div>
                                                                         <div className="text-xs text-muted-foreground">
-                                                                            Age category: {type.category}
+                                                                            Age
+                                                                            category:{' '}
+                                                                            {
+                                                                                type.category
+                                                                            }
                                                                         </div>
                                                                     </div>
                                                                 </div>

@@ -12,23 +12,28 @@ return new class extends Migration
     public function up(): void
     {
         // Create the history table for tracking all discontinue/resume actions
-        Schema::create('prescription_status_changes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('prescription_id')->constrained()->cascadeOnDelete();
-            $table->enum('action', ['discontinued', 'resumed']);
-            $table->foreignId('performed_by_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('performed_at');
-            $table->text('reason')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('prescription_status_changes')) {
+            Schema::create('prescription_status_changes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('prescription_id')->constrained()->cascadeOnDelete();
+                $table->enum('action', ['discontinued', 'resumed']);
+                $table->foreignId('performed_by_id')->constrained('users')->cascadeOnDelete();
+                $table->timestamp('performed_at');
+                $table->text('reason')->nullable();
+                $table->timestamps();
 
-            $table->index(['prescription_id', 'performed_at']);
-        });
+                $table->index(['prescription_id', 'performed_at']);
+            });
+        }
 
         // Remove legacy fields from prescriptions table (history table is now source of truth)
-        Schema::table('prescriptions', function (Blueprint $table) {
-            $table->dropForeign(['discontinued_by_id']);
-            $table->dropColumn(['discontinued_at', 'discontinued_by_id', 'discontinuation_reason']);
-        });
+        // Only if columns still exist
+        if (Schema::hasColumn('prescriptions', 'discontinued_at')) {
+            Schema::table('prescriptions', function (Blueprint $table) {
+                $table->dropForeign(['discontinued_by_id']);
+                $table->dropColumn(['discontinued_at', 'discontinued_by_id', 'discontinuation_reason']);
+            });
+        }
     }
 
     /**

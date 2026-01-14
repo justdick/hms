@@ -26,7 +26,6 @@ import {
     DollarSign,
     Edit,
     FileText,
-    Heart,
     IdCard,
     MapPin,
     Phone,

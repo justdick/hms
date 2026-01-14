@@ -197,7 +197,9 @@ export function CurrentPatientsTable({ admissions, wardId }: Props) {
                                                             {' '}
                                                             •{' '}
                                                             {new Date(
-                                                                admission.patient.date_of_birth,
+                                                                admission
+                                                                    .patient
+                                                                    .date_of_birth,
                                                             ).toLocaleDateString()}
                                                         </>
                                                     )}

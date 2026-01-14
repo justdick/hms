@@ -711,8 +711,13 @@ export default function WardRoundCreate({
                                         BP:{' '}
                                     </span>
                                     <span className="font-medium text-green-900 dark:text-green-100">
-                                        {Math.round(latestVitals.blood_pressure_systolic)}/
-                                        {Math.round(latestVitals.blood_pressure_diastolic)}
+                                        {Math.round(
+                                            latestVitals.blood_pressure_systolic,
+                                        )}
+                                        /
+                                        {Math.round(
+                                            latestVitals.blood_pressure_diastolic,
+                                        )}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
@@ -745,10 +750,7 @@ export default function WardRoundCreate({
                             previousConsultations={[]}
                             allergies={patientHistory?.allergies || []}
                         />
-                        <Button
-                            onClick={handleSaveAndExit}
-                            variant="outline"
-                        >
+                        <Button onClick={handleSaveAndExit} variant="outline">
                             Save & Exit
                         </Button>
                     </div>

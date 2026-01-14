@@ -51,7 +51,11 @@ function formatFullCurrency(amount: number): string {
     }).format(amount);
 }
 
-export function RevenueTrendChart({ data, className, dateLabel }: RevenueTrendChartProps) {
+export function RevenueTrendChart({
+    data,
+    className,
+    dateLabel,
+}: RevenueTrendChartProps) {
     const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
     const avgRevenue = data.length > 0 ? totalRevenue / data.length : 0;
 
@@ -71,9 +75,11 @@ export function RevenueTrendChart({ data, className, dateLabel }: RevenueTrendCh
         previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg) * 100 : 0;
 
     // Generate dynamic label from data if not provided
-    const displayLabel = dateLabel || (data.length > 0 
-        ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
-        : 'No data');
+    const displayLabel =
+        dateLabel ||
+        (data.length > 0
+            ? `${data[0].fullDate} - ${data[data.length - 1].fullDate}`
+            : 'No data');
 
     return (
         <Card className={cn('', className)}>

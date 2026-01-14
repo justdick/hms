@@ -380,7 +380,15 @@ export function PatientBillingModal({
                                     )}
                                     {patient.patient.insurance_plan && (
                                         <p className="mt-1 text-xs text-muted-foreground">
-                                            {patient.patient.insurance_plan.provider} - {patient.patient.insurance_plan.name}
+                                            {
+                                                patient.patient.insurance_plan
+                                                    .provider
+                                            }{' '}
+                                            -{' '}
+                                            {
+                                                patient.patient.insurance_plan
+                                                    .name
+                                            }
                                         </p>
                                     )}
                                 </div>

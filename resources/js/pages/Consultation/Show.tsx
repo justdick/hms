@@ -528,7 +528,9 @@ export default function ConsultationShow({
         if (consultation.status === 'in_progress') return true;
         if (consultation.status === 'completed' && consultation.completed_at) {
             const completedAt = new Date(consultation.completed_at);
-            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const twentyFourHoursAgo = new Date(
+                Date.now() - 24 * 60 * 60 * 1000,
+            );
             return completedAt > twentyFourHoursAgo;
         }
         return false;
@@ -541,7 +543,9 @@ export default function ConsultationShow({
 
     // Vitals modal state
     const [vitalsModalOpen, setVitalsModalOpen] = useState(false);
-    const [vitalsModalMode, setVitalsModalMode] = useState<'create' | 'edit'>('edit');
+    const [vitalsModalMode, setVitalsModalMode] = useState<'create' | 'edit'>(
+        'edit',
+    );
 
     // Lab order state
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
@@ -950,7 +954,7 @@ export default function ConsultationShow({
     const getStatusBadge = (status: string) => {
         if (status === 'completed') {
             return (
-                <Badge className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700">
+                <Badge className="border-green-300 bg-green-100 text-green-800 dark:border-green-700 dark:bg-green-900 dark:text-green-200">
                     COMPLETED
                 </Badge>
             );
@@ -958,7 +962,7 @@ export default function ConsultationShow({
 
         if (status === 'in_progress') {
             return (
-                <Badge className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700">
+                <Badge className="border-blue-300 bg-blue-100 text-blue-800 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-200">
                     IN PROGRESS
                 </Badge>
             );
@@ -1065,12 +1069,23 @@ export default function ConsultationShow({
                                     orientation="vertical"
                                     className="h-4"
                                 />
-                                {consultation.patient_checkin.patient.active_insurance ? (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                        {consultation.patient_checkin.patient.active_insurance.plan.provider.code}
+                                {consultation.patient_checkin.patient
+                                    .active_insurance ? (
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                    >
+                                        {
+                                            consultation.patient_checkin.patient
+                                                .active_insurance.plan.provider
+                                                .code
+                                        }
                                     </Badge>
                                 ) : (
-                                    <Badge variant="outline" className="text-muted-foreground">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-muted-foreground"
+                                    >
                                         Cash
                                     </Badge>
                                 )}
@@ -1161,11 +1176,14 @@ export default function ConsultationShow({
                                                             .patient
                                                             .active_admission
                                                             .admitted_at,
-                                                    ).toLocaleDateString('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    })}
+                                                    ).toLocaleDateString(
+                                                        'en-US',
+                                                        {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        },
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -1231,7 +1249,8 @@ export default function ConsultationShow({
                                                                 .patient
                                                                 .active_admission
                                                                 .latest_vital_signs[0]
-                                                                .blood_pressure_systolic ?? 0,
+                                                                .blood_pressure_systolic ??
+                                                                0,
                                                         )}
                                                         /
                                                         {Math.round(
@@ -1240,7 +1259,8 @@ export default function ConsultationShow({
                                                                 .patient
                                                                 .active_admission
                                                                 .latest_vital_signs[0]
-                                                                .blood_pressure_diastolic ?? 0,
+                                                                .blood_pressure_diastolic ??
+                                                                0,
                                                         )}
                                                     </span>
                                                 </div>
@@ -1317,88 +1337,109 @@ export default function ConsultationShow({
                         {isEditable &&
                             !consultation.patient_checkin.patient
                                 .active_admission && (
-                            <>
-                                <Button
-                                    onClick={() => setShowCompleteDialog(true)}
-                                    variant="outline"
-                                    className="border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
-                                >
-                                    Complete Consultation
-                                </Button>
-                                <Dialog
-                                    open={showAdmissionModal}
-                                    onOpenChange={setShowAdmissionModal}
-                                >
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
-                                        >
-                                            <UserPlus className="mr-2 h-4 w-4" />
-                                            Admit Patient
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-md">
-                                        <DialogHeader>
-                                            <DialogTitle>
+                                <>
+                                    <Button
+                                        onClick={() =>
+                                            setShowCompleteDialog(true)
+                                        }
+                                        variant="outline"
+                                        className="border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    >
+                                        Complete Consultation
+                                    </Button>
+                                    <Dialog
+                                        open={showAdmissionModal}
+                                        onOpenChange={setShowAdmissionModal}
+                                    >
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
+                                            >
+                                                <UserPlus className="mr-2 h-4 w-4" />
                                                 Admit Patient
-                                            </DialogTitle>
-                                        </DialogHeader>
-                                        <form
-                                            onSubmit={handleAdmissionSubmit}
-                                            className="space-y-4"
-                                        >
-                                            <div>
-                                                <Label htmlFor="ward_id">
-                                                    Select Ward
-                                                </Label>
-                                                <Select
-                                                    value={
-                                                        admissionData.ward_id
-                                                    }
-                                                    onValueChange={
-                                                        handleWardChange
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Choose a ward" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableWards.map(
-                                                            (ward) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        ward.id
-                                                                    }
-                                                                    value={ward.id.toString()}
-                                                                >
-                                                                    {ward.name}
-                                                                    {bedManagementEnabled && (
-                                                                        <>
-                                                                            {' '}
-                                                                            {ward.available_beds > 0 ? (
-                                                                                <span className="text-green-600">
-                                                                                    ({ward.available_beds} beds available)
-                                                                                </span>
-                                                                            ) : (
-                                                                                <span className="text-orange-600">
-                                                                                    (Full - overflow)
-                                                                                </span>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </SelectItem>
-                                                            ),
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>
+                                                    Admit Patient
+                                                </DialogTitle>
+                                            </DialogHeader>
+                                            <form
+                                                onSubmit={handleAdmissionSubmit}
+                                                className="space-y-4"
+                                            >
+                                                <div>
+                                                    <Label htmlFor="ward_id">
+                                                        Select Ward
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            admissionData.ward_id
+                                                        }
+                                                        onValueChange={
+                                                            handleWardChange
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Choose a ward" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {availableWards.map(
+                                                                (ward) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            ward.id
+                                                                        }
+                                                                        value={ward.id.toString()}
+                                                                    >
+                                                                        {
+                                                                            ward.name
+                                                                        }
+                                                                        {bedManagementEnabled && (
+                                                                            <>
+                                                                                {' '}
+                                                                                {ward.available_beds >
+                                                                                0 ? (
+                                                                                    <span className="text-green-600">
+                                                                                        (
+                                                                                        {
+                                                                                            ward.available_beds
+                                                                                        }{' '}
+                                                                                        beds
+                                                                                        available)
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="text-orange-600">
+                                                                                        (Full
+                                                                                        -
+                                                                                        overflow)
+                                                                                    </span>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {bedManagementEnabled &&
+                                                        admissionData.ward_id &&
+                                                        availableWards.find(
+                                                            (w) =>
+                                                                w.id.toString() ===
+                                                                admissionData.ward_id,
+                                                        )?.available_beds ===
+                                                            0 && (
+                                                            <p className="mt-1 text-sm text-orange-600">
+                                                                ⚠️ This ward is
+                                                                full. Patient
+                                                                will be admitted
+                                                                as overflow.
+                                                            </p>
                                                         )}
-                                                    </SelectContent>
-                                                </Select>
-                                                {bedManagementEnabled && admissionData.ward_id && 
-                                                    availableWards.find(w => w.id.toString() === admissionData.ward_id)?.available_beds === 0 && (
-                                                    <p className="mt-1 text-sm text-orange-600">
-                                                        ⚠️ This ward is full. Patient will be admitted as overflow.
-                                                    </p>
-                                                )}
-                                            </div>
+                                                </div>
 
                                                 <div>
                                                     <Label htmlFor="admission_notes">
@@ -1451,138 +1492,140 @@ export default function ConsultationShow({
                                         </DialogContent>
                                     </Dialog>
 
-                                <Dialog
-                                    open={showTransferModal}
-                                    onOpenChange={setShowTransferModal}
-                                >
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white"
-                                        >
-                                            <ArrowRightLeft className="mr-2 h-4 w-4" />
-                                            Transfer Patient
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-md">
-                                        <DialogHeader>
-                                            <DialogTitle>
-                                                Transfer Patient to Another
-                                                Department
-                                            </DialogTitle>
-                                        </DialogHeader>
-                                        <form
-                                            onSubmit={handleTransferSubmit}
-                                            className="space-y-4"
-                                        >
-                                            <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
-                                                <p className="text-sm text-blue-900">
-                                                    <strong>
-                                                        Current Department:
-                                                    </strong>{' '}
-                                                    {
-                                                        consultation
-                                                            .patient_checkin
-                                                            .department.name
-                                                    }
-                                                </p>
-                                            </div>
+                                    <Dialog
+                                        open={showTransferModal}
+                                        onOpenChange={setShowTransferModal}
+                                    >
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white"
+                                            >
+                                                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                                Transfer Patient
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>
+                                                    Transfer Patient to Another
+                                                    Department
+                                                </DialogTitle>
+                                            </DialogHeader>
+                                            <form
+                                                onSubmit={handleTransferSubmit}
+                                                className="space-y-4"
+                                            >
+                                                <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
+                                                    <p className="text-sm text-blue-900">
+                                                        <strong>
+                                                            Current Department:
+                                                        </strong>{' '}
+                                                        {
+                                                            consultation
+                                                                .patient_checkin
+                                                                .department.name
+                                                        }
+                                                    </p>
+                                                </div>
 
-                                            <div>
-                                                <Label htmlFor="transfer_department_id">
-                                                    Select New Department
-                                                </Label>
-                                                <Select
-                                                    value={
-                                                        transferData.department_id
-                                                    }
-                                                    onValueChange={
-                                                        handleTransferDepartmentChange
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Choose destination department" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableDepartments
-                                                            .filter(
-                                                                (dept) =>
-                                                                    dept.id !==
-                                                                    consultation
-                                                                        .patient_checkin
-                                                                        .department
-                                                                        .id,
+                                                <div>
+                                                    <Label htmlFor="transfer_department_id">
+                                                        Select New Department
+                                                    </Label>
+                                                    <Select
+                                                        value={
+                                                            transferData.department_id
+                                                        }
+                                                        onValueChange={
+                                                            handleTransferDepartmentChange
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Choose destination department" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {availableDepartments
+                                                                .filter(
+                                                                    (dept) =>
+                                                                        dept.id !==
+                                                                        consultation
+                                                                            .patient_checkin
+                                                                            .department
+                                                                            .id,
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        department,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                department.id
+                                                                            }
+                                                                            value={department.id.toString()}
+                                                                        >
+                                                                            {
+                                                                                department.name
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor="transfer_reason">
+                                                        Reason for Transfer
+                                                        (Optional)
+                                                    </Label>
+                                                    <Textarea
+                                                        id="transfer_reason"
+                                                        placeholder="Reason for department transfer..."
+                                                        value={
+                                                            transferData.reason
+                                                        }
+                                                        onChange={(e) =>
+                                                            setTransferData(
+                                                                'reason',
+                                                                e.target.value,
                                                             )
-                                                            .map(
-                                                                (
-                                                                    department,
-                                                                ) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            department.id
-                                                                        }
-                                                                        value={department.id.toString()}
-                                                                    >
-                                                                        {
-                                                                            department.name
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                                        }
+                                                        rows={3}
+                                                    />
+                                                </div>
 
-                                            <div>
-                                                <Label htmlFor="transfer_reason">
-                                                    Reason for Transfer
-                                                    (Optional)
-                                                </Label>
-                                                <Textarea
-                                                    id="transfer_reason"
-                                                    placeholder="Reason for department transfer..."
-                                                    value={transferData.reason}
-                                                    onChange={(e) =>
-                                                        setTransferData(
-                                                            'reason',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    rows={3}
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2 pt-4">
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        setShowTransferModal(
-                                                            false,
-                                                        )
-                                                    }
-                                                    className="flex-1"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    type="submit"
-                                                    disabled={
-                                                        transferProcessing ||
-                                                        !transferData.department_id
-                                                    }
-                                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                                >
-                                                    {transferProcessing
-                                                        ? 'Transferring...'
-                                                        : 'Transfer Patient'}
-                                                </Button>
-                                            </div>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
-                            </>
-                        )}
+                                                <div className="flex gap-2 pt-4">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setShowTransferModal(
+                                                                false,
+                                                            )
+                                                        }
+                                                        className="flex-1"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={
+                                                            transferProcessing ||
+                                                            !transferData.department_id
+                                                        }
+                                                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                                    >
+                                                        {transferProcessing
+                                                            ? 'Transferring...'
+                                                            : 'Transfer Patient'}
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </>
+                            )}
                     </div>
                 </div>
 
@@ -1659,11 +1702,17 @@ export default function ConsultationShow({
                                             variant="outline"
                                             size="sm"
                                             onClick={() => {
-                                                setVitalsModalMode(latestVitals ? 'edit' : 'create');
+                                                setVitalsModalMode(
+                                                    latestVitals
+                                                        ? 'edit'
+                                                        : 'create',
+                                                );
                                                 setVitalsModalOpen(true);
                                             }}
                                         >
-                                            {latestVitals ? 'Edit Vitals' : 'Add Vitals'}
+                                            {latestVitals
+                                                ? 'Edit Vitals'
+                                                : 'Add Vitals'}
                                         </Button>
                                     )}
                                 </CardHeader>
@@ -1676,11 +1725,13 @@ export default function ConsultationShow({
                                                 </p>
                                                 <p className="text-xl font-bold text-red-600">
                                                     {Math.round(
-                                                        latestVitals.blood_pressure_systolic ?? 0,
+                                                        latestVitals.blood_pressure_systolic ??
+                                                            0,
                                                     )}
                                                     /
                                                     {Math.round(
-                                                        latestVitals.blood_pressure_diastolic ?? 0,
+                                                        latestVitals.blood_pressure_diastolic ??
+                                                            0,
                                                     )}
                                                 </p>
                                                 <p className="text-xs text-red-700">
@@ -1839,11 +1890,13 @@ export default function ConsultationShow({
                                                                 </p>
                                                                 <p className="font-medium text-gray-900">
                                                                     {Math.round(
-                                                                        vitals.blood_pressure_systolic ?? 0,
+                                                                        vitals.blood_pressure_systolic ??
+                                                                            0,
                                                                     )}
                                                                     /
                                                                     {Math.round(
-                                                                        vitals.blood_pressure_diastolic ?? 0,
+                                                                        vitals.blood_pressure_diastolic ??
+                                                                            0,
                                                                     )}
                                                                 </p>
                                                             </div>

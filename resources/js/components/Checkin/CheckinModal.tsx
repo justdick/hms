@@ -92,7 +92,7 @@ export default function CheckinModal({
     const [serviceDate, setServiceDate] = useState('');
     const [checkingInsurance, setCheckingInsurance] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // Admission warning state
     const [admissionWarning, setAdmissionWarning] = useState<{
         show: boolean;
@@ -119,7 +119,11 @@ export default function CheckinModal({
             setNotes('');
             setServiceDate('');
             setIsSubmitting(false);
-            setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
+            setAdmissionWarning({
+                show: false,
+                admission: null,
+                pendingCheckinData: null,
+            });
         }
     }, [open, patient]);
 
@@ -233,24 +237,32 @@ export default function CheckinModal({
             onSuccess: () => {
                 toast.success('Patient checked in successfully');
                 setIsSubmitting(false);
-                setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
+                setAdmissionWarning({
+                    show: false,
+                    admission: null,
+                    pendingCheckinData: null,
+                });
                 onSuccess();
             },
             onError: (errors) => {
                 setIsSubmitting(false);
-                
+
                 // Handle admission warning - show dialog instead of error
                 // The admission details are passed as JSON in the error value
                 if (errors.admission_warning) {
                     try {
-                        const admissionDetails = typeof errors.admission_warning === 'string' 
-                            ? JSON.parse(errors.admission_warning)
-                            : null;
+                        const admissionDetails =
+                            typeof errors.admission_warning === 'string'
+                                ? JSON.parse(errors.admission_warning)
+                                : null;
                         if (admissionDetails) {
                             setAdmissionWarning({
                                 show: true,
                                 admission: admissionDetails,
-                                pendingCheckinData: { hasInsurance, claimCheckCode },
+                                pendingCheckinData: {
+                                    hasInsurance,
+                                    claimCheckCode,
+                                },
                             });
                             return;
                         }
@@ -258,7 +270,7 @@ export default function CheckinModal({
                         // If parsing fails, fall through to generic error handling
                     }
                 }
-                
+
                 // Display specific error messages based on field
                 // Priority: department_id > claim_check_code > patient_id > other errors
                 if (errors.department_id) {
@@ -273,7 +285,9 @@ export default function CheckinModal({
                     if (firstError && typeof firstError === 'string') {
                         toast.error(firstError);
                     } else {
-                        toast.error('Check-in failed. Please review the form and try again.');
+                        toast.error(
+                            'Check-in failed. Please review the form and try again.',
+                        );
                     }
                 }
             },
@@ -291,7 +305,11 @@ export default function CheckinModal({
     };
 
     const handleAdmissionWarningClose = () => {
-        setAdmissionWarning({ show: false, admission: null, pendingCheckinData: null });
+        setAdmissionWarning({
+            show: false,
+            admission: null,
+            pendingCheckinData: null,
+        });
     };
 
     const handleModalClose = () => {
@@ -534,10 +552,13 @@ export default function CheckinModal({
                                             isSubmitting
                                         }
                                     >
-                                        {(checkingInsurance || isSubmitting) && (
+                                        {(checkingInsurance ||
+                                            isSubmitting) && (
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         )}
-                                        {isSubmitting ? 'Checking in...' : 'Check-in'}
+                                        {isSubmitting
+                                            ? 'Checking in...'
+                                            : 'Check-in'}
                                     </Button>
                                 </div>
                             </div>

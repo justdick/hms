@@ -107,15 +107,17 @@ export function LabResultsDisplay({ order }: Props) {
             const isObject = typeof result === 'object' && result !== null;
             const value = isObject ? result.value : result;
             const unit = isObject ? result.unit : '';
-            
+
             // Try to get range from result, or fall back to test parameters
             let range = isObject ? result.range : '';
             let flag = isObject ? result.flag : 'normal';
-            
+
             // If no range in result, try to get from test parameters
             if (!range && order.lab_service?.test_parameters?.parameters) {
                 const param = order.lab_service.test_parameters.parameters.find(
-                    p => p.name === key || p.name.toLowerCase() === key.toLowerCase()
+                    (p) =>
+                        p.name === key ||
+                        p.name.toLowerCase() === key.toLowerCase(),
                 );
                 if (param?.normal_range) {
                     const { min, max } = param.normal_range;
@@ -126,7 +128,7 @@ export function LabResultsDisplay({ order }: Props) {
                     } else if (max !== undefined) {
                         range = `<${max}`;
                     }
-                    
+
                     // Also calculate flag if not set
                     if (flag === 'normal' && param.type === 'numeric') {
                         const numValue = parseFloat(String(value));
@@ -140,7 +142,7 @@ export function LabResultsDisplay({ order }: Props) {
                     }
                 }
             }
-            
+
             return {
                 parameter: key.replace(/_/g, ' '),
                 value,

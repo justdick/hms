@@ -65,10 +65,12 @@ export function MedicationHistoryTab({
             if (filter === 'all') return true;
             if (filter === 'active')
                 return (
-                    (prescription.status === 'active' || !prescription.status) &&
+                    (prescription.status === 'active' ||
+                        !prescription.status) &&
                     !prescription.discontinued_at
                 );
-            if (filter === 'discontinued') return !!prescription.discontinued_at;
+            if (filter === 'discontinued')
+                return !!prescription.discontinued_at;
             return true;
         })
         .sort((a, b) => b.id - a.id);

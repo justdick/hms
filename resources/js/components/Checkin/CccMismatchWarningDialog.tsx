@@ -40,31 +40,47 @@ export default function CccMismatchWarningDialog({
                     <AlertDialogDescription asChild>
                         <div className="space-y-3">
                             <p>
-                                This patient already has a check-in today with a different CCC:
+                                This patient already has a check-in today with a
+                                different CCC:
                             </p>
-                            <div className="rounded-md bg-muted p-3 space-y-2">
+                            <div className="space-y-2 rounded-md bg-muted p-3">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Existing CCC:</span>
-                                    <span className="font-mono font-medium">{existingCcc}</span>
+                                    <span className="text-muted-foreground">
+                                        Existing CCC:
+                                    </span>
+                                    <span className="font-mono font-medium">
+                                        {existingCcc}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">From:</span>
-                                    <span className="font-medium">{department}</span>
+                                    <span className="text-muted-foreground">
+                                        From:
+                                    </span>
+                                    <span className="font-medium">
+                                        {department}
+                                    </span>
                                 </div>
-                                <div className="border-t pt-2 flex justify-between text-sm">
-                                    <span className="text-muted-foreground">You entered:</span>
-                                    <span className="font-mono font-medium">{enteredCcc}</span>
+                                <div className="flex justify-between border-t pt-2 text-sm">
+                                    <span className="text-muted-foreground">
+                                        You entered:
+                                    </span>
+                                    <span className="font-mono font-medium">
+                                        {enteredCcc}
+                                    </span>
                                 </div>
                             </div>
                             <p className="text-sm">
-                                NHIS requires the same CCC for all visits on the same day.
-                                Would you like to use the existing CCC instead?
+                                NHIS requires the same CCC for all visits on the
+                                same day. Would you like to use the existing CCC
+                                instead?
                             </p>
                         </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-                    <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={onClose}>
+                        Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={onUseSameDayCcc}
                         className="bg-primary"

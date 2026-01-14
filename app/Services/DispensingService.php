@@ -27,14 +27,23 @@ class DispensingService
 
             switch ($action) {
                 case 'keep':
-                    // Keep full quantity
+                    // For injections (null quantity), use the quantity entered by pharmacist
+                    // For regular prescriptions, use the prescribed quantity
+                    $quantityToDispense = $prescription->quantity ?? $data['quantity_to_dispense'];
+
                     $prescription->update([
-                        'quantity_to_dispense' => $prescription->quantity,
+                        'quantity_to_dispense' => $quantityToDispense,
+                        'quantity' => $prescription->quantity ?? $quantityToDispense, // Set quantity for injections
                         'status' => 'reviewed',
                         'reviewed_by' => $reviewer->id,
                         'reviewed_at' => now(),
                         'dispensing_notes' => $data['notes'] ?? null,
                     ]);
+
+                    // For injections that didn't have a charge (quantity was null), create one now
+                    if (! $prescription->charge && $prescription->drug && $prescription->drug->unit_price > 0) {
+                        $this->billingService->createChargeForPrescription($prescription->fresh());
+                    }
                     break;
 
                 case 'partial':

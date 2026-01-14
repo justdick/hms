@@ -49,6 +49,7 @@ interface StockStatus {
     available: boolean;
     in_stock: number;
     shortage: number;
+    quantity_pending?: boolean; // For injections where pharmacist determines quantity
 }
 
 interface PrescriptionData {

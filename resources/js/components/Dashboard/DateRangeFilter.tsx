@@ -132,7 +132,9 @@ export function DateRangeFilter({
                             {getDisplayLabel()}
                         </span>
                         <span className="sm:hidden">
-                            {value.preset === 'custom' ? 'Custom' : getDisplayLabel()}
+                            {value.preset === 'custom'
+                                ? 'Custom'
+                                : getDisplayLabel()}
                         </span>
                         <ChevronDown className="h-3 w-3 opacity-70" />
                     </Button>
@@ -140,33 +142,25 @@ export function DateRangeFilter({
                 <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
                         onClick={() => handlePresetChange('today')}
-                        className={cn(
-                            value.preset === 'today' && 'bg-accent',
-                        )}
+                        className={cn(value.preset === 'today' && 'bg-accent')}
                     >
                         Today
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => handlePresetChange('week')}
-                        className={cn(
-                            value.preset === 'week' && 'bg-accent',
-                        )}
+                        className={cn(value.preset === 'week' && 'bg-accent')}
                     >
                         This Week
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => handlePresetChange('month')}
-                        className={cn(
-                            value.preset === 'month' && 'bg-accent',
-                        )}
+                        className={cn(value.preset === 'month' && 'bg-accent')}
                     >
                         This Month
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => handlePresetChange('year')}
-                        className={cn(
-                            value.preset === 'year' && 'bg-accent',
-                        )}
+                        className={cn(value.preset === 'year' && 'bg-accent')}
                     >
                         This Year
                     </DropdownMenuItem>
@@ -197,9 +191,7 @@ export function DateRangeFilter({
                                 selected={dateRange}
                                 onSelect={handleDateRangeSelect}
                                 numberOfMonths={2}
-                                defaultMonth={
-                                    dateRange?.from || new Date()
-                                }
+                                defaultMonth={dateRange?.from || new Date()}
                             />
                         </PopoverContent>
                     </Popover>

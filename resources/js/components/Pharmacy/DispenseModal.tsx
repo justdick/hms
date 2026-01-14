@@ -406,7 +406,9 @@ export function DispenseModal({
                                                     <div className="mt-1 text-xs text-muted-foreground">
                                                         Latest exp:{' '}
                                                         {new Date(
-                                                            pd.available_batches[0].expiry_date,
+                                                            pd
+                                                                .available_batches[0]
+                                                                .expiry_date,
                                                         ).toLocaleDateString()}
                                                     </div>
                                                 )}

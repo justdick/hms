@@ -8,7 +8,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
-import { Calendar, Clock, MoreVertical, Pill, PlayCircle, XCircle } from 'lucide-react';
+import {
+    Calendar,
+    Clock,
+    MoreVertical,
+    Pill,
+    PlayCircle,
+    XCircle,
+} from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -87,8 +94,10 @@ export function MedicationHistoryCard({
                                     {(prescription.dose_quantity ||
                                         prescription.dosage) && (
                                         <span className="ml-1 text-sm font-normal text-muted-foreground">
-                                            ({prescription.dose_quantity ||
-                                                prescription.dosage})
+                                            (
+                                            {prescription.dose_quantity ||
+                                                prescription.dosage}
+                                            )
                                         </span>
                                     )}
                                 </h4>
@@ -155,7 +164,7 @@ export function MedicationHistoryCard({
 
                         {/* Instructions */}
                         {prescription.instructions && (
-                            <p className="text-sm text-amber-600 dark:text-amber-400 italic">
+                            <p className="text-sm text-amber-600 italic dark:text-amber-400">
                                 {prescription.instructions}
                             </p>
                         )}
@@ -171,9 +180,7 @@ export function MedicationHistoryCard({
                         <DropdownMenuContent align="end">
                             {isDiscontinued ? (
                                 <DropdownMenuItem
-                                    onClick={() =>
-                                        onResume?.(prescription.id)
-                                    }
+                                    onClick={() => onResume?.(prescription.id)}
                                     className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
                                 >
                                     <PlayCircle className="mr-2 h-4 w-4" />

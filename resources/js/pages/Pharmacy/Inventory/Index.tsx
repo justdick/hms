@@ -82,7 +82,8 @@ export default function InventoryIndex({
     filters,
 }: Props) {
     const [importModalOpen, setImportModalOpen] = useState(false);
-    const [inventoryImportModalOpen, setInventoryImportModalOpen] = useState(false);
+    const [inventoryImportModalOpen, setInventoryImportModalOpen] =
+        useState(false);
     const { data, setData, post, processing, reset } = useForm<{
         file: File | null;
     }>({
@@ -250,7 +251,9 @@ export default function InventoryIndex({
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={() => setInventoryImportModalOpen(true)}
+                                    onClick={() =>
+                                        setInventoryImportModalOpen(true)
+                                    }
                                 >
                                     <Upload className="mr-2 h-4 w-4" />
                                     Import Stock (Restore)
@@ -264,17 +267,22 @@ export default function InventoryIndex({
                         >
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Import Stock Batches</DialogTitle>
+                                    <DialogTitle>
+                                        Import Stock Batches
+                                    </DialogTitle>
                                     <DialogDescription>
-                                        Restore inventory from a previously exported file.
-                                        Drugs must exist in the system before importing batches.
+                                        Restore inventory from a previously
+                                        exported file. Drugs must exist in the
+                                        system before importing batches.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleInventoryImport}>
                                     <div className="space-y-4 py-4">
                                         <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-                                            <strong>Note:</strong> Export your current stock before migration,
-                                            then import after running migrate:fresh to restore stock levels.
+                                            <strong>Note:</strong> Export your
+                                            current stock before migration, then
+                                            import after running migrate:fresh
+                                            to restore stock levels.
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="inventory-file">
@@ -287,12 +295,14 @@ export default function InventoryIndex({
                                                 onChange={(e) =>
                                                     setData(
                                                         'file',
-                                                        e.target.files?.[0] || null,
+                                                        e.target.files?.[0] ||
+                                                            null,
                                                     )
                                                 }
                                             />
                                             <p className="text-xs text-muted-foreground">
-                                                Use the file from "Export Stock (Backup)"
+                                                Use the file from "Export Stock
+                                                (Backup)"
                                             </p>
                                         </div>
                                     </div>
@@ -300,7 +310,11 @@ export default function InventoryIndex({
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => setInventoryImportModalOpen(false)}
+                                            onClick={() =>
+                                                setInventoryImportModalOpen(
+                                                    false,
+                                                )
+                                            }
                                         >
                                             Cancel
                                         </Button>
@@ -308,7 +322,9 @@ export default function InventoryIndex({
                                             type="submit"
                                             disabled={!data.file || processing}
                                         >
-                                            {processing ? 'Importing...' : 'Import Stock'}
+                                            {processing
+                                                ? 'Importing...'
+                                                : 'Import Stock'}
                                         </Button>
                                     </DialogFooter>
                                 </form>

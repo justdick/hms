@@ -47,7 +47,7 @@ import {
     Trash2,
     XCircle,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const SERVICE_TYPES = [
     { value: 'consultation', label: 'Consultation' },

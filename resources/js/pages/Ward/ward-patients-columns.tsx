@@ -148,268 +148,272 @@ export const createWardPatientsColumns = (
     bedManagementEnabled: boolean = true,
 ): ColumnDef<WardPatientData>[] => {
     const columns: ColumnDef<WardPatientData>[] = [
-    {
-        accessorKey: 'patient',
-        id: 'patient',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === 'asc')
-                }
-            >
-                Patient
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        ),
-        cell: ({ row }) => {
-            const admission = row.original;
-            return (
+        {
+            accessorKey: 'patient',
+            id: 'patient',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Patient
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const admission = row.original;
+                return (
+                    <Link
+                        href={`/wards/${wardId}/patients/${admission.id}`}
+                        className="block"
+                    >
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                            {admission.patient.first_name}{' '}
+                            {admission.patient.last_name}
+                        </div>
+                        {admission.patient.gender && (
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {admission.patient.gender}
+                                {admission.patient.date_of_birth && (
+                                    <>
+                                        {' '}
+                                        •{' '}
+                                        {new Date(
+                                            admission.patient.date_of_birth,
+                                        ).toLocaleDateString()}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </Link>
+                );
+            },
+            sortingFn: (rowA, rowB) => {
+                const nameA =
+                    `${rowA.original.patient.first_name} ${rowA.original.patient.last_name}`.toLowerCase();
+                const nameB =
+                    `${rowB.original.patient.first_name} ${rowB.original.patient.last_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            },
+        },
+        {
+            accessorKey: 'patient.patient_number',
+            id: 'folder_number',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Folder #
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
                 <Link
-                    href={`/wards/${wardId}/patients/${admission.id}`}
+                    href={`/wards/${wardId}/patients/${row.original.id}`}
+                    className="block font-mono text-sm text-gray-700 dark:text-gray-300"
+                >
+                    {row.original.patient.patient_number}
+                </Link>
+            ),
+        },
+        {
+            accessorKey: 'doctor',
+            id: 'doctor',
+            header: 'Doctor',
+            cell: ({ row }) => {
+                const admission = row.original;
+                return (
+                    <Link
+                        href={`/wards/${wardId}/patients/${admission.id}`}
+                        className="block"
+                    >
+                        {admission.consultation?.doctor ? (
+                            <div className="flex items-center gap-2 text-sm">
+                                <Stethoscope className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                <span>
+                                    Dr. {admission.consultation.doctor.name}
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                Not assigned
+                            </span>
+                        )}
+                    </Link>
+                );
+            },
+        },
+        {
+            accessorKey: 'insurance',
+            id: 'insurance',
+            header: 'Insurance',
+            cell: ({ row }) => {
+                const admission = row.original;
+                const insurance = admission.patient.active_insurance;
+                return (
+                    <Link
+                        href={`/wards/${wardId}/patients/${admission.id}`}
+                        className="block"
+                    >
+                        {insurance?.plan?.provider ? (
+                            <div className="flex items-center gap-1 text-sm">
+                                <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <div className="flex flex-col">
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                        {insurance.plan.provider.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {insurance.plan.plan_name}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                None
+                            </span>
+                        )}
+                    </Link>
+                );
+            },
+        },
+        {
+            accessorKey: 'admitted_at',
+            id: 'admitted_at',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Admitted
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <Link
+                    href={`/wards/${wardId}/patients/${row.original.id}`}
+                    className="block text-sm text-gray-600 dark:text-gray-400"
+                >
+                    <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDateTime(row.original.admitted_at)}
+                    </div>
+                </Link>
+            ),
+        },
+        {
+            accessorKey: 'status',
+            id: 'status',
+            header: 'Status',
+            cell: ({ row }) => (
+                <Link
+                    href={`/wards/${wardId}/patients/${row.original.id}`}
                     className="block"
                 >
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                        {admission.patient.first_name}{' '}
-                        {admission.patient.last_name}
-                    </div>
-                    {admission.patient.gender && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {admission.patient.gender}
-                            {admission.patient.date_of_birth && (
-                                <>
-                                    {' '}
-                                    •{' '}
-                                    {new Date(
-                                        admission.patient.date_of_birth,
-                                    ).toLocaleDateString()}
-                                </>
+                    <Badge variant="default">
+                        {row.original.status.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                </Link>
+            ),
+            filterFn: (row, id, value) => {
+                return value.includes(row.getValue(id));
+            },
+        },
+        {
+            accessorKey: 'vitals_schedule',
+            id: 'vitals_status',
+            header: 'Vitals Status',
+            cell: ({ row }) => {
+                const admission = row.original;
+                return admission.vitals_schedule ? (
+                    <VitalsStatusBadge
+                        schedule={admission.vitals_schedule}
+                        admissionId={admission.id}
+                        wardId={wardId}
+                    />
+                ) : (
+                    <span className="text-sm text-gray-400 dark:text-gray-600">
+                        No schedule
+                    </span>
+                );
+            },
+        },
+        {
+            id: 'alerts',
+            header: () => <div className="text-center">Alerts</div>,
+            cell: ({ row }) => {
+                const admission = row.original;
+                const vitalsOverdue = isVitalsOverdue(admission);
+                const hasTodayMeds =
+                    admission.today_medication_administrations &&
+                    admission.today_medication_administrations.length > 0;
+                const givenCount =
+                    admission.today_medication_administrations?.filter(
+                        (m) => m.status === 'given',
+                    ).length || 0;
+
+                return (
+                    <Link
+                        href={`/wards/${wardId}/patients/${admission.id}`}
+                        className="block"
+                    >
+                        <div className="flex items-center justify-center gap-2">
+                            {vitalsOverdue && (
+                                <div
+                                    className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400"
+                                    title="Vitals overdue"
+                                >
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span className="hidden xl:inline">
+                                        Vitals
+                                    </span>
+                                </div>
+                            )}
+                            {hasTodayMeds && (
+                                <div
+                                    className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
+                                    title={`${givenCount} medication(s) given today`}
+                                >
+                                    <Pill className="h-4 w-4" />
+                                    <span className="hidden xl:inline">
+                                        {givenCount}
+                                    </span>
+                                </div>
+                            )}
+                            {!vitalsOverdue && !hasTodayMeds && (
+                                <span className="text-xs text-gray-400 dark:text-gray-600">
+                                    -
+                                </span>
                             )}
                         </div>
-                    )}
-                </Link>
-            );
-        },
-        sortingFn: (rowA, rowB) => {
-            const nameA =
-                `${rowA.original.patient.first_name} ${rowA.original.patient.last_name}`.toLowerCase();
-            const nameB =
-                `${rowB.original.patient.first_name} ${rowB.original.patient.last_name}`.toLowerCase();
-            return nameA.localeCompare(nameB);
-        },
-    },
-    {
-        accessorKey: 'patient.patient_number',
-        id: 'folder_number',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === 'asc')
-                }
-            >
-                Folder #
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <Link
-                href={`/wards/${wardId}/patients/${row.original.id}`}
-                className="block font-mono text-sm text-gray-700 dark:text-gray-300"
-            >
-                {row.original.patient.patient_number}
-            </Link>
-        ),
-    },
-    {
-        accessorKey: 'doctor',
-        id: 'doctor',
-        header: 'Doctor',
-        cell: ({ row }) => {
-            const admission = row.original;
-            return (
-                <Link
-                    href={`/wards/${wardId}/patients/${admission.id}`}
-                    className="block"
-                >
-                    {admission.consultation?.doctor ? (
-                        <div className="flex items-center gap-2 text-sm">
-                            <Stethoscope className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                            <span>
-                                Dr. {admission.consultation.doctor.name}
-                            </span>
-                        </div>
-                    ) : (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Not assigned
-                        </span>
-                    )}
-                </Link>
-            );
-        },
-    },
-    {
-        accessorKey: 'insurance',
-        id: 'insurance',
-        header: 'Insurance',
-        cell: ({ row }) => {
-            const admission = row.original;
-            const insurance = admission.patient.active_insurance;
-            return (
-                <Link
-                    href={`/wards/${wardId}/patients/${admission.id}`}
-                    className="block"
-                >
-                    {insurance?.plan?.provider ? (
-                        <div className="flex items-center gap-1 text-sm">
-                            <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                            <div className="flex flex-col">
-                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                    {insurance.plan.provider.name}
-                                </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {insurance.plan.plan_name}
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            None
-                        </span>
-                    )}
-                </Link>
-            );
-        },
-    },
-    {
-        accessorKey: 'admitted_at',
-        id: 'admitted_at',
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === 'asc')
-                }
-            >
-                Admitted
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <Link
-                href={`/wards/${wardId}/patients/${row.original.id}`}
-                className="block text-sm text-gray-600 dark:text-gray-400"
-            >
-                <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {formatDateTime(row.original.admitted_at)}
-                </div>
-            </Link>
-        ),
-    },
-    {
-        accessorKey: 'status',
-        id: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-            <Link
-                href={`/wards/${wardId}/patients/${row.original.id}`}
-                className="block"
-            >
-                <Badge variant="default">
-                    {row.original.status.replace('_', ' ').toUpperCase()}
-                </Badge>
-            </Link>
-        ),
-        filterFn: (row, id, value) => {
-            return value.includes(row.getValue(id));
-        },
-    },
-    {
-        accessorKey: 'vitals_schedule',
-        id: 'vitals_status',
-        header: 'Vitals Status',
-        cell: ({ row }) => {
-            const admission = row.original;
-            return admission.vitals_schedule ? (
-                <VitalsStatusBadge
-                    schedule={admission.vitals_schedule}
-                    admissionId={admission.id}
-                    wardId={wardId}
-                />
-            ) : (
-                <span className="text-sm text-gray-400 dark:text-gray-600">
-                    No schedule
-                </span>
-            );
-        },
-    },
-    {
-        id: 'alerts',
-        header: () => <div className="text-center">Alerts</div>,
-        cell: ({ row }) => {
-            const admission = row.original;
-            const vitalsOverdue = isVitalsOverdue(admission);
-            const hasTodayMeds =
-                admission.today_medication_administrations &&
-                admission.today_medication_administrations.length > 0;
-            const givenCount =
-                admission.today_medication_administrations?.filter(
-                    (m) => m.status === 'given',
-                ).length || 0;
-
-            return (
-                <Link
-                    href={`/wards/${wardId}/patients/${admission.id}`}
-                    className="block"
-                >
-                    <div className="flex items-center justify-center gap-2">
-                        {vitalsOverdue && (
-                            <div
-                                className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400"
-                                title="Vitals overdue"
-                            >
-                                <AlertCircle className="h-4 w-4" />
-                                <span className="hidden xl:inline">Vitals</span>
-                            </div>
-                        )}
-                        {hasTodayMeds && (
-                            <div
-                                className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
-                                title={`${givenCount} medication(s) given today`}
-                            >
-                                <Pill className="h-4 w-4" />
-                                <span className="hidden xl:inline">
-                                    {givenCount}
-                                </span>
-                            </div>
-                        )}
-                        {!vitalsOverdue && !hasTodayMeds && (
-                            <span className="text-xs text-gray-400 dark:text-gray-600">
-                                -
-                            </span>
-                        )}
-                    </div>
-                </Link>
-            );
-        },
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const admission = row.original;
-            return (
-                <Button size="sm" variant="ghost" asChild>
-                    <Link href={`/wards/${wardId}/patients/${admission.id}`}>
-                        <Eye className="mr-1 h-3 w-3" />
-                        View
                     </Link>
-                </Button>
-            );
+                );
+            },
         },
-    },
-];
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => {
+                const admission = row.original;
+                return (
+                    <Button size="sm" variant="ghost" asChild>
+                        <Link
+                            href={`/wards/${wardId}/patients/${admission.id}`}
+                        >
+                            <Eye className="mr-1 h-3 w-3" />
+                            View
+                        </Link>
+                    </Button>
+                );
+            },
+        },
+    ];
 
     // Add bed column only if bed management is enabled
     if (bedManagementEnabled) {
@@ -457,7 +461,10 @@ export const createWardPatientsColumns = (
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem
                                             onClick={() =>
-                                                onBedAction?.(admission, 'change')
+                                                onBedAction?.(
+                                                    admission,
+                                                    'change',
+                                                )
                                             }
                                         >
                                             <RefreshCw className="mr-2 h-4 w-4" />
@@ -479,7 +486,9 @@ export const createWardPatientsColumns = (
                                 variant="outline"
                                 size="sm"
                                 className="h-7 text-xs"
-                                onClick={() => onBedAction?.(admission, 'assign')}
+                                onClick={() =>
+                                    onBedAction?.(admission, 'assign')
+                                }
                             >
                                 <Plus className="mr-1 h-3 w-3" />
                                 Assign

@@ -182,9 +182,17 @@ export default function ConsultationIndex({
                 filters.date_from === todayRange.from &&
                 filters.date_to === todayRange.to
             ) {
-                return { preset: 'today', from: filters.date_from, to: filters.date_to };
+                return {
+                    preset: 'today',
+                    from: filters.date_from,
+                    to: filters.date_to,
+                };
             }
-            return { preset: 'custom', from: filters.date_from, to: filters.date_to };
+            return {
+                preset: 'custom',
+                from: filters.date_from,
+                to: filters.date_to,
+            };
         }
         // Default to today
         const todayRange = calculateDateRange('today');
@@ -612,41 +620,116 @@ export default function ConsultationIndex({
                                             <div className="space-y-3">
                                                 <h2 className="text-lg font-semibold">
                                                     Active Consultations (
-                                                    {activeConsultations.length})
+                                                    {activeConsultations.length}
+                                                    )
                                                 </h2>
                                                 <div className="rounded-md border">
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow>
-                                                                <TableHead>Patient</TableHead>
-                                                                <TableHead>ID</TableHead>
-                                                                <TableHead>Age</TableHead>
-                                                                <TableHead>Department</TableHead>
-                                                                <TableHead>Doctor</TableHead>
-                                                                <TableHead>Date</TableHead>
-                                                                <TableHead className="text-right">Action</TableHead>
+                                                                <TableHead>
+                                                                    Patient
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    ID
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Age
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Department
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Doctor
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Date
+                                                                </TableHead>
+                                                                <TableHead className="text-right">
+                                                                    Action
+                                                                </TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {activeConsultations.map((consultation) => (
-                                                                <TableRow key={consultation.id}>
-                                                                    <TableCell className="font-medium">
-                                                                        {consultation.patient_checkin.patient.first_name}{' '}
-                                                                        {consultation.patient_checkin.patient.last_name}
-                                                                        <Badge className="ml-2">In Progress</Badge>
-                                                                    </TableCell>
-                                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
-                                                                    <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
-                                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
-                                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
-                                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
-                                                                    <TableCell className="text-right">
-                                                                        <Button size="sm" onClick={() => openContinueDialog(consultation)}>
-                                                                            Continue
-                                                                        </Button>
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
+                                                            {activeConsultations.map(
+                                                                (
+                                                                    consultation,
+                                                                ) => (
+                                                                    <TableRow
+                                                                        key={
+                                                                            consultation.id
+                                                                        }
+                                                                    >
+                                                                        <TableCell className="font-medium">
+                                                                            {
+                                                                                consultation
+                                                                                    .patient_checkin
+                                                                                    .patient
+                                                                                    .first_name
+                                                                            }{' '}
+                                                                            {
+                                                                                consultation
+                                                                                    .patient_checkin
+                                                                                    .patient
+                                                                                    .last_name
+                                                                            }
+                                                                            <Badge className="ml-2">
+                                                                                In
+                                                                                Progress
+                                                                            </Badge>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {
+                                                                                consultation
+                                                                                    .patient_checkin
+                                                                                    .patient
+                                                                                    .patient_number
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {calculateAge(
+                                                                                consultation
+                                                                                    .patient_checkin
+                                                                                    .patient
+                                                                                    .date_of_birth,
+                                                                            )}{' '}
+                                                                            yrs
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {consultation
+                                                                                .patient_checkin
+                                                                                .department
+                                                                                ?.name ??
+                                                                                'Unknown'}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {consultation
+                                                                                .doctor
+                                                                                ?.name ??
+                                                                                '-'}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {formatDate(
+                                                                                consultation
+                                                                                    .patient_checkin
+                                                                                    .service_date,
+                                                                            )}
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                onClick={() =>
+                                                                                    openContinueDialog(
+                                                                                        consultation,
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                Continue
+                                                                            </Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ),
+                                                            )}
                                                         </TableBody>
                                                     </Table>
                                                 </div>
@@ -657,62 +740,151 @@ export default function ConsultationIndex({
                                             <div className="space-y-3">
                                                 <h2 className="text-lg font-semibold">
                                                     Awaiting Consultation (
-                                                    {awaitingConsultation.length})
+                                                    {
+                                                        awaitingConsultation.length
+                                                    }
+                                                    )
                                                 </h2>
                                                 <div className="rounded-md border">
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow>
-                                                                <TableHead>Patient</TableHead>
-                                                                <TableHead>ID</TableHead>
-                                                                <TableHead>Age</TableHead>
-                                                                <TableHead>Department</TableHead>
-                                                                <TableHead>Date</TableHead>
-                                                                <TableHead>Vitals</TableHead>
-                                                                <TableHead>Insurance</TableHead>
-                                                                <TableHead className="text-right">Action</TableHead>
+                                                                <TableHead>
+                                                                    Patient
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    ID
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Age
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Department
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Date
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Vitals
+                                                                </TableHead>
+                                                                <TableHead>
+                                                                    Insurance
+                                                                </TableHead>
+                                                                <TableHead className="text-right">
+                                                                    Action
+                                                                </TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {awaitingConsultation.map((checkin) => (
-                                                                <TableRow key={checkin.id}>
-                                                                    <TableCell className="font-medium">
-                                                                        {checkin.patient.first_name}{' '}
-                                                                        {checkin.patient.last_name}
-                                                                    </TableCell>
-                                                                    <TableCell>{checkin.patient.patient_number}</TableCell>
-                                                                    <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
-                                                                    <TableCell>{checkin.department.name}</TableCell>
-                                                                    <TableCell>{formatDate(checkin.service_date)}</TableCell>
-                                                                    <TableCell>
-                                                                        {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
-                                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                                                                ✓ Taken
-                                                                            </Badge>
-                                                                        ) : (
-                                                                            <Badge variant="outline" className="text-muted-foreground">
-                                                                                Pending
-                                                                            </Badge>
-                                                                        )}
-                                                                    </TableCell>
-                                                                    <TableCell>
-                                                                        {checkin.patient.active_insurance ? (
-                                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                                                                {checkin.patient.active_insurance.plan.provider.code}
-                                                                            </Badge>
-                                                                        ) : (
-                                                                            <Badge variant="outline" className="text-muted-foreground">
-                                                                                Cash
-                                                                            </Badge>
-                                                                        )}
-                                                                    </TableCell>
-                                                                    <TableCell className="text-right">
-                                                                        <Button size="sm" onClick={() => openStartDialog(checkin)}>
-                                                                            Start
-                                                                        </Button>
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
+                                                            {awaitingConsultation.map(
+                                                                (checkin) => (
+                                                                    <TableRow
+                                                                        key={
+                                                                            checkin.id
+                                                                        }
+                                                                    >
+                                                                        <TableCell className="font-medium">
+                                                                            {
+                                                                                checkin
+                                                                                    .patient
+                                                                                    .first_name
+                                                                            }{' '}
+                                                                            {
+                                                                                checkin
+                                                                                    .patient
+                                                                                    .last_name
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {
+                                                                                checkin
+                                                                                    .patient
+                                                                                    .patient_number
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {calculateAge(
+                                                                                checkin
+                                                                                    .patient
+                                                                                    .date_of_birth,
+                                                                            )}{' '}
+                                                                            yrs
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {
+                                                                                checkin
+                                                                                    .department
+                                                                                    .name
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {formatDate(
+                                                                                checkin.service_date,
+                                                                            )}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {checkin.vital_signs &&
+                                                                            checkin
+                                                                                .vital_signs
+                                                                                .length >
+                                                                                0 ? (
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                                                                >
+                                                                                    ✓
+                                                                                    Taken
+                                                                                </Badge>
+                                                                            ) : (
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className="text-muted-foreground"
+                                                                                >
+                                                                                    Pending
+                                                                                </Badge>
+                                                                            )}
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {checkin
+                                                                                .patient
+                                                                                .active_insurance ? (
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                                                                >
+                                                                                    {
+                                                                                        checkin
+                                                                                            .patient
+                                                                                            .active_insurance
+                                                                                            .plan
+                                                                                            .provider
+                                                                                            .code
+                                                                                    }
+                                                                                </Badge>
+                                                                            ) : (
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className="text-muted-foreground"
+                                                                                >
+                                                                                    Cash
+                                                                                </Badge>
+                                                                            )}
+                                                                        </TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                onClick={() =>
+                                                                                    openStartDialog(
+                                                                                        checkin,
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                Start
+                                                                            </Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ),
+                                                            )}
                                                         </TableBody>
                                                     </Table>
                                                 </div>
@@ -730,7 +902,8 @@ export default function ConsultationIndex({
                         {activeConsultations.length > 0 && (
                             <div className="space-y-3">
                                 <h2 className="flex items-center gap-2 text-lg font-semibold">
-                                    Active Consultations ({activeConsultations.length})
+                                    Active Consultations (
+                                    {activeConsultations.length})
                                 </h2>
                                 <div className="rounded-md border">
                                     <Table>
@@ -739,32 +912,89 @@ export default function ConsultationIndex({
                                                 <TableHead>Patient</TableHead>
                                                 <TableHead>ID</TableHead>
                                                 <TableHead>Age</TableHead>
-                                                <TableHead>Department</TableHead>
+                                                <TableHead>
+                                                    Department
+                                                </TableHead>
                                                 <TableHead>Doctor</TableHead>
                                                 <TableHead>Date</TableHead>
-                                                <TableHead className="text-right">Action</TableHead>
+                                                <TableHead className="text-right">
+                                                    Action
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {activeConsultations.map((consultation) => (
-                                                <TableRow key={consultation.id}>
-                                                    <TableCell className="font-medium">
-                                                        {consultation.patient_checkin.patient.first_name}{' '}
-                                                        {consultation.patient_checkin.patient.last_name}
-                                                        <Badge className="ml-2">In Progress</Badge>
-                                                    </TableCell>
-                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
-                                                    <TableCell>{calculateAge(consultation.patient_checkin.patient.date_of_birth)} yrs</TableCell>
-                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
-                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
-                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button size="sm" onClick={() => openContinueDialog(consultation)}>
-                                                            Continue
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {activeConsultations.map(
+                                                (consultation) => (
+                                                    <TableRow
+                                                        key={consultation.id}
+                                                    >
+                                                        <TableCell className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .first_name
+                                                            }{' '}
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .last_name
+                                                            }
+                                                            <Badge className="ml-2">
+                                                                In Progress
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .patient_number
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {calculateAge(
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .date_of_birth,
+                                                            )}{' '}
+                                                            yrs
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {consultation
+                                                                .patient_checkin
+                                                                .department
+                                                                ?.name ??
+                                                                'Unknown'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {consultation.doctor
+                                                                ?.name ?? '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatDate(
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .service_date,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    openContinueDialog(
+                                                                        consultation,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Continue
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
@@ -775,7 +1005,8 @@ export default function ConsultationIndex({
                         <div className="space-y-3">
                             <h2 className="flex items-center gap-2 text-lg font-semibold">
                                 <Clock className="h-5 w-5 text-blue-600" />
-                                Awaiting Consultation ({awaitingConsultation.length})
+                                Awaiting Consultation (
+                                {awaitingConsultation.length})
                             </h2>
                             {awaitingConsultation.length > 0 ? (
                                 <div className="rounded-md border">
@@ -785,53 +1016,115 @@ export default function ConsultationIndex({
                                                 <TableHead>Patient</TableHead>
                                                 <TableHead>ID</TableHead>
                                                 <TableHead>Age</TableHead>
-                                                <TableHead>Department</TableHead>
+                                                <TableHead>
+                                                    Department
+                                                </TableHead>
                                                 <TableHead>Date</TableHead>
                                                 <TableHead>Vitals</TableHead>
                                                 <TableHead>Insurance</TableHead>
-                                                <TableHead className="text-right">Action</TableHead>
+                                                <TableHead className="text-right">
+                                                    Action
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {awaitingConsultation.map((checkin) => (
-                                                <TableRow key={checkin.id}>
-                                                    <TableCell className="font-medium">
-                                                        {checkin.patient.first_name}{' '}
-                                                        {checkin.patient.last_name}
-                                                    </TableCell>
-                                                    <TableCell>{checkin.patient.patient_number}</TableCell>
-                                                    <TableCell>{calculateAge(checkin.patient.date_of_birth)} yrs</TableCell>
-                                                    <TableCell>{checkin.department.name}</TableCell>
-                                                    <TableCell>{formatDate(checkin.service_date)}</TableCell>
-                                                    <TableCell>
-                                                        {checkin.vital_signs && checkin.vital_signs.length > 0 ? (
-                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                                                ✓ Taken
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="text-muted-foreground">
-                                                                Pending
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {checkin.patient.active_insurance ? (
-                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                                                {checkin.patient.active_insurance.plan.provider.code}
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="text-muted-foreground">
-                                                                Cash
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button size="sm" onClick={() => openStartDialog(checkin)}>
-                                                            Start
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {awaitingConsultation.map(
+                                                (checkin) => (
+                                                    <TableRow key={checkin.id}>
+                                                        <TableCell className="font-medium">
+                                                            {
+                                                                checkin.patient
+                                                                    .first_name
+                                                            }{' '}
+                                                            {
+                                                                checkin.patient
+                                                                    .last_name
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {
+                                                                checkin.patient
+                                                                    .patient_number
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {calculateAge(
+                                                                checkin.patient
+                                                                    .date_of_birth,
+                                                            )}{' '}
+                                                            yrs
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {
+                                                                checkin
+                                                                    .department
+                                                                    .name
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatDate(
+                                                                checkin.service_date,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {checkin.vital_signs &&
+                                                            checkin.vital_signs
+                                                                .length > 0 ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                                                >
+                                                                    ✓ Taken
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-muted-foreground"
+                                                                >
+                                                                    Pending
+                                                                </Badge>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {checkin.patient
+                                                                .active_insurance ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                                                >
+                                                                    {
+                                                                        checkin
+                                                                            .patient
+                                                                            .active_insurance
+                                                                            .plan
+                                                                            .provider
+                                                                            .code
+                                                                    }
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-muted-foreground"
+                                                                >
+                                                                    Cash
+                                                                </Badge>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    openStartDialog(
+                                                                        checkin,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Start
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
@@ -841,10 +1134,12 @@ export default function ConsultationIndex({
                                         <div className="text-center text-gray-500">
                                             <Clock className="mx-auto mb-3 h-12 w-12 text-gray-300" />
                                             <p className="font-medium">
-                                                No patients awaiting consultation
+                                                No patients awaiting
+                                                consultation
                                             </p>
                                             <p className="mt-1 text-sm">
-                                                New check-ins will appear here automatically
+                                                New check-ins will appear here
+                                                automatically
                                             </p>
                                         </div>
                                     </CardContent>
@@ -858,7 +1153,8 @@ export default function ConsultationIndex({
                         <div className="space-y-3">
                             <h2 className="flex items-center gap-2 text-lg font-semibold">
                                 <CheckCircle className="h-5 w-5 text-gray-600" />
-                                Completed Consultations{!canFilterByDate && ' (Last 24 Hours)'}
+                                Completed Consultations
+                                {!canFilterByDate && ' (Last 24 Hours)'}
                             </h2>
                             {completedConsultations.length > 0 ? (
                                 <div className="rounded-md border">
@@ -867,48 +1163,109 @@ export default function ConsultationIndex({
                                             <TableRow>
                                                 <TableHead>Patient</TableHead>
                                                 <TableHead>ID</TableHead>
-                                                <TableHead>Department</TableHead>
+                                                <TableHead>
+                                                    Department
+                                                </TableHead>
                                                 <TableHead>Doctor</TableHead>
                                                 <TableHead>Date</TableHead>
                                                 <TableHead>Insurance</TableHead>
-                                                <TableHead className="text-right">Action</TableHead>
+                                                <TableHead className="text-right">
+                                                    Action
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {completedConsultations.map((consultation) => (
-                                                <TableRow key={consultation.id}>
-                                                    <TableCell className="font-medium">
-                                                        {consultation.patient_checkin.patient.first_name}{' '}
-                                                        {consultation.patient_checkin.patient.last_name}
-                                                    </TableCell>
-                                                    <TableCell>{consultation.patient_checkin.patient.patient_number}</TableCell>
-                                                    <TableCell>{consultation.patient_checkin.department?.name ?? 'Unknown'}</TableCell>
-                                                    <TableCell>{consultation.doctor?.name ?? '-'}</TableCell>
-                                                    <TableCell>{formatDate(consultation.patient_checkin.service_date)}</TableCell>
-                                                    <TableCell>
-                                                        {consultation.patient_checkin.patient.active_insurance ? (
-                                                            <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                                                {consultation.patient_checkin.patient.active_insurance.plan.provider.code}
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="text-muted-foreground">
-                                                                Cash
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => router.visit(`/consultation/${consultation.id}`)}
-                                                            className="gap-1"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                            View
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {completedConsultations.map(
+                                                (consultation) => (
+                                                    <TableRow
+                                                        key={consultation.id}
+                                                    >
+                                                        <TableCell className="font-medium">
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .first_name
+                                                            }{' '}
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .last_name
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .patient
+                                                                    .patient_number
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {consultation
+                                                                .patient_checkin
+                                                                .department
+                                                                ?.name ??
+                                                                'Unknown'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {consultation.doctor
+                                                                ?.name ?? '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatDate(
+                                                                consultation
+                                                                    .patient_checkin
+                                                                    .service_date,
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {consultation
+                                                                .patient_checkin
+                                                                .patient
+                                                                .active_insurance ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                                                >
+                                                                    {
+                                                                        consultation
+                                                                            .patient_checkin
+                                                                            .patient
+                                                                            .active_insurance
+                                                                            .plan
+                                                                            .provider
+                                                                            .code
+                                                                    }
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-muted-foreground"
+                                                                >
+                                                                    Cash
+                                                                </Badge>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    router.visit(
+                                                                        `/consultation/${consultation.id}`,
+                                                                    )
+                                                                }
+                                                                className="gap-1"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                                View
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
@@ -970,7 +1327,10 @@ export default function ConsultationIndex({
                                                 Patient ID:
                                             </span>
                                             <span className="text-gray-900 dark:text-gray-100">
-                                                {getDialogPatient()?.patient_number}
+                                                {
+                                                    getDialogPatient()
+                                                        ?.patient_number
+                                                }
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
@@ -978,10 +1338,19 @@ export default function ConsultationIndex({
                                                 Date of Birth:
                                             </span>
                                             <span className="text-gray-900 dark:text-gray-100">
-                                                {getDialogPatient()?.date_of_birth &&
-                                                    formatDate(getDialogPatient()!.date_of_birth)}{' '}
-                                                ({getDialogPatient()?.date_of_birth &&
-                                                    calculateAge(getDialogPatient()!.date_of_birth)}{' '}
+                                                {getDialogPatient()
+                                                    ?.date_of_birth &&
+                                                    formatDate(
+                                                        getDialogPatient()!
+                                                            .date_of_birth,
+                                                    )}{' '}
+                                                (
+                                                {getDialogPatient()
+                                                    ?.date_of_birth &&
+                                                    calculateAge(
+                                                        getDialogPatient()!
+                                                            .date_of_birth,
+                                                    )}{' '}
                                                 years)
                                             </span>
                                         </div>
@@ -990,7 +1359,10 @@ export default function ConsultationIndex({
                                                 Phone:
                                             </span>
                                             <span className="text-gray-900 dark:text-gray-100">
-                                                {getDialogPatient()?.phone_number}
+                                                {
+                                                    getDialogPatient()
+                                                        ?.phone_number
+                                                }
                                             </span>
                                         </div>
                                         <div className="flex justify-between">

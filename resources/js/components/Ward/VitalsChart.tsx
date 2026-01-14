@@ -138,10 +138,11 @@ function BloodPressureChart({
     }
 
     // Calculate min/max for Y-axis domain with padding
-    const allValues = validData.flatMap((d) =>
-        [d.systolic, d.diastolic].filter(
-            (v) => v !== undefined && v !== null,
-        ) as number[],
+    const allValues = validData.flatMap(
+        (d) =>
+            [d.systolic, d.diastolic].filter(
+                (v) => v !== undefined && v !== null,
+            ) as number[],
     );
     const minValue = Math.min(...allValues);
     const maxValue = Math.max(...allValues);
@@ -496,12 +497,16 @@ export function VitalsChart({ vitals }: Props) {
 
     const systolicData = reversedVitals.map((vital) => ({
         date: formatDateTime(vital.recorded_at),
-        value: vital.blood_pressure_systolic ? Math.round(vital.blood_pressure_systolic) : vital.blood_pressure_systolic,
+        value: vital.blood_pressure_systolic
+            ? Math.round(vital.blood_pressure_systolic)
+            : vital.blood_pressure_systolic,
     }));
 
     const diastolicData = reversedVitals.map((vital) => ({
         date: formatDateTime(vital.recorded_at),
-        value: vital.blood_pressure_diastolic ? Math.round(vital.blood_pressure_diastolic) : vital.blood_pressure_diastolic,
+        value: vital.blood_pressure_diastolic
+            ? Math.round(vital.blood_pressure_diastolic)
+            : vital.blood_pressure_diastolic,
     }));
 
     const pulseData = reversedVitals.map((vital) => ({

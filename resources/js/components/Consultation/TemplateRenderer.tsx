@@ -17,7 +17,10 @@ interface Props {
     templateText: string;
     variables: TemplateVariable[];
     initialSelections?: Record<string, string>;
-    onChange: (composedText: string, selections: Record<string, string>) => void;
+    onChange: (
+        composedText: string,
+        selections: Record<string, string>,
+    ) => void;
     disabled?: boolean;
 }
 
@@ -29,11 +32,11 @@ interface TemplatePart {
 
 /**
  * TemplateRenderer Component
- * 
+ *
  * Parses template text containing {{variable}} placeholders and renders
  * inline Select components for each variable. Maintains selection state
  * and generates composed text with all selections.
- * 
+ *
  * Requirements: 3.2, 3.3
  */
 export default function TemplateRenderer({
@@ -43,7 +46,8 @@ export default function TemplateRenderer({
     onChange,
     disabled = false,
 }: Props) {
-    const [selections, setSelections] = useState<Record<string, string>>(initialSelections);
+    const [selections, setSelections] =
+        useState<Record<string, string>>(initialSelections);
 
     // Create a map of variable key to variable definition for quick lookup
     const variableMap = useMemo(() => {
@@ -93,16 +97,19 @@ export default function TemplateRenderer({
     const generateComposedText = useCallback(
         (currentSelections: Record<string, string>): string => {
             let composed = templateText;
-            
+
             for (const [key, value] of Object.entries(currentSelections)) {
                 if (value) {
-                    composed = composed.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+                    composed = composed.replace(
+                        new RegExp(`\\{\\{${key}\\}\\}`, 'g'),
+                        value,
+                    );
                 }
             }
-            
+
             return composed;
         },
-        [templateText]
+        [templateText],
     );
 
     // Handle selection change for a variable
@@ -113,11 +120,11 @@ export default function TemplateRenderer({
                 [variableKey]: value,
             };
             setSelections(newSelections);
-            
+
             const composedText = generateComposedText(newSelections);
             onChange(composedText, newSelections);
         },
-        [selections, generateComposedText, onChange]
+        [selections, generateComposedText, onChange],
     );
 
     // Sync selections when initialSelections change (e.g., when loading saved data)
@@ -157,14 +164,18 @@ export default function TemplateRenderer({
                         <span key={index} className="inline-block align-middle">
                             <Select
                                 value={selectedValue || ''}
-                                onValueChange={(value) => handleSelectionChange(variableKey, value)}
+                                onValueChange={(value) =>
+                                    handleSelectionChange(variableKey, value)
+                                }
                                 disabled={disabled}
                             >
                                 <SelectTrigger
-                                    className="inline-flex h-7 min-w-[120px] max-w-[200px] gap-1 border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium hover:bg-primary/20"
+                                    className="inline-flex h-7 max-w-[200px] min-w-[120px] gap-1 border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium hover:bg-primary/20"
                                     aria-label={variable.label}
                                 >
-                                    <SelectValue placeholder={`[${variable.label}]`} />
+                                    <SelectValue
+                                        placeholder={`[${variable.label}]`}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {variable.options.map((option) => (

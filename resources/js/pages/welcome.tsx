@@ -18,12 +18,14 @@ const features = [
     {
         icon: Users,
         title: 'Patient Management',
-        description: 'Complete patient registration and multi-visit history tracking',
+        description:
+            'Complete patient registration and multi-visit history tracking',
     },
     {
         icon: CalendarCheck,
         title: 'Check-in & OPD',
-        description: 'Walk-in patient check-in with department-based queue management',
+        description:
+            'Walk-in patient check-in with department-based queue management',
     },
     {
         icon: Stethoscope,
@@ -33,34 +35,40 @@ const features = [
     {
         icon: ClipboardList,
         title: 'Ward Management',
-        description: 'Admissions, bed management, ward rounds, and nursing care',
+        description:
+            'Admissions, bed management, ward rounds, and nursing care',
     },
     {
         icon: Pill,
         title: 'Pharmacy',
-        description: 'Drug inventory, batch tracking, and prescription dispensing',
+        description:
+            'Drug inventory, batch tracking, and prescription dispensing',
     },
     {
         icon: Beaker,
         title: 'Laboratory',
-        description: 'Lab service catalog, sample tracking, and result reporting',
+        description:
+            'Lab service catalog, sample tracking, and result reporting',
     },
     {
         icon: CreditCard,
         title: 'Billing & Revenue',
-        description: 'Itemized billing, multiple payment methods, and reporting',
+        description:
+            'Itemized billing, multiple payment methods, and reporting',
     },
     {
         icon: Shield,
         title: 'Insurance Claims',
-        description: 'Coverage management, claims vetting, and batch processing',
+        description:
+            'Coverage management, claims vetting, and batch processing',
     },
 ];
 
 export default function Welcome() {
     const { auth, theme } = usePage<SharedData>().props;
     const logoUrl = theme?.branding?.logoUrl;
-    const hospitalName = theme?.branding?.hospitalName || 'Hospital Management System';
+    const hospitalName =
+        theme?.branding?.hospitalName || 'Hospital Management System';
 
     return (
         <>
@@ -132,8 +140,9 @@ export default function Welcome() {
                                 {hospitalName}
                             </h1>
                             <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-                                Comprehensive hospital management solution for streamlined operations,
-                                better patient care, and efficient administration.
+                                Comprehensive hospital management solution for
+                                streamlined operations, better patient care, and
+                                efficient administration.
                             </p>
                             {!auth.user && (
                                 <div className="mt-8">
@@ -179,7 +188,8 @@ export default function Welcome() {
                     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
                             <p className="text-sm text-muted-foreground">
-                                © {new Date().getFullYear()} {hospitalName}. All rights reserved.
+                                © {new Date().getFullYear()} {hospitalName}. All
+                                rights reserved.
                             </p>
                             <div className="text-center text-sm text-muted-foreground sm:text-right">
                                 <p>

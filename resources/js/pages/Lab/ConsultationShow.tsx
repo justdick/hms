@@ -144,11 +144,20 @@ export default function ConsultationShow({ consultation, labOrders }: Props) {
                                 </span>
                                 <span>•</span>
                                 {patient.active_insurance ? (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                        {patient.active_insurance.plan.provider.code}
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                    >
+                                        {
+                                            patient.active_insurance.plan
+                                                .provider.code
+                                        }
                                     </Badge>
                                 ) : (
-                                    <Badge variant="outline" className="text-muted-foreground">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-muted-foreground"
+                                    >
                                         Cash
                                     </Badge>
                                 )}

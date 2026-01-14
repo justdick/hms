@@ -38,7 +38,7 @@ export default function DiagnosisFormSection({
 }: Props) {
     // isEditable takes precedence (used by consultations with 24hr edit window)
     // consultationStatus is fallback for ward rounds (only in_progress is editable)
-    const canEdit = isEditable ?? (consultationStatus === 'in_progress');
+    const canEdit = isEditable ?? consultationStatus === 'in_progress';
 
     const [selectedProvisional, setSelectedProvisional] = useState<
         number | null

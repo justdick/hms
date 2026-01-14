@@ -249,7 +249,9 @@ export function ImageGallery({
                                                 {images.length}
                                             </span>
                                         )}
-                                        {formatFileSize(currentImage.file_size ?? 0)}
+                                        {formatFileSize(
+                                            currentImage.file_size ?? 0,
+                                        )}
                                     </p>
                                 </div>
 

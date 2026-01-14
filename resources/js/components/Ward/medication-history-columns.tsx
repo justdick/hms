@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, MoreVertical, Pill, PlayCircle, XCircle } from 'lucide-react';
+import {
+    ArrowUpDown,
+    MoreVertical,
+    Pill,
+    PlayCircle,
+    XCircle,
+} from 'lucide-react';
 
 interface Drug {
     id: number;
@@ -73,11 +79,12 @@ export const medicationHistoryColumns = (
                     </div>
                     {(prescription.dose_quantity || prescription.dosage) && (
                         <div className="text-sm text-muted-foreground">
-                            Dose: {prescription.dose_quantity || prescription.dosage}
+                            Dose:{' '}
+                            {prescription.dose_quantity || prescription.dosage}
                         </div>
                     )}
                     {prescription.instructions && (
-                        <div className="text-xs text-amber-600 dark:text-amber-400 italic">
+                        <div className="text-xs text-amber-600 italic dark:text-amber-400">
                             {prescription.instructions}
                         </div>
                     )}

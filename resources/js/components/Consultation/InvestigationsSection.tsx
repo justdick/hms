@@ -168,7 +168,7 @@ export function InvestigationsSection({
 
     // isEditable takes precedence (used by consultations with 24hr edit window)
     // consultationStatus is fallback for ward rounds (only in_progress is editable)
-    const canOrder = isEditable ?? (consultationStatus === 'in_progress');
+    const canOrder = isEditable ?? consultationStatus === 'in_progress';
 
     // Get counts for tab badges
     const labCount = laboratoryOrders.length;

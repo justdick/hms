@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 interface StockIndicatorProps {
     available: boolean;
     inStock: number;
-    requested: number;
+    requested: number | null; // null for injections where pharmacist determines quantity
     className?: string;
 }
 
@@ -15,6 +15,24 @@ export function StockIndicator({
     className,
 }: StockIndicatorProps) {
     const getStatus = () => {
+        // For injections where quantity is pending, just show stock availability
+        if (requested === null) {
+            if (inStock > 0) {
+                return {
+                    icon: CheckCircle,
+                    text: 'In Stock',
+                    variant: 'success' as const,
+                    color: 'text-green-600 dark:text-green-400',
+                };
+            }
+            return {
+                icon: XCircle,
+                text: 'Out of Stock',
+                variant: 'danger' as const,
+                color: 'text-red-600 dark:text-red-400',
+            };
+        }
+
         if (available) {
             return {
                 icon: CheckCircle,
@@ -52,7 +70,8 @@ export function StockIndicator({
                     {status.text}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                    {inStock} in stock (need {requested})
+                    {inStock} in stock
+                    {requested !== null ? ` (need ${requested})` : ' (qty TBD)'}
                 </span>
             </div>
         </div>

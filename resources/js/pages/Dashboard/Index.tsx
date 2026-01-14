@@ -289,7 +289,9 @@ export default function Dashboard() {
                         )}
                         {lists.patientFlowTrend && (
                             <div className="md:col-span-2">
-                                <PatientFlowChart data={lists.patientFlowTrend} />
+                                <PatientFlowChart
+                                    data={lists.patientFlowTrend}
+                                />
                             </div>
                         )}
                     </div>

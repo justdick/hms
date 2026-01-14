@@ -58,7 +58,7 @@ import { WardRoundViewModal } from '@/components/Ward/WardRoundViewModal';
 import { WardTransferModal } from '@/components/Ward/WardTransferModal';
 import AppLayout from '@/layouts/app-layout';
 import { SharedData } from '@/types';
-import { Head, Link, router, usePage, Form } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 import { isToday } from 'date-fns';
 import {
     Activity,
@@ -199,7 +199,13 @@ interface Nurse {
 
 interface NursingNote {
     id: number;
-    type: 'admission' | 'assessment' | 'care' | 'observation' | 'incident' | 'handover';
+    type:
+        | 'admission'
+        | 'assessment'
+        | 'care'
+        | 'observation'
+        | 'incident'
+        | 'handover';
     note: string;
     noted_at: string;
     nurse: Nurse;
@@ -366,6 +372,9 @@ interface Props {
     can_edit_medication_timestamp?: boolean;
     can_delete_medication_administration?: boolean;
     can_transfer?: boolean;
+    can_create_ward_round?: boolean;
+    can_update_ward_round?: boolean;
+    can_view_ward_rounds?: boolean;
     availableWards?: Array<{
         id: number;
         name: string;
@@ -396,6 +405,9 @@ export default function WardPatientShow({
     can_edit_medication_timestamp = false,
     can_delete_medication_administration = false,
     can_transfer = false,
+    can_create_ward_round = false,
+    can_update_ward_round = false,
+    can_view_ward_rounds = false,
     availableWards = [],
 }: Props) {
     const { auth, features } = usePage<SharedData>().props;
@@ -820,8 +832,8 @@ export default function WardPatientShow({
                             <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
                                 {bedManagementEnabled ? 'Ward & Bed' : 'Ward'}
                             </p>
-                            {bedManagementEnabled && (
-                                admission.bed ? (
+                            {bedManagementEnabled &&
+                                (admission.bed ? (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button
@@ -833,7 +845,9 @@ export default function WardPatientShow({
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={loadBedData}>
+                                            <DropdownMenuItem
+                                                onClick={loadBedData}
+                                            >
                                                 <RefreshCw className="mr-2 h-4 w-4" />
                                                 Change Bed
                                             </DropdownMenuItem>
@@ -857,8 +871,7 @@ export default function WardPatientShow({
                                         <BedIcon className="mr-1 h-3 w-3" />
                                         Assign Bed
                                     </Button>
-                                )
-                            )}
+                                ))}
                         </div>
                         <div className="space-y-1">
                             {bedManagementEnabled && (
@@ -869,8 +882,11 @@ export default function WardPatientShow({
                                 </p>
                             )}
                             {admission.ward && (
-                                <p className={`text-purple-600 dark:text-purple-400 ${bedManagementEnabled ? 'text-sm' : 'font-semibold text-purple-700 dark:text-purple-300'}`}>
-                                    {admission.ward.name} ({admission.ward.code})
+                                <p
+                                    className={`text-purple-600 dark:text-purple-400 ${bedManagementEnabled ? 'text-sm' : 'font-semibold text-purple-700 dark:text-purple-300'}`}
+                                >
+                                    {admission.ward.name} ({admission.ward.code}
+                                    )
                                 </p>
                             )}
                         </div>
@@ -1058,13 +1074,15 @@ export default function WardPatientShow({
                             <FileText className="h-4 w-4" />
                             Nursing Notes
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="rounds"
-                            className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-violet-50 text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
-                        >
-                            <Stethoscope className="h-4 w-4" />
-                            Ward Rounds
-                        </TabsTrigger>
+                        {can_view_ward_rounds && (
+                            <TabsTrigger
+                                value="rounds"
+                                className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-violet-50 text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
+                            >
+                                <Stethoscope className="h-4 w-4" />
+                                Ward Rounds
+                            </TabsTrigger>
+                        )}
                     </TabsList>
 
                     {/* Overview Tab */}
@@ -1299,7 +1317,9 @@ export default function WardPatientShow({
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => {
-                                                                        setNoteToEdit(note);
+                                                                        setNoteToEdit(
+                                                                            note,
+                                                                        );
                                                                     }}
                                                                 >
                                                                     <Edit2 className="h-4 w-4" />
@@ -1368,11 +1388,15 @@ export default function WardPatientShow({
                                     {
                                         preserveScroll: true,
                                         onSuccess: () => {
-                                            toast.success('Medication resumed successfully');
+                                            toast.success(
+                                                'Medication resumed successfully',
+                                            );
                                             router.reload();
                                         },
                                         onError: () => {
-                                            toast.error('Failed to resume medication');
+                                            toast.error(
+                                                'Failed to resume medication',
+                                            );
                                         },
                                     },
                                 );
@@ -1388,34 +1412,39 @@ export default function WardPatientShow({
                     )}
 
                     {/* Ward Rounds Tab */}
-                    <TabsContent value="rounds">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Ward Rounds</CardTitle>
-                                <Button onClick={handleStartNewWardRound}>
-                                    <Stethoscope className="mr-2 h-4 w-4" />
-                                    Start New Ward Round
-                                </Button>
-                            </CardHeader>
-                            <CardContent>
-                                {admission.ward_rounds &&
-                                admission.ward_rounds.length > 0 ? (
-                                    <WardRoundsTable
-                                        admissionId={admission.id}
-                                        wardRounds={admission.ward_rounds}
-                                        onViewWardRound={handleViewWardRound}
-                                    />
-                                ) : (
-                                    <div className="py-12 text-center">
-                                        <Stethoscope className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
-                                        <p className="text-gray-500 dark:text-gray-400">
-                                            No ward rounds yet
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                    {can_view_ward_rounds && (
+                        <TabsContent value="rounds">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardTitle>Ward Rounds</CardTitle>
+                                    {can_create_ward_round && (
+                                        <Button onClick={handleStartNewWardRound}>
+                                            <Stethoscope className="mr-2 h-4 w-4" />
+                                            Start New Ward Round
+                                        </Button>
+                                    )}
+                                </CardHeader>
+                                <CardContent>
+                                    {admission.ward_rounds &&
+                                    admission.ward_rounds.length > 0 ? (
+                                        <WardRoundsTable
+                                            admissionId={admission.id}
+                                            wardRounds={admission.ward_rounds}
+                                            onViewWardRound={handleViewWardRound}
+                                            canUpdateWardRound={can_update_ward_round}
+                                        />
+                                    ) : (
+                                        <div className="py-12 text-center">
+                                            <Stethoscope className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                                            <p className="text-gray-500 dark:text-gray-400">
+                                                No ward rounds yet
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    )}
                 </Tabs>
 
                 {/* Modals */}
@@ -1549,37 +1578,62 @@ export default function WardPatientShow({
                                 action={`/admissions/${admission.id}/nursing-notes/${noteToEdit.id}`}
                                 method="put"
                                 onSuccess={() => {
-                                    toast.success('Nursing note updated successfully');
+                                    toast.success(
+                                        'Nursing note updated successfully',
+                                    );
                                     setNoteToEdit(null);
                                 }}
                                 onError={() => {
-                                    toast.error('Failed to update nursing note');
+                                    toast.error(
+                                        'Failed to update nursing note',
+                                    );
                                 }}
                                 className="space-y-4"
                             >
                                 {({ processing, errors }) => (
                                     <>
                                         <div className="space-y-2">
-                                            <Label htmlFor="edit-type">Note Type</Label>
-                                            <Select name="type" defaultValue={noteToEdit.type}>
+                                            <Label htmlFor="edit-type">
+                                                Note Type
+                                            </Label>
+                                            <Select
+                                                name="type"
+                                                defaultValue={noteToEdit.type}
+                                            >
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="admission">Admission</SelectItem>
-                                                    <SelectItem value="assessment">Assessment</SelectItem>
-                                                    <SelectItem value="care">Care</SelectItem>
-                                                    <SelectItem value="observation">Observation</SelectItem>
-                                                    <SelectItem value="incident">Incident</SelectItem>
-                                                    <SelectItem value="handover">Handover</SelectItem>
+                                                    <SelectItem value="admission">
+                                                        Admission
+                                                    </SelectItem>
+                                                    <SelectItem value="assessment">
+                                                        Assessment
+                                                    </SelectItem>
+                                                    <SelectItem value="care">
+                                                        Care
+                                                    </SelectItem>
+                                                    <SelectItem value="observation">
+                                                        Observation
+                                                    </SelectItem>
+                                                    <SelectItem value="incident">
+                                                        Incident
+                                                    </SelectItem>
+                                                    <SelectItem value="handover">
+                                                        Handover
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             {errors.type && (
-                                                <p className="text-sm text-destructive">{errors.type}</p>
+                                                <p className="text-sm text-destructive">
+                                                    {errors.type}
+                                                </p>
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="edit-note">Note</Label>
+                                            <Label htmlFor="edit-note">
+                                                Note
+                                            </Label>
                                             <Textarea
                                                 name="note"
                                                 id="edit-note"
@@ -1589,18 +1643,25 @@ export default function WardPatientShow({
                                                 minLength={10}
                                             />
                                             {errors.note && (
-                                                <p className="text-sm text-destructive">{errors.note}</p>
+                                                <p className="text-sm text-destructive">
+                                                    {errors.note}
+                                                </p>
                                             )}
                                         </div>
                                         <div className="flex justify-end gap-2">
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                onClick={() => setNoteToEdit(null)}
+                                                onClick={() =>
+                                                    setNoteToEdit(null)
+                                                }
                                             >
                                                 Cancel
                                             </Button>
-                                            <Button type="submit" disabled={processing}>
+                                            <Button
+                                                type="submit"
+                                                disabled={processing}
+                                            >
                                                 {processing && (
                                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                 )}

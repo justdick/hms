@@ -22,12 +22,14 @@ interface WardRoundsTableProps {
     admissionId: number;
     wardRounds: WardRound[];
     onViewWardRound?: (wardRound: WardRound) => void;
+    canUpdateWardRound?: boolean;
 }
 
 export function WardRoundsTable({
     admissionId,
     wardRounds,
     onViewWardRound,
+    canUpdateWardRound = false,
 }: WardRoundsTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         { id: 'round_datetime', desc: true },
@@ -35,7 +37,7 @@ export function WardRoundsTable({
 
     const table = useReactTable({
         data: wardRounds,
-        columns: wardRoundsColumns(admissionId, onViewWardRound),
+        columns: wardRoundsColumns(admissionId, onViewWardRound, canUpdateWardRound),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -91,6 +93,7 @@ export function WardRoundsTable({
                                         wardRoundsColumns(
                                             admissionId,
                                             onViewWardRound,
+                                            canUpdateWardRound,
                                         ).length
                                     }
                                     className="h-24 text-center"

@@ -324,7 +324,13 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                         </span>
                                                                     )}
                                                                     {patient.earliest_date_formatted && (
-                                                                        <span className="flex items-center gap-1" title={patient.earliest_date_relative || ''}>
+                                                                        <span
+                                                                            className="flex items-center gap-1"
+                                                                            title={
+                                                                                patient.earliest_date_relative ||
+                                                                                ''
+                                                                            }
+                                                                        >
                                                                             <Calendar className="h-3 w-3" />
                                                                             {
                                                                                 patient.earliest_date_formatted

@@ -124,7 +124,9 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
             preserveScroll: true,
             onSuccess: (page) => {
                 // Check for flash success message
-                const flash = page.props.flash as { success?: string } | undefined;
+                const flash = page.props.flash as
+                    | { success?: string }
+                    | undefined;
                 if (flash?.success) {
                     toast.success(flash.success);
                 } else {
