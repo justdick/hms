@@ -29,6 +29,7 @@ interface Diagnosis {
 interface Props {
     value: number | null;
     onChange: (value: number | null) => void;
+    onSelect?: (id: number) => void;
     excludeIds?: number[];
     placeholder?: string;
     disabled?: boolean;
@@ -118,6 +119,7 @@ function CustomDiagnosisForm({
 export default function AsyncDiagnosisSelect({
     value,
     onChange,
+    onSelect,
     excludeIds = [],
     placeholder = 'Search diagnoses...',
     disabled = false,
@@ -208,8 +210,14 @@ export default function AsyncDiagnosisSelect({
     }, [open]);
 
     const handleSelect = (diagnosis: Diagnosis) => {
-        setSelectedDiagnosis(diagnosis);
-        onChange(diagnosis.id);
+        if (onSelect) {
+            // Direct add mode - call onSelect immediately and don't store value
+            onSelect(diagnosis.id);
+        } else {
+            // Standard mode - store selection for parent to use
+            setSelectedDiagnosis(diagnosis);
+            onChange(diagnosis.id);
+        }
         setOpen(false);
     };
 

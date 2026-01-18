@@ -1,8 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { FileText, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { FileText, Trash2 } from 'lucide-react';
 import AsyncDiagnosisSelect from './AsyncDiagnosisSelect';
 
 interface Diagnosis {
@@ -40,13 +39,6 @@ export default function DiagnosisFormSection({
     // consultationStatus is fallback for ward rounds (only in_progress is editable)
     const canEdit = isEditable ?? consultationStatus === 'in_progress';
 
-    const [selectedProvisional, setSelectedProvisional] = useState<
-        number | null
-    >(null);
-    const [selectedPrincipal, setSelectedPrincipal] = useState<number | null>(
-        null,
-    );
-
     const provisionalDiagnoses = consultationDiagnoses.filter(
         (d) => d.type === 'provisional',
     );
@@ -58,17 +50,16 @@ export default function DiagnosisFormSection({
     const addedProvisionalIds = provisionalDiagnoses.map((d) => d.diagnosis.id);
     const addedPrincipalIds = principalDiagnoses.map((d) => d.diagnosis.id);
 
-    const handleAddProvisional = () => {
-        if (selectedProvisional) {
-            onAdd(selectedProvisional, 'provisional');
-            setSelectedProvisional(null);
+    // Handle direct selection - immediately add the diagnosis
+    const handleProvisionalSelect = (diagnosisId: number) => {
+        if (!processing) {
+            onAdd(diagnosisId, 'provisional');
         }
     };
 
-    const handleAddPrincipal = () => {
-        if (selectedPrincipal) {
-            onAdd(selectedPrincipal, 'principal');
-            setSelectedPrincipal(null);
+    const handlePrincipalSelect = (diagnosisId: number) => {
+        if (!processing) {
+            onAdd(diagnosisId, 'principal');
         }
     };
 
@@ -92,23 +83,14 @@ export default function DiagnosisFormSection({
                         <Label className="mb-2 block text-sm font-medium">
                             Add Provisional Diagnosis
                         </Label>
-                        <div className="flex gap-2">
-                            <div className="flex-1">
-                                <AsyncDiagnosisSelect
-                                    value={selectedProvisional}
-                                    onChange={setSelectedProvisional}
-                                    excludeIds={addedProvisionalIds}
-                                    placeholder="Search diagnoses..."
-                                />
-                            </div>
-                            <Button
-                                onClick={handleAddProvisional}
-                                disabled={!selectedProvisional || processing}
-                                size="icon"
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <AsyncDiagnosisSelect
+                            value={null}
+                            onChange={() => { }}
+                            onSelect={handleProvisionalSelect}
+                            excludeIds={addedProvisionalIds}
+                            placeholder="Search and click to add..."
+                            disabled={processing}
+                        />
                     </div>
                 )}
 
@@ -183,23 +165,14 @@ export default function DiagnosisFormSection({
                         <Label className="mb-2 block text-sm font-medium">
                             Add Principal Diagnosis
                         </Label>
-                        <div className="flex gap-2">
-                            <div className="flex-1">
-                                <AsyncDiagnosisSelect
-                                    value={selectedPrincipal}
-                                    onChange={setSelectedPrincipal}
-                                    excludeIds={addedPrincipalIds}
-                                    placeholder="Search diagnoses..."
-                                />
-                            </div>
-                            <Button
-                                onClick={handleAddPrincipal}
-                                disabled={!selectedPrincipal || processing}
-                                size="icon"
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <AsyncDiagnosisSelect
+                            value={null}
+                            onChange={() => { }}
+                            onSelect={handlePrincipalSelect}
+                            excludeIds={addedPrincipalIds}
+                            placeholder="Search and click to add..."
+                            disabled={processing}
+                        />
                     </div>
                 )}
 
