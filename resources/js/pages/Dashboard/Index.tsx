@@ -258,7 +258,7 @@ export default function Dashboard() {
     const renderMetrics = () => {
         if (!metricsLoaded) return <MetricsSkeleton />;
         if (hasWidget('admin_metrics'))
-            return <AdminMetrics metrics={adminData} />;
+            return <AdminMetrics metrics={adminData} datePreset={currentDateFilter.preset} />;
         if (hasWidget('finance_metrics'))
             return <FinanceMetrics metrics={financeData} />;
         if (hasWidget('claims_metrics'))

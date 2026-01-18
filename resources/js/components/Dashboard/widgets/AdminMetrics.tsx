@@ -21,9 +21,27 @@ export interface AdminMetricsData {
 export interface AdminMetricsProps {
     metrics: AdminMetricsData;
     patientsHref?: string;
+    datePreset?: 'today' | 'week' | 'month' | 'year' | 'custom';
 }
 
-export function AdminMetrics({ metrics, patientsHref }: AdminMetricsProps) {
+// Helper function to get the appropriate label based on date preset
+function getAttendanceLabel(preset?: string): string {
+    switch (preset) {
+        case 'week':
+            return 'Patients this week';
+        case 'month':
+            return 'Patients this month';
+        case 'year':
+            return 'Patients this year';
+        case 'custom':
+            return 'Patients (selected period)';
+        case 'today':
+        default:
+            return 'Patients today';
+    }
+}
+
+export function AdminMetrics({ metrics, patientsHref, datePreset = 'today' }: AdminMetricsProps) {
     return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Total Attendance Group */}
@@ -39,7 +57,7 @@ export function AdminMetrics({ metrics, patientsHref }: AdminMetricsProps) {
                         {metrics.totalPatientsToday}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Patients today
+                        {getAttendanceLabel(datePreset)}
                     </p>
                 </div>
             </div>
