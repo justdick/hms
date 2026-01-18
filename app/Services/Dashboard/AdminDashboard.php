@@ -4,6 +4,7 @@ namespace App\Services\Dashboard;
 
 use App\Models\Charge;
 use App\Models\Department;
+use App\Models\PatientAdmission;
 use App\Models\PatientCheckin;
 use App\Models\User;
 use Carbon\CarbonPeriod;
@@ -98,7 +99,7 @@ class AdminDashboard extends AbstractDashboardWidget
     {
         [$start, $end] = $this->getDateRange();
 
-        return $start->format('Ymd').'_'.$end->format('Ymd');
+        return $start->format('Ymd') . '_' . $end->format('Ymd');
     }
 
     /**
@@ -112,12 +113,15 @@ class AdminDashboard extends AbstractDashboardWidget
 
         // Admin metrics are system-wide aggregates (5 min cache)
         return [
-            'totalPatientsToday' => $this->cacheSystem("total_patients_{$dateCacheKey}", fn () => $this->getTotalPatients()),
-            'totalRevenueToday' => $this->cacheSystem("total_revenue_{$dateCacheKey}", fn () => $this->getTotalRevenue()),
-            'activeUsersCount' => $this->cacheSystem('active_users_count', fn () => $this->getActiveUsersCount()),
-            'totalDepartments' => $this->cacheSystem('total_departments', fn () => $this->getTotalActiveDepartments()),
-            'nhisAttendance' => $this->cacheSystem("nhis_attendance_{$dateCacheKey}", fn () => $this->getNhisAttendance()),
-            'nonInsuredAttendance' => $this->cacheSystem("non_insured_attendance_{$dateCacheKey}", fn () => $this->getNonInsuredAttendance()),
+            'totalPatientsToday' => $this->cacheSystem("total_patients_{$dateCacheKey}", fn() => $this->getTotalPatients()),
+            // OPD metrics
+            'opdAttendance' => $this->cacheSystem("opd_attendance_{$dateCacheKey}", fn() => $this->getOpdAttendance()),
+            'opdNhisAttendance' => $this->cacheSystem("opd_nhis_{$dateCacheKey}", fn() => $this->getOpdNhisAttendance()),
+            'opdNonInsuredAttendance' => $this->cacheSystem("opd_non_insured_{$dateCacheKey}", fn() => $this->getOpdNonInsuredAttendance()),
+            // IPD metrics
+            'ipdAttendance' => $this->cacheSystem("ipd_attendance_{$dateCacheKey}", fn() => $this->getIpdAttendance()),
+            'ipdNhisAttendance' => $this->cacheSystem("ipd_nhis_{$dateCacheKey}", fn() => $this->getIpdNhisAttendance()),
+            'ipdNonInsuredAttendance' => $this->cacheSystem("ipd_non_insured_{$dateCacheKey}", fn() => $this->getIpdNonInsuredAttendance()),
         ];
     }
 
@@ -131,10 +135,10 @@ class AdminDashboard extends AbstractDashboardWidget
         $dateCacheKey = $this->getDateCacheKey();
 
         return [
-            'patientFlowTrend' => $this->cacheSystem("patient_flow_trend_{$dateCacheKey}", fn () => $this->getPatientFlowTrend()),
-            'revenueTrend' => $this->cacheSystem("revenue_trend_{$dateCacheKey}", fn () => $this->getRevenueTrend()),
-            'departmentActivity' => $this->cacheSystem("department_activity_{$dateCacheKey}", fn () => $this->getDepartmentActivity()),
-            'attendanceBreakdown' => $this->cacheSystem("attendance_breakdown_{$dateCacheKey}", fn () => $this->getAttendanceBreakdown()),
+            'patientFlowTrend' => $this->cacheSystem("patient_flow_trend_{$dateCacheKey}", fn() => $this->getPatientFlowTrend()),
+            'revenueTrend' => $this->cacheSystem("revenue_trend_{$dateCacheKey}", fn() => $this->getRevenueTrend()),
+            'departmentActivity' => $this->cacheSystem("department_activity_{$dateCacheKey}", fn() => $this->getDepartmentActivity()),
+            'attendanceBreakdown' => $this->cacheSystem("attendance_breakdown_{$dateCacheKey}", fn() => $this->getAttendanceBreakdown()),
         ];
     }
 
@@ -155,17 +159,72 @@ class AdminDashboard extends AbstractDashboardWidget
     }
 
     /**
-     * Get total revenue collected within date range.
+     * Get IPD (admitted patients) attendance count within date range.
      */
-    protected function getTotalRevenue(): float
+    protected function getIpdAttendance(): int
     {
         [$startDate, $endDate] = $this->getDateRange();
 
-        return (float) Charge::query()
-            ->whereBetween('paid_at', [$startDate, $endDate])
-            ->whereIn('status', ['paid', 'partial'])
-            ->notVoided()
-            ->sum('paid_amount');
+        return PatientAdmission::query()
+            ->whereBetween('admitted_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
+            ->count();
+    }
+
+    /**
+     * Get OPD (outpatient) attendance count within date range.
+     * OPD = Total check-ins minus IPD admissions.
+     */
+    protected function getOpdAttendance(): int
+    {
+        return $this->getTotalPatients() - $this->getIpdAttendance();
+    }
+
+    /**
+     * Get OPD NHIS (insured outpatient) attendance count within date range.
+     * OPD NHIS = Total NHIS - IPD NHIS.
+     */
+    protected function getOpdNhisAttendance(): int
+    {
+        return $this->getNhisAttendance() - $this->getIpdNhisAttendance();
+    }
+
+    /**
+     * Get OPD non-insured attendance count within date range.
+     */
+    protected function getOpdNonInsuredAttendance(): int
+    {
+        return $this->getOpdAttendance() - $this->getOpdNhisAttendance();
+    }
+
+    /**
+     * Get IPD NHIS (insured admitted patients) attendance count within date range.
+     */
+    protected function getIpdNhisAttendance(): int
+    {
+        [$startDate, $endDate] = $this->getDateRange();
+
+        return PatientAdmission::query()
+            ->whereBetween('admitted_at', [$startDate, $endDate])
+            ->where(function ($query) {
+                $query->where('migrated_from_mittag', false)
+                    ->orWhereNull('migrated_from_mittag');
+            })
+            ->whereHas('patient.activeInsurance.plan.provider', function ($query) {
+                $query->where('is_nhis', true);
+            })
+            ->count();
+    }
+
+    /**
+     * Get IPD non-insured attendance count within date range.
+     */
+    protected function getIpdNonInsuredAttendance(): int
+    {
+        return $this->getIpdAttendance() - $this->getIpdNhisAttendance();
     }
 
     /**
@@ -284,27 +343,6 @@ class AdminDashboard extends AbstractDashboardWidget
                 'fill' => '#f59e0b', // amber
             ],
         ]);
-    }
-
-    /**
-     * Get count of active users (users who are active in the system).
-     * Since we don't track last_activity_at, we count all active users.
-     */
-    protected function getActiveUsersCount(): int
-    {
-        return User::query()
-            ->active()
-            ->count();
-    }
-
-    /**
-     * Get total number of active departments.
-     */
-    protected function getTotalActiveDepartments(): int
-    {
-        return Department::query()
-            ->active()
-            ->count();
     }
 
     /**

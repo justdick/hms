@@ -15,4 +15,5 @@ Route::middleware(['auth'])->prefix('radiology')->name('radiology.')->group(func
     Route::post('/orders/{labOrder}/attachments', [ImagingAttachmentController::class, 'store'])->name('attachments.store');
     Route::delete('/attachments/{imagingAttachment}', [ImagingAttachmentController::class, 'destroy'])->name('attachments.destroy');
     Route::get('/attachments/{imagingAttachment}/download', [ImagingAttachmentController::class, 'download'])->name('attachments.download');
+    Route::get('/attachments/{imagingAttachment}/view', [ImagingAttachmentController::class, 'view'])->name('attachments.view');
 });

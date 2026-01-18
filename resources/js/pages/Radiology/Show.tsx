@@ -21,7 +21,7 @@ import {
     Calendar,
     CheckCircle,
     Clock,
-    Download,
+    Download as DownloadIcon,
     FileText,
     Image,
     Phone,
@@ -32,6 +32,13 @@ import {
     User,
 } from 'lucide-react';
 import * as React from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import Fullscreen from 'yet-another-react-lightbox/plugins/fullscreen';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import Download from 'yet-another-react-lightbox/plugins/download';
+import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
+import 'yet-another-react-lightbox/styles.css';
+import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import { ImageUploadZone } from './ImageUploadZone';
 
 interface Patient {
@@ -131,12 +138,21 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
 export default function RadiologyShow({ labOrder, patient, context }: Props) {
     const [showCompleteDialog, setShowCompleteDialog] = React.useState(false);
     const [showUploadDialog, setShowUploadDialog] = React.useState(false);
-    const [showImageViewer, setShowImageViewer] = React.useState(false);
-    const [selectedImage, setSelectedImage] =
-        React.useState<ImagingAttachment | null>(null);
+    const [lightboxOpen, setLightboxOpen] = React.useState(false);
+    const [lightboxIndex, setLightboxIndex] = React.useState(0);
     const [reportFindings, setReportFindings] = React.useState('');
     const [reportImpression, setReportImpression] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
+
+    // Prepare slides for lightbox - only image files
+    const imageSlides = labOrder.imaging_attachments
+        .filter((a) => a.file_type.startsWith('image/'))
+        .map((attachment) => ({
+            src: attachment.url,
+            alt: attachment.description || attachment.file_name,
+            title: attachment.description || attachment.file_name,
+            download: `/radiology/attachments/${attachment.id}/download`,
+        }));
 
     const calculateAge = (dateOfBirth: string) => {
         const today = new Date();
@@ -205,9 +221,9 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
         });
     };
 
-    const openImageViewer = (attachment: ImagingAttachment) => {
-        setSelectedImage(attachment);
-        setShowImageViewer(true);
+    const openLightbox = (index: number) => {
+        setLightboxIndex(index);
+        setLightboxOpen(true);
     };
 
     const canMarkInProgress = labOrder.status === 'ordered';
@@ -319,226 +335,106 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                     </div>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    {/* Patient Information */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="h-5 w-5" />
-                                Patient Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {patient ? (
-                                <>
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Name
-                                        </Label>
-                                        <p className="text-sm">
-                                            {patient.first_name}{' '}
-                                            {patient.last_name}
+                {/* Consolidated Info Card */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {/* Patient Info */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                    <User className="h-4 w-4" />
+                                    Patient
+                                </div>
+                                {patient ? (
+                                    <div className="space-y-1">
+                                        <p className="font-medium">
+                                            {patient.first_name} {patient.last_name}
                                         </p>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Patient Number
-                                        </Label>
-                                        <p className="font-mono text-sm">
-                                            {patient.patient_number}
+                                        <p className="text-sm text-muted-foreground">
+                                            {patient.patient_number} • {calculateAge(patient.date_of_birth)}y {patient.gender}
                                         </p>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Age & Gender
-                                        </Label>
-                                        <p className="text-sm">
-                                            {calculateAge(
-                                                patient.date_of_birth,
-                                            )}{' '}
-                                            years old, {patient.gender}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm font-medium">
-                                            Date of Birth
-                                        </Label>
-                                        <p className="text-sm">
-                                            {format(
-                                                new Date(patient.date_of_birth),
-                                                'PPP',
-                                            )}
-                                        </p>
-                                    </div>
-                                    {patient.phone_number && (
-                                        <div className="flex items-center gap-1">
-                                            <Phone className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-sm">
+                                        {patient.phone_number && (
+                                            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                                                <Phone className="h-3 w-3" />
                                                 {patient.phone_number}
-                                            </span>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <p className="text-muted-foreground">
-                                    Patient information not available
-                                </p>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Study Information */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Scan className="h-5 w-5" />
-                                Study Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div>
-                                <Label className="text-sm font-medium">
-                                    Study Type
-                                </Label>
-                                <p className="text-sm font-medium">
-                                    {labOrder.lab_service.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Code: {labOrder.lab_service.code}
-                                </p>
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Not available</p>
+                                )}
                             </div>
-                            {labOrder.lab_service.modality && (
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Modality
-                                    </Label>
-                                    <p className="text-sm">
-                                        <Badge variant="outline">
+
+                            {/* Study Info */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                    <Scan className="h-4 w-4" />
+                                    Study
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="font-medium">{labOrder.lab_service.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {labOrder.lab_service.code} • {labOrder.lab_service.category}
+                                    </p>
+                                    {labOrder.lab_service.modality && (
+                                        <Badge variant="outline" className="text-xs">
                                             {labOrder.lab_service.modality}
                                         </Badge>
-                                    </p>
+                                    )}
                                 </div>
-                            )}
-                            <div>
-                                <Label className="text-sm font-medium">
-                                    Category
-                                </Label>
-                                <p className="text-sm">
-                                    {labOrder.lab_service.category}
-                                </p>
                             </div>
-                            {labOrder.clinical_notes && (
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Clinical Indication
-                                    </Label>
-                                    <p className="rounded border bg-muted/50 p-2 text-sm">
-                                        {labOrder.clinical_notes}
-                                    </p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
 
-                    {/* Order Details */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" />
-                                Order Details
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div>
-                                <Label className="text-sm font-medium">
-                                    Ordered By
-                                </Label>
-                                <p className="text-sm">
-                                    {labOrder.ordered_by.name}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">
-                                    Ordered:{' '}
-                                    {format(
-                                        new Date(labOrder.ordered_at),
-                                        'PPpp',
-                                    )}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">
-                                    {formatDistanceToNow(
-                                        new Date(labOrder.ordered_at),
-                                        { addSuffix: true },
-                                    )}
-                                </span>
-                            </div>
-                            {context && (
-                                <div>
-                                    <Label className="text-sm font-medium">
-                                        Context
-                                    </Label>
-                                    <p className="text-sm">
-                                        {context.type === 'consultation' ? (
-                                            <>
-                                                Consultation -{' '}
-                                                {context.department}
-                                            </>
-                                        ) : (
-                                            <>
-                                                Ward Round Day{' '}
-                                                {context.day_number} -{' '}
-                                                {context.ward}
-                                            </>
-                                        )}
+                            {/* Order Info */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                    <FileText className="h-4 w-4" />
+                                    Order
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="font-medium">{labOrder.ordered_by.name}</p>
+                                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <Calendar className="h-3 w-3" />
+                                        {format(new Date(labOrder.ordered_at), 'PPp')}
                                     </p>
-                                    {context.doctor && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Doctor: {context.doctor}
+                                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        {formatDistanceToNow(new Date(labOrder.ordered_at), { addSuffix: true })}
+                                    </p>
+                                    {context && (
+                                        <p className="text-sm text-muted-foreground">
+                                            {context.type === 'consultation'
+                                                ? `${context.department}`
+                                                : `Ward Round Day ${context.day_number}`}
                                         </p>
                                     )}
                                 </div>
-                            )}
-                            {labOrder.result_entered_at && (
-                                <div className="flex items-center gap-1">
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                    <span className="text-sm">
-                                        Completed:{' '}
-                                        {format(
-                                            new Date(
-                                                labOrder.result_entered_at,
-                                            ),
-                                            'PPpp',
-                                        )}
-                                    </span>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                            </div>
+                        </div>
 
-                    {/* Preparation Instructions */}
-                    {labOrder.lab_service.preparation_instructions && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <AlertCircle className="h-5 w-5" />
-                                    Preparation Instructions
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm">
-                                    {
-                                        labOrder.lab_service
-                                            .preparation_instructions
-                                    }
+                        {/* Clinical Indication - full width if present */}
+                        {labOrder.clinical_notes && (
+                            <div className="mt-4 border-t pt-4">
+                                <Label className="text-sm font-medium">Clinical Indication</Label>
+                                <p className="mt-1 rounded bg-muted/50 p-2 text-sm">
+                                    {labOrder.clinical_notes}
                                 </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+                            </div>
+                        )}
+
+                        {/* Preparation Instructions - full width if present */}
+                        {labOrder.lab_service.preparation_instructions && (
+                            <div className="mt-4 border-t pt-4">
+                                <div className="flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                                    <Label className="text-sm font-medium">Preparation Instructions</Label>
+                                </div>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {labOrder.lab_service.preparation_instructions}
+                                </p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Images Section */}
                 <Card>
@@ -552,16 +448,26 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                         {labOrder.imaging_attachments.length > 0 ? (
                             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                                 {labOrder.imaging_attachments.map(
-                                    (attachment) => (
+                                    (attachment, index) => {
+                                        // Find the index in imageSlides for this attachment
+                                        const slideIndex = imageSlides.findIndex(
+                                            (s) => s.src === attachment.url
+                                        );
+                                        
+                                        return (
                                         <div
                                             key={attachment.id}
                                             className="group relative rounded-lg border bg-muted/30 p-2"
                                         >
                                             <div
                                                 className="aspect-square cursor-pointer overflow-hidden rounded-md bg-muted"
-                                                onClick={() =>
-                                                    openImageViewer(attachment)
-                                                }
+                                                onClick={() => {
+                                                    if (attachment.file_type.startsWith('image/') && slideIndex >= 0) {
+                                                        openLightbox(slideIndex);
+                                                    } else if (attachment.file_type === 'application/pdf') {
+                                                        window.open(attachment.url, '_blank');
+                                                    }
+                                                }}
                                             >
                                                 {attachment.file_type.startsWith(
                                                     'image/',
@@ -620,7 +526,7 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                                         href={`/radiology/attachments/${attachment.id}/download`}
                                                         download
                                                     >
-                                                        <Download className="h-4 w-4" />
+                                                        <DownloadIcon className="h-4 w-4" />
                                                     </a>
                                                 </Button>
                                                 {canUploadImages && (
@@ -639,7 +545,8 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                                 )}
                                             </div>
                                         </div>
-                                    ),
+                                    );
+                                    }
                                 )}
                             </div>
                         ) : (
@@ -780,80 +687,19 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                 </DialogContent>
             </Dialog>
 
-            {/* Image Viewer Dialog */}
-            <Dialog open={showImageViewer} onOpenChange={setShowImageViewer}>
-                <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {selectedImage?.description ||
-                                selectedImage?.file_name}
-                        </DialogTitle>
-                    </DialogHeader>
-                    {selectedImage && (
-                        <div className="space-y-4">
-                            <div className="flex max-h-[70vh] items-center justify-center overflow-hidden rounded-lg bg-black">
-                                {selectedImage.file_type.startsWith(
-                                    'image/',
-                                ) ? (
-                                    <img
-                                        src={selectedImage.url}
-                                        alt={
-                                            selectedImage.description ||
-                                            selectedImage.file_name
-                                        }
-                                        className="max-h-[70vh] object-contain"
-                                    />
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-12">
-                                        <FileText className="h-16 w-16 text-white" />
-                                        <p className="mt-2 text-white">
-                                            PDF Document
-                                        </p>
-                                        <Button
-                                            variant="secondary"
-                                            className="mt-4"
-                                            asChild
-                                        >
-                                            <a
-                                                href={selectedImage.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Open PDF
-                                            </a>
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                <div>
-                                    <p>
-                                        Uploaded by{' '}
-                                        {selectedImage.uploaded_by.name}
-                                    </p>
-                                    <p>
-                                        {format(
-                                            new Date(selectedImage.uploaded_at),
-                                            'PPpp',
-                                        )}
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" asChild>
-                                        <a
-                                            href={`/radiology/attachments/${selectedImage.id}/download`}
-                                            download
-                                        >
-                                            <Download className="mr-2 h-4 w-4" />
-                                            Download
-                                        </a>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            {/* Image Gallery Lightbox */}
+            <Lightbox
+                open={lightboxOpen}
+                close={() => setLightboxOpen(false)}
+                index={lightboxIndex}
+                slides={imageSlides}
+                plugins={[Fullscreen, Zoom, Download, Thumbnails]}
+                zoom={{
+                    maxZoomPixelRatio: 3,
+                    scrollToZoom: true,
+                }}
+            />
+
         </AppLayout>
     );
 }

@@ -261,11 +261,9 @@ export function ImageUploadZone({
 
         setIsUploading(false);
 
-        // Check if all files uploaded successfully
-        const allSuccess = files.every(
-            (f) => f.status === 'success' || f.status === 'error',
-        );
-        if (allSuccess && onUploadComplete) {
+        // Call onUploadComplete after all uploads finish
+        // The parent component will handle closing the modal and refreshing
+        if (onUploadComplete) {
             onUploadComplete();
         }
     };

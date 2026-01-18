@@ -108,4 +108,27 @@ class ImagingAttachmentController extends Controller
             $imagingAttachment->file_name
         );
     }
+
+    /**
+     * View/serve an imaging attachment inline.
+     */
+    public function view(ImagingAttachment $imagingAttachment): StreamedResponse|RedirectResponse
+    {
+        Gate::authorize('viewWorklist-radiology');
+
+        // Check if file exists
+        if (! $this->storageService->exists($imagingAttachment->file_path)) {
+            return back()->with('error', 'File not found.');
+        }
+
+        $disk = $this->storageService->getDisk();
+
+        return Storage::disk($disk)->response(
+            $imagingAttachment->file_path,
+            $imagingAttachment->file_name,
+            [
+                'Content-Type' => $imagingAttachment->file_type,
+            ]
+        );
+    }
 }

@@ -81,7 +81,8 @@
         "tailwindcss-animate": "^1.0.7",
         "typescript": "^5.7.2",
         "use-debounce": "^10.0.6",
-        "vite": "^7.0.4"
+        "vite": "^7.0.4",
+        "yet-another-react-lightbox": "^3.28.0"
     },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5",

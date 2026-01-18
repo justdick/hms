@@ -106,11 +106,12 @@ interface DashboardMetrics {
     pendingInsuranceClaims?: number;
     pendingInsuranceClaimsCount?: number;
     totalPatientsToday?: number;
-    totalRevenueToday?: number;
-    activeUsersCount?: number;
-    totalDepartments?: number;
-    nhisAttendance?: number;
-    nonInsuredAttendance?: number;
+    opdAttendance?: number;
+    opdNhisAttendance?: number;
+    opdNonInsuredAttendance?: number;
+    ipdAttendance?: number;
+    ipdNhisAttendance?: number;
+    ipdNonInsuredAttendance?: number;
 }
 
 interface DashboardLists {
@@ -246,11 +247,12 @@ export default function Dashboard() {
 
     const adminData: AdminMetricsData = {
         totalPatientsToday: metrics?.totalPatientsToday ?? 0,
-        totalRevenueToday: metrics?.totalRevenueToday ?? 0,
-        activeUsersCount: metrics?.activeUsersCount ?? 0,
-        totalDepartments: metrics?.totalDepartments ?? 0,
-        nhisAttendance: metrics?.nhisAttendance ?? 0,
-        nonInsuredAttendance: metrics?.nonInsuredAttendance ?? 0,
+        opdAttendance: metrics?.opdAttendance ?? 0,
+        opdNhisAttendance: metrics?.opdNhisAttendance ?? 0,
+        opdNonInsuredAttendance: metrics?.opdNonInsuredAttendance ?? 0,
+        ipdAttendance: metrics?.ipdAttendance ?? 0,
+        ipdNhisAttendance: metrics?.ipdNhisAttendance ?? 0,
+        ipdNonInsuredAttendance: metrics?.ipdNonInsuredAttendance ?? 0,
     };
 
     const renderMetrics = () => {

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class ImagingAttachment extends Model
 {
@@ -25,6 +24,11 @@ class ImagingAttachment extends Model
         'uploaded_by',
         'uploaded_at',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = ['url', 'thumbnail_url'];
 
     protected function casts(): array
     {
@@ -54,21 +58,22 @@ class ImagingAttachment extends Model
 
     /**
      * Get the URL for the attachment.
+     * Uses a route to serve the file since it's stored on local (private) disk.
      */
     public function getUrlAttribute(): string
     {
-        return Storage::disk('local')->url($this->file_path);
+        return route('radiology.attachments.view', $this->id);
     }
 
     /**
      * Get the thumbnail URL for the attachment.
      * Returns the same URL for now - thumbnail generation can be added later.
      */
-    public function getThumbnailUrlAttribute(): string
+    public function getThumbnailUrlAttribute(): ?string
     {
-        // For PDFs, return a generic PDF icon path
+        // For PDFs, return null (no thumbnail)
         if ($this->file_type === 'application/pdf') {
-            return asset('images/pdf-icon.png');
+            return null;
         }
 
         // For images, return the same path (thumbnail generation can be added later)
