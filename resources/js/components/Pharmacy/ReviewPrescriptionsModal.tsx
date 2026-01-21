@@ -93,6 +93,7 @@ interface Props {
     patientId: number;
     prescriptionsData: PrescriptionData[];
     suppliesData: SupplyData[];
+    onSuccess?: () => void; // Callback after successful review
 }
 
 export function ReviewPrescriptionsModal({
@@ -101,6 +102,7 @@ export function ReviewPrescriptionsModal({
     patientId,
     prescriptionsData,
     suppliesData,
+    onSuccess,
 }: Props) {
     const [reviews, setReviews] = useState<ReviewForm[]>(
         prescriptionsData.map((pd) => {
@@ -319,6 +321,7 @@ export function ReviewPrescriptionsModal({
             payload,
             {
                 onSuccess: () => {
+                    onSuccess?.(); // Trigger parent refresh
                     onOpenChange(false);
                 },
                 onError: (errors) => {

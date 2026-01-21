@@ -141,6 +141,8 @@ function parseFrequency(frequency: string): number | null {
         'Every 6 hours': 4,
         'Every 8 hours': 3,
         'Every 12 hours': 2,
+        // Note: 'At 0, 12, 24 hours' is NOT included here because it's a one-time
+        // schedule (3 doses total), not a daily recurring pattern like TDS
         'At night (Nocte)': 1, // Once daily at night
         'As needed (PRN)': 4, // PRN: assume max 4 times per day for quantity calculation
     };
@@ -263,6 +265,7 @@ export default function PrescriptionFormSection({
             'Every 6 hours': 'Q6H',
             'Every 8 hours': 'Q8H',
             'Every 12 hours': 'Q12H',
+            'At 0, 12, 24 hours': '0-12-24H',
             'At night (Nocte)': 'Nocte',
             'As needed (PRN)': 'PRN',
         };
@@ -439,11 +442,14 @@ export default function PrescriptionFormSection({
         setManuallyEdited(false);
     }, [selectedDrug?.id]);
 
-    // Track previous frequency to detect changes from STAT
+    // Track previous frequency to detect changes from STAT or 0-12-24H
     const [prevFrequency, setPrevFrequency] = useState<string>('');
 
-    // Auto-set duration to "Single dose" when STAT is selected, clear when switching away
+    // Auto-set duration when STAT or 0-12-24H is selected, clear when switching away
     useEffect(() => {
+        // Frequencies that have fixed duration (no duration selection needed)
+        const fixedDurationFrequencies = ['STAT (Immediately)', 'At 0, 12, 24 hours'];
+
         if (prescriptionData.frequency === 'STAT (Immediately)') {
             setPrescriptionData('duration', 'Single dose');
 
@@ -470,16 +476,25 @@ export default function PrescriptionFormSection({
                 // No drug selected yet, default to 1
                 setPrescriptionData('quantity_to_dispense', 1);
             }
+        } else if (prescriptionData.frequency === 'At 0, 12, 24 hours') {
+            // For 0-12-24H: duration is not applicable - the frequency defines the schedule
+            setPrescriptionData('duration', 'N/A');
+
+            // Quantity is left to pharmacy for vials
+            if (selectedDrug?.unit_type === 'vial') {
+                setPrescriptionData('quantity_to_dispense', null);
+            }
         } else if (
-            prevFrequency === 'STAT (Immediately)' &&
-            prescriptionData.frequency !== 'STAT (Immediately)'
+            fixedDurationFrequencies.includes(prevFrequency) &&
+            !fixedDurationFrequencies.includes(prescriptionData.frequency)
         ) {
-            // Clear duration when switching away from STAT so user can select appropriate duration
+            // Clear duration when switching away from fixed-duration frequencies
             setPrescriptionData('duration', '');
             setPrescriptionData('quantity_to_dispense', '');
         }
 
         setPrevFrequency(prescriptionData.frequency);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         prescriptionData.frequency,
         prescriptionData.dose_quantity,
@@ -500,35 +515,35 @@ export default function PrescriptionFormSection({
                         className={cn(
                             'w-full justify-between',
                             !prescriptionData.drug_id &&
-                                'text-muted-foreground',
+                            'text-muted-foreground',
                         )}
                     >
                         {selectedDrug
                             ? (() => {
-                                  const { baseName, packSize } =
-                                      extractPackSize(selectedDrug.name);
-                                  return (
-                                      <span className="flex items-center gap-2 truncate">
-                                          <span className="truncate font-medium">
-                                              {baseName}
-                                          </span>
-                                          {packSize && (
-                                              <Badge
-                                                  variant="outline"
-                                                  className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400"
-                                              >
-                                                  {packSize}
-                                              </Badge>
-                                          )}
-                                          <Badge
-                                              variant="secondary"
-                                              className="shrink-0 text-xs"
-                                          >
-                                              {selectedDrug.form}
-                                          </Badge>
-                                      </span>
-                                  );
-                              })()
+                                const { baseName, packSize } =
+                                    extractPackSize(selectedDrug.name);
+                                return (
+                                    <span className="flex items-center gap-2 truncate">
+                                        <span className="truncate font-medium">
+                                            {baseName}
+                                        </span>
+                                        {packSize && (
+                                            <Badge
+                                                variant="outline"
+                                                className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400"
+                                            >
+                                                {packSize}
+                                            </Badge>
+                                        )}
+                                        <Badge
+                                            variant="secondary"
+                                            className="shrink-0 text-xs"
+                                        >
+                                            {selectedDrug.form}
+                                        </Badge>
+                                    </span>
+                                );
+                            })()
                             : 'Select drug...'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -752,9 +767,9 @@ export default function PrescriptionFormSection({
                                                         'quantity_to_dispense',
                                                         e.target.value
                                                             ? parseInt(
-                                                                  e.target
-                                                                      .value,
-                                                              )
+                                                                e.target
+                                                                    .value,
+                                                            )
                                                             : '',
                                                     );
                                                 }}
@@ -763,15 +778,15 @@ export default function PrescriptionFormSection({
                                             />
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 {selectedDrug.unit_type ===
-                                                'bottle'
+                                                    'bottle'
                                                     ? (prescriptionData.quantity_to_dispense ||
-                                                          1) === 1
+                                                        1) === 1
                                                         ? 'bottle'
                                                         : 'bottles'
                                                     : (prescriptionData.quantity_to_dispense ||
-                                                            1) === 1
-                                                      ? 'vial'
-                                                      : 'vials'}
+                                                        1) === 1
+                                                        ? 'vial'
+                                                        : 'vials'}
                                             </span>
                                         </div>
                                         <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -813,7 +828,7 @@ export default function PrescriptionFormSection({
                                     ((parsedResult.quantityToDispense ===
                                         null ||
                                         parsedResult.quantityToDispense ===
-                                            0) &&
+                                        0) &&
                                         !prescriptionData.quantity_to_dispense)
                                 }
                                 className="w-full"
@@ -870,9 +885,9 @@ export default function PrescriptionFormSection({
                                                             'quantity_to_dispense',
                                                             e.target.value
                                                                 ? parseInt(
-                                                                      e.target
-                                                                          .value,
-                                                                  )
+                                                                    e.target
+                                                                        .value,
+                                                                )
                                                                 : '',
                                                         );
                                                     }}
@@ -881,18 +896,18 @@ export default function PrescriptionFormSection({
                                                 />
                                                 <span className="text-sm text-gray-600 dark:text-gray-400">
                                                     {selectedDrug.unit_type ===
-                                                    'tube'
+                                                        'tube'
                                                         ? (prescriptionData.quantity_to_dispense ||
-                                                              1) === 1
+                                                            1) === 1
                                                             ? 'tube'
                                                             : 'tubes'
                                                         : selectedDrug.unit_type ===
                                                             'piece'
-                                                          ? (prescriptionData.quantity_to_dispense ||
+                                                            ? (prescriptionData.quantity_to_dispense ||
                                                                 1) === 1
-                                                              ? 'unit'
-                                                              : 'units'
-                                                          : selectedDrug.unit_type}
+                                                                ? 'unit'
+                                                                : 'units'
+                                                            : selectedDrug.unit_type}
                                                 </span>
                                             </div>
                                         </div>
@@ -956,22 +971,22 @@ export default function PrescriptionFormSection({
                                                 <span className="text-xs text-gray-600 dark:text-gray-400">
                                                     {selectedDrug.form ===
                                                         'tablet' ||
-                                                    selectedDrug.form ===
+                                                        selectedDrug.form ===
                                                         'capsule'
                                                         ? `${selectedDrug.form}(s)`
                                                         : selectedDrug.form ===
-                                                                'injection' ||
+                                                            'injection' ||
                                                             selectedDrug.unit_type ===
-                                                                'vial'
-                                                          ? 'mg'
-                                                          : selectedDrug.unit_type ===
-                                                                  'bottle' ||
-                                                              selectedDrug.form ===
-                                                                  'syrup' ||
-                                                              selectedDrug.form ===
-                                                                  'suspension'
-                                                            ? 'ml'
-                                                            : selectedDrug.form}
+                                                            'vial'
+                                                            ? 'mg'
+                                                            : selectedDrug.unit_type ===
+                                                                'bottle' ||
+                                                                selectedDrug.form ===
+                                                                'syrup' ||
+                                                                selectedDrug.form ===
+                                                                'suspension'
+                                                                ? 'ml'
+                                                                : selectedDrug.form}
                                                 </span>
                                             </div>
                                         </div>
@@ -1024,6 +1039,12 @@ export default function PrescriptionFormSection({
                                                     <SelectItem value="Every 12 hours">
                                                         Every 12 hours
                                                     </SelectItem>
+                                                    {/* Injectable-only: 0-12-24H for malaria drugs */}
+                                                    {selectedDrug?.form === 'injection' && (
+                                                        <SelectItem value="At 0, 12, 24 hours">
+                                                            At 0, 12, 24 hours
+                                                        </SelectItem>
+                                                    )}
                                                     <SelectItem value="At night (Nocte)">
                                                         At night (Nocte)
                                                     </SelectItem>
@@ -1052,13 +1073,21 @@ export default function PrescriptionFormSection({
                                                 required
                                                 disabled={
                                                     prescriptionData.frequency ===
-                                                    'STAT (Immediately)'
+                                                    'STAT (Immediately)' ||
+                                                    prescriptionData.frequency ===
+                                                    'At 0, 12, 24 hours'
                                                 }
                                             >
                                                 <SelectTrigger id="duration">
                                                     <SelectValue placeholder="Select" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    {/* N/A only shows when 0-12-24H is selected since schedule is self-contained */}
+                                                    {prescriptionData.frequency === 'At 0, 12, 24 hours' && (
+                                                        <SelectItem value="N/A">
+                                                            N/A
+                                                        </SelectItem>
+                                                    )}
                                                     <SelectItem value="Single dose">
                                                         Single dose
                                                     </SelectItem>
@@ -1136,12 +1165,12 @@ export default function PrescriptionFormSection({
                                                         prescriptionData.quantity_to_dispense
                                                     }{' '}
                                                     {selectedDrug.form ===
-                                                    'tablet'
+                                                        'tablet'
                                                         ? 'tablets'
                                                         : selectedDrug.form ===
                                                             'capsule'
-                                                          ? 'capsules'
-                                                          : 'pieces'}
+                                                            ? 'capsules'
+                                                            : 'pieces'}
                                                 </p>
                                                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                                                     Auto-calculated from
@@ -1152,12 +1181,12 @@ export default function PrescriptionFormSection({
                                     </div>
                                 )}
 
-                            {/* Calculated Quantity Display for bottles/vials WITH bottle_size configured */}
+                            {/* Calculated Quantity Display for bottles WITH bottle_size configured */}
+                            {/* Note: Vials are excluded since quantity is entered at dispensing */}
                             {prescriptionData.quantity_to_dispense &&
                                 selectedDrug &&
                                 !isTopicalPreparation(selectedDrug) &&
-                                (selectedDrug.unit_type === 'bottle' ||
-                                    selectedDrug.unit_type === 'vial') &&
+                                selectedDrug.unit_type === 'bottle' &&
                                 selectedDrug.bottle_size && (
                                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
                                         <div className="flex items-center gap-2">
@@ -1170,43 +1199,29 @@ export default function PrescriptionFormSection({
                                                     {
                                                         prescriptionData.quantity_to_dispense
                                                     }{' '}
-                                                    {selectedDrug.unit_type ===
-                                                    'bottle'
-                                                        ? prescriptionData.quantity_to_dispense ===
-                                                          1
-                                                            ? 'bottle'
-                                                            : 'bottles'
-                                                        : prescriptionData.quantity_to_dispense ===
-                                                            1
-                                                          ? 'vial'
-                                                          : 'vials'}
+                                                    {prescriptionData.quantity_to_dispense ===
+                                                        1
+                                                        ? 'bottle'
+                                                        : 'bottles'}
                                                 </p>
                                                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                                                     Based on{' '}
                                                     {prescriptionData.dose_quantity ||
                                                         '5'}
-                                                    {selectedDrug.unit_type ===
-                                                    'vial'
-                                                        ? 'mg'
-                                                        : 'ml'}{' '}
-                                                    per dose,{' '}
+                                                    ml per dose,{' '}
                                                     {selectedDrug.bottle_size}
-                                                    {selectedDrug.unit_type ===
-                                                    'vial'
-                                                        ? 'mg'
-                                                        : 'ml'}{' '}
-                                                    per {selectedDrug.unit_type}
+                                                    ml per bottle
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
-                            {/* Manual Quantity Input for bottles/vials WITHOUT bottle_size configured */}
+                            {/* Manual Quantity Input for bottles WITHOUT bottle_size configured */}
+                            {/* Note: Vials are excluded since quantity is entered at dispensing */}
                             {selectedDrug &&
                                 !isTopicalPreparation(selectedDrug) &&
-                                (selectedDrug.unit_type === 'bottle' ||
-                                    selectedDrug.unit_type === 'vial') &&
+                                selectedDrug.unit_type === 'bottle' &&
                                 !selectedDrug.bottle_size &&
                                 prescriptionData.frequency &&
                                 prescriptionData.duration && (
@@ -1234,9 +1249,9 @@ export default function PrescriptionFormSection({
                                                         'quantity_to_dispense',
                                                         e.target.value
                                                             ? parseInt(
-                                                                  e.target
-                                                                      .value,
-                                                              )
+                                                                e.target
+                                                                    .value,
+                                                            )
                                                             : '',
                                                     );
                                                 }}
@@ -1245,15 +1260,15 @@ export default function PrescriptionFormSection({
                                             />
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 {selectedDrug.unit_type ===
-                                                'bottle'
+                                                    'bottle'
                                                     ? (prescriptionData.quantity_to_dispense ||
-                                                          1) === 1
+                                                        1) === 1
                                                         ? 'bottle'
                                                         : 'bottles'
                                                     : (prescriptionData.quantity_to_dispense ||
-                                                            1) === 1
-                                                      ? 'vial'
-                                                      : 'vials'}
+                                                        1) === 1
+                                                        ? 'vial'
+                                                        : 'vials'}
                                             </span>
                                         </div>
                                         <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -1295,9 +1310,9 @@ export default function PrescriptionFormSection({
                                                         'quantity_to_dispense',
                                                         e.target.value
                                                             ? parseInt(
-                                                                  e.target
-                                                                      .value,
-                                                              )
+                                                                e.target
+                                                                    .value,
+                                                            )
                                                             : '',
                                                     );
                                                 }}
@@ -1306,9 +1321,9 @@ export default function PrescriptionFormSection({
                                             />
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                                 {selectedDrug.unit_type ===
-                                                'tube'
+                                                    'tube'
                                                     ? (prescriptionData.quantity_to_dispense ||
-                                                          1) === 1
+                                                        1) === 1
                                                         ? 'tube'
                                                         : 'tubes'
                                                     : selectedDrug.unit_type}
@@ -1327,24 +1342,24 @@ export default function PrescriptionFormSection({
                             {/* Instructions (for non-topical drugs - topicals have their own instructions field) */}
                             {(!selectedDrug ||
                                 !isTopicalPreparation(selectedDrug)) && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="instructions">
-                                        Instructions (Optional)
-                                    </Label>
-                                    <Textarea
-                                        id="instructions"
-                                        placeholder="Special instructions for the patient..."
-                                        value={prescriptionData.instructions}
-                                        onChange={(e) =>
-                                            setPrescriptionData(
-                                                'instructions',
-                                                e.target.value,
-                                            )
-                                        }
-                                        rows={3}
-                                    />
-                                </div>
-                            )}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="instructions">
+                                            Instructions (Optional)
+                                        </Label>
+                                        <Textarea
+                                            id="instructions"
+                                            placeholder="Special instructions for the patient..."
+                                            value={prescriptionData.instructions}
+                                            onChange={(e) =>
+                                                setPrescriptionData(
+                                                    'instructions',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            rows={3}
+                                        />
+                                    </div>
+                                )}
 
                             <Button
                                 type="submit"
@@ -1446,19 +1461,19 @@ export default function PrescriptionFormSection({
                                             <Badge
                                                 variant={
                                                     prescription.status ===
-                                                    'prescribed'
+                                                        'prescribed'
                                                         ? 'default'
                                                         : prescription.status ===
                                                             'dispensed'
-                                                          ? 'outline'
-                                                          : 'destructive'
+                                                            ? 'outline'
+                                                            : 'destructive'
                                                 }
                                             >
                                                 {prescription.status.toUpperCase()}
                                             </Badge>
                                             {canEdit &&
                                                 prescription.status ===
-                                                    'prescribed' && (
+                                                'prescribed' && (
                                                     <>
                                                         <Button
                                                             variant="ghost"

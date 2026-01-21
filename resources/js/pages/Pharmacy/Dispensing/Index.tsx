@@ -97,6 +97,24 @@ export default function DispensingIndex({ pendingCount }: Props) {
         performSearch(searchQuery, dateFilter);
     }, [searchQuery, dateFilter, performSearch]);
 
+    // Function to refresh search results after modal actions (review/dispense)
+    const refreshSearchResults = useCallback(async () => {
+        if (!searchQuery.trim()) return;
+
+        setIsSearching(true);
+        try {
+            const response = await fetch(
+                `/pharmacy/dispensing/search?query=${encodeURIComponent(searchQuery)}&date_filter=${dateFilter}`,
+            );
+            const data = await response.json();
+            setSearchResults(data);
+        } catch (error) {
+            console.error('Refresh error:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    }, [searchQuery, dateFilter]);
+
     const handleReviewClick = async (patient: SearchResult) => {
         setSelectedPatient(patient);
         setLoadingData(true);
@@ -344,24 +362,24 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                     )}
                                                                     {patient.prescription_count >
                                                                         0 && (
-                                                                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                                                            <FileText className="h-3 w-3" />
-                                                                            {
-                                                                                patient.prescription_count
-                                                                            }{' '}
-                                                                            Rx
-                                                                        </span>
-                                                                    )}
+                                                                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                                                <FileText className="h-3 w-3" />
+                                                                                {
+                                                                                    patient.prescription_count
+                                                                                }{' '}
+                                                                                Rx
+                                                                            </span>
+                                                                        )}
                                                                     {patient.supply_count >
                                                                         0 && (
-                                                                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-                                                                            <Pill className="h-3 w-3" />
-                                                                            {
-                                                                                patient.supply_count
-                                                                            }{' '}
-                                                                            Supplies
-                                                                        </span>
-                                                                    )}
+                                                                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                                                                                <Pill className="h-3 w-3" />
+                                                                                {
+                                                                                    patient.supply_count
+                                                                                }{' '}
+                                                                                Supplies
+                                                                            </span>
+                                                                        )}
                                                                     <span className="text-xs text-muted-foreground">
                                                                         {
                                                                             patient.total_items
@@ -369,7 +387,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                         total
                                                                         item
                                                                         {patient.total_items !==
-                                                                        1
+                                                                            1
                                                                             ? 's'
                                                                             : ''}
                                                                     </span>
@@ -378,39 +396,8 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                             <div className="flex flex-col gap-2">
                                                                 {patient.status ===
                                                                     'needs_review' && (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        onClick={() =>
-                                                                            handleReviewClick(
-                                                                                patient,
-                                                                            )
-                                                                        }
-                                                                        disabled={
-                                                                            loadingData
-                                                                        }
-                                                                    >
-                                                                        Review
-                                                                    </Button>
-                                                                )}
-                                                                {patient.status ===
-                                                                    'ready_to_dispense' && (
-                                                                    <>
                                                                         <Button
                                                                             size="sm"
-                                                                            onClick={() =>
-                                                                                handleDispenseClick(
-                                                                                    patient,
-                                                                                )
-                                                                            }
-                                                                            disabled={
-                                                                                loadingData
-                                                                            }
-                                                                        >
-                                                                            Dispense
-                                                                        </Button>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="outline"
                                                                             onClick={() =>
                                                                                 handleReviewClick(
                                                                                     patient,
@@ -420,20 +407,51 @@ export default function DispensingIndex({ pendingCount }: Props) {
                                                                                 loadingData
                                                                             }
                                                                         >
-                                                                            Re-review
+                                                                            Review
                                                                         </Button>
-                                                                    </>
-                                                                )}
+                                                                    )}
+                                                                {patient.status ===
+                                                                    'ready_to_dispense' && (
+                                                                        <>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                onClick={() =>
+                                                                                    handleDispenseClick(
+                                                                                        patient,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    loadingData
+                                                                                }
+                                                                            >
+                                                                                Dispense
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                onClick={() =>
+                                                                                    handleReviewClick(
+                                                                                        patient,
+                                                                                    )
+                                                                                }
+                                                                                disabled={
+                                                                                    loadingData
+                                                                                }
+                                                                            >
+                                                                                Re-review
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
                                                                 {patient.status ===
                                                                     'completed' && (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        disabled
-                                                                    >
-                                                                        Completed
-                                                                    </Button>
-                                                                )}
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            disabled
+                                                                        >
+                                                                            Completed
+                                                                        </Button>
+                                                                    )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -488,6 +506,7 @@ export default function DispensingIndex({ pendingCount }: Props) {
                     patientId={selectedPatient.id}
                     prescriptionsData={reviewData.prescriptions || []}
                     suppliesData={reviewData.supplies || []}
+                    onSuccess={refreshSearchResults}
                 />
             )}
 

@@ -14,11 +14,17 @@
         "mcp"
       ]
     },
-     "sequential-thinking": {
+    "sequential-thinking": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "spec": {
+      "command": "node",
+      "args": [
+        "C:/wamp64/www/specmcp/dist/index.js"
       ]
     }
   }

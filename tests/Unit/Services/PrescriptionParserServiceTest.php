@@ -23,17 +23,18 @@ it('maps frequency abbreviations consistently', function (string $code, string $
         ->and($result['description'])->toContain($expectedDesc)
         ->and($result['times_per_day'])->toBe($expectedTimesPerDay);
 })->with([
-    'OD - once daily' => ['OD', 'Once daily', 1],
-    'BD - twice daily' => ['BD', 'Twice daily', 2],
-    'BID - twice daily alias' => ['BID', 'Twice daily', 2],
-    'TDS - three times daily' => ['TDS', 'Three times daily', 3],
-    'TID - three times daily alias' => ['TID', 'Three times daily', 3],
-    'QDS - four times daily' => ['QDS', 'Four times daily', 4],
-    'QID - four times daily alias' => ['QID', 'Four times daily', 4],
-    'Q6H - every 6 hours' => ['Q6H', 'Every 6 hours', 4],
-    'Q8H - every 8 hours' => ['Q8H', 'Every 8 hours', 3],
-    'Q12H - every 12 hours' => ['Q12H', 'Every 12 hours', 2],
-]);
+            'OD - once daily' => ['OD', 'Once daily', 1],
+            'BD - twice daily' => ['BD', 'Twice daily', 2],
+            'BID - twice daily alias' => ['BID', 'Twice daily', 2],
+            'TDS - three times daily' => ['TDS', 'Three times daily', 3],
+            'TID - three times daily alias' => ['TID', 'Three times daily', 3],
+            'QDS - four times daily' => ['QDS', 'Four times daily', 4],
+            'QID - four times daily alias' => ['QID', 'Four times daily', 4],
+            'Q6H - every 6 hours' => ['Q6H', 'Every 6 hours', 4],
+            'Q8H - every 8 hours' => ['Q8H', 'Every 8 hours', 3],
+            'Q12H - every 12 hours' => ['Q12H', 'Every 12 hours', 2],
+            '0-12-24H - injectable schedule' => ['0-12-24H', '0, 12, 24 hours', 3],
+        ]);
 
 /**
  * Feature: smart-prescription-input, Property 2: Frequency abbreviation mapping consistency
@@ -70,16 +71,16 @@ it('parses duration formats correctly', function (string $input, int $expectedDa
     expect($result)->not->toBeNull()
         ->and($result['days'])->toBe($expectedDays);
 })->with([
-    'x 5 days' => ['x 5 days', 5],
-    'x 7 days' => ['x 7 days', 7],
-    'x 30 days' => ['x 30 days', 30],
-    '5 days without x' => ['5 days', 5],
-    'x 7/7 notation' => ['x 7/7', 7],
-    '14/7 notation' => ['14/7', 14],
-    'x 1 week' => ['x 1 week', 7],
-    'x 2 weeks' => ['x 2 weeks', 14],
-    '4 weeks' => ['4 weeks', 28],
-]);
+            'x 5 days' => ['x 5 days', 5],
+            'x 7 days' => ['x 7 days', 7],
+            'x 30 days' => ['x 30 days', 30],
+            '5 days without x' => ['5 days', 5],
+            'x 7/7 notation' => ['x 7/7', 7],
+            '14/7 notation' => ['14/7', 14],
+            'x 1 week' => ['x 1 week', 7],
+            'x 2 weeks' => ['x 2 weeks', 14],
+            '4 weeks' => ['4 weeks', 28],
+        ]);
 
 /**
  * Feature: smart-prescription-input, Property 3: Duration format parsing consistency
@@ -155,11 +156,11 @@ it('parses specific split dose patterns correctly', function (string $input, int
         ->and($result->durationDays)->toBe($expectedDays)
         ->and($result->scheduleType)->toBe('split_dose');
 })->with([
-    '1-0-1 x 30 days' => ['1-0-1 x 30 days', 60, 30],
-    '2-1-1 x 7 days' => ['2-1-1 x 7 days', 28, 7],
-    '1-1-1 x 5 days' => ['1-1-1 x 5 days', 15, 5],
-    '2-0-2 x 14 days' => ['2-0-2 x 14 days', 56, 14],
-]);
+            '1-0-1 x 30 days' => ['1-0-1 x 30 days', 60, 30],
+            '2-1-1 x 7 days' => ['2-1-1 x 7 days', 28, 7],
+            '1-1-1 x 5 days' => ['1-1-1 x 5 days', 15, 5],
+            '2-0-2 x 14 days' => ['2-0-2 x 14 days', 56, 14],
+        ]);
 
 /**
  * Feature: smart-prescription-input, Property 5: Custom interval quantity calculation
@@ -206,7 +207,7 @@ it('calculates taper quantity as sum of doses', function () {
             $doses[] = max(1, $startDose - $d);
         }
 
-        $input = implode('-', $doses).' taper';
+        $input = implode('-', $doses) . ' taper';
         $result = $this->parser->parseTaper($input);
 
         $expectedQuantity = (int) ceil(array_sum($doses));
@@ -226,10 +227,10 @@ it('parses specific taper patterns correctly', function (string $input, int $exp
         ->and($result->quantityToDispense)->toBe($expectedQuantity)
         ->and($result->durationDays)->toBe($expectedDays);
 })->with([
-    '4-3-2-1 taper' => ['4-3-2-1 taper', 10, 4],
-    '6-5-4-3-2-1 taper' => ['6-5-4-3-2-1 taper', 21, 6],
-    '3-2-1 taper' => ['3-2-1 taper', 6, 3],
-]);
+            '4-3-2-1 taper' => ['4-3-2-1 taper', 10, 4],
+            '6-5-4-3-2-1 taper' => ['6-5-4-3-2-1 taper', 21, 6],
+            '3-2-1 taper' => ['3-2-1 taper', 6, 3],
+        ]);
 
 /**
  * Feature: smart-prescription-input, Property 7: Quantity calculation correctness by drug type
@@ -311,11 +312,11 @@ it('parses STAT without duration', function (string $input) {
         ->and($result->scheduleType)->toBe('stat')
         ->and($result->frequencyCode)->toBe('STAT');
 })->with([
-    'STAT alone' => ['STAT'],
-    '2 STAT' => ['2 STAT'],
-    '2 tabs STAT' => ['2 tabs STAT'],
-    '1 cap STAT' => ['1 cap STAT'],
-]);
+            'STAT alone' => ['STAT'],
+            '2 STAT' => ['2 STAT'],
+            '2 tabs STAT' => ['2 tabs STAT'],
+            '1 cap STAT' => ['1 cap STAT'],
+        ]);
 
 it('parses PRN without duration', function (string $input) {
     $result = $this->parser->parse($input);
@@ -324,11 +325,11 @@ it('parses PRN without duration', function (string $input) {
         ->and($result->scheduleType)->toBe('prn')
         ->and($result->frequencyCode)->toBe('PRN');
 })->with([
-    'PRN alone' => ['PRN'],
-    '2 PRN' => ['2 PRN'],
-    '2 tabs PRN' => ['2 tabs PRN'],
-    '1 cap PRN' => ['1 cap PRN'],
-]);
+            'PRN alone' => ['PRN'],
+            '2 PRN' => ['2 PRN'],
+            '2 tabs PRN' => ['2 tabs PRN'],
+            '1 cap PRN' => ['1 cap PRN'],
+        ]);
 
 /**
  * Feature: smart-prescription-input, Property 10: Invalid input produces helpful feedback
@@ -343,12 +344,12 @@ it('provides helpful feedback for invalid input', function (string $input) {
     expect($result->isValid)->toBeFalse()
         ->and($result->errors)->not->toBeEmpty();
 })->with([
-    'empty string' => [''],
-    'random text' => ['take some medicine'],
-    'missing frequency' => ['2 x 5 days'],
-    'missing duration' => ['2 BD'],
-    'invalid frequency' => ['2 XYZ x 5 days'],
-]);
+            'empty string' => [''],
+            'random text' => ['take some medicine'],
+            'missing frequency' => ['2 x 5 days'],
+            'missing duration' => ['2 BD'],
+            'invalid frequency' => ['2 XYZ x 5 days'],
+        ]);
 
 it('provides partial feedback when some components are recognized', function () {
     // Has dose and frequency but missing duration
@@ -374,10 +375,10 @@ it('stores schedule pattern for split dose', function () {
         ->and($result->schedulePattern)->not->toBeNull()
         ->and($result->schedulePattern['type'])->toBe('split_dose')
         ->and($result->schedulePattern['pattern'])->toBe([
-            'morning' => 1.0,
-            'noon' => 0.0,
-            'evening' => 1.0,
-        ])
+                'morning' => 1.0,
+                'noon' => 0.0,
+                'evening' => 1.0,
+            ])
         ->and($result->schedulePattern['daily_total'])->toBe(2.0);
 });
 
@@ -451,12 +452,12 @@ it('parses standard prescription formats', function (string $input, string $expe
         ->and($result->durationDays)->toBe($expectedDays)
         ->and($result->quantityToDispense)->toBe($expectedQty);
 })->with([
-    '2 BD x 5 days' => ['2 BD x 5 days', '2', 'BD', 5, 20],
-    '1 TDS x 7/7' => ['1 TDS x 7/7', '1', 'TDS', 7, 21],
-    '1 OD x 30 days' => ['1 OD x 30 days', '1', 'OD', 30, 30],
-    '5ml TDS x 5 days' => ['5ml TDS x 5 days', '5 ml', 'TDS', 5, 75],
-    '2 tabs QDS x 7 days' => ['2 tabs QDS x 7 days', '2 tabs', 'QDS', 7, 56],
-]);
+            '2 BD x 5 days' => ['2 BD x 5 days', '2', 'BD', 5, 20],
+            '1 TDS x 7/7' => ['1 TDS x 7/7', '1', 'TDS', 7, 21],
+            '1 OD x 30 days' => ['1 OD x 30 days', '1', 'OD', 30, 30],
+            '5ml TDS x 5 days' => ['5ml TDS x 5 days', '5 ml', 'TDS', 5, 75],
+            '2 tabs QDS x 7 days' => ['2 tabs QDS x 7 days', '2 tabs', 'QDS', 7, 56],
+        ]);
 
 // toSchedulePattern tests
 it('converts result to schedule pattern', function () {
@@ -545,3 +546,71 @@ it('gets times per day from frequency code', function () {
 
     expect($result->getTimesPerDay())->toBe(2);
 });
+
+/**
+ * Feature: injectable-only-schedule, Property 1: 0-12-24H parsing
+ * Validates: Injectable malaria drug schedule at 0, 12, 24 hours
+ *
+ * The 0-12-24H schedule is specifically for injectable drugs (e.g., IV Artesunate for severe malaria).
+ * It represents 3 doses at hours 0, 12, and 24.
+ */
+it('parses 0-12-24H schedule for injectable drugs', function (string $input, string $expectedDose, int $expectedQty) {
+    $drug = new Drug;
+    $drug->form = 'injection';
+
+    $result = $this->parser->parse($input, $drug);
+
+    expect($result->isValid)->toBeTrue()
+        ->and($result->doseQuantity)->toBe($expectedDose)
+        ->and($result->frequencyCode)->toBe('0-12-24H')
+        ->and($result->quantityToDispense)->toBe($expectedQty)
+        ->and($result->scheduleType)->toBe('injectable_interval');
+})->with([
+            '2 0-12-24H' => ['2 0-12-24H', '2', 6],
+            '60mg 0-12-24H' => ['60mg 0-12-24H', '60 mg', 180],
+            '2 0-12-24 HRS' => ['2 0-12-24 HRS', '2', 6],
+            '60mg 0-12-24 hrs' => ['60mg 0-12-24 hrs', '60 mg', 180],
+            '2.4 0-12-24H' => ['2.4 0-12-24H', '2.4', 8], // ceil(2.4 * 3) = 8
+        ]);
+
+it('stores schedule pattern for 0-12-24H injectable schedule', function () {
+    $drug = new Drug;
+    $drug->form = 'injection';
+
+    $result = $this->parser->parse('60mg 0-12-24H', $drug);
+
+    expect($result->isValid)->toBeTrue()
+        ->and($result->schedulePattern)->not->toBeNull()
+        ->and($result->schedulePattern['type'])->toBe('injectable_interval')
+        ->and($result->schedulePattern['intervals_hours'])->toBe([0, 12, 24])
+        ->and($result->schedulePattern['dose_per_interval'])->toBe(60.0)
+        ->and($result->schedulePattern['total_doses'])->toBe(3);
+});
+
+it('rejects 0-12-24H schedule for non-injectable drugs', function (string $form) {
+    $drug = new Drug;
+    $drug->form = $form;
+
+    $result = $this->parser->parse('60mg 0-12-24H', $drug);
+
+    expect($result->isValid)->toBeFalse()
+        ->and($result->errors)->not->toBeEmpty()
+        ->and($result->errors[0])->toContain('only valid for injectable drugs');
+})->with([
+            'tablet' => ['tablet'],
+            'capsule' => ['capsule'],
+            'syrup' => ['syrup'],
+            'cream' => ['cream'],
+        ]);
+
+it('accepts 0-12-24H schedule for iv_bag form', function () {
+    $drug = new Drug;
+    $drug->form = 'iv_bag';
+
+    $result = $this->parser->parse('500ml 0-12-24H', $drug);
+
+    expect($result->isValid)->toBeTrue()
+        ->and($result->frequencyCode)->toBe('0-12-24H')
+        ->and($result->scheduleType)->toBe('injectable_interval');
+});
+

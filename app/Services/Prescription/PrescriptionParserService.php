@@ -32,6 +32,22 @@ class PrescriptionParserService
         'Q6H' => ['description' => 'Every 6 hours (Q6H)', 'times_per_day' => 4],
         'Q8H' => ['description' => 'Every 8 hours (Q8H)', 'times_per_day' => 3],
         'Q12H' => ['description' => 'Every 12 hours (Q12H)', 'times_per_day' => 2],
+        '0-12-24H' => ['description' => 'At 0, 12, 24 hours (0-12-24H)', 'times_per_day' => null, 'total_doses' => 3, 'is_schedule' => true],
+    ];
+
+    /**
+     * Frequency codes that are only valid for injectable drugs.
+     */
+    private const INJECTABLE_ONLY_FREQUENCIES = [
+        '0-12-24H',
+    ];
+
+    /**
+     * Drug forms considered as injectables.
+     */
+    private const INJECTABLE_FORMS = [
+        'injection',
+        'iv_bag',
     ];
 
     /**
@@ -81,6 +97,15 @@ class PrescriptionParserService
 
         // Try taper pattern
         if ($result = $this->parseTaper($input)) {
+            if ($drug) {
+                $result = $this->applyDrugQuantity($result, $drug);
+            }
+
+            return $result;
+        }
+
+        // Try injectable-only schedule (0-12-24H) - must check before custom intervals
+        if ($result = $this->parseInjectableSchedule($input, $drug)) {
             if ($drug) {
                 $result = $this->applyDrugQuantity($result, $drug);
             }
@@ -164,7 +189,7 @@ class PrescriptionParserService
         $separatorPattern = '(?:[x*\/]\s*|for\s+)?';
 
         // Pattern: "N/7" (N days in week notation) - check first to avoid conflict
-        if (preg_match('/^'.$separatorPattern.'(\d+)\/7$/i', $input, $matches)) {
+        if (preg_match('/^' . $separatorPattern . '(\d+)\/7$/i', $input, $matches)) {
             $days = (int) $matches[1];
 
             return [
@@ -174,7 +199,7 @@ class PrescriptionParserService
         }
 
         // Pattern: "N weeks" or "N week"
-        if (preg_match('/^'.$separatorPattern.'(\d+)\s*weeks?$/i', $input, $matches)) {
+        if (preg_match('/^' . $separatorPattern . '(\d+)\s*weeks?$/i', $input, $matches)) {
             $weeks = (int) $matches[1];
             $days = $weeks * 7;
 
@@ -186,7 +211,7 @@ class PrescriptionParserService
 
         // Pattern: "N days", "N day", "N d", "Nd", or just "N"
         // Matches: "5 days", "5 day", "5d", "5 d", "5"
-        if (preg_match('/^'.$separatorPattern.'(\d+)\s*(?:days?|d)?$/i', $input, $matches)) {
+        if (preg_match('/^' . $separatorPattern . '(\d+)\s*(?:days?|d)?$/i', $input, $matches)) {
             $days = (int) $matches[1];
 
             return [
@@ -213,7 +238,7 @@ class PrescriptionParserService
         $patternFor = '/^(\d+(?:\.\d+)?)\s*(ml|mg|tabs?|capsules?|caps?)?\s*(OD|BD|BID|TDS|TID|QDS|QID|Q6H|Q8H|Q12H)\s+for\s+(.+)$/i';
 
         $matches = null;
-        if (! preg_match($pattern, $input, $matches) && ! preg_match($patternFor, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches) && !preg_match($patternFor, $input, $matches)) {
             return null;
         }
 
@@ -223,21 +248,21 @@ class PrescriptionParserService
         $durationPart = $matches[4];
 
         $frequency = $this->parseFrequency($frequencyCode);
-        if (! $frequency) {
+        if (!$frequency) {
             return null;
         }
 
         $duration = $this->parseDuration($durationPart);
-        if (! $duration) {
+        if (!$duration) {
             return ParsedPrescriptionResult::partial(
                 errors: ["Could not parse duration: '{$durationPart}'. Try 'x 5 days', '5d', or just '5'"],
-                doseQuantity: $doseValue.($doseUnit ? " {$doseUnit}" : ''),
+                doseQuantity: $doseValue . ($doseUnit ? " {$doseUnit}" : ''),
                 frequency: $frequency['description'],
                 frequencyCode: $frequency['code'],
             );
         }
 
-        $doseQuantity = $doseValue.($doseUnit ? " {$doseUnit}" : '');
+        $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
         $totalQuantity = (int) ceil((float) $doseValue * $frequency['times_per_day'] * $duration['days']);
 
         $displayText = "{$doseQuantity} {$frequency['code']} x {$duration['duration']}";
@@ -273,7 +298,7 @@ class PrescriptionParserService
         $patternFor = '/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)\s+for\s+(.+)$/i';
 
         $matches = null;
-        if (! preg_match($pattern, $input, $matches) && ! preg_match($patternFor, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches) && !preg_match($patternFor, $input, $matches)) {
             return null;
         }
 
@@ -283,7 +308,7 @@ class PrescriptionParserService
         $durationPart = $matches[4];
 
         $duration = $this->parseDuration($durationPart);
-        if (! $duration) {
+        if (!$duration) {
             return ParsedPrescriptionResult::partial(
                 errors: ["Could not parse duration: '{$durationPart}'. Try 'x 5 days', '5d', or just '5'"],
                 doseQuantity: "{$morning}-{$noon}-{$evening}",
@@ -304,7 +329,7 @@ class PrescriptionParserService
         if ($evening > 0) {
             $parts[] = "{$evening} evening";
         }
-        $frequencyDesc = implode(', ', $parts)." ({$dailyTotal}/day)";
+        $frequencyDesc = implode(', ', $parts) . " ({$dailyTotal}/day)";
 
         $displayText = "{$morning}-{$noon}-{$evening} x {$duration['duration']}";
 
@@ -373,7 +398,7 @@ class PrescriptionParserService
         // Parse intervals - remove 'h' suffix and split by comma/space
         $intervalsStr = preg_replace('/h/i', '', $intervalsStr);
         $intervals = array_map('intval', preg_split('/[,\s]+/', trim($intervalsStr)));
-        $intervals = array_filter($intervals, fn ($v) => $v >= 0 || $v === 0);
+        $intervals = array_filter($intervals, fn($v) => $v >= 0 || $v === 0);
         $intervals = array_values($intervals);
 
         // Must have at least 2 intervals
@@ -389,8 +414,8 @@ class PrescriptionParserService
         $totalDoses = count($intervals);
         $totalQuantity = (int) ceil((float) $doseValue * $totalDoses);
 
-        $doseQuantity = $doseValue.($doseUnit ? " {$doseUnit}" : '');
-        $intervalsDisplay = implode('h, ', $intervals).'h';
+        $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
+        $intervalsDisplay = implode('h, ', $intervals) . 'h';
         $displayText = "{$doseQuantity} at {$intervalsDisplay}";
 
         return ParsedPrescriptionResult::valid(
@@ -419,7 +444,7 @@ class PrescriptionParserService
         // Pattern: "4-3-2-1 taper" or "4-3-2-1"
         $pattern = '/^((?:\d+(?:\.\d+)?-)+\d+(?:\.\d+)?)\s*(?:taper)?$/i';
 
-        if (! preg_match($pattern, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches)) {
             return null;
         }
 
@@ -436,7 +461,7 @@ class PrescriptionParserService
         }
 
         // If no taper keyword, check if it's decreasing (to distinguish from split dose)
-        if (! $hasTaperKeyword) {
+        if (!$hasTaperKeyword) {
             $isDecreasing = true;
             for ($i = 1; $i < count($doses); $i++) {
                 if ($doses[$i] > $doses[$i - 1]) {
@@ -445,11 +470,11 @@ class PrescriptionParserService
                 }
             }
             // If not decreasing and exactly 3 doses, it's likely a split dose
-            if (! $isDecreasing && count($doses) === 3) {
+            if (!$isDecreasing && count($doses) === 3) {
                 return null;
             }
             // If not decreasing and no taper keyword, not a taper
-            if (! $isDecreasing) {
+            if (!$isDecreasing) {
                 return null;
             }
         }
@@ -464,10 +489,10 @@ class PrescriptionParserService
             $scheduleDesc[] = "Day {$dayNum}: {$dose}";
         }
 
-        $displayText = implode('-', array_map(fn ($d) => (string) $d, $doses)).' taper';
+        $displayText = implode('-', array_map(fn($d) => (string) $d, $doses)) . ' taper';
 
         return ParsedPrescriptionResult::valid(
-            doseQuantity: implode('-', array_map(fn ($d) => (string) $d, $doses)),
+            doseQuantity: implode('-', array_map(fn($d) => (string) $d, $doses)),
             frequency: 'Taper schedule',
             frequencyCode: 'TAPER',
             duration: "{$durationDays} days",
@@ -484,6 +509,62 @@ class PrescriptionParserService
     }
 
     /**
+     * Parse injectable-only schedule (e.g., "2 0-12-24H" or "60mg 0-12-24 HRS").
+     *
+     * This schedule is specifically for injectable drugs (e.g., IV Artesunate for severe malaria).
+     * It represents 3 doses at hours 0, 12, and 24.
+     *
+     * @param  string  $input  The prescription input string
+     * @param  Drug|null  $drug  The drug being prescribed (required for validation)
+     */
+    private function parseInjectableSchedule(string $input, ?Drug $drug = null): ?ParsedPrescriptionResult
+    {
+        // Pattern: "2 0-12-24H", "60mg 0-12-24H", "2 0-12-24 HRS", "60mg 0-12-24 hrs"
+        $pattern = '/^(\d+(?:\.\d+)?)\s*(mg|ml|units?)?\s*0-12-24\s*(?:H|HRS?)$/i';
+
+        if (!preg_match($pattern, $input, $matches)) {
+            return null;
+        }
+
+        $doseValue = $matches[1];
+        $doseUnit = $matches[2] ?? '';
+
+        // Validate: this frequency is only for injectable drugs
+        if ($drug) {
+            $drugForm = strtolower($drug->form ?? '');
+            if (!in_array($drugForm, self::INJECTABLE_FORMS)) {
+                return ParsedPrescriptionResult::invalid([
+                    '0-12-24H schedule is only valid for injectable drugs.',
+                    "This drug is a '{$drug->form}', not an injection.",
+                ]);
+            }
+        }
+
+        $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
+        $totalDoses = 3; // Doses at 0h, 12h, 24h
+        $totalQuantity = (int) ceil((float) $doseValue * $totalDoses);
+
+        $displayText = "{$doseQuantity} at 0, 12, 24 hours";
+
+        return ParsedPrescriptionResult::valid(
+            doseQuantity: $doseQuantity,
+            frequency: 'At 0, 12, 24 hours (0-12-24H)',
+            frequencyCode: '0-12-24H',
+            duration: '24 hours (3 doses)',
+            durationDays: 1,
+            quantityToDispense: $totalQuantity,
+            scheduleType: 'injectable_interval',
+            schedulePattern: [
+                'type' => 'injectable_interval',
+                'intervals_hours' => [0, 12, 24],
+                'dose_per_interval' => (float) $doseValue,
+                'total_doses' => $totalDoses,
+            ],
+            displayText: $displayText,
+        );
+    }
+
+    /**
      * Parse STAT (single immediate dose).
      */
     private function parseStat(string $input): ?ParsedPrescriptionResult
@@ -491,14 +572,14 @@ class PrescriptionParserService
         // Pattern: "STAT" or "2 STAT" or "2 tabs STAT"
         $pattern = '/^(\d+(?:\.\d+)?)?\s*(tabs?|capsules?|caps?|ml)?\s*STAT$/i';
 
-        if (! preg_match($pattern, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches)) {
             return null;
         }
 
         $doseValue = $matches[1] ?? '1';
         $doseUnit = $matches[2] ?? '';
 
-        $doseQuantity = $doseValue.($doseUnit ? " {$doseUnit}" : '');
+        $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
         $totalQuantity = (int) ceil((float) $doseValue);
 
         return ParsedPrescriptionResult::stat($doseQuantity, $totalQuantity);
@@ -520,7 +601,7 @@ class PrescriptionParserService
         // Examples: "1", "2", "1 tube", "2 tubes"
         $pattern = '/^(\d+)\s*(tubes?)?$/i';
 
-        if (! preg_match($pattern, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches)) {
             return null;
         }
 
@@ -559,7 +640,7 @@ class PrescriptionParserService
         // Examples: "change every 3 days x 30 days", "every 7 days x 28 days"
         $pattern = '/^(?:change\s+)?every\s+(\d+)\s*days?\s*x\s*(\d+)\s*days?$/i';
 
-        if (! preg_match($pattern, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches)) {
             return null;
         }
 
@@ -612,7 +693,7 @@ class PrescriptionParserService
             $maxDaily = (int) $matches[3];
             $durationDays = (int) $matches[4];
 
-            $doseQuantity = $doseValue.($doseUnit ? " {$doseUnit}" : '');
+            $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
             $totalQuantity = $maxDaily * $durationDays;
 
             $displayText = "{$doseQuantity} PRN (max {$maxDaily}/24h) x {$durationDays} days";
@@ -637,14 +718,14 @@ class PrescriptionParserService
         // Pattern 2: Simple PRN - "PRN" or "2 PRN" or "2 tabs PRN"
         $pattern = '/^(\d+(?:\.\d+)?)?\s*(tabs?|capsules?|caps?|ml)?\s*PRN$/i';
 
-        if (! preg_match($pattern, $input, $matches)) {
+        if (!preg_match($pattern, $input, $matches)) {
             return null;
         }
 
         $doseValue = $matches[1] ?? '1';
         $doseUnit = $matches[2] ?? '';
 
-        $doseQuantity = $doseValue.($doseUnit ? " {$doseUnit}" : '');
+        $doseQuantity = $doseValue . ($doseUnit ? " {$doseUnit}" : '');
         $totalQuantity = (int) ceil((float) $doseValue);
 
         return ParsedPrescriptionResult::prn($doseQuantity, $totalQuantity);
@@ -665,12 +746,12 @@ class PrescriptionParserService
 
         // Try to extract dose
         if (preg_match('/^(\d+(?:\.\d+)?)\s*(ml|mg|tabs?|capsules?|caps?)?/i', $input, $matches)) {
-            $doseQuantity = $matches[1].(isset($matches[2]) ? " {$matches[2]}" : '');
+            $doseQuantity = $matches[1] . (isset($matches[2]) ? " {$matches[2]}" : '');
         }
 
         // Try to extract frequency
         foreach (array_keys(self::FREQUENCY_MAP) as $code) {
-            if (preg_match('/\b'.preg_quote($code, '/').'\b/i', $input)) {
+            if (preg_match('/\b' . preg_quote($code, '/') . '\b/i', $input)) {
                 $freq = $this->parseFrequency($code);
                 if ($freq) {
                     $frequency = $freq['description'];
@@ -690,15 +771,15 @@ class PrescriptionParserService
         }
 
         // Build error messages
-        if (! $doseQuantity) {
+        if (!$doseQuantity) {
             $errors[] = 'Could not find dose quantity. Start with a number (e.g., "2 BD x 5 days")';
         }
-        if (! $frequency) {
+        if (!$frequency) {
             $errors[] = 'Could not find frequency. Use OD, BD, TDS, QDS, Q6H, Q8H, or Q12H';
         }
-        if (! $duration && ! $frequencyCode) {
+        if (!$duration && !$frequencyCode) {
             $errors[] = 'Could not find duration. Add "x N days" or "x N/7"';
-        } elseif (! $duration && $frequencyCode !== 'STAT' && $frequencyCode !== 'PRN') {
+        } elseif (!$duration && $frequencyCode !== 'STAT' && $frequencyCode !== 'PRN') {
             $errors[] = 'Could not find duration. Add "x N days" or "x N/7"';
         }
 
@@ -748,7 +829,7 @@ class PrescriptionParserService
      */
     public function calculateQuantity(ParsedPrescriptionResult $result, Drug $drug): int
     {
-        if (! $result->isValid) {
+        if (!$result->isValid) {
             return 0;
         }
 
@@ -790,7 +871,7 @@ class PrescriptionParserService
         if ($isLiquid) {
             // If bottle_size is not configured, return 0 to indicate manual entry is needed
             // The frontend will show a manual input field when quantity is 0 for liquids
-            if (! $drug->bottle_size) {
+            if (!$drug->bottle_size) {
                 return 0;
             }
 
@@ -812,7 +893,7 @@ class PrescriptionParserService
      */
     public function toSchedulePattern(ParsedPrescriptionResult $result): ?array
     {
-        if (! $result->isValid) {
+        if (!$result->isValid) {
             return null;
         }
 
@@ -824,7 +905,7 @@ class PrescriptionParserService
      */
     public function format(ParsedPrescriptionResult $result): string
     {
-        if (! $result->isValid) {
+        if (!$result->isValid) {
             return '';
         }
 
@@ -838,11 +919,11 @@ class PrescriptionParserService
             $parts[] = $result->doseQuantity;
         }
 
-        if ($result->frequencyCode && ! in_array($result->frequencyCode, ['SPLIT', 'CUSTOM', 'TAPER'])) {
+        if ($result->frequencyCode && !in_array($result->frequencyCode, ['SPLIT', 'CUSTOM', 'TAPER'])) {
             $parts[] = $result->frequencyCode;
         }
 
-        if ($result->duration && ! in_array($result->scheduleType, ['stat', 'prn'])) {
+        if ($result->duration && !in_array($result->scheduleType, ['stat', 'prn'])) {
             $parts[] = "x {$result->duration}";
         }
 
