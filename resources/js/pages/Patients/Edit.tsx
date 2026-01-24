@@ -16,10 +16,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useNhisExtension, NhisIdType } from '@/hooks/useNhisExtension';
 import AppLayout from '@/layouts/app-layout';
+import { copyToClipboard } from '@/lib/utils';
 import patients from '@/routes/patients';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, Loader2, Shield } from 'lucide-react';
+import {
+    AlertTriangle,
+    ArrowLeft,
+    CheckCircle2,
+    ExternalLink,
+    Loader2,
+    Shield,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -31,7 +40,56 @@ interface InsurancePlan {
         id: number;
         name: string;
         code: string;
+        is_nhis?: boolean;
     };
+}
+
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
+}
+
+/**
+ * Parse NHIS date format (could be DD-MM-YYYY or YYYY-MM-DD)
+ */
+function parseNhisDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+
+    // Try DD-MM-YYYY format first (common NHIS format)
+    const ddmmyyyy = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (ddmmyyyy) {
+        return `${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`;
+    }
+
+    // Try YYYY-MM-DD format - return as is
+    const yyyymmdd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (yyyymmdd) {
+        return dateStr;
+    }
+
+    // Fallback to Date parsing
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+    }
+
+    return '';
+}
+
+/**
+ * Check if a date string represents an expired date
+ */
+function isDateExpired(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
 }
 
 interface PatientInsurance {
@@ -72,12 +130,21 @@ interface Patient {
 interface Props {
     patient: Patient;
     insurance_plans: InsurancePlan[];
+    nhis_settings?: NhisSettings;
 }
 
-export default function PatientsEdit({ patient, insurance_plans }: Props) {
+export default function PatientsEdit({
+    patient,
+    insurance_plans,
+    nhis_settings,
+}: Props) {
     const [hasInsurance, setHasInsurance] = useState(
         !!patient.active_insurance,
     );
+
+    // NHIS Extension hook
+    const { isVerifying, cccData, startVerification, clearCccData } =
+        useNhisExtension();
 
     const { data, setData, processing, errors } = useForm({
         first_name: patient.first_name || '',
@@ -111,6 +178,106 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
         setData('has_insurance', hasInsurance);
     }, [hasInsurance]);
 
+    // Get selected plan details
+    const selectedPlan = insurance_plans.find(
+        (p) => p.id.toString() === data.insurance_plan_id,
+    );
+    const isNhisPlan = selectedPlan?.provider?.is_nhis ?? false;
+    const verificationMode = nhis_settings?.verification_mode ?? 'manual';
+
+    // Check if NHIS lookup shows INACTIVE or expired coverage
+    const isNhisInactive =
+        cccData?.status === 'INACTIVE' || cccData?.error === 'INACTIVE';
+    const nhisEndDate = parseNhisDate(cccData?.coverageEnd);
+    const isNhisExpired = nhisEndDate ? isDateExpired(nhisEndDate) : false;
+    const isNhisUnusable = isNhisInactive || isNhisExpired;
+
+    // Auto-fill coverage dates when NHIS data is received
+    useEffect(() => {
+        if (cccData) {
+            // Check for Ghana Card not linked error first
+            if (cccData.errorType === 'GHANACARD_NOT_LINKED') {
+                toast.error('Ghana Card not linked to NHIS', {
+                    description:
+                        'This Ghana Card is not linked to an NHIS membership. The patient needs to link their Ghana Card at an NHIS office, or use their NHIS membership number instead.',
+                    duration: 8000,
+                });
+                return;
+            }
+
+            const startDate = parseNhisDate(cccData.coverageStart);
+            const endDate = parseNhisDate(cccData.coverageEnd);
+
+            // Auto-fill membership ID from NHIS response (useful when using Ghana Card)
+            if (cccData.membershipNumber && !data.membership_id.trim()) {
+                setData('membership_id', cccData.membershipNumber);
+                toast.info('NHIS membership number auto-filled', {
+                    description: `Membership ID: ${cccData.membershipNumber}`,
+                });
+            }
+
+            // Always update insurance dates if available
+            if (startDate) {
+                setData('coverage_start_date', startDate);
+            }
+            if (endDate) {
+                setData('coverage_end_date', endDate);
+            }
+
+            // Show appropriate toast
+            if (isNhisInactive) {
+                toast.error('NHIS membership is INACTIVE', {
+                    description: `Coverage: ${startDate || '?'} to ${endDate || '?'}. Patient needs to renew.`,
+                });
+            } else if (isNhisExpired) {
+                toast.warning('NHIS coverage has expired', {
+                    description: `Coverage ended on ${endDate}. Patient needs to renew.`,
+                });
+            } else if (startDate || endDate) {
+                toast.success('NHIS coverage dates verified', {
+                    description: `Coverage: ${startDate} to ${endDate}`,
+                });
+            }
+        }
+    }, [cccData]);
+
+    // Clear NHIS data when plan changes or insurance is toggled off
+    useEffect(() => {
+        if (!hasInsurance || !isNhisPlan) {
+            clearCccData();
+        }
+    }, [hasInsurance, data.insurance_plan_id]);
+
+    const handleLookupNhis = () => {
+        // Can use either membership ID or national ID (Ghana Card)
+        const hasMembershipId = data.membership_id.trim();
+        const hasNationalId = data.national_id?.trim();
+        const lookupId = hasMembershipId || hasNationalId;
+        
+        if (!lookupId) {
+            toast.error('Enter membership ID or national ID (Ghana Card) first');
+            return;
+        }
+
+        // Determine which ID type to use
+        const idType = hasMembershipId ? 'nhis' : 'ghanacard';
+
+        // Copy the ID to clipboard
+        copyToClipboard(lookupId);
+
+        // Show hint about which ID type will be used
+        if (idType === 'ghanacard') {
+            toast.info('Ghana Card number copied - extension will select Ghana Card on portal');
+        }
+
+        // Start verification with the appropriate ID type
+        startVerification(
+            lookupId,
+            nhis_settings?.credentials || undefined,
+            nhis_settings?.nhia_portal_url,
+            idType,
+        );
+    };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -456,29 +623,120 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                                 <Label htmlFor="membership_id">
                                                     Membership ID *
                                                 </Label>
-                                                <Input
-                                                    id="membership_id"
-                                                    value={data.membership_id}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            'membership_id',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="Enter membership ID"
-                                                    className={
-                                                        errors.membership_id
-                                                            ? 'border-destructive'
-                                                            : ''
-                                                    }
-                                                />
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        id="membership_id"
+                                                        value={data.membership_id}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'membership_id',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Enter membership ID"
+                                                        className={
+                                                            errors.membership_id
+                                                                ? 'border-destructive'
+                                                                : ''
+                                                        }
+                                                    />
+                                                    {isNhisPlan &&
+                                                        verificationMode ===
+                                                            'extension' && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="default"
+                                                                size="icon"
+                                                                onClick={
+                                                                    handleLookupNhis
+                                                                }
+                                                                disabled={
+                                                                    isVerifying ||
+                                                                    (!data.membership_id.trim() &&
+                                                                        !data.national_id?.trim())
+                                                                }
+                                                                title="Verify NHIS using membership ID or Ghana Card"
+                                                                className="shrink-0 bg-blue-600 hover:bg-blue-700"
+                                                            >
+                                                                {isVerifying ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <ExternalLink className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                </div>
                                                 {errors.membership_id && (
                                                     <p className="text-sm text-destructive">
                                                         {errors.membership_id}
                                                     </p>
                                                 )}
+                                                {isNhisPlan &&
+                                                    verificationMode ===
+                                                        'extension' &&
+                                                    !cccData && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            💡 Click to verify
+                                                            using membership ID
+                                                            or Ghana Card
+                                                            (national ID)
+                                                        </p>
+                                                    )}
                                             </div>
                                         </div>
+
+                                        {/* NHIS Lookup Result */}
+                                        {cccData && isNhisPlan && (
+                                            <div
+                                                className={`rounded-md p-3 text-sm ${
+                                                    isNhisUnusable
+                                                        ? isNhisInactive
+                                                            ? 'border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20'
+                                                            : 'border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20'
+                                                        : 'border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20'
+                                                }`}
+                                            >
+                                                <div
+                                                    className={`flex items-center gap-2 ${
+                                                        isNhisUnusable
+                                                            ? isNhisInactive
+                                                                ? 'text-red-700 dark:text-red-400'
+                                                                : 'text-amber-700 dark:text-amber-400'
+                                                            : 'text-green-700 dark:text-green-400'
+                                                    }`}
+                                                >
+                                                    {isNhisUnusable ? (
+                                                        <AlertTriangle className="h-4 w-4" />
+                                                    ) : (
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    )}
+                                                    <span className="font-medium">
+                                                        NHIS Verified:{' '}
+                                                        {cccData.memberName ||
+                                                            'Member'}
+                                                    </span>
+                                                </div>
+                                                <p
+                                                    className={`mt-1 ${
+                                                        isNhisUnusable
+                                                            ? isNhisInactive
+                                                                ? 'text-red-600 dark:text-red-500'
+                                                                : 'text-amber-600 dark:text-amber-500'
+                                                            : 'text-green-600 dark:text-green-500'
+                                                    }`}
+                                                >
+                                                    Status: {cccData.status}
+                                                    {cccData.coverageStart &&
+                                                        cccData.coverageEnd &&
+                                                        ` • Coverage: ${cccData.coverageStart} to ${cccData.coverageEnd}`}
+                                                    {isNhisInactive &&
+                                                        ' (INACTIVE)'}
+                                                    {!isNhisInactive &&
+                                                        isNhisExpired &&
+                                                        ' (EXPIRED)'}
+                                                </p>
+                                            </div>
+                                        )}
 
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
@@ -519,7 +777,13 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="coverage_start_date">
-                                                    Coverage Start Date *
+                                                    Coverage Start Date{' '}
+                                                    {!isNhisPlan && '*'}
+                                                    {isNhisPlan && (
+                                                        <span className="text-xs font-normal text-muted-foreground">
+                                                            (from NHIS)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     id="coverage_start_date"
@@ -533,10 +797,16 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                                             e.target.value,
                                                         )
                                                     }
+                                                    readOnly={
+                                                        isNhisPlan && !!cccData
+                                                    }
                                                     className={
                                                         errors.coverage_start_date
                                                             ? 'border-destructive'
-                                                            : ''
+                                                            : isNhisPlan &&
+                                                                cccData
+                                                              ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                              : ''
                                                     }
                                                 />
                                                 {errors.coverage_start_date && (
@@ -550,7 +820,12 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
 
                                             <div className="space-y-2">
                                                 <Label htmlFor="coverage_end_date">
-                                                    Coverage End Date
+                                                    Coverage End Date{' '}
+                                                    {isNhisPlan && (
+                                                        <span className="text-xs font-normal text-muted-foreground">
+                                                            (from NHIS)
+                                                        </span>
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     id="coverage_end_date"
@@ -564,7 +839,17 @@ export default function PatientsEdit({ patient, insurance_plans }: Props) {
                                                             e.target.value,
                                                         )
                                                     }
+                                                    readOnly={
+                                                        isNhisPlan && !!cccData
+                                                    }
                                                     placeholder="Optional"
+                                                    className={
+                                                        isNhisPlan && cccData
+                                                            ? isNhisExpired
+                                                                ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/20'
+                                                                : 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                            : ''
+                                                    }
                                                 />
                                             </div>
                                         </div>

@@ -34,6 +34,7 @@
                 const verificationData = {
                     membershipNumber: event.data.membershipNumber,
                     credentials: event.data.credentials,
+                    idType: event.data.idType || 'nhis', // 'nhis' or 'ghanacard'
                     timestamp: Date.now(),
                     hmsOrigin: window.location.origin,
                     hmsUrl: window.location.href
@@ -68,6 +69,15 @@
                     },
                     '*',
                 );
+                console.log('HMS NHIS Extension: postMessage sent');
+                
+                // Clear the lastCccData from storage after a delay to ensure message is received
+                setTimeout(() => {
+                    chrome.storage.local.remove(['lastCccData'], () => {
+                        console.log('HMS NHIS Extension: Cleared lastCccData from storage');
+                    });
+                }, 2000);
+                
                 sendResponse({ received: true });
             }
             return true;

@@ -23,7 +23,10 @@ interface CccData {
     coverageStart: string;
     coverageEnd: string;
     error?: string | null;
+    errorType?: 'INACTIVE' | 'GHANACARD_NOT_LINKED' | 'NOT_FOUND' | 'UNKNOWN' | null;
 }
+
+export type NhisIdType = 'nhis' | 'ghanacard';
 
 interface UseNhisExtensionReturn {
     isExtensionInstalled: boolean;
@@ -33,6 +36,7 @@ interface UseNhisExtensionReturn {
         membershipNumber: string,
         credentials?: { username: string; password: string },
         portalUrl?: string,
+        idType?: NhisIdType,
     ) => void;
     clearCccData: () => void;
 }
@@ -53,16 +57,21 @@ export function useNhisExtension(): UseNhisExtensionReturn {
     // Listen for CCC data from extension
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
+            console.log('useNhisExtension: Received window message', event.data?.type);
             // Only accept messages from same origin or extension
             if (event.data?.type === 'NHIS_CCC_RECEIVED') {
-                console.log('Received CCC from extension:', event.data.data);
+                console.log('useNhisExtension: Received CCC from extension:', event.data.data);
                 setCccData(event.data.data);
                 setIsVerifying(false);
             }
         };
 
+        console.log('useNhisExtension: Adding message listener');
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+        return () => {
+            console.log('useNhisExtension: Removing message listener');
+            window.removeEventListener('message', handleMessage);
+        };
     }, []);
 
     const checkExtension = useCallback(() => {
@@ -103,6 +112,7 @@ export function useNhisExtension(): UseNhisExtensionReturn {
             membershipNumber: string,
             credentials?: { username: string; password: string },
             portalUrl?: string,
+            idType: NhisIdType = 'nhis',
         ) => {
             setIsVerifying(true);
             setCccData(null);
@@ -114,6 +124,7 @@ export function useNhisExtension(): UseNhisExtensionReturn {
                     type: 'HMS_NHIS_VERIFY_REQUEST',
                     membershipNumber,
                     credentials: credentials || null,
+                    idType, // 'nhis' or 'ghanacard'
                 },
                 '*',
             );
@@ -130,6 +141,7 @@ export function useNhisExtension(): UseNhisExtensionReturn {
                         type: 'NHIS_VERIFY_REQUEST',
                         membershipNumber,
                         credentials,
+                        idType,
                     });
                 } catch {
                     // Extension communication failed, rely on postMessage

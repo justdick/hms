@@ -211,6 +211,16 @@ export default function PatientRegistrationForm({
     // Auto-fill ALL fields when NHIS data is received
     useEffect(() => {
         if (cccData) {
+            // Check for Ghana Card not linked error first
+            if (cccData.errorType === 'GHANACARD_NOT_LINKED') {
+                toast.error('Ghana Card not linked to NHIS', {
+                    description:
+                        'This Ghana Card is not linked to an NHIS membership. The patient needs to link their Ghana Card at an NHIS office, or use their NHIS membership number instead.',
+                    duration: 8000,
+                });
+                return;
+            }
+
             const startDate = parseNhisDate(cccData.coverageStart);
             const endDate = parseNhisDate(cccData.coverageEnd);
             const dob = parseNhisDate(cccData.dob);
@@ -219,6 +229,12 @@ export default function PatientRegistrationForm({
 
             // Track what was auto-filled
             const autoFilled: string[] = [];
+
+            // Auto-fill membership ID from NHIS response (useful when using Ghana Card)
+            if (cccData.membershipNumber && !data.membership_id.trim()) {
+                setData('membership_id', cccData.membershipNumber);
+                autoFilled.push('membership ID');
+            }
 
             // Auto-fill patient details (only if empty)
             if (firstName && !data.first_name) {
@@ -276,19 +292,33 @@ export default function PatientRegistrationForm({
     }, [hasInsurance, data.insurance_plan_id]);
 
     const handleLookupNhis = () => {
-        if (!data.membership_id.trim()) {
-            toast.error('Enter membership ID first');
+        // Can use either membership ID or national ID (Ghana Card)
+        const hasMembershipId = data.membership_id.trim();
+        const hasNationalId = data.national_id?.trim();
+        const lookupId = hasMembershipId || hasNationalId;
+
+        if (!lookupId) {
+            toast.error('Enter membership ID or national ID (Ghana Card) first');
             return;
         }
 
-        // Copy membership number to clipboard
-        copyToClipboard(data.membership_id);
+        // Determine which ID type to use
+        const idType = hasMembershipId ? 'nhis' : 'ghanacard';
 
-        // Start verification
+        // Copy the ID to clipboard
+        copyToClipboard(lookupId);
+
+        // Show hint about which ID type will be used
+        if (idType === 'ghanacard') {
+            toast.info('Ghana Card number copied - extension will select Ghana Card on portal');
+        }
+
+        // Start verification with the appropriate ID type
         startVerification(
-            data.membership_id,
+            lookupId,
             nhisSettings?.credentials || undefined,
             nhisSettings?.nhia_portal_url,
+            idType,
         );
     };
 

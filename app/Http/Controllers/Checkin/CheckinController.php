@@ -588,4 +588,49 @@ class CheckinController extends Controller
             'has_same_day_ccc' => false,
         ]);
     }
+
+    /**
+     * Apply insurance to an existing check-in.
+     * Used when patient adds insurance mid-visit and needs to apply CCC from NHIS portal.
+     */
+    public function applyInsurance(PatientCheckin $checkin, Request $request)
+    {
+        $this->authorize('update', $checkin);
+
+        $validated = $request->validate([
+            'claim_check_code' => 'required|string|max:50',
+        ]);
+
+        // Validate checkin doesn't already have insurance
+        if ($checkin->claim_check_code) {
+            return back()->with('error', 'This check-in already has insurance applied.');
+        }
+
+        // Validate checkin is still active
+        if (in_array($checkin->status, ['completed', 'cancelled'])) {
+            return back()->with('error', 'Cannot apply insurance to a completed or cancelled check-in.');
+        }
+
+        // Get patient's active insurance
+        $patient = $checkin->patient;
+        $patientInsurance = $patient->activeInsurance;
+
+        if (! $patientInsurance) {
+            return back()->with('error', 'Patient does not have active insurance.');
+        }
+
+        // Use the InsuranceApplicationService to apply insurance
+        $insuranceApplicationService = app(\App\Services\InsuranceApplicationService::class);
+        $result = $insuranceApplicationService->applyInsuranceToActiveCheckin(
+            $checkin,
+            $patientInsurance,
+            $validated['claim_check_code']
+        );
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
+    }
 }

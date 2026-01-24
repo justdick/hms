@@ -53,6 +53,9 @@ class InsuranceApplicationService
         return DB::transaction(function () use ($checkin, $patientInsurance, $claimCheckCode) {
             $patient = $checkin->patient;
 
+            // Determine type of service based on check-in status
+            $typeOfService = $checkin->status === 'admitted' ? 'inpatient' : 'outpatient';
+
             // Create the insurance claim
             $claim = InsuranceClaim::create([
                 'claim_check_code' => $claimCheckCode,
@@ -66,7 +69,7 @@ class InsuranceApplicationService
                 'patient_gender' => $patient->gender,
                 'membership_id' => $patientInsurance->membership_id,
                 'date_of_attendance' => $checkin->checked_in_at,
-                'type_of_service' => 'outpatient',
+                'type_of_service' => $typeOfService,
                 'type_of_attendance' => 'routine',
                 'status' => 'pending_vetting',
                 'total_claim_amount' => 0,
@@ -114,13 +117,18 @@ class InsuranceApplicationService
             return; // Skip charges that don't map to insurance categories
         }
 
+        // Get item ID for NHIS coverage lookup (same logic as ChargeObserver)
+        $itemId = $this->getItemIdForCharge($charge);
+
         // Calculate coverage
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
             $charge->service_code ?? 'GENERAL',
             (float) $charge->amount,
-            1
+            1,
+            null,
+            $itemId
         );
 
         // Update charge with insurance information
@@ -162,12 +170,25 @@ class InsuranceApplicationService
 
     /**
      * Check if a patient has any active checkins without insurance.
+     *
+     * For admitted patients, only include if admitted today (same-day scenario).
+     * This is because NHIS requires CCC date to match admission date.
      */
     public function getActiveCheckinWithoutInsurance(Patient $patient): ?PatientCheckin
     {
+        $today = now()->toDateString();
+
         return PatientCheckin::where('patient_id', $patient->id)
-            ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
             ->whereNull('claim_check_code')
+            ->where(function ($query) use ($today) {
+                // OPD statuses - always eligible
+                $query->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
+                    // Admitted patients - only if admitted today
+                    ->orWhere(function ($q) use ($today) {
+                        $q->where('status', 'admitted')
+                            ->whereDate('checked_in_at', $today);
+                    });
+            })
             ->first();
     }
 
@@ -206,5 +227,71 @@ class InsuranceApplicationService
             'nursing' => 'nursing',
             default => null,
         };
+    }
+
+    /**
+     * Get the item ID for a charge based on its service type.
+     * This is used for NHIS coverage lookup which requires the actual item ID.
+     *
+     * Since charges don't have direct foreign keys to all item types,
+     * we look up the item by service_code when needed.
+     */
+    protected function getItemIdForCharge(Charge $charge): ?int
+    {
+        return match ($charge->service_type) {
+            // For consultations, the item ID is the department ID from the check-in
+            'consultation' => $charge->patientCheckin?->department_id,
+
+            // For pharmacy/drugs, get the drug_id from the prescription or look up by code
+            'pharmacy', 'drug' => $charge->prescription?->drug_id
+                ?? $this->lookupDrugIdByCode($charge->service_code),
+
+            // For lab tests, look up by service code
+            'lab', 'laboratory' => $this->lookupLabServiceIdByCode($charge->service_code),
+
+            // For procedures, look up by service code
+            'procedure' => $this->lookupProcedureTypeIdByCode($charge->service_code),
+
+            // For ward charges, get from the admission
+            'ward', 'admission' => $charge->patientCheckin?->patientAdmission?->ward_id,
+
+            default => null,
+        };
+    }
+
+    /**
+     * Look up drug ID by drug code.
+     */
+    protected function lookupDrugIdByCode(?string $code): ?int
+    {
+        if (! $code) {
+            return null;
+        }
+
+        return \App\Models\Drug::where('drug_code', $code)->value('id');
+    }
+
+    /**
+     * Look up lab service ID by service code.
+     */
+    protected function lookupLabServiceIdByCode(?string $code): ?int
+    {
+        if (! $code) {
+            return null;
+        }
+
+        return \App\Models\LabService::where('code', $code)->value('id');
+    }
+
+    /**
+     * Look up minor procedure type ID by code.
+     */
+    protected function lookupProcedureTypeIdByCode(?string $code): ?int
+    {
+        if (! $code) {
+            return null;
+        }
+
+        return \App\Models\MinorProcedureType::where('code', $code)->value('id');
     }
 }

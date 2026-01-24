@@ -41,24 +41,30 @@ export function InsuranceCoverageBadge({
             ? patientCopayAmount
             : parseFloat(String(patientCopayAmount)) || 0;
 
+    // Total cost = tariff amount + patient copay (what insurance pays + what patient pays)
+    const totalCost = numInsuranceCovered + numPatientCopay;
+
+    // Coverage percentage based on total cost, not just tariff amount
     const coveragePercentage =
-        numAmount > 0 ? Math.round((numInsuranceCovered / numAmount) * 100) : 0;
+        totalCost > 0 ? Math.round((numInsuranceCovered / totalCost) * 100) : 0;
+
+    // "Fully Covered" should only show when patient pays nothing
+    const isFullyCovered = numPatientCopay === 0 && numInsuranceCovered > 0;
 
     const getBadgeVariant = () => {
-        if (coveragePercentage >= 100) return 'default';
+        if (isFullyCovered) return 'default';
         if (coveragePercentage > 0) return 'secondary';
         return 'outline';
     };
 
     const getIcon = () => {
-        if (coveragePercentage >= 100)
-            return <ShieldCheck className="size-3" />;
+        if (isFullyCovered) return <ShieldCheck className="size-3" />;
         if (coveragePercentage > 0) return <ShieldAlert className="size-3" />;
         return <ShieldOff className="size-3" />;
     };
 
     const getBadgeText = () => {
-        if (coveragePercentage >= 100) return 'Fully Covered';
+        if (isFullyCovered) return 'Fully Covered';
         if (coveragePercentage > 0) return `${coveragePercentage}% Covered`;
         return 'Not Covered';
     };
@@ -85,14 +91,6 @@ export function InsuranceCoverageBadge({
                     <div className="grid gap-1 text-sm">
                         <div className="flex justify-between gap-4">
                             <span className="text-muted-foreground">
-                                Total Amount:
-                            </span>
-                            <span className="font-medium">
-                                {formatCurrency(numAmount)}
-                            </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                            <span className="text-muted-foreground">
                                 Insurance Pays:
                             </span>
                             <span className="font-medium text-green-600 dark:text-green-400">
@@ -101,13 +99,21 @@ export function InsuranceCoverageBadge({
                         </div>
                         <div className="flex justify-between gap-4">
                             <span className="text-muted-foreground">
-                                Patient Pays:
+                                Patient Copay:
                             </span>
                             <span className="font-medium text-orange-600 dark:text-orange-400">
                                 {formatCurrency(numPatientCopay)}
                             </span>
                         </div>
                         <div className="flex justify-between gap-4 border-t pt-1">
+                            <span className="text-muted-foreground">
+                                Total Cost:
+                            </span>
+                            <span className="font-medium">
+                                {formatCurrency(totalCost)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between gap-4">
                             <span className="text-muted-foreground">
                                 Coverage:
                             </span>

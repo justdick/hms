@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Patient;
-use App\Models\PatientInsurance;
-use App\Services\InsuranceApplicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -340,6 +338,8 @@ class PatientController extends Controller
             'can_manage_credit' => auth()->user()->can('billing.manage-credit'),
             'payment_methods' => \App\Models\PaymentMethod::where('is_active', true)->get(),
             'account_summary' => $this->getAccountSummary($patient),
+            'active_checkin_without_insurance' => $this->getActiveCheckinWithoutInsurance($patient),
+            'nhis_settings' => $this->getNhisSettings(),
         ]);
     }
 
@@ -363,6 +363,7 @@ class PatientController extends Controller
                         'id' => $plan->provider->id,
                         'name' => $plan->provider->name,
                         'code' => $plan->provider->code,
+                        'is_nhis' => $plan->provider->is_nhis ?? false,
                     ],
                 ];
             });
@@ -401,6 +402,7 @@ class PatientController extends Controller
                 ] : null,
             ],
             'insurance_plans' => $insurancePlans,
+            'nhis_settings' => $this->getNhisSettings(),
         ]);
     }
 
@@ -409,9 +411,6 @@ class PatientController extends Controller
         $validated = $request->validated();
 
         return DB::transaction(function () use ($request, $patient, $validated) {
-            // Check if patient had insurance before this update
-            $hadInsuranceBefore = $patient->activeInsurance !== null;
-
             // Update patient data
             $patient->update([
                 'first_name' => $validated['first_name'],
@@ -447,17 +446,23 @@ class PatientController extends Controller
 
                 // Update existing active insurance or create new one
                 $activeInsurance = $patient->activeInsurance;
+                $insuranceWasAdded = ! $activeInsurance;
                 if ($activeInsurance) {
                     $activeInsurance->update($insuranceData);
-                    $newInsurance = $activeInsurance->fresh();
                 } else {
-                    $newInsurance = $patient->insurancePlans()->create($insuranceData);
+                    $patient->insurancePlans()->create($insuranceData);
                 }
 
-                // If patient didn't have insurance before but now does,
-                // check for active checkins and apply insurance retroactively
-                if (! $hadInsuranceBefore && $newInsurance) {
-                    $this->applyInsuranceToActiveCheckin($patient, $newInsurance);
+                // If insurance was newly added, check for active checkin
+                if ($insuranceWasAdded) {
+                    $activeCheckin = $this->getActiveCheckinWithoutInsurance($patient);
+                    if ($activeCheckin) {
+                        return redirect()
+                            ->route('patients.show', $patient)
+                            ->with('success', 'Patient information updated successfully.')
+                            ->with('show_apply_insurance_modal', true)
+                            ->with('active_checkin_id', $activeCheckin['id']);
+                    }
                 }
             }
 
@@ -465,28 +470,6 @@ class PatientController extends Controller
                 ->route('patients.show', $patient)
                 ->with('success', 'Patient information updated successfully.');
         });
-    }
-
-    /**
-     * Apply insurance to any active checkin for the patient.
-     * This handles the emergency scenario where insurance is added mid-visit.
-     */
-    protected function applyInsuranceToActiveCheckin(Patient $patient, PatientInsurance $insurance): void
-    {
-        $insuranceApplicationService = app(InsuranceApplicationService::class);
-
-        // Check for active checkin without insurance
-        $activeCheckin = $insuranceApplicationService->getActiveCheckinWithoutInsurance($patient);
-
-        if ($activeCheckin) {
-            // Generate a claim check code and apply insurance
-            $claimCheckCode = $insuranceApplicationService->generateClaimCheckCode();
-            $insuranceApplicationService->applyInsuranceToActiveCheckin(
-                $activeCheckin,
-                $insurance,
-                $claimCheckCode
-            );
-        }
     }
 
     /**
@@ -917,5 +900,70 @@ class PatientController extends Controller
         $newNumber = $highestNumber + 1;
 
         return $basePattern.str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get active check-in without insurance for a patient.
+     * Only returns check-ins that are eligible for insurance application.
+     */
+    private function getActiveCheckinWithoutInsurance(Patient $patient): ?array
+    {
+        $today = now()->toDateString();
+
+        $checkin = \App\Models\PatientCheckin::where('patient_id', $patient->id)
+            ->whereNull('claim_check_code')
+            ->where(function ($query) use ($today) {
+                // OPD statuses - always eligible
+                $query->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation', 'in_consultation'])
+                    // Admitted patients - only if admitted today
+                    ->orWhere(function ($q) use ($today) {
+                        $q->where('status', 'admitted')
+                            ->whereDate('checked_in_at', $today);
+                    });
+            })
+            ->with('department')
+            ->first();
+
+        if (! $checkin) {
+            return null;
+        }
+
+        return [
+            'id' => $checkin->id,
+            'checked_in_at' => $checkin->checked_in_at->format('Y-m-d H:i'),
+            'department' => [
+                'id' => $checkin->department->id,
+                'name' => $checkin->department->name,
+            ],
+            'status' => $checkin->status,
+            'is_admitted' => $checkin->status === 'admitted',
+        ];
+    }
+
+    /**
+     * Get NHIS settings for the frontend.
+     */
+    private function getNhisSettings(): array
+    {
+        $nhisSettings = \App\Models\NhisSettings::getInstance();
+        $nhisCredentials = null;
+
+        if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
+            try {
+                $nhisCredentials = [
+                    'username' => $nhisSettings->nhia_username,
+                    'password' => $nhisSettings->nhia_password,
+                ];
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Password was encrypted with different APP_KEY, ignore
+            }
+        }
+
+        return [
+            'verification_mode' => $nhisSettings->verification_mode,
+            'nhia_portal_url' => $nhisSettings->nhia_portal_url,
+            'auto_open_portal' => $nhisSettings->auto_open_portal,
+            'credentials' => $nhisCredentials,
+        ];
     }
 }

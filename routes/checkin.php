@@ -29,6 +29,7 @@ Route::middleware(['auth'])->prefix('checkin')->name('checkin.')->group(function
         Route::patch('/{checkin}/department', [CheckinController::class, 'updateDepartment'])->name('update-department');
         Route::patch('/{checkin}/date', [CheckinController::class, 'updateDate'])->name('update-date');
         Route::post('/{checkin}/cancel', [CheckinController::class, 'cancel'])->name('cancel');
+        Route::post('/{checkin}/apply-insurance', [CheckinController::class, 'applyInsurance'])->name('apply-insurance');
         Route::get('/department/{department}/queue', [CheckinController::class, 'departmentQueue'])->name('department-queue');
         Route::get('/patients/{patient}/insurance', [CheckinController::class, 'checkInsurance'])->name('patient-insurance');
         Route::get('/patients/{patient}/same-day-ccc', [CheckinController::class, 'getSameDayCcc'])->name('same-day-ccc');

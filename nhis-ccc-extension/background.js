@@ -73,6 +73,11 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 async function sendCccToHmsWithPending(data, pending) {
     console.log('HMS NHIS Extension BG: Sending CCC to HMS with pending', pending);
     
+    // Store CCC data for polling fallback (in case direct message fails)
+    chrome.storage.local.set({ lastCccData: data }, () => {
+        console.log('HMS NHIS Extension BG: Stored CCC data for polling fallback');
+    });
+    
     // Find all tabs that might be HMS
     const tabs = await chrome.tabs.query({});
     
@@ -88,12 +93,17 @@ async function sendCccToHmsWithPending(data, pending) {
         }
     }
     
-    // Clear pending verification after sending
+    // Clear pending verification after sending (but keep lastCccData for polling)
     chrome.storage.local.remove(['pendingVerification']);
 }
 
 async function sendCccToAllHmsTabs(data) {
     console.log('HMS NHIS Extension BG: Sending CCC to all HMS tabs');
+    
+    // Store CCC data for polling fallback
+    chrome.storage.local.set({ lastCccData: data }, () => {
+        console.log('HMS NHIS Extension BG: Stored CCC data for polling fallback');
+    });
     
     const tabs = await chrome.tabs.query({});
     

@@ -211,11 +211,18 @@ class Charge extends Model
 
     public function getCoveragePercentage(): float
     {
-        if (! $this->is_insurance_claim || $this->amount <= 0) {
+        if (! $this->is_insurance_claim) {
             return 0.0;
         }
 
-        return round(($this->insurance_covered_amount / $this->amount) * 100, 2);
+        // Total cost = insurance covered amount + patient copay
+        $totalCost = $this->insurance_covered_amount + $this->patient_copay_amount;
+
+        if ($totalCost <= 0) {
+            return 0.0;
+        }
+
+        return round(($this->insurance_covered_amount / $totalCost) * 100, 2);
     }
 
     public function getInsuranceCoverageDisplay(): string
@@ -224,11 +231,12 @@ class Charge extends Model
             return 'No Coverage';
         }
 
-        $percentage = $this->getCoveragePercentage();
-
-        if ($percentage >= 100) {
+        // "Fully Covered" only when patient pays nothing
+        if ($this->patient_copay_amount == 0 && $this->insurance_covered_amount > 0) {
             return 'Fully Covered';
         }
+
+        $percentage = $this->getCoveragePercentage();
 
         if ($percentage > 0) {
             return "{$percentage}% Covered";

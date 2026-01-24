@@ -56,9 +56,18 @@
             console.log('HMS NHIS Extension: Generate button not found');
         }
     } else if (currentUrl.includes('/Home/cardType')) {
-        // Card type selection - click NHIS Card
+        // Card type selection - click NHIS Card or Ghana Card based on idType
         await sleep(500);
-        await waitAndClick('#nhiaCard', true);
+        const idType = pending.idType || 'nhis';
+        if (idType === 'ghanacard') {
+            // Ghana Card is the second option
+            await waitAndClick('#ghanaCard', true);
+            console.log('HMS NHIS Extension: Selected Ghana Card');
+        } else {
+            // NHIS Card is the default/first option
+            await waitAndClick('#nhiaCard', true);
+            console.log('HMS NHIS Extension: Selected NHIS Card');
+        }
     } else if (currentUrl.includes('/Home/cardNumber')) {
         // Card number entry - fill and submit
         await fillCardNumber(membershipNumber);
@@ -222,22 +231,32 @@
             coverageStart: null,
             coverageEnd: null,
             error: null,
+            errorType: null,
         };
 
         // Parse the result page
         const pageText = document.body.innerText;
 
-        // Check for error modal (INACTIVE membership)
-        // The error modal shows "An Error Occured!" with "INACTIVE" text
+        // Check for error modal
         const hasErrorModal = pageText.includes('An Error Occured') || 
-                              pageText.includes('An Error Occurred') ||
-                              pageText.includes('INACTIVE');
+                              pageText.includes('An Error Occurred');
         
         if (hasErrorModal) {
             // Check for specific error messages
-            if (pageText.includes('INACTIVE')) {
+            if (pageText.includes("@UMN") || pageText.includes("must have its value set")) {
+                // Ghana Card not linked to NHIS
+                data.error = 'Ghana Card not linked to NHIS membership';
+                data.errorType = 'GHANACARD_NOT_LINKED';
+                data.status = 'NOT_LINKED';
+                console.log('HMS NHIS Extension: Ghana Card not linked to NHIS');
+            } else if (pageText.includes('INACTIVE')) {
                 data.error = 'INACTIVE';
+                data.errorType = 'INACTIVE';
                 data.status = 'INACTIVE';
+            } else if (pageText.includes('not found') || pageText.includes('NOT FOUND')) {
+                data.error = 'Member not found';
+                data.errorType = 'NOT_FOUND';
+                data.status = 'NOT_FOUND';
             } else {
                 // Try to extract error message
                 const errorMatch = pageText.match(/An Error Occur[r]?ed[!]?\s*([^\n]+)/i);
@@ -246,18 +265,21 @@
                 } else {
                     data.error = 'Unknown error';
                 }
+                data.errorType = 'UNKNOWN';
             }
-            console.log('HMS NHIS Extension: Detected error/inactive status', data.error);
+            console.log('HMS NHIS Extension: Detected error', data.error, data.errorType);
         }
 
-        // Extract CCC (may not exist if INACTIVE)
+        // Extract CCC (may not exist if error)
         const cccMatch = pageText.match(/CCC\s*:\s*["']?(\d+)["']?/i);
         if (cccMatch) data.ccc = cccMatch[1];
 
         // Extract Status from the page (STATUS : ACTIVE or similar)
-        // This is different from the error status
-        const statusMatch = pageText.match(/STATUS\s*:\s*["']?(\w+)["']?/i);
-        if (statusMatch) data.status = statusMatch[1];
+        // Only override if not already set by error handling
+        const statusMatch = pageText.match(/STATUS\s*:\s*["']?([^\n"']+)["']?/i);
+        if (statusMatch && !data.status) {
+            data.status = statusMatch[1].trim();
+        }
 
         // Extract Name
         const nameMatch = pageText.match(/NAME\s*:\s*["']?([^\n"']+)["']?/i);
@@ -285,9 +307,8 @@
 
         console.log('HMS NHIS Extension: Extracted data', data);
 
-        // Send data if we have CCC OR if we have dates (even for INACTIVE)
-        // This allows HMS to update dates even when membership is expired
-        if (data.ccc || data.coverageStart || data.coverageEnd || data.status) {
+        // Send data if we have CCC, dates, status, or error
+        if (data.ccc || data.coverageStart || data.coverageEnd || data.status || data.error) {
             // Send to background script (it will clear pending verification after sending to HMS)
             chrome.runtime.sendMessage({
                 type: 'CCC_CAPTURED',
@@ -297,14 +318,16 @@
             // Show appropriate message
             if (data.ccc) {
                 showSuccessMessage(data.ccc);
+            } else if (data.errorType === 'GHANACARD_NOT_LINKED') {
+                showGhanaCardNotLinkedMessage();
             } else if (data.error || data.status === 'INACTIVE') {
                 showErrorMessage(data.status || data.error, data.coverageEnd);
             }
 
-            // Auto-close this tab after 3 seconds
+            // Auto-close this tab after 4 seconds (longer for error messages)
             setTimeout(() => {
                 window.close();
-            }, 3000);
+            }, data.error ? 5000 : 3000);
         } else {
             console.log('HMS NHIS Extension: No useful data found on page');
         }
@@ -372,6 +395,34 @@
 
         // Auto-remove after 10 seconds
         setTimeout(() => banner.remove(), 10000);
+    }
+
+    // Helper: Show Ghana Card not linked message
+    function showGhanaCardNotLinkedMessage() {
+        const banner = document.createElement('div');
+        banner.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #f59e0b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 99999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 350px;
+        `;
+        banner.innerHTML = `
+            ⚠️ <strong>Ghana Card Not Linked</strong><br>
+            <small>This Ghana Card is not linked to an NHIS membership.</small><br>
+            <small style="margin-top: 4px; display: block;">The patient needs to link their Ghana Card at an NHIS office or use their NHIS membership number instead.</small>
+        `;
+        document.body.appendChild(banner);
+
+        // Auto-remove after 15 seconds (longer for this important message)
+        setTimeout(() => banner.remove(), 15000);
     }
 
     // Helper: Sleep

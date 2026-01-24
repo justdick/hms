@@ -226,13 +226,21 @@ test('patient update with new insurance applies to active checkin', function () 
 
     $response->assertRedirect();
 
-    // Verify checkin now has insurance
-    $checkin->refresh();
-    expect($checkin->claim_check_code)->not->toBeNull();
+    // Verify insurance was saved for the patient
+    $patient->refresh();
+    expect($patient->activeInsurance)->not->toBeNull()
+        ->and($patient->activeInsurance->membership_id)->toBe('MEM789');
 
-    // Verify claim was created
+    // Verify checkin does NOT have insurance auto-applied (requires CCC from NHIS portal)
+    $checkin->refresh();
+    expect($checkin->claim_check_code)->toBeNull();
+
+    // Verify no claim was auto-created
     $claim = InsuranceClaim::where('patient_checkin_id', $checkin->id)->first();
-    expect($claim)->not->toBeNull();
+    expect($claim)->toBeNull();
+
+    // Verify flash data indicates modal should be shown
+    $response->assertSessionHas('show_apply_insurance_modal', true);
 });
 
 test('getActiveCheckinWithoutInsurance returns correct checkin', function () {
@@ -281,4 +289,254 @@ test('generateClaimCheckCode creates unique codes', function () {
     expect($code1)->toStartWith('CC-')
         ->and($code2)->toStartWith('CC-')
         ->and($code1)->not->toBe($code2);
+});
+
+test('getActiveCheckinWithoutInsurance includes admitted patients from today', function () {
+    $patient = Patient::factory()->create();
+
+    // Create admitted checkin from today without insurance
+    $admittedCheckin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'admitted',
+        'claim_check_code' => null,
+        'checked_in_at' => now(), // Today
+    ]);
+
+    $service = app(InsuranceApplicationService::class);
+    $result = $service->getActiveCheckinWithoutInsurance($patient);
+
+    expect($result)->not->toBeNull()
+        ->and($result->id)->toBe($admittedCheckin->id);
+});
+
+test('getActiveCheckinWithoutInsurance excludes admitted patients from previous days', function () {
+    $patient = Patient::factory()->create();
+
+    // Create admitted checkin from yesterday without insurance
+    PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'admitted',
+        'claim_check_code' => null,
+        'checked_in_at' => now()->subDay(), // Yesterday
+    ]);
+
+    $service = app(InsuranceApplicationService::class);
+    $result = $service->getActiveCheckinWithoutInsurance($patient);
+
+    // Should return null because admitted patient is from a previous day
+    expect($result)->toBeNull();
+});
+
+test('insurance applied to admitted patient creates inpatient claim', function () {
+    $patient = Patient::factory()->create();
+
+    // Create admitted checkin from today
+    $checkin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'admitted',
+        'claim_check_code' => null,
+        'checked_in_at' => now(),
+    ]);
+
+    // Create a pending charge
+    Charge::factory()->create([
+        'patient_checkin_id' => $checkin->id,
+        'service_type' => 'consultation',
+        'service_code' => 'CONS001',
+        'charge_type' => 'consultation_fee',
+        'amount' => 100.00,
+        'status' => 'pending',
+        'is_insurance_claim' => false,
+    ]);
+
+    $patientInsurance = PatientInsurance::create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $this->plan->id,
+        'membership_id' => 'MEM123456',
+        'coverage_start_date' => now()->subMonth(),
+        'status' => 'active',
+    ]);
+
+    $service = app(InsuranceApplicationService::class);
+    $result = $service->applyInsuranceToActiveCheckin(
+        $checkin,
+        $patientInsurance,
+        'CC-INPATIENT-001'
+    );
+
+    expect($result['success'])->toBeTrue();
+
+    // Verify claim was created with inpatient type
+    $claim = InsuranceClaim::where('claim_check_code', 'CC-INPATIENT-001')->first();
+    expect($claim)->not->toBeNull()
+        ->and($claim->type_of_service)->toBe('inpatient');
+});
+
+test('insurance applied to OPD patient creates outpatient claim', function () {
+    $patient = Patient::factory()->create();
+
+    // Create OPD checkin
+    $checkin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'in_consultation',
+        'claim_check_code' => null,
+    ]);
+
+    // Create a pending charge
+    Charge::factory()->create([
+        'patient_checkin_id' => $checkin->id,
+        'service_type' => 'consultation',
+        'service_code' => 'CONS001',
+        'charge_type' => 'consultation_fee',
+        'amount' => 100.00,
+        'status' => 'pending',
+        'is_insurance_claim' => false,
+    ]);
+
+    $patientInsurance = PatientInsurance::create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $this->plan->id,
+        'membership_id' => 'MEM123456',
+        'coverage_start_date' => now()->subMonth(),
+        'status' => 'active',
+    ]);
+
+    $service = app(InsuranceApplicationService::class);
+    $result = $service->applyInsuranceToActiveCheckin(
+        $checkin,
+        $patientInsurance,
+        'CC-OUTPATIENT-001'
+    );
+
+    expect($result['success'])->toBeTrue();
+
+    // Verify claim was created with outpatient type
+    $claim = InsuranceClaim::where('claim_check_code', 'CC-OUTPATIENT-001')->first();
+    expect($claim)->not->toBeNull()
+        ->and($claim->type_of_service)->toBe('outpatient');
+});
+
+test('apply insurance endpoint applies CCC to checkin', function () {
+    $patient = Patient::factory()->create();
+
+    // Create checkin without insurance
+    $checkin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'awaiting_consultation',
+        'claim_check_code' => null,
+    ]);
+
+    // Create a pending charge
+    Charge::factory()->create([
+        'patient_checkin_id' => $checkin->id,
+        'service_type' => 'consultation',
+        'service_code' => 'CONS001',
+        'charge_type' => 'consultation_fee',
+        'amount' => 100.00,
+        'status' => 'pending',
+        'is_insurance_claim' => false,
+    ]);
+
+    // Add insurance to patient
+    PatientInsurance::create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $this->plan->id,
+        'membership_id' => 'MEM123456',
+        'coverage_start_date' => now()->subMonth(),
+        'status' => 'active',
+    ]);
+
+    // Apply insurance via endpoint with CCC from "NHIS portal"
+    $response = $this->actingAs($this->user)
+        ->post("/checkin/checkins/{$checkin->id}/apply-insurance", [
+            'claim_check_code' => 'CC-FROM-NHIS-PORTAL',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    // Verify checkin now has the CCC
+    $checkin->refresh();
+    expect($checkin->claim_check_code)->toBe('CC-FROM-NHIS-PORTAL');
+
+    // Verify claim was created
+    $claim = InsuranceClaim::where('claim_check_code', 'CC-FROM-NHIS-PORTAL')->first();
+    expect($claim)->not->toBeNull()
+        ->and($claim->patient_id)->toBe($patient->id);
+
+    // Verify charge was updated with insurance
+    $charge = Charge::where('patient_checkin_id', $checkin->id)->first();
+    expect($charge->is_insurance_claim)->toBeTrue()
+        ->and($charge->insurance_claim_id)->toBe($claim->id);
+});
+
+test('apply insurance endpoint fails without active insurance', function () {
+    $patient = Patient::factory()->create();
+
+    // Create checkin without insurance
+    $checkin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'awaiting_consultation',
+        'claim_check_code' => null,
+    ]);
+
+    // Try to apply insurance without patient having insurance
+    $response = $this->actingAs($this->user)
+        ->post("/checkin/checkins/{$checkin->id}/apply-insurance", [
+            'claim_check_code' => 'CC-TEST',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+
+    // Verify checkin still has no CCC
+    $checkin->refresh();
+    expect($checkin->claim_check_code)->toBeNull();
+});
+
+test('apply insurance endpoint fails if checkin already has insurance', function () {
+    $patient = Patient::factory()->create();
+
+    // Create checkin WITH insurance already
+    $checkin = PatientCheckin::factory()->create([
+        'patient_id' => $patient->id,
+        'department_id' => $this->department->id,
+        'checked_in_by' => $this->user->id,
+        'status' => 'awaiting_consultation',
+        'claim_check_code' => 'EXISTING-CCC',
+    ]);
+
+    // Add insurance to patient
+    PatientInsurance::create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $this->plan->id,
+        'membership_id' => 'MEM123456',
+        'coverage_start_date' => now()->subMonth(),
+        'status' => 'active',
+    ]);
+
+    // Try to apply insurance again
+    $response = $this->actingAs($this->user)
+        ->post("/checkin/checkins/{$checkin->id}/apply-insurance", [
+            'claim_check_code' => 'NEW-CCC',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+
+    // Verify CCC was not changed
+    $checkin->refresh();
+    expect($checkin->claim_check_code)->toBe('EXISTING-CCC');
 });

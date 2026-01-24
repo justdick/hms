@@ -1,3 +1,4 @@
+import ApplyInsuranceToCheckinModal from '@/components/Patient/ApplyInsuranceToCheckinModal';
 import CheckinModal from '@/components/Checkin/CheckinModal';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,7 @@ import AppLayout from '@/layouts/app-layout';
 import { CreditLimitModal } from '@/pages/Billing/PatientAccounts/components/CreditLimitModal';
 import { DepositModal } from '@/pages/Billing/PatientAccounts/components/DepositModal';
 import patients from '@/routes/patients';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     AlertCircle,
@@ -35,7 +36,7 @@ import {
     Users,
     Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BillingSummary from './components/BillingSummary';
 import MedicalHistoryTab from './components/MedicalHistoryTab';
 
@@ -251,6 +252,27 @@ interface MedicalHistoryData {
     }>;
 }
 
+interface ActiveCheckinWithoutInsurance {
+    id: number;
+    checked_in_at: string;
+    department: {
+        id: number;
+        name: string;
+    };
+    status: string;
+    is_admitted: boolean;
+}
+
+interface NhisSettings {
+    verification_mode: 'manual' | 'extension';
+    nhia_portal_url: string;
+    auto_open_portal: boolean;
+    credentials?: {
+        username: string;
+        password: string;
+    } | null;
+}
+
 interface Props {
     patient: Patient;
     can_edit: boolean;
@@ -263,6 +285,8 @@ interface Props {
     can_manage_credit?: boolean;
     payment_methods?: PaymentMethod[];
     account_summary?: AccountSummary | null;
+    active_checkin_without_insurance?: ActiveCheckinWithoutInsurance | null;
+    nhis_settings?: NhisSettings;
 }
 
 export default function PatientsShow({
@@ -277,10 +301,32 @@ export default function PatientsShow({
     can_manage_credit = false,
     payment_methods = [],
     account_summary = null,
+    active_checkin_without_insurance = null,
+    nhis_settings,
 }: Props) {
     const [checkinModalOpen, setCheckinModalOpen] = useState(false);
     const [depositModalOpen, setDepositModalOpen] = useState(false);
     const [creditLimitModalOpen, setCreditLimitModalOpen] = useState(false);
+    const [applyInsuranceModalOpen, setApplyInsuranceModalOpen] =
+        useState(false);
+
+    // Check for flash data to show apply insurance modal
+    const { flash } = usePage<{
+        flash: {
+            show_apply_insurance_modal?: boolean;
+            active_checkin_id?: number;
+        };
+    }>().props;
+
+    // Show modal if redirected from patient edit with new insurance
+    useEffect(() => {
+        if (
+            flash?.show_apply_insurance_modal &&
+            active_checkin_without_insurance
+        ) {
+            setApplyInsuranceModalOpen(true);
+        }
+    }, [flash, active_checkin_without_insurance]);
 
     const formatCurrency = (amount: number | string) => {
         return new Intl.NumberFormat('en-GH', {
@@ -644,6 +690,51 @@ export default function PatientsShow({
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Active Check-in Without Insurance Banner */}
+                            {active_checkin_without_insurance &&
+                                patient.active_insurance && (
+                                    <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start gap-3">
+                                                <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-amber-800 dark:text-amber-200">
+                                                        Active Check-in Without
+                                                        Insurance
+                                                    </h4>
+                                                    <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                                                        This patient has an
+                                                        active check-in in{' '}
+                                                        <strong>
+                                                            {
+                                                                active_checkin_without_insurance
+                                                                    .department
+                                                                    .name
+                                                            }
+                                                        </strong>{' '}
+                                                        that doesn't have
+                                                        insurance coverage
+                                                        applied.
+                                                    </p>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="mt-2 border-amber-300 bg-white hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/50 dark:hover:bg-amber-900"
+                                                        onClick={() =>
+                                                            setApplyInsuranceModalOpen(
+                                                                true,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Shield className="mr-2 h-4 w-4" />
+                                                        Apply Insurance Coverage
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
 
                             {/* Quick Stats */}
                             <Card>
@@ -1117,6 +1208,21 @@ export default function PatientsShow({
                 currentLimit={account_summary?.credit_limit || 0}
                 formatCurrency={formatCurrency}
             />
+
+            {/* Apply Insurance to Checkin Modal */}
+            {active_checkin_without_insurance && patient.active_insurance && (
+                <ApplyInsuranceToCheckinModal
+                    open={applyInsuranceModalOpen}
+                    onClose={() => setApplyInsuranceModalOpen(false)}
+                    checkin={active_checkin_without_insurance}
+                    insurance={{
+                        id: patient.active_insurance.id,
+                        membership_id: patient.active_insurance.membership_id,
+                        insurance_plan: patient.active_insurance.insurance_plan,
+                    }}
+                    nhisSettings={nhis_settings}
+                />
+            )}
         </AppLayout>
     );
 }

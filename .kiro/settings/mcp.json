@@ -21,7 +21,8 @@
         "browser_press_key",
         "browser_close",
         "browser_run_code",
-        "browser_select_option"
+        "browser_select_option",
+        "browser_tabs"
       ]
     },
     "laravel-boost": {

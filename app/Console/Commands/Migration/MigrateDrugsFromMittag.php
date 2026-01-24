@@ -195,11 +195,11 @@ class MigrateDrugsFromMittag extends Command
         return match (true) {
             str_contains($name, 'tablet') || str_contains($unit, 'tab') => 'tablet',
             str_contains($name, 'capsule') || str_contains($unit, 'cap') => 'capsule',
-            str_contains($name, 'syrup') || str_contains($unit, 'bottle') => 'syrup',
+            str_contains($name, 'syrup') || str_contains($name, 'mixture') || str_contains($unit, 'bottle') => 'syrup',
+            str_contains($name, 'suspension') => 'suspension',
             str_contains($name, 'cream') || str_contains($name, 'ointment') => 'cream',
             str_contains($name, 'injection') || str_contains($name, 'inj') => 'injection',
             str_contains($name, 'drop') => 'drops',
-            str_contains($name, 'suspension') => 'suspension',
             default => 'tablet',
         };
     }

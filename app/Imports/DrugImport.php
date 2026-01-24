@@ -171,6 +171,8 @@ class DrugImport
             'inj' => 'injection',
             'susp' => 'suspension',
             'syr' => 'syrup',
+            'mix' => 'syrup',
+            'mixture' => 'syrup',
             'crm' => 'cream',
             'oint' => 'ointment',
         ];
