@@ -33,6 +33,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Pagination } from '@/components/ui/pagination';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePoll } from '@inertiajs/react';
 import { CheckCircle, Clock, Eye, List, RefreshCw, Search } from 'lucide-react';
@@ -145,10 +146,20 @@ interface Filters {
     date_to?: string;
 }
 
+interface PaginatedData<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
 interface Props {
-    awaitingConsultation: PatientCheckin[];
-    activeConsultations: ActiveConsultation[];
-    completedConsultations: CompletedConsultation[];
+    awaitingConsultation: PaginatedData<PatientCheckin>;
+    activeConsultations: PaginatedData<ActiveConsultation>;
+    completedConsultations: PaginatedData<CompletedConsultation>;
     totalAwaitingCount: number;
     totalActiveCount: number;
     totalCompletedCount: number;
@@ -355,6 +366,64 @@ export default function ConsultationIndex({
                 setLastUpdated(new Date());
             },
         });
+    };
+
+    // Pagination handlers
+    const handleAwaitingPageChange = (page: number) => {
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                department_id: departmentFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                awaiting_page: page,
+                active_page: activeConsultations.current_page,
+                completed_page: completedConsultations.current_page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleActivePageChange = (page: number) => {
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                department_id: departmentFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                awaiting_page: awaitingConsultation.current_page,
+                active_page: page,
+                completed_page: completedConsultations.current_page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleCompletedPageChange = (page: number) => {
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                department_id: departmentFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                awaiting_page: awaitingConsultation.current_page,
+                active_page: activeConsultations.current_page,
+                completed_page: page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const openStartDialog = (checkin: PatientCheckin) => {
@@ -598,8 +667,8 @@ export default function ConsultationIndex({
                         {/* Search Results */}
                         {filters.search && filters.search.length >= 2 && (
                             <>
-                                {awaitingConsultation.length === 0 &&
-                                activeConsultations.length === 0 ? (
+                                {awaitingConsultation.data.length === 0 &&
+                                activeConsultations.data.length === 0 ? (
                                     <Card>
                                         <CardContent className="py-12">
                                             <div className="text-center text-gray-500">
@@ -616,11 +685,11 @@ export default function ConsultationIndex({
                                     </Card>
                                 ) : (
                                     <div className="space-y-6">
-                                        {activeConsultations.length > 0 && (
+                                        {activeConsultations.data.length > 0 && (
                                             <div className="space-y-3">
                                                 <h2 className="text-lg font-semibold">
                                                     Active Consultations (
-                                                    {activeConsultations.length}
+                                                    {activeConsultations.total}
                                                     )
                                                 </h2>
                                                 <div className="rounded-md border">
@@ -651,7 +720,7 @@ export default function ConsultationIndex({
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {activeConsultations.map(
+                                                            {activeConsultations.data.map(
                                                                 (
                                                                     consultation,
                                                                 ) => (
@@ -736,12 +805,12 @@ export default function ConsultationIndex({
                                             </div>
                                         )}
 
-                                        {awaitingConsultation.length > 0 && (
+                                        {awaitingConsultation.data.length > 0 && (
                                             <div className="space-y-3">
                                                 <h2 className="text-lg font-semibold">
                                                     Awaiting Consultation (
                                                     {
-                                                        awaitingConsultation.length
+                                                        awaitingConsultation.total
                                                     }
                                                     )
                                                 </h2>
@@ -776,7 +845,7 @@ export default function ConsultationIndex({
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                            {awaitingConsultation.map(
+                                                            {awaitingConsultation.data.map(
                                                                 (checkin) => (
                                                                     <TableRow
                                                                         key={
@@ -899,11 +968,11 @@ export default function ConsultationIndex({
                     {/* Queue Tab */}
                     <TabsContent value="queue" className="mt-6 space-y-6">
                         {/* Active Consultations Table */}
-                        {activeConsultations.length > 0 && (
+                        {activeConsultations.data.length > 0 && (
                             <div className="space-y-3">
                                 <h2 className="flex items-center gap-2 text-lg font-semibold">
                                     Active Consultations (
-                                    {activeConsultations.length})
+                                    {activeConsultations.total})
                                 </h2>
                                 <div className="rounded-md border">
                                     <Table>
@@ -923,7 +992,7 @@ export default function ConsultationIndex({
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {activeConsultations.map(
+                                            {activeConsultations.data.map(
                                                 (consultation) => (
                                                     <TableRow
                                                         key={consultation.id}
@@ -998,6 +1067,14 @@ export default function ConsultationIndex({
                                         </TableBody>
                                     </Table>
                                 </div>
+                                <Pagination
+                                    currentPage={activeConsultations.current_page}
+                                    lastPage={activeConsultations.last_page}
+                                    from={activeConsultations.from}
+                                    to={activeConsultations.to}
+                                    total={activeConsultations.total}
+                                    onPageChange={handleActivePageChange}
+                                />
                             </div>
                         )}
 
@@ -1006,9 +1083,10 @@ export default function ConsultationIndex({
                             <h2 className="flex items-center gap-2 text-lg font-semibold">
                                 <Clock className="h-5 w-5 text-blue-600" />
                                 Awaiting Consultation (
-                                {awaitingConsultation.length})
+                                {awaitingConsultation.total})
                             </h2>
-                            {awaitingConsultation.length > 0 ? (
+                            {awaitingConsultation.data.length > 0 ? (
+                                <>
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -1028,7 +1106,7 @@ export default function ConsultationIndex({
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {awaitingConsultation.map(
+                                            {awaitingConsultation.data.map(
                                                 (checkin) => (
                                                     <TableRow key={checkin.id}>
                                                         <TableCell className="font-medium">
@@ -1128,6 +1206,15 @@ export default function ConsultationIndex({
                                         </TableBody>
                                     </Table>
                                 </div>
+                                <Pagination
+                                    currentPage={awaitingConsultation.current_page}
+                                    lastPage={awaitingConsultation.last_page}
+                                    from={awaitingConsultation.from}
+                                    to={awaitingConsultation.to}
+                                    total={awaitingConsultation.total}
+                                    onPageChange={handleAwaitingPageChange}
+                                />
+                                </>
                             ) : (
                                 <Card>
                                     <CardContent className="py-12">
@@ -1156,7 +1243,8 @@ export default function ConsultationIndex({
                                 Completed Consultations
                                 {!canFilterByDate && ' (Last 24 Hours)'}
                             </h2>
-                            {completedConsultations.length > 0 ? (
+                            {completedConsultations.data.length > 0 ? (
+                                <>
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
@@ -1175,7 +1263,7 @@ export default function ConsultationIndex({
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {completedConsultations.map(
+                                            {completedConsultations.data.map(
                                                 (consultation) => (
                                                     <TableRow
                                                         key={consultation.id}
@@ -1269,6 +1357,15 @@ export default function ConsultationIndex({
                                         </TableBody>
                                     </Table>
                                 </div>
+                                <Pagination
+                                    currentPage={completedConsultations.current_page}
+                                    lastPage={completedConsultations.last_page}
+                                    from={completedConsultations.from}
+                                    to={completedConsultations.to}
+                                    total={completedConsultations.total}
+                                    onPageChange={handleCompletedPageChange}
+                                />
+                                </>
                             ) : (
                                 <Card>
                                     <CardContent className="py-12">
