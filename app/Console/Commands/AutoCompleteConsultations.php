@@ -46,6 +46,12 @@ class AutoCompleteConsultations extends Command
                 'completed_at' => now(),
             ]);
 
+            // Also update check-in status to completed
+            $consultation->patientCheckin->update([
+                'consultation_completed_at' => now(),
+                'status' => 'completed',
+            ]);
+
             $this->line("Auto-completed consultation #{$consultation->id} (started: {$consultation->started_at->format('Y-m-d H:i')})");
         }
 

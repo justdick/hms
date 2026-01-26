@@ -7,9 +7,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+
 
 // Schedule auto-cancellation of old incomplete check-ins
 // DISABLED: We want to keep old check-ins for historical purposes
