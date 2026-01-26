@@ -141,6 +141,8 @@ interface CompletedConsultation {
 
 interface Filters {
     search?: string;
+    queue_search?: string;
+    completed_search?: string;
     department_id?: string;
     date_from?: string;
     date_to?: string;
@@ -181,6 +183,8 @@ export default function ConsultationIndex({
 }: Props) {
     const [activeTab, setActiveTab] = useState<string>('search');
     const [search, setSearch] = useState(filters.search || '');
+    const [queueSearch, setQueueSearch] = useState(filters.queue_search || '');
+    const [completedSearch, setCompletedSearch] = useState(filters.completed_search || '');
     const [departmentFilter, setDepartmentFilter] = useState(
         filters.department_id || '',
     );
@@ -313,6 +317,58 @@ export default function ConsultationIndex({
         return () => clearTimeout(timeoutId);
     }, [search, activeTab]);
 
+    // Debounced queue search effect
+    useEffect(() => {
+        if (activeTab !== 'queue') return;
+
+        const timeoutId = setTimeout(() => {
+            if (queueSearch.length >= 2 || queueSearch.length === 0) {
+                router.get(
+                    '/consultation',
+                    {
+                        queue_search: queueSearch || undefined,
+                        department_id: departmentFilter || undefined,
+                        date_from: dateFilter.from || undefined,
+                        date_to: dateFilter.to || undefined,
+                    },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                    },
+                );
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [queueSearch, activeTab]);
+
+    // Debounced completed search effect
+    useEffect(() => {
+        if (activeTab !== 'completed') return;
+
+        const timeoutId = setTimeout(() => {
+            if (completedSearch.length >= 2 || completedSearch.length === 0) {
+                router.get(
+                    '/consultation',
+                    {
+                        completed_search: completedSearch || undefined,
+                        department_id: departmentFilter || undefined,
+                        date_from: dateFilter.from || undefined,
+                        date_to: dateFilter.to || undefined,
+                    },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                    },
+                );
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [completedSearch, activeTab]);
+
     // Department filter change
     const handleDepartmentChange = (value: string) => {
         const newValue = value === 'all' ? '' : value;
@@ -322,6 +378,8 @@ export default function ConsultationIndex({
             '/consultation',
             {
                 search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
                 department_id: newValue || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
@@ -342,6 +400,8 @@ export default function ConsultationIndex({
             '/consultation',
             {
                 search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
                 department_id: departmentFilter || undefined,
                 date_from: value.from || undefined,
                 date_to: value.to || undefined,
@@ -374,6 +434,8 @@ export default function ConsultationIndex({
             '/consultation',
             {
                 search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
@@ -393,6 +455,8 @@ export default function ConsultationIndex({
             '/consultation',
             {
                 search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
@@ -412,6 +476,8 @@ export default function ConsultationIndex({
             '/consultation',
             {
                 search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
@@ -554,6 +620,16 @@ export default function ConsultationIndex({
 
                         {activeTab === 'queue' && (
                             <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/50">
+                                <div className="relative">
+                                    <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search patient..."
+                                        value={queueSearch}
+                                        onChange={(e) => setQueueSearch(e.target.value)}
+                                        className="w-[200px] pl-8 border-blue-300 bg-white dark:border-blue-700 dark:bg-blue-900"
+                                    />
+                                </div>
                                 {canFilterByDate && (
                                     <DateFilterPresets
                                         value={dateFilter}
@@ -598,6 +674,16 @@ export default function ConsultationIndex({
 
                         {activeTab === 'completed' && (
                             <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/50">
+                                <div className="relative">
+                                    <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search patient..."
+                                        value={completedSearch}
+                                        onChange={(e) => setCompletedSearch(e.target.value)}
+                                        className="w-[200px] pl-8 border-green-300 bg-white dark:border-green-700 dark:bg-green-900"
+                                    />
+                                </div>
                                 {canFilterByDate && (
                                     <DateFilterPresets
                                         value={dateFilter}

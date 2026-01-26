@@ -27,6 +27,8 @@ class ConsultationController extends Controller
         $this->authorize('viewAny', PatientCheckin::class);
 
         $search = $request->input('search');
+        $queueSearch = $request->input('queue_search');
+        $completedSearch = $request->input('completed_search');
         $departmentFilter = $request->input('department_id');
         $perPage = 10;
 
@@ -106,7 +108,7 @@ class ConsultationController extends Controller
             $activeQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
         }
 
-        // Apply search filter if provided (for search tab)
+        // Apply search filter if provided (for search tab - applies to awaiting and active)
         if ($search && strlen($search) >= 2) {
             $awaitingQuery->whereHas('patient', function ($query) use ($search) {
                 $query->where('first_name', 'like', "%{$search}%")
@@ -120,6 +122,23 @@ class ConsultationController extends Controller
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('patient_number', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply queue search filter (for queue tab - applies to awaiting and active)
+        if ($queueSearch && strlen($queueSearch) >= 2) {
+            $awaitingQuery->whereHas('patient', function ($query) use ($queueSearch) {
+                $query->where('first_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('last_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$queueSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$queueSearch}%");
+            });
+
+            $activeQuery->whereHas('patientCheckin.patient', function ($query) use ($queueSearch) {
+                $query->where('first_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('last_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$queueSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$queueSearch}%");
             });
         }
 
@@ -163,13 +182,23 @@ class ConsultationController extends Controller
             $completedQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
         }
 
-        // Apply search filter if provided
+        // Apply search filter if provided (for search tab)
         if ($search && strlen($search) >= 2) {
             $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
                 $query->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('patient_number', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply completed search filter (for completed tab)
+        if ($completedSearch && strlen($completedSearch) >= 2) {
+            $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($completedSearch) {
+                $query->where('first_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('last_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$completedSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$completedSearch}%");
             });
         }
 
@@ -194,6 +223,8 @@ class ConsultationController extends Controller
             'departments' => $departments,
             'filters' => [
                 'search' => $search,
+                'queue_search' => $queueSearch,
+                'completed_search' => $completedSearch,
                 'department_id' => $departmentFilter,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
