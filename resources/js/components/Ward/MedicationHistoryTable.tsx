@@ -26,6 +26,7 @@ interface MedicationHistoryTableProps {
     onDiscontinue: (prescriptionId: number) => void;
     onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
+    onUncomplete?: (prescriptionId: number) => void;
 }
 
 export function MedicationHistoryTable({
@@ -33,6 +34,7 @@ export function MedicationHistoryTable({
     onDiscontinue,
     onComplete,
     onResume,
+    onUncomplete,
 }: MedicationHistoryTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         { id: 'created_at', desc: true },
@@ -40,7 +42,7 @@ export function MedicationHistoryTable({
 
     const table = useReactTable({
         data: prescriptions,
-        columns: medicationHistoryColumns({ onDiscontinue, onComplete, onResume }),
+        columns: medicationHistoryColumns({ onDiscontinue, onComplete, onResume, onUncomplete }),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -101,6 +103,7 @@ export function MedicationHistoryTable({
                                             onDiscontinue,
                                             onComplete,
                                             onResume,
+                                            onUncomplete,
                                         }).length
                                     }
                                     className="h-24 text-center"

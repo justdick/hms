@@ -343,6 +343,25 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
+     * Undo completion of a prescription (revert to active).
+     * This allows the medication to appear in the MAR slide-over again.
+     */
+    public function uncomplete(Request $request, Prescription $prescription)
+    {
+        $this->authorize('prescriptions.resume'); // Same permission as resume
+
+        // Check if not completed
+        if (! $prescription->isCompleted()) {
+            return back()->withErrors(['error' => 'This prescription is not marked as completed.']);
+        }
+
+        // Uncomplete the prescription (revert to active)
+        $prescription->uncomplete(auth()->user());
+
+        return back()->with('success', 'Medication completion reverted. Prescription is now active.');
+    }
+
+    /**
      * Get active prescriptions for an admission.
      */
     private function getActivePrescriptions(PatientAdmission $admission)

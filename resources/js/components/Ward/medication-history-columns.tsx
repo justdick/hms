@@ -7,6 +7,7 @@ import {
     CheckCircle2,
     Pill,
     PlayCircle,
+    RotateCcw,
     XCircle,
 } from 'lucide-react';
 
@@ -46,6 +47,7 @@ interface ColumnActions {
     onDiscontinue: (prescriptionId: number) => void;
     onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
+    onUncomplete?: (prescriptionId: number) => void;
 }
 
 export const medicationHistoryColumns = (
@@ -202,9 +204,15 @@ export const medicationHistoryColumns = (
 
             if (isCompleted) {
                 return (
-                    <span className="text-sm text-muted-foreground">
-                        Course finished
-                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => actions.onUncomplete?.(prescription.id)}
+                        className="h-8 border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950 dark:hover:text-amber-300"
+                    >
+                        <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                        Undo
+                    </Button>
                 );
             }
 

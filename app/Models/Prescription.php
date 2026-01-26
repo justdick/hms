@@ -400,6 +400,22 @@ class Prescription extends Model
         ]);
     }
 
+    public function uncomplete(User $user, ?string $reason = null): void
+    {
+        // Revert to active by creating a 'resumed' status change
+        $this->statusChanges()->create([
+            'action' => 'resumed',
+            'performed_by_id' => $user->id,
+            'performed_at' => now(),
+            'reason' => $reason ?? 'Completion reverted',
+        ]);
+    }
+
+    public function canBeUncompleted(): bool
+    {
+        return $this->isCompleted();
+    }
+
     /**
      * Check if this prescription is for an admitted patient (IPD).
      */

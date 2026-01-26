@@ -438,6 +438,8 @@ export default function WardPatientShow({
     // Medication modals
     const [discontinueModalOpen, setDiscontinueModalOpen] = useState(false);
     const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false);
+    const [uncompleteConfirmOpen, setUncompleteConfirmOpen] = useState(false);
+    const [resumeConfirmOpen, setResumeConfirmOpen] = useState(false);
     const [selectedPrescription, setSelectedPrescription] = useState<
         ConsultationPrescription | WardRoundPrescription | null
     >(null);
@@ -1391,24 +1393,18 @@ export default function WardPatientShow({
                                 setCompleteConfirmOpen(true);
                             }}
                             onResume={(prescriptionId) => {
-                                router.post(
-                                    `/admissions/prescriptions/${prescriptionId}/resume`,
-                                    {},
-                                    {
-                                        preserveScroll: true,
-                                        onSuccess: () => {
-                                            toast.success(
-                                                'Medication resumed successfully',
-                                            );
-                                            router.reload();
-                                        },
-                                        onError: () => {
-                                            toast.error(
-                                                'Failed to resume medication',
-                                            );
-                                        },
-                                    },
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
                                 );
+                                setSelectedPrescription(prescription || null);
+                                setResumeConfirmOpen(true);
+                            }}
+                            onUncomplete={(prescriptionId) => {
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
+                                );
+                                setSelectedPrescription(prescription || null);
+                                setUncompleteConfirmOpen(true);
                             }}
                         />
                     </TabsContent>
@@ -1552,7 +1548,7 @@ export default function WardPatientShow({
                                     finished the full course of medication.
                                 </p>
                                 <p className="text-muted-foreground">
-                                    This action cannot be undone.
+                                    You can undo this action if needed.
                                 </p>
                             </AlertDialogDescription>
                         </AlertDialogHeader>
@@ -1598,6 +1594,146 @@ export default function WardPatientShow({
                             >
                                 <CheckCircle2 className="mr-2 h-4 w-4" />
                                 Mark Completed
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Confirmation Dialog for Undoing Medication Completion */}
+                <AlertDialog
+                    open={uncompleteConfirmOpen}
+                    onOpenChange={setUncompleteConfirmOpen}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Undo Medication Completion?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-2">
+                                <p>
+                                    This will revert{' '}
+                                    <strong>
+                                        {selectedPrescription?.drug?.name ||
+                                            selectedPrescription?.medication_name}
+                                    </strong>{' '}
+                                    back to active status.
+                                </p>
+                                <p className="text-muted-foreground">
+                                    The medication will appear in the active
+                                    prescriptions list again.
+                                </p>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
+                                onClick={() => {
+                                    setUncompleteConfirmOpen(false);
+                                    setSelectedPrescription(null);
+                                }}
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    if (selectedPrescription) {
+                                        router.post(
+                                            `/admissions/prescriptions/${selectedPrescription.id}/uncomplete`,
+                                            {},
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    toast.success(
+                                                        'Medication completion undone',
+                                                    );
+                                                    setUncompleteConfirmOpen(
+                                                        false,
+                                                    );
+                                                    setSelectedPrescription(
+                                                        null,
+                                                    );
+                                                    router.reload();
+                                                },
+                                                onError: () => {
+                                                    toast.error(
+                                                        'Failed to undo completion',
+                                                    );
+                                                },
+                                            },
+                                        );
+                                    }
+                                }}
+                                className="bg-amber-600 hover:bg-amber-700"
+                            >
+                                Undo Completion
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Confirmation Dialog for Resuming Discontinued Medication */}
+                <AlertDialog
+                    open={resumeConfirmOpen}
+                    onOpenChange={setResumeConfirmOpen}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Resume Medication?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-2">
+                                <p>
+                                    This will resume{' '}
+                                    <strong>
+                                        {selectedPrescription?.drug?.name ||
+                                            selectedPrescription?.medication_name}
+                                    </strong>{' '}
+                                    and return it to active status.
+                                </p>
+                                <p className="text-muted-foreground">
+                                    The medication will appear in the active
+                                    prescriptions list and can be administered again.
+                                </p>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
+                                onClick={() => {
+                                    setResumeConfirmOpen(false);
+                                    setSelectedPrescription(null);
+                                }}
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    if (selectedPrescription) {
+                                        router.post(
+                                            `/admissions/prescriptions/${selectedPrescription.id}/resume`,
+                                            {},
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    toast.success(
+                                                        'Medication resumed successfully',
+                                                    );
+                                                    setResumeConfirmOpen(false);
+                                                    setSelectedPrescription(
+                                                        null,
+                                                    );
+                                                    router.reload();
+                                                },
+                                                onError: () => {
+                                                    toast.error(
+                                                        'Failed to resume medication',
+                                                    );
+                                                },
+                                            },
+                                        );
+                                    }
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                Resume Medication
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

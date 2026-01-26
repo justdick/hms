@@ -49,6 +49,7 @@ interface MedicationHistoryTabProps {
     onDiscontinue: (prescriptionId: number) => void;
     onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
+    onUncomplete?: (prescriptionId: number) => void;
 }
 
 type FilterType = 'all' | 'active' | 'discontinued' | 'completed';
@@ -60,6 +61,7 @@ export function MedicationHistoryTab({
     onDiscontinue,
     onComplete,
     onResume,
+    onUncomplete,
 }: MedicationHistoryTabProps) {
     const [filter, setFilter] = useState<FilterType>('all');
     const [viewType, setViewType] = useState<ViewType>('table');
@@ -150,6 +152,7 @@ export function MedicationHistoryTab({
                     onDiscontinue={onDiscontinue}
                     onComplete={onComplete}
                     onResume={onResume}
+                    onUncomplete={onUncomplete}
                 />
             ) : (
                 <div className="space-y-3">
@@ -160,6 +163,7 @@ export function MedicationHistoryTab({
                             onDiscontinue={onDiscontinue}
                             onComplete={onComplete}
                             onResume={onResume}
+                            onUncomplete={onUncomplete}
                         />
                     ))}
                 </div>

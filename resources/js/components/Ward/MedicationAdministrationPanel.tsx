@@ -66,6 +66,7 @@ interface Prescription {
     status?: string;
     drug?: Drug;
     discontinued_at?: string;
+    completed_at?: string;
     today_administration_count?: number;
     expected_doses_per_day?: number;
     created_at?: string;
@@ -126,9 +127,9 @@ export function MedicationAdministrationPanel({
         'give' | 'hold' | 'refuse' | 'omit' | null
     >(null);
 
-    // Filter active prescriptions (not discontinued)
+    // Filter active prescriptions (not discontinued or completed)
     const activePrescriptions = prescriptions.filter(
-        (p) => !p.discontinued_at && p.status !== 'discontinued',
+        (p) => !p.discontinued_at && !p.completed_at && p.status !== 'discontinued' && p.status !== 'completed',
     );
 
     // Get today's administration count for each prescription
