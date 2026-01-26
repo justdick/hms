@@ -4,12 +4,14 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
     ArrowUpDown,
+    CheckCircle2,
     MoreVertical,
     Pill,
     PlayCircle,
@@ -43,10 +45,14 @@ export interface MedicationHistoryRow {
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
+    completed_at?: string;
+    completed_by?: User;
+    completion_reason?: string;
 }
 
 interface ColumnActions {
     onDiscontinue: (prescriptionId: number) => void;
+    onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
 }
 
@@ -143,6 +149,7 @@ export const medicationHistoryColumns = (
         cell: ({ row }) => {
             const prescription = row.original;
             const isDiscontinued = !!prescription.discontinued_at;
+            const isCompleted = !!prescription.completed_at;
 
             if (isDiscontinued) {
                 return (
@@ -152,6 +159,18 @@ export const medicationHistoryColumns = (
                     >
                         <XCircle className="mr-1 h-3 w-3" />
                         Discontinued
+                    </Badge>
+                );
+            }
+
+            if (isCompleted) {
+                return (
+                    <Badge
+                        variant="outline"
+                        className="border-green-500 text-green-700 dark:border-green-600 dark:text-green-400"
+                    >
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        Completed
                     </Badge>
                 );
             }
@@ -173,6 +192,7 @@ export const medicationHistoryColumns = (
         cell: ({ row }) => {
             const prescription = row.original;
             const isDiscontinued = !!prescription.discontinued_at;
+            const isCompleted = !!prescription.completed_at;
 
             return (
                 <DropdownMenu>
@@ -192,16 +212,33 @@ export const medicationHistoryColumns = (
                                 <PlayCircle className="mr-2 h-4 w-4" />
                                 Resume
                             </DropdownMenuItem>
-                        ) : (
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    actions.onDiscontinue(prescription.id)
-                                }
-                                className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                            >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Discontinue
+                        ) : isCompleted ? (
+                            <DropdownMenuItem disabled className="text-muted-foreground">
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                Course Completed
                             </DropdownMenuItem>
+                        ) : (
+                            <>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        actions.onComplete(prescription.id)
+                                    }
+                                    className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                                >
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                    Mark Completed
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        actions.onDiscontinue(prescription.id)
+                                    }
+                                    className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Discontinue
+                                </DropdownMenuItem>
+                            </>
                         )}
                     </DropdownMenuContent>
                 </DropdownMenu>

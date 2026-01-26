@@ -24,12 +24,14 @@ import {
 interface MedicationHistoryTableProps {
     prescriptions: MedicationHistoryRow[];
     onDiscontinue: (prescriptionId: number) => void;
+    onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
 }
 
 export function MedicationHistoryTable({
     prescriptions,
     onDiscontinue,
+    onComplete,
     onResume,
 }: MedicationHistoryTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
@@ -38,7 +40,7 @@ export function MedicationHistoryTable({
 
     const table = useReactTable({
         data: prescriptions,
-        columns: medicationHistoryColumns({ onDiscontinue, onResume }),
+        columns: medicationHistoryColumns({ onDiscontinue, onComplete, onResume }),
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -76,7 +78,7 @@ export function MedicationHistoryTable({
                                 <TableRow
                                     key={row.id}
                                     className={
-                                        row.original.discontinued_at
+                                        row.original.discontinued_at || row.original.completed_at
                                             ? 'opacity-60 hover:bg-muted/50 dark:opacity-50 dark:hover:bg-gray-800/50'
                                             : 'hover:bg-muted/50 dark:hover:bg-gray-800/50'
                                     }
@@ -97,6 +99,7 @@ export function MedicationHistoryTable({
                                     colSpan={
                                         medicationHistoryColumns({
                                             onDiscontinue,
+                                            onComplete,
                                             onResume,
                                         }).length
                                     }

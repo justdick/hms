@@ -70,6 +70,9 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::post('/prescriptions/{prescription}/resume', [MedicationAdministrationController::class, 'resume'])
         ->name('prescriptions.resume')
         ->middleware('can:prescriptions.resume');
+    Route::post('/prescriptions/{prescription}/complete', [MedicationAdministrationController::class, 'complete'])
+        ->name('prescriptions.complete')
+        ->middleware('can:prescriptions.discontinue'); // Same permission as discontinue
 });
 
 // Vitals Alert API Routes (JSON responses for AJAX calls)

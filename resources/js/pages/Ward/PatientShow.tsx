@@ -1381,6 +1381,26 @@ export default function WardPatientShow({
                                 setSelectedPrescription(prescription || null);
                                 setDiscontinueModalOpen(true);
                             }}
+                            onComplete={(prescriptionId) => {
+                                router.post(
+                                    `/admissions/prescriptions/${prescriptionId}/complete`,
+                                    {},
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            toast.success(
+                                                'Medication marked as completed',
+                                            );
+                                            router.reload();
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Failed to complete medication',
+                                            );
+                                        },
+                                    },
+                                );
+                            }}
                             onResume={(prescriptionId) => {
                                 router.post(
                                     `/admissions/prescriptions/${prescriptionId}/resume`,

@@ -38,22 +38,27 @@ interface Prescription {
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
+    completed_at?: string;
+    completed_by?: User;
+    completion_reason?: string;
 }
 
 interface MedicationHistoryTabProps {
     patientAdmissionId: number;
     prescriptions: Prescription[];
     onDiscontinue: (prescriptionId: number) => void;
+    onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
 }
 
-type FilterType = 'all' | 'active' | 'discontinued';
+type FilterType = 'all' | 'active' | 'discontinued' | 'completed';
 type ViewType = 'table' | 'cards';
 
 export function MedicationHistoryTab({
     patientAdmissionId,
     prescriptions,
     onDiscontinue,
+    onComplete,
     onResume,
 }: MedicationHistoryTabProps) {
     const [filter, setFilter] = useState<FilterType>('all');
@@ -67,10 +72,13 @@ export function MedicationHistoryTab({
                 return (
                     (prescription.status === 'active' ||
                         !prescription.status) &&
-                    !prescription.discontinued_at
+                    !prescription.discontinued_at &&
+                    !prescription.completed_at
                 );
             if (filter === 'discontinued')
                 return !!prescription.discontinued_at;
+            if (filter === 'completed')
+                return !!prescription.completed_at;
             return true;
         })
         .sort((a, b) => b.id - a.id);
@@ -93,6 +101,9 @@ export function MedicationHistoryTab({
                         <SelectContent>
                             <SelectItem value="all">All</SelectItem>
                             <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">
+                                Completed
+                            </SelectItem>
                             <SelectItem value="discontinued">
                                 Discontinued
                             </SelectItem>
@@ -128,13 +139,16 @@ export function MedicationHistoryTab({
                             ? 'No prescriptions found'
                             : filter === 'active'
                               ? 'No active prescriptions'
-                              : 'No discontinued prescriptions'}
+                              : filter === 'completed'
+                                ? 'No completed prescriptions'
+                                : 'No discontinued prescriptions'}
                     </p>
                 </div>
             ) : viewType === 'table' ? (
                 <MedicationHistoryTable
                     prescriptions={filteredPrescriptions}
                     onDiscontinue={onDiscontinue}
+                    onComplete={onComplete}
                     onResume={onResume}
                 />
             ) : (
@@ -144,6 +158,7 @@ export function MedicationHistoryTab({
                             key={prescription.id}
                             prescription={prescription}
                             onDiscontinue={onDiscontinue}
+                            onComplete={onComplete}
                             onResume={onResume}
                         />
                     ))}

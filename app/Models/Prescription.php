@@ -65,6 +65,9 @@ class Prescription extends Model
         'discontinued_at',
         'discontinued_by',
         'discontinuation_reason',
+        'completed_at',
+        'completed_by',
+        'completion_reason',
     ];
 
     /**
@@ -118,6 +121,59 @@ class Prescription extends Model
             ->first();
 
         return $latestDiscontinue?->reason;
+    }
+
+    /**
+     * Get the completed_at timestamp from the latest complete action.
+     * Returns null if not completed.
+     */
+    public function getCompletedAtAttribute(): ?string
+    {
+        if (! $this->isCompleted()) {
+            return null;
+        }
+
+        $latestComplete = $this->statusChanges()
+            ->where('action', 'completed')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestComplete?->performed_at?->toISOString();
+    }
+
+    /**
+     * Get the user who completed this prescription.
+     */
+    public function getCompletedByAttribute(): ?array
+    {
+        if (! $this->isCompleted()) {
+            return null;
+        }
+
+        $latestComplete = $this->statusChanges()
+            ->where('action', 'completed')
+            ->with('performedBy:id,name')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestComplete?->performedBy?->only(['id', 'name']);
+    }
+
+    /**
+     * Get the completion reason/notes.
+     */
+    public function getCompletionReasonAttribute(): ?string
+    {
+        if (! $this->isCompleted()) {
+            return null;
+        }
+
+        $latestComplete = $this->statusChanges()
+            ->where('action', 'completed')
+            ->orderBy('performed_at', 'desc')
+            ->first();
+
+        return $latestComplete?->reason;
     }
 
     public function prescribable(): MorphTo
@@ -307,15 +363,37 @@ class Prescription extends Model
         return $latest && $latest->action === 'discontinued';
     }
 
+    public function isCompleted(): bool
+    {
+        $latest = $this->latestStatusChange;
+
+        return $latest && $latest->action === 'completed';
+    }
+
     public function canBeDiscontinued(): bool
     {
-        return ! $this->isDiscontinued();
+        return ! $this->isDiscontinued() && ! $this->isCompleted();
+    }
+
+    public function canBeCompleted(): bool
+    {
+        return ! $this->isDiscontinued() && ! $this->isCompleted();
     }
 
     public function resume(User $user, ?string $reason = null): void
     {
         $this->statusChanges()->create([
             'action' => 'resumed',
+            'performed_by_id' => $user->id,
+            'performed_at' => now(),
+            'reason' => $reason,
+        ]);
+    }
+
+    public function complete(User $user, ?string $reason = null): void
+    {
+        $this->statusChanges()->create([
+            'action' => 'completed',
             'performed_by_id' => $user->id,
             'performed_at' => now(),
             'reason' => $reason,

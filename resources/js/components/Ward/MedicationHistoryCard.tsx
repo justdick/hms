@@ -5,11 +5,13 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import {
     Calendar,
+    CheckCircle2,
     Clock,
     MoreVertical,
     Pill,
@@ -44,20 +46,27 @@ interface Prescription {
     discontinued_at?: string;
     discontinued_by?: User;
     discontinuation_reason?: string;
+    completed_at?: string;
+    completed_by?: User;
+    completion_reason?: string;
 }
 
 interface MedicationHistoryCardProps {
     prescription: Prescription;
     onDiscontinue: (prescriptionId: number) => void;
+    onComplete: (prescriptionId: number) => void;
     onResume?: (prescriptionId: number) => void;
 }
 
 export function MedicationHistoryCard({
     prescription,
     onDiscontinue,
+    onComplete,
     onResume,
 }: MedicationHistoryCardProps) {
     const isDiscontinued = !!prescription.discontinued_at;
+    const isCompleted = !!prescription.completed_at;
+    const isInactive = isDiscontinued || isCompleted;
 
     const getStatusBadge = () => {
         if (isDiscontinued) {
@@ -72,6 +81,18 @@ export function MedicationHistoryCard({
             );
         }
 
+        if (isCompleted) {
+            return (
+                <Badge
+                    variant="outline"
+                    className="border-green-500 text-green-700 dark:border-green-600 dark:text-green-400"
+                >
+                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                    Completed
+                </Badge>
+            );
+        }
+
         return (
             <Badge variant="default" className="bg-green-600 dark:bg-green-700">
                 <Pill className="mr-1 h-3 w-3" />
@@ -81,7 +102,7 @@ export function MedicationHistoryCard({
     };
 
     return (
-        <Card className={isDiscontinued ? 'opacity-60 dark:opacity-50' : ''}>
+        <Card className={isInactive ? 'opacity-60 dark:opacity-50' : ''}>
             <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
@@ -162,6 +183,30 @@ export function MedicationHistoryCard({
                             </div>
                         )}
 
+                        {/* Completed Information */}
+                        {isCompleted && (
+                            <div className="rounded-md bg-green-50 p-2 text-sm dark:bg-green-950/20">
+                                <p className="font-medium text-green-900 dark:text-green-200">
+                                    Completed on{' '}
+                                    {format(
+                                        new Date(prescription.completed_at!),
+                                        'MMM d, yyyy HH:mm',
+                                    )}
+                                </p>
+                                {prescription.completed_by && (
+                                    <p className="text-green-700 dark:text-green-300">
+                                        By: {prescription.completed_by.name}
+                                    </p>
+                                )}
+                                {prescription.completion_reason && (
+                                    <p className="mt-1 text-green-700 dark:text-green-300">
+                                        Notes:{' '}
+                                        {prescription.completion_reason}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Instructions */}
                         {prescription.instructions && (
                             <p className="text-sm text-amber-600 italic dark:text-amber-400">
@@ -186,16 +231,33 @@ export function MedicationHistoryCard({
                                     <PlayCircle className="mr-2 h-4 w-4" />
                                     Resume
                                 </DropdownMenuItem>
-                            ) : (
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        onDiscontinue(prescription.id)
-                                    }
-                                    className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                >
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Discontinue
+                            ) : isCompleted ? (
+                                <DropdownMenuItem disabled className="text-muted-foreground">
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                    Course Completed
                                 </DropdownMenuItem>
+                            ) : (
+                                <>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            onComplete(prescription.id)
+                                        }
+                                        className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                                    >
+                                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                                        Mark Completed
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            onDiscontinue(prescription.id)
+                                        }
+                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                    >
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Discontinue
+                                    </DropdownMenuItem>
+                                </>
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -316,6 +316,33 @@ class MedicationAdministrationController extends Controller
     }
 
     /**
+     * Mark a prescription as completed.
+     * This indicates the patient has finished the full course of medication.
+     */
+    public function complete(Request $request, Prescription $prescription)
+    {
+        $this->authorize('prescriptions.discontinue'); // Same permission as discontinue
+
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        // Check if already completed or discontinued
+        if ($prescription->isCompleted()) {
+            return back()->withErrors(['reason' => 'This prescription has already been marked as completed.']);
+        }
+
+        if ($prescription->isDiscontinued()) {
+            return back()->withErrors(['reason' => 'Cannot complete a discontinued prescription.']);
+        }
+
+        // Mark the prescription as completed
+        $prescription->complete(auth()->user(), $validated['reason'] ?? null);
+
+        return back()->with('success', 'Medication marked as completed.');
+    }
+
+    /**
      * Get active prescriptions for an admission.
      */
     private function getActivePrescriptions(PatientAdmission $admission)
