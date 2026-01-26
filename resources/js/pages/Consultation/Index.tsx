@@ -146,6 +146,7 @@ interface Filters {
     department_id?: string;
     date_from?: string;
     date_to?: string;
+    per_page?: number;
 }
 
 interface PaginatedData<T> {
@@ -185,6 +186,7 @@ export default function ConsultationIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [queueSearch, setQueueSearch] = useState(filters.queue_search || '');
     const [completedSearch, setCompletedSearch] = useState(filters.completed_search || '');
+    const [perPage, setPerPage] = useState(filters.per_page || 5);
     const [departmentFilter, setDepartmentFilter] = useState(
         filters.department_id || '',
     );
@@ -304,6 +306,7 @@ export default function ConsultationIndex({
                         department_id: departmentFilter || undefined,
                         date_from: dateFilter.from || undefined,
                         date_to: dateFilter.to || undefined,
+                        per_page: perPage,
                     },
                     {
                         preserveState: true,
@@ -330,6 +333,7 @@ export default function ConsultationIndex({
                         department_id: departmentFilter || undefined,
                         date_from: dateFilter.from || undefined,
                         date_to: dateFilter.to || undefined,
+                        per_page: perPage,
                     },
                     {
                         preserveState: true,
@@ -356,6 +360,7 @@ export default function ConsultationIndex({
                         department_id: departmentFilter || undefined,
                         date_from: dateFilter.from || undefined,
                         date_to: dateFilter.to || undefined,
+                        per_page: perPage,
                     },
                     {
                         preserveState: true,
@@ -383,6 +388,7 @@ export default function ConsultationIndex({
                 department_id: newValue || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
+                per_page: perPage,
             },
             {
                 preserveState: true,
@@ -405,6 +411,31 @@ export default function ConsultationIndex({
                 department_id: departmentFilter || undefined,
                 date_from: value.from || undefined,
                 date_to: value.to || undefined,
+                per_page: perPage,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
+
+    // Per page change handler
+    const handlePerPageChange = (value: string) => {
+        const newPerPage = parseInt(value, 10);
+        setPerPage(newPerPage);
+
+        router.get(
+            '/consultation',
+            {
+                search: search || undefined,
+                queue_search: queueSearch || undefined,
+                completed_search: completedSearch || undefined,
+                department_id: departmentFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                per_page: newPerPage,
             },
             {
                 preserveState: true,
@@ -439,6 +470,7 @@ export default function ConsultationIndex({
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
+                per_page: perPage,
                 awaiting_page: page,
                 active_page: activeConsultations.current_page,
                 completed_page: completedConsultations.current_page,
@@ -460,6 +492,7 @@ export default function ConsultationIndex({
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
+                per_page: perPage,
                 awaiting_page: awaitingConsultation.current_page,
                 active_page: page,
                 completed_page: completedConsultations.current_page,
@@ -481,6 +514,7 @@ export default function ConsultationIndex({
                 department_id: departmentFilter || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
+                per_page: perPage,
                 awaiting_page: awaitingConsultation.current_page,
                 active_page: activeConsultations.current_page,
                 completed_page: page,
@@ -630,6 +664,19 @@ export default function ConsultationIndex({
                                         className="w-[200px] pl-8 border-blue-300 bg-white dark:border-blue-700 dark:bg-blue-900"
                                     />
                                 </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-blue-700 dark:text-blue-300">Show</span>
+                                    <select
+                                        value={perPage}
+                                        onChange={(e) => handlePerPageChange(e.target.value)}
+                                        className="h-8 rounded-md border border-blue-300 bg-white px-2 text-sm dark:border-blue-700 dark:bg-blue-900"
+                                    >
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
                                 {canFilterByDate && (
                                     <DateFilterPresets
                                         value={dateFilter}
@@ -683,6 +730,19 @@ export default function ConsultationIndex({
                                         onChange={(e) => setCompletedSearch(e.target.value)}
                                         className="w-[200px] pl-8 border-green-300 bg-white dark:border-green-700 dark:bg-green-900"
                                     />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-green-700 dark:text-green-300">Show</span>
+                                    <select
+                                        value={perPage}
+                                        onChange={(e) => handlePerPageChange(e.target.value)}
+                                        className="h-8 rounded-md border border-green-300 bg-white px-2 text-sm dark:border-green-700 dark:bg-green-900"
+                                    >
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                    </select>
                                 </div>
                                 {canFilterByDate && (
                                     <DateFilterPresets

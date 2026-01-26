@@ -30,7 +30,7 @@ class ConsultationController extends Controller
         $queueSearch = $request->input('queue_search');
         $completedSearch = $request->input('completed_search');
         $departmentFilter = $request->input('department_id');
-        $perPage = 10;
+        $perPage = $request->input('per_page', 5); // Default to 5, allow user selection
 
         // Check if user has permission to filter by date
         $canFilterByDate = $user->can('consultations.filter-by-date');
@@ -228,6 +228,7 @@ class ConsultationController extends Controller
                 'department_id' => $departmentFilter,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
+                'per_page' => (int) $perPage,
             ],
             'canFilterByDate' => $canFilterByDate,
         ]);
