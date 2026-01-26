@@ -68,6 +68,7 @@ import {
     ArrowRightLeft,
     Bed as BedIcon,
     Calendar,
+    CheckCircle2,
     ClipboardList,
     Clock,
     Edit2,
@@ -436,6 +437,7 @@ export default function WardPatientShow({
 
     // Medication modals
     const [discontinueModalOpen, setDiscontinueModalOpen] = useState(false);
+    const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false);
     const [selectedPrescription, setSelectedPrescription] = useState<
         ConsultationPrescription | WardRoundPrescription | null
     >(null);
@@ -1382,24 +1384,11 @@ export default function WardPatientShow({
                                 setDiscontinueModalOpen(true);
                             }}
                             onComplete={(prescriptionId) => {
-                                router.post(
-                                    `/admissions/prescriptions/${prescriptionId}/complete`,
-                                    {},
-                                    {
-                                        preserveScroll: true,
-                                        onSuccess: () => {
-                                            toast.success(
-                                                'Medication marked as completed',
-                                            );
-                                            router.reload();
-                                        },
-                                        onError: () => {
-                                            toast.error(
-                                                'Failed to complete medication',
-                                            );
-                                        },
-                                    },
+                                const prescription = allPrescriptions.find(
+                                    (p) => p.id === prescriptionId,
                                 );
+                                setSelectedPrescription(prescription || null);
+                                setCompleteConfirmOpen(true);
                             }}
                             onResume={(prescriptionId) => {
                                 router.post(
@@ -1541,6 +1530,78 @@ export default function WardPatientShow({
                         setSelectedPrescription(null);
                     }}
                 />
+
+                {/* Confirmation Dialog for Completing Medication */}
+                <AlertDialog
+                    open={completeConfirmOpen}
+                    onOpenChange={setCompleteConfirmOpen}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Mark Medication as Completed?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="space-y-2">
+                                <p>
+                                    This will mark{' '}
+                                    <strong>
+                                        {selectedPrescription?.drug?.name ||
+                                            selectedPrescription?.medication_name}
+                                    </strong>{' '}
+                                    as completed, indicating the patient has
+                                    finished the full course of medication.
+                                </p>
+                                <p className="text-muted-foreground">
+                                    This action cannot be undone.
+                                </p>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
+                                onClick={() => {
+                                    setCompleteConfirmOpen(false);
+                                    setSelectedPrescription(null);
+                                }}
+                            >
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    if (selectedPrescription) {
+                                        router.post(
+                                            `/admissions/prescriptions/${selectedPrescription.id}/complete`,
+                                            {},
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    toast.success(
+                                                        'Medication marked as completed',
+                                                    );
+                                                    setCompleteConfirmOpen(
+                                                        false,
+                                                    );
+                                                    setSelectedPrescription(
+                                                        null,
+                                                    );
+                                                    router.reload();
+                                                },
+                                                onError: () => {
+                                                    toast.error(
+                                                        'Failed to complete medication',
+                                                    );
+                                                },
+                                            },
+                                        );
+                                    }
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                Mark Completed
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 {/* Confirmation Dialog for Starting New Ward Round */}
                 <AlertDialog

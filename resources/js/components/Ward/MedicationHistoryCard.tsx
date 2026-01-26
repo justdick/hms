@@ -1,19 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import {
     Calendar,
     CheckCircle2,
     Clock,
-    MoreVertical,
     Pill,
     PlayCircle,
     XCircle,
@@ -216,51 +208,44 @@ export function MedicationHistoryCard({
                     </div>
 
                     {/* Action Buttons */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
+                    <div className="flex flex-col gap-2">
+                        {isDiscontinued ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onResume?.(prescription.id)}
+                                className="h-8 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
+                            >
+                                <PlayCircle className="mr-1 h-3.5 w-3.5" />
+                                Resume
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {isDiscontinued ? (
-                                <DropdownMenuItem
-                                    onClick={() => onResume?.(prescription.id)}
-                                    className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
+                        ) : isCompleted ? (
+                            <span className="text-sm text-muted-foreground">
+                                Course finished
+                            </span>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onComplete(prescription.id)}
+                                    className="h-8 border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
                                 >
-                                    <PlayCircle className="mr-2 h-4 w-4" />
-                                    Resume
-                                </DropdownMenuItem>
-                            ) : isCompleted ? (
-                                <DropdownMenuItem disabled className="text-muted-foreground">
-                                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                                    Course Completed
-                                </DropdownMenuItem>
-                            ) : (
-                                <>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            onComplete(prescription.id)
-                                        }
-                                        className="text-green-600 focus:text-green-600 dark:text-green-400 dark:focus:text-green-400"
-                                    >
-                                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                                        Mark Completed
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            onDiscontinue(prescription.id)
-                                        }
-                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                    >
-                                        <XCircle className="mr-2 h-4 w-4" />
-                                        Discontinue
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                                    Complete
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onDiscontinue(prescription.id)}
+                                    className="h-8 border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
+                                >
+                                    <XCircle className="mr-1 h-3.5 w-3.5" />
+                                    Discontinue
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </CardContent>
         </Card>
