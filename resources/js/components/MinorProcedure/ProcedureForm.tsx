@@ -238,7 +238,7 @@ export default function ProcedureForm({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogContent className="max-h-[90vh] max-w-5xl sm:max-w-5xl overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Perform Minor Procedure</DialogTitle>
                     <DialogDescription>
@@ -617,15 +617,17 @@ export default function ProcedureForm({
                                                     variant="outline"
                                                     role="combobox"
                                                     aria-expanded={supplyOpen}
-                                                    className="flex-1 justify-between"
+                                                    className="min-w-0 flex-1 justify-between"
                                                 >
-                                                    {selectedSupply
-                                                        ? availableDrugs.find(
-                                                              (d) =>
-                                                                  d.id ===
-                                                                  selectedSupply,
-                                                          )?.name
-                                                        : 'Select supply...'}
+                                                    <span className="truncate">
+                                                        {selectedSupply
+                                                            ? availableDrugs.find(
+                                                                  (d) =>
+                                                                      d.id ===
+                                                                      selectedSupply,
+                                                              )?.name
+                                                            : 'Select supply...'}
+                                                    </span>
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -728,9 +730,14 @@ export default function ProcedureForm({
                                                 parseFloat(supplyQuantity) <= 0
                                             }
                                         >
-                                            <Plus className="h-4 w-4" />
+                                            Add
                                         </Button>
                                     </div>
+                                    {selectedSupply && (
+                                        <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                                            ⚠️ Click "Add" to include this supply in the procedure
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Selected Supplies */}
@@ -818,7 +825,11 @@ export default function ProcedureForm({
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={processing}>
+                                <Button
+                                    type="submit"
+                                    disabled={processing || !!selectedSupply}
+                                    title={selectedSupply ? 'Please add or clear the selected supply first' : undefined}
+                                >
                                     {processing
                                         ? 'Completing Procedure...'
                                         : 'Complete Procedure'}
