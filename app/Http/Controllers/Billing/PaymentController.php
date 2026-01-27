@@ -258,6 +258,7 @@ class PaymentController extends Controller
 
     /**
      * Process payment for charges (enhanced for inline form submission)
+     * Supports charges from multiple checkins for the same patient
      */
     public function processPayment(Request $request, PatientCheckin $checkin)
     {
@@ -272,8 +273,12 @@ class PaymentController extends Controller
             'emergency_override' => 'boolean',
         ]);
 
+        // Get all checkin IDs for this patient to allow cross-visit payments
+        $patientCheckinIds = PatientCheckin::where('patient_id', $checkin->patient_id)
+            ->pluck('id');
+
         $charges = Charge::whereIn('id', $validated['charges'])
-            ->where('patient_checkin_id', $checkin->id)
+            ->whereIn('patient_checkin_id', $patientCheckinIds)
             ->where('status', 'pending')
             ->get();
 
