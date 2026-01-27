@@ -172,41 +172,24 @@ export default function ProcedureForm({
     };
 
     // Callback when a diagnosis is selected from async search
-    const handleDiagnosisSelected = async (diagnosisId: number | null) => {
-        if (!diagnosisId) {
-            setSelectedDiagnosis(null);
-            return;
-        }
-
+    const handleDiagnosisSelected = (diagnosis: {
+        id: number;
+        name: string;
+        icd_code: string | null;
+    }) => {
         // Check if already added
-        if (selectedDiagnoses.find((d) => d.id === diagnosisId)) {
-            setSelectedDiagnosis(null);
+        if (selectedDiagnoses.find((d) => d.id === diagnosis.id)) {
             return;
         }
 
-        // Fetch diagnosis details
-        try {
-            const response = await fetch(
-                `/consultation/diagnoses/search?q=${diagnosisId}`,
-            );
-            const data = await response.json();
-            const diagnosis = data.find(
-                (d: { id: number }) => d.id === diagnosisId,
-            );
-            if (diagnosis) {
-                setSelectedDiagnoses([
-                    ...selectedDiagnoses,
-                    {
-                        id: diagnosis.id,
-                        name: diagnosis.name,
-                        icd_code: diagnosis.icd_code,
-                    },
-                ]);
-            }
-        } catch (error) {
-            console.error('Failed to fetch diagnosis:', error);
-        }
-        setSelectedDiagnosis(null);
+        setSelectedDiagnoses([
+            ...selectedDiagnoses,
+            {
+                id: diagnosis.id,
+                name: diagnosis.name,
+                icd_code: diagnosis.icd_code || '',
+            },
+        ]);
     };
 
     const handleAddSupply = () => {
@@ -539,8 +522,9 @@ export default function ProcedureForm({
                                     <div className="flex gap-2">
                                         <div className="flex-1">
                                             <AsyncDiagnosisSelect
-                                                value={selectedDiagnosis}
-                                                onChange={
+                                                value={null}
+                                                onChange={() => {}}
+                                                onSelectDiagnosis={
                                                     handleDiagnosisSelected
                                                 }
                                                 excludeIds={selectedDiagnoses.map(

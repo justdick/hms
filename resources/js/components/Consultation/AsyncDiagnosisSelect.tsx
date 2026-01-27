@@ -30,6 +30,7 @@ interface Props {
     value: number | null;
     onChange: (value: number | null) => void;
     onSelect?: (id: number) => void;
+    onSelectDiagnosis?: (diagnosis: Diagnosis) => void;
     excludeIds?: number[];
     placeholder?: string;
     disabled?: boolean;
@@ -120,6 +121,7 @@ export default function AsyncDiagnosisSelect({
     value,
     onChange,
     onSelect,
+    onSelectDiagnosis,
     excludeIds = [],
     placeholder = 'Search diagnoses...',
     disabled = false,
@@ -210,7 +212,10 @@ export default function AsyncDiagnosisSelect({
     }, [open]);
 
     const handleSelect = (diagnosis: Diagnosis) => {
-        if (onSelect) {
+        if (onSelectDiagnosis) {
+            // Pass full diagnosis object
+            onSelectDiagnosis(diagnosis);
+        } else if (onSelect) {
             // Direct add mode - call onSelect immediately and don't store value
             onSelect(diagnosis.id);
         } else {
