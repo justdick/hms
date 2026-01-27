@@ -59,6 +59,15 @@
         "view_items_in_registries",
         "get_add_command_for_items"
       ]
+    },
+    "remotion-documentation": {
+      "command": "npx",
+      "args": [
+        "@remotion/mcp@latest"
+      ],
+      "autoApprove": [
+        "remotion-documentation"
+      ]
     }
   }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Patient;
+use App\Models\PatientInsurance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
