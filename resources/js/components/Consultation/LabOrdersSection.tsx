@@ -86,25 +86,28 @@ export default function LabOrdersSection({
 
     const excludedIds = labOrders.map(o => o.lab_service.id);
 
+    // Compact toggle for inside the form header (same style as prescriptions)
+    const modeToggle = isEditable && (
+        <div className="flex items-center gap-1.5 rounded-md border bg-white/80 px-2 py-1 dark:bg-gray-800/80">
+            <ListPlus className="h-3.5 w-3.5 text-muted-foreground" />
+            <Switch
+                checked={batchMode}
+                onCheckedChange={setBatchMode}
+                aria-label="Toggle batch mode"
+                className="scale-90"
+            />
+            <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+                {batchMode ? 'Batch' : 'Single'}
+            </span>
+        </div>
+    );
+
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle>Laboratory Orders</CardTitle>
-                {isEditable && (
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <ListPlus className="h-4 w-4" />
-                        </div>
-                        <Switch
-                            checked={batchMode}
-                            onCheckedChange={setBatchMode}
-                            aria-label="Toggle batch mode"
-                        />
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Layers className="h-4 w-4" />
-                        </div>
-                    </div>
-                )}
+                {modeToggle}
             </CardHeader>
             <CardContent>
                 {batchMode ? (

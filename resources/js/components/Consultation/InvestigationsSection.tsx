@@ -93,6 +93,7 @@ interface InvestigationsSectionProps {
     isEditable?: boolean;
     consultationStatus?: string;
     canUploadExternal?: boolean;
+    headerExtra?: React.ReactNode;
 }
 
 export function InvestigationsSection({
@@ -101,6 +102,7 @@ export function InvestigationsSection({
     isEditable,
     consultationStatus,
     canUploadExternal = false,
+    headerExtra,
 }: InvestigationsSectionProps) {
     const [activeTab, setActiveTab] = useState('laboratory');
     const [showLabOrderDialog, setShowLabOrderDialog] = useState(false);
@@ -181,7 +183,10 @@ export function InvestigationsSection({
     return (
         <Card>
             <CardHeader className="pb-3">
-                <CardTitle>Investigations</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Investigations</CardTitle>
+                    {headerExtra}
+                </div>
             </CardHeader>
             <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>

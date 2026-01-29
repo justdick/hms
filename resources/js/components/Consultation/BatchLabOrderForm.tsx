@@ -60,6 +60,7 @@ interface Props {
     isEditable?: boolean;
     onDelete?: (id: number) => void;
     filterType?: 'laboratory' | 'imaging';
+    headerExtra?: React.ReactNode;
 }
 
 export default function BatchLabOrderForm({
@@ -70,6 +71,7 @@ export default function BatchLabOrderForm({
     isEditable = true,
     onDelete,
     filterType = 'laboratory',
+    headerExtra,
 }: Props) {
     const [pendingOrders, setPendingOrders] = useState<PendingLabOrder[]>([]);
     const [isSaving, setIsSaving] = useState(false);
@@ -144,16 +146,19 @@ export default function BatchLabOrderForm({
     const typeLabelPlural = filterType === 'imaging' ? 'Imaging Studies' : 'Lab Tests';
 
     return (
-        <div className="space-y-4">
-            {/* Add New Order Form */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Left Column: Add New Order Form */}
             {isEditable && (
-                <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-blue-800 dark:from-blue-950/20 dark:to-indigo-950/20">
-                    <h4 className="mb-3 flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-                        <Plus className="h-4 w-4" />
-                        Add {typeLabel}
-                    </h4>
+                <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-950/20 dark:to-indigo-950/20">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <Plus className="h-5 w-5" />
+                            Add {typeLabel}
+                        </h3>
+                        {headerExtra}
+                    </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <div>
                             <Label>Search {typeLabel}</Label>
                             <AsyncLabServiceSelect
@@ -190,20 +195,18 @@ export default function BatchLabOrderForm({
                             </Alert>
                         )}
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <Label htmlFor="priority">Priority</Label>
-                                <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
-                                    <SelectTrigger id="priority">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="routine">Routine</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                        <SelectItem value="stat">STAT (Immediate)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div>
+                            <Label htmlFor="priority">Priority</Label>
+                            <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+                                <SelectTrigger id="priority">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="routine">Routine</SelectItem>
+                                    <SelectItem value="urgent">Urgent</SelectItem>
+                                    <SelectItem value="stat">STAT (Immediate)</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div>
@@ -221,8 +224,7 @@ export default function BatchLabOrderForm({
                             type="button"
                             onClick={handleAddToPending}
                             disabled={!selectedService}
-                            variant="secondary"
-                            className="w-full"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Add to List
@@ -231,79 +233,31 @@ export default function BatchLabOrderForm({
                 </div>
             )}
 
-            {/* Pending Orders (not yet saved) */}
-            {pendingOrders.length > 0 && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h4 className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-200">
-                            <AlertTriangle className="h-4 w-4" />
-                            Pending ({pendingOrders.length}) - Not yet saved
-                        </h4>
-                        <Button
-                            onClick={handleSaveAll}
-                            disabled={isSaving}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                        >
-                            <Save className="mr-1.5 h-4 w-4" />
-                            {isSaving ? 'Saving...' : 'Save All'}
-                        </Button>
-                    </div>
-                    <div className="space-y-2">
-                        {pendingOrders.map((order) => (
-                            <div
-                                key={order.id}
-                                className="flex items-center justify-between rounded-md border bg-white p-3 dark:bg-gray-900"
+            {/* Right Column: Pending & Existing Orders */}
+            <div className="space-y-4">
+                {/* Pending Orders (not yet saved) */}
+                {pendingOrders.length > 0 && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                        <div className="mb-3 flex items-center justify-between">
+                            <h4 className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-200">
+                                <AlertTriangle className="h-4 w-4" />
+                                Pending ({pendingOrders.length}) - Not yet saved
+                            </h4>
+                            <Button
+                                onClick={handleSaveAll}
+                                disabled={isSaving}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
                             >
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <TestTube className="h-4 w-4 text-blue-600" />
-                                        <span className="font-medium">{order.lab_service.name}</span>
-                                        <Badge
-                                            variant={order.priority === 'stat' ? 'destructive' : order.priority === 'urgent' ? 'default' : 'secondary'}
-                                            className="text-xs"
-                                        >
-                                            {order.priority}
-                                        </Badge>
-                                    </div>
-                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                        {order.lab_service.code} • {order.lab_service.category}
-                                    </p>
-                                    {order.special_instructions && (
-                                        <p className="mt-1 text-xs text-gray-500 italic">{order.special_instructions}</p>
-                                    )}
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleRemovePending(order.id)}
-                                    className="text-red-600 hover:text-red-700"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Existing Orders (already saved) */}
-            <div className="rounded-lg border p-4">
-                <h4 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">
-                    Ordered {typeLabelPlural} ({existingLabOrders.length})
-                </h4>
-                {existingLabOrders.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No {typeLabelPlural.toLowerCase()} ordered yet.
-                    </p>
-                ) : (
-                    <div className="space-y-2">
-                        {existingLabOrders.map((order) => {
-                            const canDelete = order.status === 'ordered' && isEditable;
-                            return (
+                                <Save className="mr-1.5 h-4 w-4" />
+                                {isSaving ? 'Saving...' : 'Save All'}
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {pendingOrders.map((order) => (
                                 <div
                                     key={order.id}
-                                    className="flex items-center justify-between rounded-md border bg-gray-50 p-3 dark:bg-gray-800"
+                                    className="flex items-center justify-between rounded-md border bg-white p-3 dark:bg-gray-900"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
@@ -315,9 +269,6 @@ export default function BatchLabOrderForm({
                                             >
                                                 {order.priority}
                                             </Badge>
-                                            <Badge variant="outline" className="text-xs">
-                                                {order.status}
-                                            </Badge>
                                         </div>
                                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                             {order.lab_service.code} • {order.lab_service.category}
@@ -326,21 +277,75 @@ export default function BatchLabOrderForm({
                                             <p className="mt-1 text-xs text-gray-500 italic">{order.special_instructions}</p>
                                         )}
                                     </div>
-                                    {canDelete && onDelete && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => onDelete(order.id)}
-                                            className="text-red-600 hover:text-red-700"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemovePending(order.id)}
+                                        className="text-red-600 hover:text-red-700"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                            );
-                        })}
+                            ))}
+                        </div>
                     </div>
                 )}
+
+                {/* Existing Orders (already saved) */}
+                <div className="rounded-lg border p-4">
+                    <h4 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">
+                        Ordered {typeLabelPlural} ({existingLabOrders.length})
+                    </h4>
+                    {existingLabOrders.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            No {typeLabelPlural.toLowerCase()} ordered yet.
+                        </p>
+                    ) : (
+                        <div className="space-y-2">
+                            {existingLabOrders.map((order) => {
+                                const canDelete = order.status === 'ordered' && isEditable;
+                                return (
+                                    <div
+                                        key={order.id}
+                                        className="flex items-center justify-between rounded-md border bg-gray-50 p-3 dark:bg-gray-800"
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <TestTube className="h-4 w-4 text-blue-600" />
+                                                <span className="font-medium">{order.lab_service.name}</span>
+                                                <Badge
+                                                    variant={order.priority === 'stat' ? 'destructive' : order.priority === 'urgent' ? 'default' : 'secondary'}
+                                                    className="text-xs"
+                                                >
+                                                    {order.priority}
+                                                </Badge>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {order.status}
+                                                </Badge>
+                                            </div>
+                                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                                {order.lab_service.code} • {order.lab_service.category}
+                                            </p>
+                                            {order.special_instructions && (
+                                                <p className="mt-1 text-xs text-gray-500 italic">{order.special_instructions}</p>
+                                            )}
+                                        </div>
+                                        {canDelete && onDelete && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => onDelete(order.id)}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -71,116 +71,89 @@ export function InvestigationsWithBatch({
     const labCount = laboratoryOrders.length;
     const imagingCount = imagingOrders.length;
 
+    // Compact toggle for inside the form header (same style as prescriptions)
+    const modeToggle = canEdit && (
+        <div className="flex items-center gap-1.5 rounded-md border bg-white/80 px-2 py-1 dark:bg-gray-800/80">
+            <ListPlus className="h-3.5 w-3.5 text-muted-foreground" />
+            <Switch
+                checked={batchMode}
+                onCheckedChange={setBatchMode}
+                aria-label="Toggle batch mode"
+                className="scale-90"
+            />
+            <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+                {batchMode ? 'Batch' : 'Single'}
+            </span>
+        </div>
+    );
+
     // If not in batch mode, use the original InvestigationsSection
     if (!batchMode) {
         return (
-            <div className="space-y-4">
-                {/* Mode Toggle */}
-                {canEdit && (
-                    <div className="flex items-center justify-end gap-3 rounded-lg border bg-muted/50 p-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <ListPlus className="h-4 w-4" />
-                            <span>Single</span>
-                        </div>
-                        <Switch
-                            checked={batchMode}
-                            onCheckedChange={setBatchMode}
-                            aria-label="Toggle batch mode"
-                        />
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Layers className="h-4 w-4" />
-                            <span>Batch</span>
-                        </div>
-                        <span className="ml-2 text-xs text-muted-foreground">
-                            Add one at a time
-                        </span>
-                    </div>
-                )}
-                <InvestigationsSection
-                    consultationId={consultationId}
-                    labOrders={labOrders}
-                    isEditable={isEditable}
-                    consultationStatus={consultationStatus}
-                    canUploadExternal={canUploadExternal}
-                />
-            </div>
+            <InvestigationsSection
+                consultationId={consultationId}
+                labOrders={labOrders}
+                isEditable={isEditable}
+                consultationStatus={consultationStatus}
+                canUploadExternal={canUploadExternal}
+                headerExtra={modeToggle}
+            />
         );
     }
 
     // Batch mode UI
     return (
-        <div className="space-y-4">
-            {/* Mode Toggle */}
-            {canEdit && (
-                <div className="flex items-center justify-end gap-3 rounded-lg border bg-muted/50 p-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <ListPlus className="h-4 w-4" />
-                        <span>Single</span>
-                    </div>
-                    <Switch
-                        checked={batchMode}
-                        onCheckedChange={setBatchMode}
-                        aria-label="Toggle batch mode"
-                    />
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Layers className="h-4 w-4" />
-                        <span>Batch</span>
-                    </div>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                        Add multiple, save all at once
-                    </span>
-                </div>
-            )}
+        <Card>
+            <CardHeader className="pb-3">
+                <CardTitle>Investigations</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="laboratory" className="flex items-center gap-2">
+                            <TestTube className="h-4 w-4" />
+                            Laboratory Tests
+                            {labCount > 0 && (
+                                <Badge variant="secondary" className="ml-1">{labCount}</Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="imaging" className="flex items-center gap-2">
+                            <Scan className="h-4 w-4" />
+                            Imaging
+                            {imagingCount > 0 && (
+                                <Badge variant="secondary" className="ml-1">{imagingCount}</Badge>
+                            )}
+                        </TabsTrigger>
+                    </TabsList>
 
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle>Investigations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="laboratory" className="flex items-center gap-2">
-                                <TestTube className="h-4 w-4" />
-                                Laboratory Tests
-                                {labCount > 0 && (
-                                    <Badge variant="secondary" className="ml-1">{labCount}</Badge>
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger value="imaging" className="flex items-center gap-2">
-                                <Scan className="h-4 w-4" />
-                                Imaging
-                                {imagingCount > 0 && (
-                                    <Badge variant="secondary" className="ml-1">{imagingCount}</Badge>
-                                )}
-                            </TabsTrigger>
-                        </TabsList>
+                    {/* Laboratory Tests Tab */}
+                    <TabsContent value="laboratory" className="mt-4">
+                        <BatchLabOrderForm
+                            existingLabOrders={laboratoryOrders}
+                            orderableType={orderableType}
+                            orderableId={orderableId ?? consultationId}
+                            admissionId={admissionId}
+                            isEditable={canEdit}
+                            filterType="laboratory"
+                            headerExtra={modeToggle}
+                        />
+                    </TabsContent>
 
-                        {/* Laboratory Tests Tab */}
-                        <TabsContent value="laboratory" className="mt-4">
-                            <BatchLabOrderForm
-                                existingLabOrders={laboratoryOrders}
-                                orderableType={orderableType}
-                                orderableId={orderableId ?? consultationId}
-                                admissionId={admissionId}
-                                isEditable={canEdit}
-                                filterType="laboratory"
-                            />
-                        </TabsContent>
-
-                        {/* Imaging Tab */}
-                        <TabsContent value="imaging" className="mt-4">
-                            <BatchLabOrderForm
-                                existingLabOrders={imagingOrders}
-                                orderableType={orderableType}
-                                orderableId={orderableId ?? consultationId}
-                                admissionId={admissionId}
-                                isEditable={canEdit}
-                                filterType="imaging"
-                            />
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
-        </div>
+                    {/* Imaging Tab */}
+                    <TabsContent value="imaging" className="mt-4">
+                        <BatchLabOrderForm
+                            existingLabOrders={imagingOrders}
+                            orderableType={orderableType}
+                            orderableId={orderableId ?? consultationId}
+                            admissionId={admissionId}
+                            isEditable={canEdit}
+                            filterType="imaging"
+                            headerExtra={modeToggle}
+                        />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
     );
 }
