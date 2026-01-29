@@ -29,6 +29,7 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
     // Prescription management
     Route::post('/prescriptions/parse', [PrescriptionParserController::class, 'parse'])->name('prescriptions.parse');
     Route::post('/{consultation}/prescriptions', [ConsultationController::class, 'storePrescription'])->name('prescriptions.store');
+    Route::post('/{consultation}/prescriptions/batch', [ConsultationController::class, 'storeBatchPrescriptions'])->name('prescriptions.store-batch');
     Route::patch('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'updatePrescription'])->name('prescriptions.update');
     Route::delete('/{consultation}/prescriptions/{prescription}', [ConsultationController::class, 'destroyPrescription'])->name('prescriptions.destroy');
     Route::post('/{consultation}/prescriptions/refill', [ConsultationController::class, 'refillPrescriptions'])->name('prescriptions.refill');
@@ -51,6 +52,7 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
     // Lab order management
     Route::prefix('/{consultation}/lab-orders')->name('lab-orders.')->group(function () {
         Route::post('/', [LabOrderController::class, 'store'])->name('store');
+        Route::post('/batch', [LabOrderController::class, 'storeBatch'])->name('store-batch');
         Route::patch('/{labOrder}', [LabOrderController::class, 'update'])->name('update');
         Route::post('/{labOrder}/cancel', [LabOrderController::class, 'cancel'])->name('cancel');
         Route::delete('/{labOrder}', [LabOrderController::class, 'destroy'])->name('destroy');

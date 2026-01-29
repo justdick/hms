@@ -1,10 +1,10 @@
 import { ServiceBlockAlert } from '@/components/billing/ServiceBlockAlert';
 import VitalsModal from '@/components/Checkin/VitalsModal';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
-import { InvestigationsSection } from '@/components/Consultation/InvestigationsSection';
+import { InvestigationsWithBatch } from '@/components/Consultation/InvestigationsWithBatch';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
-import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
+import PrescriptionSection from '@/components/Consultation/PrescriptionSection';
 import TheatreProceduresTab from '@/components/Consultation/TheatreProceduresTab';
 import {
     AlertDialog,
@@ -2007,7 +2007,7 @@ export default function ConsultationShow({
                                     <CardTitle>Prescriptions</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <PrescriptionFormSection
+                                    <PrescriptionSection
                                         drugs={availableDrugs}
                                         prescriptions={
                                             consultation.prescriptions
@@ -2038,6 +2038,8 @@ export default function ConsultationShow({
                                         previousPrescriptions={
                                             patientHistory?.previousPrescriptions
                                         }
+                                        prescribableType="consultation"
+                                        prescribableId={consultation.id}
                                     />
                                 </CardContent>
                             </Card>
@@ -2046,11 +2048,13 @@ export default function ConsultationShow({
 
                     {/* Investigations Tab (Laboratory Tests + Imaging) */}
                     <TabsContent value="orders">
-                        <InvestigationsSection
+                        <InvestigationsWithBatch
                             consultationId={consultation.id}
                             labOrders={consultation.lab_orders}
                             isEditable={isEditable}
                             canUploadExternal={canUploadExternal}
+                            orderableType="consultation"
+                            orderableId={consultation.id}
                         />
                     </TabsContent>
 

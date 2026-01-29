@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Ward;
 
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Lab\StoreBatchLabOrdersRequest;
+use App\Http\Requests\Prescription\StoreBatchPrescriptionsRequest;
 use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Http\Requests\StoreWardRoundRequest;
+use App\Models\LabService;
 use App\Models\MinorProcedureType;
 use App\Models\PatientAdmission;
 use App\Models\WardRound;
@@ -297,6 +300,39 @@ class WardRoundController extends Controller
         return back();
     }
 
+    public function addBatchPrescriptions(StoreBatchPrescriptionsRequest $request, PatientAdmission $admission, WardRound $wardRound)
+    {
+        $this->authorize('update', $wardRound);
+
+        if ($wardRound->status !== 'in_progress') {
+            return back()->with('error', 'Cannot update completed ward round');
+        }
+
+        $prescriptions = $request->getPrescriptions();
+        $createdCount = 0;
+
+        foreach ($prescriptions as $prescriptionData) {
+            $wardRound->prescriptions()->create([
+                'drug_id' => $prescriptionData['drug_id'],
+                'medication_name' => $prescriptionData['medication_name'],
+                'dose_quantity' => $prescriptionData['dose_quantity'],
+                'frequency' => $prescriptionData['frequency'],
+                'duration' => $prescriptionData['duration'],
+                'quantity' => $prescriptionData['quantity_to_dispense'],
+                'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'],
+                'instructions' => $prescriptionData['instructions'],
+                'status' => 'prescribed',
+            ]);
+            $createdCount++;
+        }
+
+        $message = $createdCount === 1
+            ? 'Prescription added successfully.'
+            : "{$createdCount} prescriptions added successfully.";
+
+        return back()->with('success', $message);
+    }
+
     public function removePrescription(PatientAdmission $admission, WardRound $wardRound, $prescriptionId)
     {
         $this->authorize('update', $wardRound);
@@ -343,6 +379,64 @@ class WardRoundController extends Controller
         event(new LabTestOrdered($labOrder));
 
         return back();
+    }
+
+    public function addBatchLabOrders(StoreBatchLabOrdersRequest $request, PatientAdmission $admission, WardRound $wardRound)
+    {
+        $this->authorize('update', $wardRound);
+
+        if ($wardRound->status !== 'in_progress') {
+            return back()->with('error', 'Cannot update completed ward round');
+        }
+
+        $labOrders = $request->getLabOrders();
+        $createdCount = 0;
+        $skippedServices = [];
+
+        foreach ($labOrders as $orderData) {
+            $labService = LabService::find($orderData['lab_service_id']);
+
+            if (! $labService || ! $labService->is_active) {
+                $skippedServices[] = $labService?->name ?? 'Unknown';
+
+                continue;
+            }
+
+            // Check if already ordered for this ward round
+            $existingOrder = $wardRound->labOrders()
+                ->where('lab_service_id', $orderData['lab_service_id'])
+                ->where('status', '!=', 'cancelled')
+                ->first();
+
+            if ($existingOrder) {
+                $skippedServices[] = $labService->name.' (already ordered)';
+
+                continue;
+            }
+
+            $labOrder = $wardRound->labOrders()->create([
+                'lab_service_id' => $orderData['lab_service_id'],
+                'ordered_by' => auth()->id(),
+                'ordered_at' => now(),
+                'status' => 'ordered',
+                'priority' => $orderData['priority'],
+                'special_instructions' => $orderData['special_instructions'],
+            ]);
+
+            // Fire lab test ordered event for billing
+            event(new LabTestOrdered($labOrder));
+            $createdCount++;
+        }
+
+        $message = $createdCount === 1
+            ? 'Lab test ordered successfully.'
+            : "{$createdCount} lab tests ordered successfully.";
+
+        if (! empty($skippedServices)) {
+            $message .= ' Skipped: '.implode(', ', $skippedServices);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function removeLabOrder(PatientAdmission $admission, WardRound $wardRound, $labOrderId)

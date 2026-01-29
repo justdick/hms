@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Consultation;
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExternalImageUploadRequest;
+use App\Http\Requests\Lab\StoreBatchLabOrdersRequest;
 use App\Models\Consultation;
 use App\Models\ImagingAttachment;
 use App\Models\LabOrder;
@@ -63,6 +64,60 @@ class LabOrderController extends Controller
         event(new LabTestOrdered($labOrder));
 
         return back()->with('success', 'Lab test ordered successfully.');
+    }
+
+    public function storeBatch(StoreBatchLabOrdersRequest $request, Consultation $consultation)
+    {
+        $this->authorize('create', [LabOrder::class, $consultation]);
+
+        $labOrders = $request->getLabOrders();
+        $createdCount = 0;
+        $skippedServices = [];
+
+        foreach ($labOrders as $orderData) {
+            $labService = LabService::find($orderData['lab_service_id']);
+
+            if (! $labService || ! $labService->is_active) {
+                $skippedServices[] = $labService?->name ?? 'Unknown';
+
+                continue;
+            }
+
+            // Check if already ordered for this consultation
+            $existingOrder = $consultation->labOrders()
+                ->where('lab_service_id', $orderData['lab_service_id'])
+                ->where('status', '!=', 'cancelled')
+                ->first();
+
+            if ($existingOrder) {
+                $skippedServices[] = $labService->name.' (already ordered)';
+
+                continue;
+            }
+
+            $labOrder = $consultation->labOrders()->create([
+                'lab_service_id' => $orderData['lab_service_id'],
+                'ordered_by' => $request->user()->id,
+                'ordered_at' => now(),
+                'status' => 'ordered',
+                'priority' => $orderData['priority'],
+                'special_instructions' => $orderData['special_instructions'],
+            ]);
+
+            // Fire lab test ordered event for billing
+            event(new LabTestOrdered($labOrder));
+            $createdCount++;
+        }
+
+        $message = $createdCount === 1
+            ? 'Lab test ordered successfully.'
+            : "{$createdCount} lab tests ordered successfully.";
+
+        if (! empty($skippedServices)) {
+            $message .= ' Skipped: '.implode(', ', $skippedServices);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function update(Request $request, Consultation $consultation, LabOrder $labOrder)

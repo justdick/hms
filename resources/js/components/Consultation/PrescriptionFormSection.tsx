@@ -32,7 +32,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
     AlertTriangle,
-    Calculator,
     Check,
     ChevronsUpDown,
     ExternalLink,
@@ -127,6 +126,7 @@ interface Props {
     isEditable?: boolean;
     consultationStatus?: string;
     previousPrescriptions?: PreviousPrescription[];
+    headerExtra?: React.ReactNode;
 }
 
 // Helper function to parse frequency to get daily count
@@ -208,6 +208,7 @@ export default function PrescriptionFormSection({
     isEditable,
     consultationStatus,
     previousPrescriptions = [],
+    headerExtra,
 }: Props) {
     // isEditable takes precedence (used by consultations with 24hr edit window)
     // consultationStatus is fallback for ward rounds (only in_progress is editable)
@@ -680,7 +681,8 @@ export default function PrescriptionFormSection({
                                 </>
                             )}
                         </h3>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {headerExtra}
                             {!isEditing && previousPrescriptions.length > 0 && (
                                 <Button
                                     type="button"
@@ -1153,31 +1155,19 @@ export default function PrescriptionFormSection({
                                 selectedDrug &&
                                 !isTopicalPreparation(selectedDrug) &&
                                 selectedDrug.unit_type === 'piece' && (
-                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
-                                        <div className="flex items-center gap-2">
-                                            <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                            <div>
-                                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                                    Calculated Quantity
-                                                </p>
-                                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                                    {
-                                                        prescriptionData.quantity_to_dispense
-                                                    }{' '}
-                                                    {selectedDrug.form ===
-                                                        'tablet'
-                                                        ? 'tablets'
-                                                        : selectedDrug.form ===
-                                                            'capsule'
-                                                            ? 'capsules'
-                                                            : 'pieces'}
-                                                </p>
-                                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                                    Auto-calculated from
-                                                    frequency × duration
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                                            <strong>Quantity to dispense:</strong>{' '}
+                                            {prescriptionData.quantity_to_dispense}{' '}
+                                            {selectedDrug.form === 'tablet'
+                                                ? 'tablets'
+                                                : selectedDrug.form === 'capsule'
+                                                    ? 'capsules'
+                                                    : 'pieces'}
+                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                                                (auto-calculated)
+                                            </span>
+                                        </p>
                                     </div>
                                 )}
 
@@ -1188,32 +1178,17 @@ export default function PrescriptionFormSection({
                                 !isTopicalPreparation(selectedDrug) &&
                                 selectedDrug.unit_type === 'bottle' &&
                                 selectedDrug.bottle_size && (
-                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
-                                        <div className="flex items-center gap-2">
-                                            <Calculator className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                            <div>
-                                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                                    Calculated Quantity
-                                                </p>
-                                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                                    {
-                                                        prescriptionData.quantity_to_dispense
-                                                    }{' '}
-                                                    {prescriptionData.quantity_to_dispense ===
-                                                        1
-                                                        ? 'bottle'
-                                                        : 'bottles'}
-                                                </p>
-                                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                                    Based on{' '}
-                                                    {prescriptionData.dose_quantity ||
-                                                        '5'}
-                                                    ml per dose,{' '}
-                                                    {selectedDrug.bottle_size}
-                                                    ml per bottle
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                                            <strong>Quantity to dispense:</strong>{' '}
+                                            {prescriptionData.quantity_to_dispense}{' '}
+                                            {prescriptionData.quantity_to_dispense === 1
+                                                ? 'bottle'
+                                                : 'bottles'}
+                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                                                (auto-calculated)
+                                            </span>
+                                        </p>
                                     </div>
                                 )}
 
@@ -1414,96 +1389,85 @@ export default function PrescriptionFormSection({
                             .map((prescription) => (
                                 <div
                                     key={prescription.id}
-                                    className="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800"
+                                    className="flex items-center justify-between rounded-lg border bg-gray-50 p-3 dark:bg-gray-800"
                                 >
-                                    <div className="mb-2 flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                                {prescription.medication_name}
-                                            </h4>
-                                            <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                                {prescription.dose_quantity && (
-                                                    <p>
-                                                        <strong>Dose:</strong>{' '}
-                                                        {
-                                                            prescription.dose_quantity
-                                                        }
-                                                    </p>
-                                                )}
-                                                <p>
-                                                    <strong>Frequency:</strong>{' '}
-                                                    {prescription.frequency}
-                                                </p>
-                                                <p>
-                                                    <strong>Duration:</strong>{' '}
-                                                    {prescription.duration}
-                                                </p>
-                                            </div>
-                                            {prescription.instructions && (
-                                                <div className="mt-2 rounded bg-blue-50 p-2 text-xs dark:bg-blue-900/30">
-                                                    <strong>
-                                                        Instructions:
-                                                    </strong>{' '}
-                                                    {prescription.instructions}
-                                                </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                            {prescription.medication_name}
+                                        </h4>
+                                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                            {prescription.dose_quantity && (
+                                                <><strong>Dose:</strong> {prescription.dose_quantity} · </>
                                             )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {prescription.refilled_from_prescription_id && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs"
-                                                >
-                                                    <RefreshCw className="mr-1 h-3 w-3" />
-                                                    Refill
-                                                </Badge>
+                                            <strong>Frequency:</strong> {prescription.frequency}
+                                            {prescription.duration && (
+                                                <> · <strong>Duration:</strong> {prescription.duration}</>
                                             )}
+                                            {prescription.quantity_to_dispense && (
+                                                <> · <strong>Qty:</strong> {prescription.quantity_to_dispense}</>
+                                            )}
+                                        </p>
+                                        {prescription.instructions && (
+                                            <p className="mt-1 text-xs text-gray-500 italic">
+                                                {prescription.instructions}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        {prescription.refilled_from_prescription_id && (
                                             <Badge
-                                                variant={
-                                                    prescription.status ===
-                                                        'prescribed'
-                                                        ? 'default'
-                                                        : prescription.status ===
-                                                            'dispensed'
-                                                            ? 'outline'
-                                                            : 'destructive'
-                                                }
+                                                variant="outline"
+                                                className="text-xs"
                                             >
-                                                {prescription.status.toUpperCase()}
+                                                <RefreshCw className="mr-1 h-3 w-3" />
+                                                Refill
                                             </Badge>
-                                            {canEdit &&
+                                        )}
+                                        <Badge
+                                            variant={
                                                 prescription.status ===
-                                                'prescribed' && (
-                                                    <>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() =>
-                                                                onEdit(
-                                                                    prescription,
-                                                                )
-                                                            }
-                                                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                            title="Edit prescription"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() =>
-                                                                onDelete(
-                                                                    prescription.id,
-                                                                )
-                                                            }
-                                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                            title="Delete prescription"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </>
-                                                )}
-                                        </div>
+                                                    'prescribed'
+                                                    ? 'default'
+                                                    : prescription.status ===
+                                                        'dispensed'
+                                                        ? 'outline'
+                                                        : 'destructive'
+                                            }
+                                        >
+                                            {prescription.status.toUpperCase()}
+                                        </Badge>
+                                        {canEdit &&
+                                            prescription.status ===
+                                            'prescribed' && (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            onEdit(
+                                                                prescription,
+                                                            )
+                                                        }
+                                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                        title="Edit prescription"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            onDelete(
+                                                                prescription.id,
+                                                            )
+                                                        }
+                                                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        title="Delete prescription"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </>
+                                            )}
                                     </div>
                                 </div>
                             ))}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Consultation;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Prescription\RefillPrescriptionsRequest;
+use App\Http\Requests\Prescription\StoreBatchPrescriptionsRequest;
 use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Http\Requests\Prescription\UpdatePrescriptionRequest;
 use App\Models\Consultation;
@@ -609,6 +610,36 @@ class ConsultationController extends Controller
         if (! empty($skippedDrugs)) {
             $message .= ' Skipped inactive drugs: '.implode(', ', $skippedDrugs);
         }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function storeBatchPrescriptions(StoreBatchPrescriptionsRequest $request, Consultation $consultation)
+    {
+        $this->authorize('update', $consultation);
+
+        $prescriptions = $request->getPrescriptions();
+        $createdCount = 0;
+
+        foreach ($prescriptions as $prescriptionData) {
+            Prescription::create([
+                'consultation_id' => $consultation->id,
+                'medication_name' => $prescriptionData['medication_name'],
+                'drug_id' => $prescriptionData['drug_id'],
+                'dose_quantity' => $prescriptionData['dose_quantity'],
+                'frequency' => $prescriptionData['frequency'],
+                'duration' => $prescriptionData['duration'],
+                'quantity' => $prescriptionData['quantity_to_dispense'],
+                'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'],
+                'instructions' => $prescriptionData['instructions'],
+                'status' => 'prescribed',
+            ]);
+            $createdCount++;
+        }
+
+        $message = $createdCount === 1
+            ? 'Prescription added successfully.'
+            : "{$createdCount} prescriptions added successfully.";
 
         return redirect()->back()->with('success', $message);
     }

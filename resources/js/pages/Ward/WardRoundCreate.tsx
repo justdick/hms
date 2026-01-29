@@ -1,8 +1,8 @@
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
 import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
-import PrescriptionFormSection from '@/components/Consultation/PrescriptionFormSection';
-import AsyncLabServiceSelect from '@/components/Lab/AsyncLabServiceSelect';
+import PrescriptionSection from '@/components/Consultation/PrescriptionSection';
+import LabOrdersSection from '@/components/Consultation/LabOrdersSection';
 import WardRoundProceduresTab from '@/components/Ward/WardRoundProceduresTab';
 import {
     AlertDialog,
@@ -187,6 +187,17 @@ interface ProcedureType {
 interface WardRoundProcedure {
     id: number;
     procedure_type: ProcedureType;
+    indication: string | null;
+    assistant: string | null;
+    anaesthetist: string | null;
+    anaesthesia_type: string | null;
+    estimated_gestational_age: string | null;
+    parity: string | null;
+    procedure_subtype: string | null;
+    procedure_steps: string | null;
+    template_selections: Record<string, string> | null;
+    findings: string | null;
+    plan: string | null;
     comments: string | null;
     performed_at: string;
     doctor: {
@@ -256,6 +267,8 @@ export default function WardRoundCreate({
         code: string;
         category: string;
         sample_type: string;
+        price: number | null;
+        is_imaging?: boolean;
     } | null>(null);
     const {
         data: labOrderData,
@@ -1084,266 +1097,57 @@ export default function WardRoundCreate({
 
                     {/* Prescriptions Tab */}
                     <TabsContent value="prescriptions">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Prescriptions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <PrescriptionFormSection
-                                    drugs={availableDrugs}
-                                    prescriptions={wardRound.prescriptions}
-                                    prescriptionData={prescriptionData}
-                                    setPrescriptionData={setPrescriptionData}
-                                    onSubmit={handlePrescriptionSubmit}
-                                    onDelete={(id) =>
-                                        setDeleteDialogState({
-                                            open: true,
-                                            type: 'prescription',
-                                            id: id,
-                                        })
-                                    }
-                                    onEdit={handlePrescriptionEdit}
-                                    onCancelEdit={handlePrescriptionCancelEdit}
-                                    onUpdate={handlePrescriptionUpdate}
-                                    editingPrescription={editingPrescription}
-                                    processing={prescriptionProcessing}
-                                    consultationId={wardRound.id}
-                                    consultationStatus={wardRound.status}
-                                />
-                            </CardContent>
-                        </Card>
+                        <PrescriptionSection
+                            drugs={availableDrugs}
+                            prescriptions={wardRound.prescriptions}
+                            prescriptionData={prescriptionData}
+                            setPrescriptionData={setPrescriptionData}
+                            onSubmit={handlePrescriptionSubmit}
+                            onDelete={(id) =>
+                                setDeleteDialogState({
+                                    open: true,
+                                    type: 'prescription',
+                                    id: id,
+                                })
+                            }
+                            onEdit={handlePrescriptionEdit}
+                            onCancelEdit={handlePrescriptionCancelEdit}
+                            onUpdate={handlePrescriptionUpdate}
+                            editingPrescription={editingPrescription}
+                            processing={prescriptionProcessing}
+                            consultationId={wardRound.id}
+                            consultationStatus={wardRound.status}
+                            prescribableType="ward_round"
+                            prescribableId={wardRound.id}
+                            admissionId={admission.id}
+                            withCard={true}
+                        />
                     </TabsContent>
 
                     {/* Lab Orders Tab */}
                     <TabsContent value="orders">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                <CardTitle>Laboratory Orders</CardTitle>
-                                {wardRound.status === 'in_progress' && (
-                                    <Dialog
-                                        open={showLabOrderDialog}
-                                        onOpenChange={setShowLabOrderDialog}
-                                    >
-                                        <DialogTrigger asChild>
-                                            <Button>
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Order Lab Test
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-md">
-                                            <DialogHeader>
-                                                <DialogTitle>
-                                                    Order Laboratory Test
-                                                </DialogTitle>
-                                            </DialogHeader>
-                                            <form
-                                                onSubmit={handleLabOrderSubmit}
-                                                className="space-y-4"
-                                            >
-                                                <div>
-                                                    <Label>
-                                                        Search Lab Test
-                                                    </Label>
-                                                    <AsyncLabServiceSelect
-                                                        onSelect={(service) => {
-                                                            setSelectedLabService(
-                                                                service,
-                                                            );
-                                                            setLabOrderData(
-                                                                'lab_service_id',
-                                                                service.id.toString(),
-                                                            );
-                                                        }}
-                                                        excludeIds={
-                                                            wardRound.lab_orders?.map(
-                                                                (o) =>
-                                                                    o
-                                                                        .lab_service
-                                                                        .id,
-                                                            ) || []
-                                                        }
-                                                        placeholder={
-                                                            selectedLabService
-                                                                ? selectedLabService.name
-                                                                : 'Search by test name or code...'
-                                                        }
-                                                    />
-                                                    {selectedLabService && (
-                                                        <div className="mt-2 rounded-md bg-muted p-2 text-sm">
-                                                            <p className="font-medium">
-                                                                {
-                                                                    selectedLabService.name
-                                                                }
-                                                            </p>
-                                                            <p className="text-muted-foreground">
-                                                                {
-                                                                    selectedLabService.code
-                                                                }{' '}
-                                                                •{' '}
-                                                                {
-                                                                    selectedLabService.category
-                                                                }{' '}
-                                                                •{' '}
-                                                                {
-                                                                    selectedLabService.sample_type
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div>
-                                                    <Label htmlFor="priority">
-                                                        Priority
-                                                    </Label>
-                                                    <Select
-                                                        value={
-                                                            labOrderData.priority
-                                                        }
-                                                        onValueChange={(
-                                                            value,
-                                                        ) =>
-                                                            setLabOrderData(
-                                                                'priority',
-                                                                value,
-                                                            )
-                                                        }
-                                                        required
-                                                    >
-                                                        <SelectTrigger
-                                                            id="priority"
-                                                            className="dark:border-gray-700 dark:bg-gray-950"
-                                                        >
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="routine">
-                                                                Routine
-                                                            </SelectItem>
-                                                            <SelectItem value="urgent">
-                                                                Urgent
-                                                            </SelectItem>
-                                                            <SelectItem value="stat">
-                                                                STAT (Immediate)
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-
-                                                <div>
-                                                    <Label htmlFor="special_instructions">
-                                                        Special Instructions
-                                                        (Optional)
-                                                    </Label>
-                                                    <Textarea
-                                                        id="special_instructions"
-                                                        placeholder="Any special instructions for the lab..."
-                                                        value={
-                                                            labOrderData.special_instructions
-                                                        }
-                                                        onChange={(e) =>
-                                                            setLabOrderData(
-                                                                'special_instructions',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        rows={3}
-                                                        className="dark:border-gray-700 dark:bg-gray-950"
-                                                    />
-                                                </div>
-
-                                                <div className="flex gap-2 pt-4">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            setShowLabOrderDialog(
-                                                                false,
-                                                            )
-                                                        }
-                                                        className="flex-1"
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={
-                                                            labOrderProcessing ||
-                                                            !labOrderData.lab_service_id
-                                                        }
-                                                        className="flex-1"
-                                                    >
-                                                        {labOrderProcessing
-                                                            ? 'Ordering...'
-                                                            : 'Order Test'}
-                                                    </Button>
-                                                </div>
-                                            </form>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
-                            </CardHeader>
-                            <CardContent>
-                                {wardRound.lab_orders &&
-                                wardRound.lab_orders.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {wardRound.lab_orders.map((order) => (
-                                            <div
-                                                key={order.id}
-                                                className="flex items-center justify-between rounded-lg border p-4 dark:border-gray-700"
-                                            >
-                                                <div>
-                                                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {order.lab_service.name}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                        Priority:{' '}
-                                                        {order.priority} •
-                                                        Status: {order.status}
-                                                    </p>
-                                                    {order.special_instructions && (
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {
-                                                                order.special_instructions
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                {wardRound.status ===
-                                                    'in_progress' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            setDeleteDialogState(
-                                                                {
-                                                                    open: true,
-                                                                    type: 'laborder',
-                                                                    id: order.id,
-                                                                },
-                                                            )
-                                                        }
-                                                    >
-                                                        Remove
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                                        <TestTube className="mx-auto mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" />
-                                        <p className="text-lg font-medium">
-                                            No lab orders added
-                                        </p>
-                                        <p className="mt-2 text-sm">
-                                            Click "Order Lab Test" to add lab
-                                            orders
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <LabOrdersSection
+                            labOrders={wardRound.lab_orders || []}
+                            isEditable={wardRound.status === 'in_progress'}
+                            showDialog={showLabOrderDialog}
+                            setShowDialog={setShowLabOrderDialog}
+                            selectedService={selectedLabService}
+                            setSelectedService={setSelectedLabService}
+                            labOrderData={labOrderData}
+                            setLabOrderData={setLabOrderData}
+                            onSubmit={handleLabOrderSubmit}
+                            onDelete={(id) =>
+                                setDeleteDialogState({
+                                    open: true,
+                                    type: 'laborder',
+                                    id,
+                                })
+                            }
+                            processing={labOrderProcessing}
+                            orderableType="ward_round"
+                            orderableId={wardRound.id}
+                            admissionId={admission.id}
+                        />
                     </TabsContent>
 
                     {/* Theatre Procedures Tab */}
