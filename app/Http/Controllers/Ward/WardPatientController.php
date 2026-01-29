@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ward;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bed;
+use App\Models\DeliveryRecord;
 use App\Models\PatientAdmission;
 use App\Models\VitalsSchedule;
 use App\Models\Ward as WardModel;
@@ -99,6 +100,23 @@ class WardPatientController extends Controller
             );
         });
 
+        // Check if this is a maternity ward admission
+        $isMaternityWard = $ward->code === 'MATERNITY-WARD';
+
+        // Load delivery records if maternity ward
+        $deliveryRecords = [];
+        if ($isMaternityWard) {
+            $deliveryRecords = $admission->deliveryRecords()
+                ->with(['recordedBy:id,name', 'lastEditedBy:id,name'])
+                ->orderBy('delivery_date', 'desc')
+                ->get()
+                ->map(function ($record) {
+                    return array_merge($record->toArray(), [
+                        'delivery_mode_label' => $record->delivery_mode_label,
+                    ]);
+                });
+        }
+
         return Inertia::render('Ward/PatientShow', [
             'admission' => $admission,
             'availableBeds' => $availableBeds,
@@ -116,6 +134,9 @@ class WardPatientController extends Controller
             'availableWards' => WardModel::active()
                 ->where('id', '!=', $ward->id)
                 ->get(['id', 'name', 'code', 'available_beds']),
+            'is_maternity_ward' => $isMaternityWard,
+            'delivery_records' => $deliveryRecords,
+            'delivery_modes' => DeliveryRecord::DELIVERY_MODES,
         ]);
     }
 

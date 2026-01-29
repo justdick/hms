@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admission\AdmissionController;
 use App\Http\Controllers\Vitals\VitalSignController;
 use App\Http\Controllers\Ward\BedAssignmentController;
+use App\Http\Controllers\Ward\DeliveryRecordController;
 use App\Http\Controllers\Ward\MedicationAdministrationController;
 use App\Http\Controllers\Ward\NursingNoteController;
 use App\Http\Controllers\Ward\VitalsAlertController;
@@ -55,6 +56,11 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::put('/{admission}/nursing-notes/{nursingNote}', [NursingNoteController::class, 'update'])->name('nursing-notes.update');
     Route::delete('/{admission}/nursing-notes/{nursingNote}', [NursingNoteController::class, 'destroy'])->name('nursing-notes.destroy');
 
+    // Delivery Records (Maternity Ward only)
+    Route::post('/{admission}/delivery-records', [DeliveryRecordController::class, 'store'])->name('delivery-records.store');
+    Route::put('/delivery-records/{deliveryRecord}', [DeliveryRecordController::class, 'update'])->name('delivery-records.update');
+    Route::delete('/delivery-records/{deliveryRecord}', [DeliveryRecordController::class, 'destroy'])->name('delivery-records.destroy');
+
     // Medication Administration (on-demand recording)
     Route::get('/{admission}/medications', [MedicationAdministrationController::class, 'index'])->name('medications.index');
     Route::post('/{admission}/medications', [MedicationAdministrationController::class, 'store'])->name('medications.store');
@@ -105,9 +111,11 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
     Route::delete('/{admission}/ward-rounds/{wardRound}/diagnoses/{diagnosis}', [WardRoundController::class, 'removeDiagnosis'])->name('ward-rounds.diagnoses.destroy');
 
     Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions', [WardRoundController::class, 'addPrescription'])->name('ward-rounds.prescriptions.store');
+    Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions/batch', [WardRoundController::class, 'addBatchPrescriptions'])->name('ward-rounds.prescriptions.store-batch');
     Route::delete('/{admission}/ward-rounds/{wardRound}/prescriptions/{prescription}', [WardRoundController::class, 'removePrescription'])->name('ward-rounds.prescriptions.destroy');
 
     Route::post('/{admission}/ward-rounds/{wardRound}/lab-orders', [WardRoundController::class, 'addLabOrder'])->name('ward-rounds.lab-orders.store');
+    Route::post('/{admission}/ward-rounds/{wardRound}/lab-orders/batch', [WardRoundController::class, 'addBatchLabOrders'])->name('ward-rounds.lab-orders.store-batch');
     Route::delete('/{admission}/ward-rounds/{wardRound}/lab-orders/{labOrder}', [WardRoundController::class, 'removeLabOrder'])->name('ward-rounds.lab-orders.destroy');
 
     // Procedure management (Theatre tab)

@@ -158,6 +158,19 @@ class PatientAdmission extends Model
         return $this->hasMany(WardTransfer::class);
     }
 
+    public function deliveryRecords(): HasMany
+    {
+        return $this->hasMany(DeliveryRecord::class);
+    }
+
+    /**
+     * Check if this admission is in the maternity ward
+     */
+    public function isMaternityWard(): bool
+    {
+        return $this->ward && strtoupper($this->ward->code) === 'MAT';
+    }
+
     public function scopeActive($query): void
     {
         $query->where('status', 'admitted');

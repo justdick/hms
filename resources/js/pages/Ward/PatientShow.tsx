@@ -37,6 +37,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
+import { DeliveryRecordTab } from '@/components/Ward/DeliveryRecordTab';
 import { DiscontinueMedicationModal } from '@/components/Ward/DiscontinueMedicationModal';
 import { LabsTab } from '@/components/Ward/LabsTab';
 import { MARTable } from '@/components/Ward/MARTable';
@@ -66,6 +67,7 @@ import {
     AlertTriangle,
     ArrowLeft,
     ArrowRightLeft,
+    Baby,
     Bed as BedIcon,
     Calendar,
     CheckCircle2,
@@ -382,6 +384,33 @@ interface Props {
         code: string;
         available_beds: number;
     }>;
+    is_maternity_ward?: boolean;
+    delivery_records?: Array<{
+        id: number;
+        delivery_date: string;
+        gestational_age?: string;
+        parity?: string;
+        delivery_mode: string;
+        delivery_mode_label: string;
+        outcomes: Array<{
+            time_of_delivery: string;
+            sex: 'male' | 'female' | 'unknown';
+            apgar_1min?: number;
+            apgar_5min?: number;
+            apgar_10min?: number;
+            birth_weight?: number;
+            head_circumference?: number;
+            full_length?: number;
+            notes?: string;
+        }>;
+        surgical_notes?: string;
+        notes?: string;
+        recorded_by?: { id: number; name: string };
+        last_edited_by?: { id: number; name: string };
+        created_at: string;
+        updated_at: string;
+    }>;
+    delivery_modes?: Record<string, string>;
 }
 
 const NOTE_TYPES = [
@@ -410,6 +439,9 @@ export default function WardPatientShow({
     can_update_ward_round = false,
     can_view_ward_rounds = false,
     availableWards = [],
+    is_maternity_ward = false,
+    delivery_records = [],
+    delivery_modes = {},
 }: Props) {
     const { auth, features } = usePage<SharedData>().props;
     const canDischarge = auth.permissions?.admissions?.discharge ?? false;
@@ -1018,7 +1050,7 @@ export default function WardPatientShow({
                     defaultValue="overview"
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-7 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
+                    <TabsList className={`grid w-full gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700 ${is_maternity_ward ? 'grid-cols-8' : 'grid-cols-7'}`}>
                         <TabsTrigger
                             value="overview"
                             className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-slate-50 text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300"
@@ -1078,6 +1110,20 @@ export default function WardPatientShow({
                             <FileText className="h-4 w-4" />
                             Nursing Notes
                         </TabsTrigger>
+                        {is_maternity_ward && (
+                            <TabsTrigger
+                                value="delivery"
+                                className="flex items-center gap-2 rounded-md border-b-2 border-transparent bg-pink-50 text-pink-700 shadow-none transition-all hover:bg-pink-100 data-[state=active]:border-pink-600 data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700 data-[state=active]:shadow-none dark:bg-pink-950 dark:text-pink-300 dark:hover:bg-pink-900 dark:data-[state=active]:border-pink-400 dark:data-[state=active]:bg-pink-900 dark:data-[state=active]:text-pink-300"
+                            >
+                                <Baby className="h-4 w-4" />
+                                Delivery
+                                {delivery_records.length > 0 && (
+                                    <Badge variant="secondary" className="ml-1">
+                                        {delivery_records.length}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        )}
                         {can_view_ward_rounds && (
                             <TabsTrigger
                                 value="rounds"
@@ -1413,6 +1459,17 @@ export default function WardPatientShow({
                     {allLabOrders.length > 0 && (
                         <TabsContent value="labs">
                             <LabsTab labOrders={allLabOrders} />
+                        </TabsContent>
+                    )}
+
+                    {/* Delivery Tab - Maternity Ward Only */}
+                    {is_maternity_ward && (
+                        <TabsContent value="delivery">
+                            <DeliveryRecordTab
+                                admissionId={admission.id}
+                                deliveryRecords={delivery_records}
+                                deliveryModes={delivery_modes}
+                            />
                         </TabsContent>
                     )}
 
