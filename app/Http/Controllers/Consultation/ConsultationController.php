@@ -241,7 +241,7 @@ class ConsultationController extends Controller
 
         $consultation->load([
             'patientCheckin.patient',
-            'patientCheckin.patient.activeAdmission.ward',
+            'patientCheckin.patient.activeAdmissions.ward',
             'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
             'patientCheckin.department',
             'patientCheckin.vitalSigns' => function ($query) {
@@ -254,6 +254,7 @@ class ConsultationController extends Controller
             'labOrders.orderedBy:id,name',
             'procedures.procedureType',
             'procedures.doctor:id,name',
+            'patientAdmission:id,consultation_id,ward_id,status', // Load admission to check if consultation already has one
         ]);
 
         // Get patient history

@@ -255,6 +255,7 @@ interface PatientAdmission {
 
 interface PatientWithAdmission extends Patient {
     active_admission?: PatientAdmission;
+    active_admissions?: PatientAdmission[];
 }
 
 interface ProcedureType {
@@ -315,6 +316,12 @@ interface Consultation {
     prescriptions: Prescription[];
     lab_orders: LabOrder[];
     procedures?: ConsultationProcedure[];
+    patient_admission?: {
+        id: number;
+        consultation_id: number;
+        ward_id: number;
+        status: string;
+    };
 }
 
 interface Ward {
@@ -1107,217 +1114,72 @@ export default function ConsultationShow({
                     checkinId={consultation.patient_checkin.id}
                 />
 
-                {/* Admission Context Banner */}
-                {consultation.patient_checkin.patient.active_admission && (
-                    <div className="rounded-lg border-l-4 border-blue-600 bg-blue-50 p-4 shadow-sm dark:border-blue-400 dark:bg-blue-950">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-3">
-                                <Bed className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                                            Currently Admitted Patient
-                                        </h3>
-                                        <Badge
-                                            variant="outline"
-                                            className="border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                                        >
-                                            {consultation.patient_checkin.patient.active_admission.status.toUpperCase()}
-                                        </Badge>
-                                    </div>
-                                    <div className="mt-2 grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
-                                        <div className="flex items-center gap-2">
-                                            <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                            <div>
-                                                <span className="text-blue-700 dark:text-blue-300">
-                                                    Ward:{' '}
-                                                </span>
-                                                <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                    {
-                                                        consultation
-                                                            .patient_checkin
-                                                            .patient
-                                                            .active_admission
-                                                            .ward.name
-                                                    }
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {consultation.patient_checkin.patient
-                                            .active_admission.bed_number && (
-                                            <div className="flex items-center gap-2">
-                                                <Bed className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                <div>
-                                                    <span className="text-blue-700 dark:text-blue-300">
-                                                        Bed:{' '}
-                                                    </span>
-                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .active_admission
-                                                                .bed_number
-                                                        }
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                            <div>
-                                                <span className="text-blue-700 dark:text-blue-300">
-                                                    Admitted:{' '}
-                                                </span>
-                                                <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                    {new Date(
-                                                        consultation
-                                                            .patient_checkin
-                                                            .patient
-                                                            .active_admission
-                                                            .admitted_at,
-                                                    ).toLocaleDateString(
-                                                        'en-US',
-                                                        {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                        },
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {consultation.patient_checkin.patient
-                                        .active_admission
-                                        .latest_ward_round?.[0] && (
-                                        <div className="mt-3 rounded border border-blue-200 bg-white p-3 dark:border-blue-800 dark:bg-blue-900">
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                    Latest Ward Round
-                                                </span>
-                                                <span className="text-blue-600 dark:text-blue-400">
-                                                    by Dr.{' '}
-                                                    {
-                                                        consultation
-                                                            .patient_checkin
-                                                            .patient
-                                                            .active_admission
-                                                            .latest_ward_round[0]
-                                                            ?.doctor?.name
-                                                    }
-                                                </span>
-                                                <span className="text-xs text-blue-500 dark:text-blue-400">
-                                                    •{' '}
-                                                    {formatDateTime(
-                                                        consultation
-                                                            .patient_checkin
-                                                            .patient
-                                                            .active_admission
-                                                            .latest_ward_round[0]
-                                                            ?.created_at || '',
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <p className="mt-2 text-sm text-blue-800 dark:text-blue-200">
-                                                {
-                                                    consultation.patient_checkin
-                                                        .patient
-                                                        .active_admission
-                                                        .latest_ward_round[0]
-                                                        ?.notes
-                                                }
-                                            </p>
-                                        </div>
-                                    )}
-                                    {consultation.patient_checkin.patient
-                                        .active_admission.latest_vital_signs &&
+                {/* Admission Context Banner - Multiple Admissions */}
+                {consultation.patient_checkin.patient.active_admissions &&
+                    consultation.patient_checkin.patient.active_admissions
+                        .length > 0 && (
+                        <div className="rounded-lg border-l-4 border-blue-600 bg-blue-50 p-4 shadow-sm dark:border-blue-400 dark:bg-blue-950">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Bed className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                                    Currently Admitted Patient
+                                </h3>
+                                <Badge
+                                    variant="outline"
+                                    className="border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                                >
+                                    {
                                         consultation.patient_checkin.patient
-                                            .active_admission.latest_vital_signs
-                                            .length > 0 && (
-                                            <div className="mt-2 flex items-center gap-4 text-sm">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Heart className="h-4 w-4 text-red-500 dark:text-red-400" />
-                                                    <span className="text-blue-700 dark:text-blue-300">
-                                                        BP:{' '}
-                                                    </span>
-                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                        {Math.round(
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .active_admission
-                                                                .latest_vital_signs[0]
-                                                                .blood_pressure_systolic ??
-                                                                0,
-                                                        )}
-                                                        /
-                                                        {Math.round(
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .active_admission
-                                                                .latest_vital_signs[0]
-                                                                .blood_pressure_diastolic ??
-                                                                0,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Activity className="h-4 w-4 text-green-500 dark:text-green-400" />
-                                                    <span className="text-blue-700 dark:text-blue-300">
-                                                        HR:{' '}
-                                                    </span>
-                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .active_admission
-                                                                .latest_vital_signs[0]
-                                                                .pulse_rate
-                                                        }{' '}
-                                                        bpm
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Activity className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                                                    <span className="text-blue-700 dark:text-blue-300">
-                                                        Temp:{' '}
-                                                    </span>
-                                                    <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                        {
-                                                            consultation
-                                                                .patient_checkin
-                                                                .patient
-                                                                .active_admission
-                                                                .latest_vital_signs[0]
-                                                                .temperature
-                                                        }
-                                                        °C
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                </div>
+                                            .active_admissions.length
+                                    }{' '}
+                                    Active{' '}
+                                    {consultation.patient_checkin.patient
+                                        .active_admissions.length === 1
+                                        ? 'Admission'
+                                        : 'Admissions'}
+                                </Badge>
                             </div>
-                            <Button
-                                onClick={() =>
-                                    router.visit(
-                                        `/wards/${consultation.patient_checkin.patient.active_admission?.ward.id}`,
-                                    )
-                                }
-                                variant="outline"
-                                size="sm"
-                                className="border-blue-600 text-blue-600 hover:bg-blue-100 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900"
-                            >
-                                <Bed className="mr-2 h-4 w-4" />
-                                View Ward Details
-                            </Button>
+                            <div className="flex flex-wrap gap-3">
+                                {consultation.patient_checkin.patient.active_admissions.map(
+                                    (admission) => (
+                                        <div
+                                            key={admission.id}
+                                            className="flex items-center gap-3 rounded-lg border border-blue-200 bg-white px-4 py-2 dark:border-blue-800 dark:bg-blue-900"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                    {admission.ward.name}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                                                <Clock className="h-3.5 w-3.5" />
+                                                {new Date(
+                                                    admission.admitted_at,
+                                                ).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                })}
+                                            </div>
+                                            <Button
+                                                onClick={() =>
+                                                    router.visit(
+                                                        `/wards/${admission.ward.id}`,
+                                                    )
+                                                }
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 border-blue-600 px-2 text-xs text-blue-600 hover:bg-blue-100 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-800"
+                                            >
+                                                <Bed className="mr-1 h-3 w-3" />
+                                                View Ward Details
+                                            </Button>
+                                        </div>
+                                    ),
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                 {/* Quick Actions */}
                 <div className="mb-6 flex items-center justify-between gap-4">
@@ -1334,9 +1196,7 @@ export default function ConsultationShow({
                             }
                             allergies={patientHistory?.allergies || []}
                         />
-                        {isEditable &&
-                            !consultation.patient_checkin.patient
-                                .active_admission && (
+                        {isEditable && (
                                 <>
                                     <Button
                                         onClick={() =>
@@ -1347,6 +1207,9 @@ export default function ConsultationShow({
                                     >
                                         Complete Consultation
                                     </Button>
+                                    {/* Only show Admit and Transfer if this consultation doesn't already have an admission */}
+                                    {!consultation.patient_admission && (
+                                    <>
                                     <Dialog
                                         open={showAdmissionModal}
                                         onOpenChange={setShowAdmissionModal}
@@ -1491,7 +1354,7 @@ export default function ConsultationShow({
                                             </form>
                                         </DialogContent>
                                     </Dialog>
-
+                                    
                                     <Dialog
                                         open={showTransferModal}
                                         onOpenChange={setShowTransferModal}
@@ -1624,6 +1487,8 @@ export default function ConsultationShow({
                                             </form>
                                         </DialogContent>
                                     </Dialog>
+                                    </>
+                                    )}
                                 </>
                             )}
                     </div>

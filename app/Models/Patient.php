@@ -67,6 +67,14 @@ class Patient extends Model
         return $this->hasOne(PatientAdmission::class)->where('status', 'admitted');
     }
 
+    /**
+     * Get all active admissions for the patient (supports multiple concurrent admissions).
+     */
+    public function activeAdmissions(): HasMany
+    {
+        return $this->hasMany(PatientAdmission::class)->where('status', 'admitted');
+    }
+
     public function insurancePlans(): HasMany
     {
         return $this->hasMany(PatientInsurance::class);
