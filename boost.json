@@ -3,10 +3,18 @@
         "claude_code",
         "cursor"
     ],
-    "editors": [
-        "claude_code",
-        "cursor",
-        "vscode"
+    "guidelines": true,
+    "herd_mcp": false,
+    "mcp": true,
+    "packages": [
+        "laravel/fortify"
     ],
-    "guidelines": []
+    "sail": false,
+    "skills": [
+        "wayfinder-development",
+        "pest-testing",
+        "inertia-react-development",
+        "tailwindcss-development",
+        "developing-with-fortify"
+    ]
 }

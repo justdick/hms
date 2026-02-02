@@ -36,16 +36,9 @@ class AdmissionController extends Controller
                 ->with('info', "Patient already admitted. Admission Number: {$existingAdmission->admission_number}");
         }
 
-        // Also check if patient has any active admission (regardless of consultation)
-        $activeAdmission = PatientAdmission::where('patient_id', $consultation->patientCheckin->patient_id)
-            ->where('status', 'admitted')
-            ->first();
-
-        if ($activeAdmission) {
-            return redirect()->back()->withErrors([
-                'admission' => "Patient already has an active admission ({$activeAdmission->admission_number}). Please discharge first before creating a new admission.",
-            ]);
-        }
+        // Note: We allow multiple concurrent admissions for the same patient
+        // (e.g., patient admitted to Female Ward, then needs new admission from today's consultation)
+        // The previous admission will be discharged separately when appropriate.
 
         $ward = Ward::findOrFail($request->ward_id);
 
