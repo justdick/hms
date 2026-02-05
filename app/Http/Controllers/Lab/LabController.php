@@ -19,6 +19,16 @@ class LabController extends Controller
         $category = $request->query('category');
         $search = $request->query('search');
         $perPage = $request->query('per_page', 5);
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $datePreset = $request->query('date_preset');
+
+        // Default to 'today' filter when no date parameters are provided
+        if (!$dateFrom && !$dateTo && !$datePreset) {
+            $datePreset = 'today';
+            $dateFrom = now()->toDateString();
+            $dateTo = now()->toDateString();
+        }
 
         // Build base query for filtering
         $baseQuery = LabOrder::query();
@@ -61,6 +71,14 @@ class LabController extends Controller
             });
         }
 
+        // Date range filter
+        if ($dateFrom) {
+            $baseQuery->whereDate('ordered_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $baseQuery->whereDate('ordered_at', '<=', $dateTo);
+        }
+
         // Get distinct orderable combinations with pagination at DB level
         $distinctOrderables = (clone $baseQuery)
             ->select('orderable_type', 'orderable_id')
@@ -73,12 +91,12 @@ class LabController extends Controller
 
         // Get the orderable keys for this page
         $orderableKeys = $distinctOrderables->getCollection()->map(function ($item) {
-            return $item->orderable_type.'_'.$item->orderable_id;
+            return $item->orderable_type . '_' . $item->orderable_id;
         })->toArray();
 
         // Fetch full lab orders only for this page's orderables
         $labOrders = collect();
-        if (! empty($orderableKeys)) {
+        if (!empty($orderableKeys)) {
             $labOrders = (clone $baseQuery)
                 ->with([
                     'labService:id,name,code,category,sample_type,turnaround_time',
@@ -103,12 +121,12 @@ class LabController extends Controller
 
         // Group and transform the orders
         $groupedData = $labOrders->groupBy(function ($order) {
-            return $order->orderable_type.'_'.$order->orderable_id;
+            return $order->orderable_type . '_' . $order->orderable_id;
         })->map(function ($orders) {
             $firstOrder = $orders->first();
             $orderable = $firstOrder->orderable;
 
-            if (! $orderable) {
+            if (!$orderable) {
                 return null;
             }
 
@@ -119,12 +137,12 @@ class LabController extends Controller
                 $orderableId = $orderable->id;
             } else {
                 $patient = $orderable->patientAdmission?->patient;
-                $context = $orderable->presenting_complaint ?? 'Ward Round - Day '.$orderable->day_number;
+                $context = $orderable->presenting_complaint ?? 'Ward Round - Day ' . $orderable->day_number;
                 $orderableType = 'ward_round';
                 $orderableId = $orderable->id;
             }
 
-            if (! $patient) {
+            if (!$patient) {
                 return null;
             }
 
@@ -148,7 +166,7 @@ class LabController extends Controller
                 'context' => $context,
                 'ordered_at' => $firstOrder->ordered_at,
                 'test_count' => $orders->count(),
-                'tests' => $orders->map(fn ($order) => [
+                'tests' => $orders->map(fn($order) => [
                     'id' => $order->id,
                     'name' => $order->labService->name,
                     'code' => $order->labService->code,
@@ -170,7 +188,9 @@ class LabController extends Controller
             'sample_collected' => LabOrder::byStatus('sample_collected')->count(),
             'in_progress' => LabOrder::byStatus('in_progress')->count(),
             'completed_today' => LabOrder::byStatus('completed')
-                ->whereDate('result_entered_at', today())
+                ->when($dateFrom, fn($q) => $q->whereDate('result_entered_at', '>=', $dateFrom))
+                ->when($dateTo, fn($q) => $q->whereDate('result_entered_at', '<=', $dateTo))
+                ->when(!$dateFrom && !$dateTo, fn($q) => $q->whereDate('result_entered_at', today()))
                 ->count(),
         ];
 
@@ -189,6 +209,9 @@ class LabController extends Controller
                 'priority' => $priority,
                 'category' => $category,
                 'search' => $search,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'date_preset' => $datePreset,
             ],
         ]);
     }
@@ -201,16 +224,27 @@ class LabController extends Controller
             'labOrders' => function ($query) {
                 // Don't show cancelled orders by default
                 $query->where('status', '!=', 'cancelled')
-                    ->with(['labService:id,name,code,price,test_parameters', 'orderedBy:id,name']);
+                    ->with(['labService:id,name,code,price,test_parameters,category', 'orderedBy:id,name']);
             },
         ]);
 
         // Get all lab orders for this consultation
         $labOrders = $consultation->labOrders;
 
+        // Get hospital info for printing from theme settings
+        $themeService = app(\App\Services\ThemeSettingService::class);
+        $theme = $themeService->getTheme();
+        $branding = $theme['branding'] ?? [];
+
+        $hospital = [
+            'name' => $branding['hospitalName'] ?? 'Hospital Management System',
+            'logo_url' => !empty($branding['logoUrl']) ? asset('storage/' . $branding['logoUrl']) : null,
+        ];
+
         return Inertia::render('Lab/ConsultationShow', [
             'consultation' => $consultation,
             'labOrders' => $labOrders,
+            'hospital' => $hospital,
         ]);
     }
 
@@ -224,32 +258,57 @@ class LabController extends Controller
             'labOrders' => function ($query) {
                 // Don't show cancelled orders by default
                 $query->where('status', '!=', 'cancelled')
-                    ->with(['labService:id,name,code,price,test_parameters', 'orderedBy:id,name']);
+                    ->with(['labService:id,name,code,price,test_parameters,category', 'orderedBy:id,name']);
             },
         ]);
 
         // Get all lab orders for this ward round
         $labOrders = $wardRound->labOrders;
 
+        // Get hospital info for printing from theme settings
+        $themeService = app(\App\Services\ThemeSettingService::class);
+        $theme = $themeService->getTheme();
+        $branding = $theme['branding'] ?? [];
+
+        $hospital = [
+            'name' => $branding['hospitalName'] ?? 'Hospital Management System',
+            'logo_url' => !empty($branding['logoUrl']) ? asset('storage/' . $branding['logoUrl']) : null,
+        ];
+
         return Inertia::render('Lab/WardRoundShow', [
             'wardRound' => $wardRound,
             'labOrders' => $labOrders,
+            'hospital' => $hospital,
         ]);
     }
 
     public function show(LabOrder $labOrder): Response
     {
         $labOrder->load([
-            'consultation.patientCheckin.patient:id,patient_number,first_name,last_name,phone_number,date_of_birth,gender',
-            'consultation:id,patient_checkin_id,presenting_complaint,history_presenting_complaint,created_at',
+            'orderable' => function ($morphTo) {
+                $morphTo->morphWith([
+                    \App\Models\Consultation::class => [
+                        'patientCheckin.patient:id,patient_number,first_name,last_name,phone_number,date_of_birth,gender',
+                    ],
+                    \App\Models\WardRound::class => [
+                        'patientAdmission.patient:id,patient_number,first_name,last_name,phone_number,date_of_birth,gender',
+                    ],
+                ]);
+            },
             'labService',
             'orderedBy:id,name',
         ]);
+
+        // For backward compatibility, add consultation property if orderable is a Consultation
+        if ($labOrder->orderable instanceof \App\Models\Consultation) {
+            $labOrder->setRelation('consultation', $labOrder->orderable);
+        }
 
         return Inertia::render('Lab/Show', [
             'labOrder' => $labOrder,
         ]);
     }
+
 
     public function collectSample(LabOrder $labOrder): RedirectResponse
     {
@@ -264,7 +323,7 @@ class LabController extends Controller
 
     public function startProcessing(LabOrder $labOrder): RedirectResponse
     {
-        if (! in_array($labOrder->status, ['ordered', 'sample_collected'])) {
+        if (!in_array($labOrder->status, ['ordered', 'sample_collected'])) {
             return back()->with('error', 'Can only start processing for ordered or sample collected tests.');
         }
 
@@ -289,39 +348,9 @@ class LabController extends Controller
             $validated['result_notes'] ?? null
         );
 
-        // Check if there are other pending lab orders for the same patient
-        $patientId = null;
-        if ($labOrder->orderable instanceof \App\Models\Consultation) {
-            $patientId = $labOrder->orderable->patientCheckin?->patient_id;
-        } elseif ($labOrder->orderable instanceof \App\Models\WardRound) {
-            $patientId = $labOrder->orderable->patientAdmission?->patient_id;
-        }
-
-        if ($patientId) {
-            $nextPendingOrder = LabOrder::where('id', '!=', $labOrder->id)
-                ->whereIn('status', ['ordered', 'sample_collected', 'in_progress'])
-                ->where(function ($query) use ($patientId) {
-                    $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patientId) {
-                        $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patientId));
-                    })
-                        ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patientId) {
-                            $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patientId));
-                        });
-                })
-                ->orderByRaw("FIELD(priority, 'stat', 'urgent', 'routine')")
-                ->first();
-
-            if ($nextPendingOrder) {
-                return redirect()
-                    ->route('lab.orders.show', $nextPendingOrder)
-                    ->with('success', 'Test results entered successfully. Here is the next pending test for this patient.');
-            }
-        }
-
-        return redirect()
-            ->route('lab.index')
-            ->with('success', 'Test results entered successfully.');
+        return back()->with('success', 'Test results entered successfully.');
     }
+
 
     public function cancel(Request $request, LabOrder $labOrder): RedirectResponse
     {
@@ -335,7 +364,7 @@ class LabController extends Controller
 
         $labOrder->update([
             'status' => 'cancelled',
-            'result_notes' => 'Cancelled: '.$validated['reason'],
+            'result_notes' => 'Cancelled: ' . $validated['reason'],
         ]);
 
         return back()->with('success', 'Lab order cancelled successfully.');

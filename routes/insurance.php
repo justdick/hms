@@ -35,7 +35,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::get('coverage-rules/create', function () {
         $planId = request()->query('plan');
 
-        return redirect('/admin/pricing-dashboard'.($planId ? "?plan={$planId}" : ''));
+        return redirect('/admin/pricing-dashboard' . ($planId ? "?plan={$planId}" : ''));
     })->name('coverage-rules.create');
     Route::get('coverage-rules/{coverageRule}/edit', function () {
         return redirect('/admin/pricing-dashboard');
@@ -107,6 +107,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::post('batches/{batch}/submit', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'markSubmitted'])->name('batches.submit');
     Route::post('batches/{batch}/response', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'recordResponse'])->name('batches.response');
     Route::get('batches/{batch}/export', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'exportXml'])->name('batches.export');
+    Route::get('batches/{batch}/export-excel', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'exportExcel'])->name('batches.export-excel');
 
     // Claim Export (dedicated controller)
     Route::get('claims/export-batch/{batch}', [ClaimExportController::class, 'exportXml'])->name('claims.export-batch');

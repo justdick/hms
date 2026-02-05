@@ -35,6 +35,7 @@ import {
     Clock,
     Download,
     FileCheck,
+    FileSpreadsheet,
     FileText,
     Lock,
     Package,
@@ -244,6 +245,10 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
         window.location.href = `/admin/insurance/batches/${batch.id}/export`;
     };
 
+    const handleExcelExport = () => {
+        window.location.href = `/admin/insurance/batches/${batch.id}/export-excel`;
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -331,8 +336,8 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                     <p className="font-medium text-green-600">
                                         {batch.approved_amount
                                             ? formatCurrency(
-                                                  batch.approved_amount,
-                                              )
+                                                batch.approved_amount,
+                                            )
                                             : '-'}
                                     </p>
                                 </div>
@@ -451,6 +456,16 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                     Export XML
                                 </Button>
                             )}
+                            {can.export && (
+                                <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    onClick={handleExcelExport}
+                                >
+                                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                    Export Excel
+                                </Button>
+                            )}
                             {can.submit && (
                                 <Button
                                     className="w-full"
@@ -541,7 +556,7 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                                     {formatDate(
                                                         item.claim
                                                             ?.date_of_attendance ||
-                                                            null,
+                                                        null,
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">

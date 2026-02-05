@@ -15,7 +15,8 @@ class InsuranceClaimService
 {
     public function __construct(
         protected InsuranceService $insuranceService
-    ) {}
+    ) {
+    }
 
     /**
      * NHIS Type of Attendance codes
@@ -64,7 +65,7 @@ class InsuranceClaimService
         int $patientId,
         int $patientInsuranceId,
         int $patientCheckinId,
-        string $typeOfService = 'OPD',
+        ?string $typeOfService = null,
         ?Carbon $dateOfAttendance = null
     ): InsuranceClaim {
         $patient = Patient::findOrFail($patientId);
@@ -72,6 +73,11 @@ class InsuranceClaimService
         $checkin = PatientCheckin::with(['department', 'consultation.doctor'])->findOrFail($patientCheckinId);
 
         $dateOfAttendance = $dateOfAttendance ?? now();
+
+        // Auto-detect type of service if not provided
+        if ($typeOfService === null) {
+            $typeOfService = $this->determineTypeOfService($checkin);
+        }
 
         // Determine specialty from department
         $specialtyAttended = $this->mapDepartmentToSpecialty($checkin->department);
@@ -85,7 +91,7 @@ class InsuranceClaimService
         // Create the claim with denormalized patient data
         return InsuranceClaim::create([
             'claim_check_code' => $claimCheckCode,
-            'folder_id' => $patientInsurance->folder_id_prefix.'-'.$patient->id,
+            'folder_id' => $patientInsurance->folder_id_prefix . '-' . $patient->id,
             'patient_id' => $patientId,
             'patient_insurance_id' => $patientInsuranceId,
             'patient_checkin_id' => $patientCheckinId,
@@ -103,12 +109,13 @@ class InsuranceClaimService
         ]);
     }
 
+
     /**
      * Map department to NHIS specialty code
      */
     protected function mapDepartmentToSpecialty($department): string
     {
-        if (! $department) {
+        if (!$department) {
             return 'OPDC';
         }
 
@@ -133,11 +140,36 @@ class InsuranceClaimService
     }
 
     /**
+     * Determine the type of service (inpatient/outpatient) for a check-in
+     * 
+     * A check-in is considered inpatient if:
+     * 1. It was created during an admission (created_during_admission = true)
+     * 2. The consultation from this check-in led to an admission (excluding legacy migrated data)
+     */
+    protected function determineTypeOfService(PatientCheckin $checkin): string
+    {
+        // Check if created during admission
+        if ($checkin->created_during_admission) {
+            return 'inpatient';
+        }
+
+        // Check if the consultation from this check-in led to an admission
+        // Exclude legacy admissions migrated from old system (migrated_from_mittag)
+        $ledToAdmission = \App\Models\PatientAdmission::where('migrated_from_mittag', false)
+            ->whereHas('consultation', function ($query) use ($checkin) {
+                $query->where('patient_checkin_id', $checkin->id);
+            })->exists();
+
+        return $ledToAdmission ? 'inpatient' : 'outpatient';
+    }
+
+
+    /**
      * Map visit type to NHIS attendance type code
      */
     protected function mapVisitTypeToAttendanceCode(?string $visitType): string
     {
-        if (! $visitType) {
+        if (!$visitType) {
             return 'EAE';
         }
 
@@ -416,7 +448,7 @@ class InsuranceClaimService
      */
     public function rejectClaim(InsuranceClaim $claim, string $rejectionReason): void
     {
-        if (! in_array($claim->status, ['submitted', 'pending_vetting', 'vetted'])) {
+        if (!in_array($claim->status, ['submitted', 'pending_vetting', 'vetted'])) {
             throw new \Exception('Cannot reject a claim in current status');
         }
 
@@ -449,7 +481,7 @@ class InsuranceClaimService
         float $paidAmount,
         ?Carbon $paymentDate = null
     ): void {
-        if (! in_array($claim->status, ['approved', 'partial'])) {
+        if (!in_array($claim->status, ['approved', 'partial'])) {
             throw new \Exception('Cannot mark claim as partial in current status');
         }
 
@@ -473,7 +505,7 @@ class InsuranceClaimService
 
         return [
             'claim_check_code' => $claim->claim_check_code,
-            'patient_name' => $claim->patient_surname.' '.$claim->patient_other_names,
+            'patient_name' => $claim->patient_surname . ' ' . $claim->patient_other_names,
             'membership_id' => $claim->membership_id,
             'status' => $claim->status,
             'total_items' => $items->count(),

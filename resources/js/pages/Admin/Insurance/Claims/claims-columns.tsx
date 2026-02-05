@@ -40,13 +40,13 @@ export interface InsuranceClaim {
     total_claim_amount: string;
     approved_amount: string;
     status:
-        | 'pending_vetting'
-        | 'vetted'
-        | 'submitted'
-        | 'approved'
-        | 'rejected'
-        | 'paid'
-        | 'partial';
+    | 'pending_vetting'
+    | 'vetted'
+    | 'submitted'
+    | 'approved'
+    | 'rejected'
+    | 'paid'
+    | 'partial';
     patient_insurance?: PatientInsurance;
     vetted_by_user?: {
         id: number;
@@ -111,198 +111,174 @@ export const createClaimsColumns = (
     onEditClaim: (claimId: number) => void,
     onDeleteClaim: (claimId: number) => void,
 ): ColumnDef<InsuranceClaim>[] => [
-    {
-        accessorKey: 'claim_check_code',
-        id: 'claim_check_code',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Claim Code
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            return (
-                <div className="font-mono text-sm font-medium">
-                    {row.original.claim_check_code}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'patient_full_name',
-        id: 'patient_full_name',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Patient
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            const claim = row.original;
-            return (
-                <div className="space-y-1">
-                    <div className="font-medium">{claim.patient_full_name}</div>
-                    <div className="text-sm text-muted-foreground">
-                        {claim.membership_id}
-                    </div>
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'folder_id',
-        id: 'folder_id',
-        header: 'Folder No.',
-        cell: ({ row }) => {
-            return (
-                <div className="font-mono text-sm">
-                    {row.original.folder_id || 'N/A'}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'date_of_attendance',
-        id: 'date_of_attendance',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Date of Attendance
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            return (
-                <div className="flex items-center gap-1 text-sm">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    {formatDate(row.original.date_of_attendance)}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'type_of_service',
-        id: 'type_of_service',
-        header: 'Service Type',
-        cell: ({ row }) => {
-            return (
-                <Badge variant="outline" className="capitalize">
-                    {row.original.type_of_service}
-                </Badge>
-            );
-        },
-        filterFn: (row, id, value) => {
-            return value.includes(row.getValue(id));
-        },
-    },
-    {
-        accessorKey: 'total_claim_amount',
-        id: 'total_claim_amount',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    className="w-full justify-end"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Claim Amount
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            return (
-                <div className="text-right font-medium">
-                    {formatCurrency(row.original.total_claim_amount)}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'status',
-        id: 'status',
-        header: 'Status',
-        cell: ({ row }) => {
-            const config = getStatusConfig(row.original.status);
-            return <Badge className={config.className}>{config.label}</Badge>;
-        },
-        filterFn: (row, id, value) => {
-            return value.includes(row.getValue(id));
-        },
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const claim = row.original;
-
-            return (
-                <div className="flex items-center justify-end gap-2">
-                    {claim.status === 'pending_vetting' && (
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => onVetClaim(claim.id)}
-                            aria-label={`Vet claim ${claim.claim_check_code}`}
-                        >
-                            <FileCheck className="mr-1 h-4 w-4" />
-                            Vet
-                        </Button>
-                    )}
-                    {claim.status === 'vetted' && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onEditClaim(claim.id)}
-                            aria-label={`Edit claim ${claim.claim_check_code}`}
-                        >
-                            <Pencil className="mr-1 h-4 w-4" />
-                            Edit
-                        </Button>
-                    )}
+        {
+            accessorKey: 'claim_check_code',
+            id: 'claim_check_code',
+            header: ({ column }) => {
+                return (
                     <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={() => onViewClaim(claim.id)}
-                        aria-label={`View claim ${claim.claim_check_code}`}
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
                     >
-                        <Eye className="h-4 w-4" />
+                        Claim Code
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
-                    {claim.status === 'pending_vetting' && (
+                );
+            },
+            cell: ({ row }) => {
+                return (
+                    <div className="font-mono text-sm font-medium">
+                        {row.original.claim_check_code}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'patient_full_name',
+            id: 'patient_full_name',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        Patient
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                const claim = row.original;
+                return (
+                    <div className="space-y-1">
+                        <div className="font-medium">{claim.patient_full_name}</div>
+                        <div className="text-sm text-muted-foreground">
+                            {claim.membership_id}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'folder_id',
+            id: 'folder_id',
+            header: 'Folder No.',
+            cell: ({ row }) => {
+                return (
+                    <div className="font-mono text-sm">
+                        {row.original.folder_id || 'N/A'}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'date_of_attendance',
+            id: 'date_of_attendance',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        Date of Attendance
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                return (
+                    <div className="flex items-center gap-1 text-sm">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {formatDate(row.original.date_of_attendance)}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'type_of_service',
+            id: 'type_of_service',
+            header: 'Service Type',
+            cell: ({ row }) => {
+                return (
+                    <Badge variant="outline" className="capitalize">
+                        {row.original.type_of_service}
+                    </Badge>
+                );
+            },
+            filterFn: (row, id, value) => {
+                return value.includes(row.getValue(id));
+            },
+        },
+
+        {
+            accessorKey: 'status',
+            id: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const config = getStatusConfig(row.original.status);
+                return <Badge className={config.className}>{config.label}</Badge>;
+            },
+            filterFn: (row, id, value) => {
+                return value.includes(row.getValue(id));
+            },
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => {
+                const claim = row.original;
+
+                return (
+                    <div className="flex items-center justify-end gap-2">
+                        {claim.status === 'pending_vetting' && (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => onVetClaim(claim.id)}
+                                aria-label={`Vet claim ${claim.claim_check_code}`}
+                            >
+                                <FileCheck className="mr-1 h-4 w-4" />
+                                Vet
+                            </Button>
+                        )}
+                        {claim.status === 'vetted' && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onEditClaim(claim.id)}
+                                aria-label={`Edit claim ${claim.claim_check_code}`}
+                            >
+                                <Pencil className="mr-1 h-4 w-4" />
+                                Edit
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onDeleteClaim(claim.id)}
-                            aria-label={`Delete claim ${claim.claim_check_code}`}
-                            className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                            onClick={() => onViewClaim(claim.id)}
+                            aria-label={`View claim ${claim.claim_check_code}`}
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                         </Button>
-                    )}
-                </div>
-            );
+                        {claim.status === 'pending_vetting' && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onDeleteClaim(claim.id)}
+                                aria-label={`Delete claim ${claim.claim_check_code}`}
+                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                );
+            },
         },
-    },
-];
+    ];

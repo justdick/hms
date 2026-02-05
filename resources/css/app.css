@@ -293,3 +293,46 @@
         animation: shake 0.4s ease-in-out;
     }
 }
+
+/* Global Print Styles */
+@media print {
+    /* Page setup */
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+
+    /* Hide the main application container */
+    #app {
+        display: none !important;
+    }
+
+    /* Show and properly position print containers */
+    .print-container {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        min-height: auto !important;
+        background: white !important;
+        color: black !important;
+    }
+
+    /* Ensure print colors are preserved */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Hide other non-print elements */
+    [data-radix-portal],
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Hide print container on screen */
+@media screen {
+    .print-container {
+        display: none !important;
+    }
+}

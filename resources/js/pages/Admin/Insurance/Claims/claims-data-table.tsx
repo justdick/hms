@@ -68,6 +68,8 @@ interface Filters {
     provider_id?: string;
     date_from?: string;
     date_to?: string;
+    date_preset?: string;
+    service_type?: string;
 }
 
 // Type for claim data with claim_check_code
@@ -111,6 +113,12 @@ const statusOptions = [
     { value: 'rejected', label: 'Rejected' },
     { value: 'paid', label: 'Paid' },
     { value: 'partial', label: 'Partial Payment' },
+];
+
+const serviceTypeOptions = [
+    { value: 'all', label: 'All Types' },
+    { value: 'outpatient', label: 'OPD' },
+    { value: 'inpatient', label: 'IPD' },
 ];
 
 export function ClaimsDataTable<TData, TValue>({
@@ -190,6 +198,17 @@ export function ClaimsDataTable<TData, TValue>({
         );
     };
 
+    const handleServiceTypeFilter = (serviceType: string) => {
+        router.get(
+            window.location.pathname,
+            {
+                ...filters,
+                service_type: serviceType === 'all' ? undefined : serviceType,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
     /**
      * Handle date filter changes from DateFilterPresets component.
      * Sends date_from and date_to to the server for filtering.
@@ -202,6 +221,7 @@ export function ClaimsDataTable<TData, TValue>({
                 ...filters,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
+                date_preset: dateFilter.preset || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -213,11 +233,11 @@ export function ClaimsDataTable<TData, TValue>({
             return {
                 from: filters.date_from,
                 to: filters.date_to,
-                preset: 'custom', // Assume custom if dates are set from URL
+                preset: filters.date_preset || 'custom', // Use preset from URL or fallback to custom
             };
         }
         return {};
-    }, [filters.date_from, filters.date_to]);
+    }, [filters.date_from, filters.date_to, filters.date_preset]);
 
     // Find prev/next links from pagination
     const prevLink = pagination.links.find((link) =>
@@ -274,6 +294,23 @@ export function ClaimsDataTable<TData, TValue>({
                     </SelectContent>
                 </Select>
 
+                {/* Service Type Filter (OPD/IPD) */}
+                <Select
+                    value={filters.service_type || 'all'}
+                    onValueChange={handleServiceTypeFilter}
+                >
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {serviceTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
                 {/* Date Filter - Requirements: 5.1, 5.4, 5.5, 5.7 */}
                 <DateFilterPresets
                     value={dateFilterValue}
@@ -320,10 +357,10 @@ export function ClaimsDataTable<TData, TValue>({
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext(),
-                                                  )}
+                                                    header.column.columnDef
+                                                        .header,
+                                                    header.getContext(),
+                                                )}
                                         </TableHead>
                                     );
                                 })}
@@ -346,7 +383,7 @@ export function ClaimsDataTable<TData, TValue>({
                                         className={cn(
                                             'hover:bg-muted/50',
                                             isGrouped &&
-                                                'border-l-2 border-l-blue-400 bg-blue-50/50 dark:bg-blue-950/20',
+                                            'border-l-2 border-l-blue-400 bg-blue-50/50 dark:bg-blue-950/20',
                                         )}
                                     >
                                         {row.getVisibleCells().map((cell) => (
@@ -371,9 +408,9 @@ export function ClaimsDataTable<TData, TValue>({
                                         <div>No claims found.</div>
                                         <div className="text-sm text-muted-foreground">
                                             {filters.search ||
-                                            filters.status ||
-                                            filters.date_from ||
-                                            filters.date_to
+                                                filters.status ||
+                                                filters.date_from ||
+                                                filters.date_to
                                                 ? 'Try adjusting your filters.'
                                                 : 'Insurance claims will appear here.'}
                                         </div>

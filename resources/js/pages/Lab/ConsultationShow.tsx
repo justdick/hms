@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PrintableLabResult } from '@/components/Lab/PrintableLabResult';
 import AppLayout from '@/layouts/app-layout';
 import lab from '@/routes/lab';
 import { Head, router } from '@inertiajs/react';
@@ -9,9 +10,11 @@ import {
     ArrowLeft,
     CheckCircle,
     FileText,
+    Printer,
     TestTube,
     Timer,
 } from 'lucide-react';
+import { useRef } from 'react';
 import {
     ConsultationTest,
     consultationTestColumns,
@@ -58,9 +61,15 @@ interface Consultation {
     created_at: string;
 }
 
+interface HospitalInfo {
+    name: string;
+    logo_url?: string;
+}
+
 interface Props {
     consultation: Consultation;
     labOrders: ConsultationTest[];
+    hospital: HospitalInfo;
 }
 
 const statusConfig = {
@@ -95,8 +104,10 @@ const statusConfig = {
     },
 };
 
-export default function ConsultationShow({ consultation, labOrders }: Props) {
+export default function ConsultationShow({ consultation, labOrders, hospital }: Props) {
     const patient = consultation.patient_checkin.patient;
+    const printRef = useRef<HTMLDivElement>(null);
+
     const statusCounts = labOrders.reduce(
         (acc, order) => {
             acc[order.status] = (acc[order.status] || 0) + 1;
@@ -105,12 +116,30 @@ export default function ConsultationShow({ consultation, labOrders }: Props) {
         {} as Record<string, number>,
     );
 
+    // Get completed tests for printing
+    const completedTests = labOrders.filter(order => order.status === 'completed');
+    const hasCompletedTests = completedTests.length > 0;
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    // Transform completed tests to print format
+    const printableResults = completedTests.map(test => ({
+        id: test.id,
+        test_name: test.lab_service.name,
+        test_code: test.lab_service.code,
+        category: test.lab_service.category || 'General',
+        result_values: test.result_values,
+        result_notes: test.result_notes,
+    }));
+
     return (
         <AppLayout
             breadcrumbs={[
-                { label: 'Laboratory', href: lab.index.url() },
+                { title: 'Laboratory', href: lab.index.url() },
                 {
-                    label: `Consultation #${consultation.id}`,
+                    title: `Consultation #${consultation.id}`,
                     href: lab.consultations.show.url({
                         consultation: consultation.id,
                     }),
@@ -126,63 +155,61 @@ export default function ConsultationShow({ consultation, labOrders }: Props) {
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={() => router.visit(lab.index.url())}
                         >
-                            <ArrowLeft className="mr-1 h-4 w-4" />
-                            Back to Lab Dashboard
+                            <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>
                             <h1 className="text-2xl font-bold">
-                                Lab Tests - {patient.first_name}{' '}
+                                Lab Tests for {patient.first_name}{' '}
                                 {patient.last_name}
                             </h1>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <span>
-                                    {labOrders.length} test
-                                    {labOrders.length !== 1 ? 's' : ''} ordered
-                                </span>
-                                <span>•</span>
-                                {patient.active_insurance ? (
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                                    >
-                                        {
-                                            patient.active_insurance.plan
-                                                .provider.code
-                                        }
-                                    </Badge>
-                                ) : (
-                                    <Badge
-                                        variant="outline"
-                                        className="text-muted-foreground"
-                                    >
-                                        Cash
-                                    </Badge>
+                            <p className="text-muted-foreground">
+                                {labOrders.length} test
+                                {labOrders.length !== 1 ? 's' : ''} ordered
+                                {patient.active_insurance && (
+                                    <span className="ml-2">
+                                        •{' '}
+                                        <Badge variant="outline">
+                                            {
+                                                patient.active_insurance.plan
+                                                    .provider.name
+                                            }
+                                        </Badge>
+                                    </span>
                                 )}
-                            </div>
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* Status Summary and Print Button */}
+                    <div className="flex flex-wrap items-center gap-2">
                         {Object.entries(statusCounts).map(([status, count]) => {
                             const config =
                                 statusConfig[
-                                    status as keyof typeof statusConfig
+                                status as keyof typeof statusConfig
                                 ];
                             if (!config) return null;
-                            const Icon = config.icon;
                             return (
                                 <Badge
                                     key={status}
-                                    className={config.className}
                                     variant="outline"
+                                    className={config.className}
                                 >
-                                    <Icon className="mr-1 h-3 w-3" />
                                     {count} {config.label}
                                 </Badge>
                             );
                         })}
+                        {hasCompletedTests && (
+                            <Button
+                                size="sm"
+                                onClick={handlePrint}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                <Printer className="mr-1 h-4 w-4" />
+                                Print Results
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -199,6 +226,16 @@ export default function ConsultationShow({ consultation, labOrders }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Printable Component - Uses Portal to render directly in body */}
+            {hasCompletedTests && (
+                <PrintableLabResult
+                    ref={printRef}
+                    hospital={hospital}
+                    patient={patient}
+                    results={printableResults}
+                />
+            )}
         </AppLayout>
     );
 }

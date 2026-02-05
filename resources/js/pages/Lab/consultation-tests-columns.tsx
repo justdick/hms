@@ -73,12 +73,12 @@ export interface ConsultationTest {
     lab_service: LabService;
     ordered_at: string;
     status:
-        | 'ordered'
-        | 'sample_collected'
-        | 'in_progress'
-        | 'completed'
-        | 'cancelled'
-        | 'external_referral';
+    | 'ordered'
+    | 'sample_collected'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled'
+    | 'external_referral';
     priority: 'routine' | 'urgent' | 'stat';
     special_instructions?: string;
     sample_collected_at?: string;
@@ -150,9 +150,26 @@ const formatDateTime = (dateString: string) => {
 const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
     const [showResultsDialog, setShowResultsDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+    // Transform saved results to simple key-value format for the form
+    // Saved format is {param: {value: x, ...}} but form needs {param: x}
+    const getInitialResultValues = () => {
+        if (!test.result_values) return {};
+
+        const result: Record<string, string | number | boolean> = {};
+        for (const [key, val] of Object.entries(test.result_values)) {
+            if (val && typeof val === 'object' && 'value' in (val as object)) {
+                result[key] = (val as { value: string | number | boolean }).value;
+            } else {
+                result[key] = val as string | number | boolean;
+            }
+        }
+        return result;
+    };
+
     const [resultValues, setResultValues] = useState<
         Record<string, string | number | boolean>
-    >(test.result_values || {});
+    >(getInitialResultValues());
     const [resultNotes, setResultNotes] = useState(test.result_notes || '');
     const [cancelReason, setCancelReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -352,7 +369,7 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
 
                     <div className="space-y-4">
                         {test.lab_service.test_parameters?.parameters &&
-                        test.lab_service.test_parameters.parameters.length >
+                            test.lab_service.test_parameters.parameters.length >
                             0 ? (
                             <>
                                 <div className="space-y-4">
@@ -372,8 +389,8 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                     (param.normal_range.min ||
                                                         0) ||
                                                     parseFloat(value) >
-                                                        (param.normal_range
-                                                            .max || Infinity));
+                                                    (param.normal_range
+                                                        .max || Infinity));
 
                                             switch (param.type) {
                                                 case 'numeric':
@@ -573,9 +590,9 @@ const TestActionButtons = ({ test }: { test: ConsultationTest }) => {
                                                                 id={`param-${index}-${param.name}`}
                                                                 checked={
                                                                     rawValue ===
-                                                                        'true' ||
+                                                                    'true' ||
                                                                     rawValue ===
-                                                                        true
+                                                                    true
                                                                 }
                                                                 onCheckedChange={(
                                                                     checked,

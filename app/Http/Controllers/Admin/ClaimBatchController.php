@@ -24,7 +24,8 @@ class ClaimBatchController extends Controller
     public function __construct(
         protected ClaimBatchService $claimBatchService,
         protected NhisXmlExportService $nhisXmlExportService
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of claim batches.
@@ -68,7 +69,7 @@ class ClaimBatchController extends Controller
         $paginated = $query->paginate($perPage)->withQueryString();
 
         // Transform data while keeping flat pagination structure
-        $batches = $paginated->through(fn ($batch) => (new ClaimBatchResource($batch))->resolve());
+        $batches = $paginated->through(fn($batch) => (new ClaimBatchResource($batch))->resolve());
 
         // Get vetted claims available for batching
         $vettedClaimsCount = InsuranceClaim::where('status', 'vetted')
@@ -138,10 +139,10 @@ class ClaimBatchController extends Controller
 
         return Inertia::render('Admin/Insurance/Batches/Show', [
             'batch' => ClaimBatchResource::make($batch)->resolve(),
-            'availableClaims' => $availableClaims->map(fn ($claim) => [
+            'availableClaims' => $availableClaims->map(fn($claim) => [
                 'id' => $claim->id,
                 'claim_check_code' => $claim->claim_check_code,
-                'patient_name' => $claim->patient_surname.' '.$claim->patient_other_names,
+                'patient_name' => $claim->patient_surname . ' ' . $claim->patient_other_names,
                 'membership_id' => $claim->membership_id,
                 'date_of_attendance' => $claim->date_of_attendance?->toDateString(),
                 'total_claim_amount' => $claim->total_claim_amount,
@@ -176,7 +177,7 @@ class ClaimBatchController extends Controller
                 $message .= " {$result['skipped']} claim(s) skipped.";
             }
 
-            if (! empty($result['errors'])) {
+            if (!empty($result['errors'])) {
                 return redirect()->back()
                     ->with('warning', $message)
                     ->with('errors_detail', $result['errors']);
@@ -292,8 +293,8 @@ class ClaimBatchController extends Controller
             );
 
             $message = "{$result['processed']} claim response(s) recorded.";
-            if (! empty($result['errors'])) {
-                $message .= ' Some errors occurred: '.implode(', ', $result['errors']);
+            if (!empty($result['errors'])) {
+                $message .= ' Some errors occurred: ' . implode(', ', $result['errors']);
 
                 return redirect()->back()->with('warning', $message);
             }
@@ -333,4 +334,29 @@ class ClaimBatchController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+    /**
+     * Export batch to Excel format.
+     * Contains same data as XML export but in spreadsheet format.
+     *
+     * _Requirements: 15.1_
+     */
+    public function exportExcel(ClaimBatch $batch): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $this->authorize('export', $batch);
+
+        $batch->load([
+            'batchItems.insuranceClaim.patient',
+            'batchItems.insuranceClaim.claimDiagnoses.diagnosis',
+            'batchItems.insuranceClaim.items.nhisTariff',
+        ]);
+
+        $filename = "nhis-batch-{$batch->batch_number}.xlsx";
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ClaimBatchExcelExport($batch),
+            $filename
+        );
+    }
 }
+

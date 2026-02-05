@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PrintableLabResult } from '@/components/Lab/PrintableLabResult';
 import AppLayout from '@/layouts/app-layout';
 import lab from '@/routes/lab';
 import { Head, router } from '@inertiajs/react';
@@ -9,9 +10,11 @@ import {
     ArrowLeft,
     CheckCircle,
     FileText,
+    Printer,
     TestTube,
     Timer,
 } from 'lucide-react';
+import { useRef } from 'react';
 import {
     ConsultationTest,
     consultationTestColumns,
@@ -72,9 +75,15 @@ interface WardRound {
     round_datetime: string;
 }
 
+interface HospitalInfo {
+    name: string;
+    logo_url?: string;
+}
+
 interface Props {
     wardRound: WardRound;
     labOrders: ConsultationTest[];
+    hospital: HospitalInfo;
 }
 
 const statusConfig = {
@@ -109,9 +118,11 @@ const statusConfig = {
     },
 };
 
-export default function WardRoundShow({ wardRound, labOrders }: Props) {
+export default function WardRoundShow({ wardRound, labOrders, hospital }: Props) {
     const patient = wardRound.patient_admission.patient;
     const ward = wardRound.patient_admission.ward;
+    const printRef = useRef<HTMLDivElement>(null);
+
     const statusCounts = labOrders.reduce(
         (acc, order) => {
             acc[order.status] = (acc[order.status] || 0) + 1;
@@ -119,6 +130,24 @@ export default function WardRoundShow({ wardRound, labOrders }: Props) {
         },
         {} as Record<string, number>,
     );
+
+    // Get completed tests for printing
+    const completedTests = labOrders.filter(order => order.status === 'completed');
+    const hasCompletedTests = completedTests.length > 0;
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    // Transform completed tests to print format
+    const printableResults = completedTests.map(test => ({
+        id: test.id,
+        test_name: test.lab_service.name,
+        test_code: test.lab_service.code,
+        category: test.lab_service.category || 'General',
+        result_values: test.result_values,
+        result_notes: test.result_notes,
+    }));
 
     return (
         <AppLayout
@@ -182,7 +211,7 @@ export default function WardRoundShow({ wardRound, labOrders }: Props) {
                         {Object.entries(statusCounts).map(([status, count]) => {
                             const config =
                                 statusConfig[
-                                    status as keyof typeof statusConfig
+                                status as keyof typeof statusConfig
                                 ];
                             if (!config) return null;
                             const Icon = config.icon;
@@ -197,6 +226,16 @@ export default function WardRoundShow({ wardRound, labOrders }: Props) {
                                 </Badge>
                             );
                         })}
+                        {hasCompletedTests && (
+                            <Button
+                                size="sm"
+                                onClick={handlePrint}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                <Printer className="mr-1 h-4 w-4" />
+                                Print Results
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -213,6 +252,16 @@ export default function WardRoundShow({ wardRound, labOrders }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Printable Component - Uses Portal to render directly in body */}
+            {hasCompletedTests && (
+                <PrintableLabResult
+                    ref={printRef}
+                    hospital={hospital}
+                    patient={patient}
+                    results={printableResults}
+                />
+            )}
         </AppLayout>
     );
 }

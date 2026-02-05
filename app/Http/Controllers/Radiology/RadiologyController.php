@@ -27,7 +27,15 @@ class RadiologyController extends Controller
         $search = $request->query('search');
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
+        $datePreset = $request->query('date_preset');
         $perPage = $request->query('per_page', 20);
+
+        // Default to 'today' filter when no date parameters are provided
+        if (!$dateFrom && !$dateTo && !$datePreset) {
+            $datePreset = 'today';
+            $dateFrom = now()->toDateString();
+            $dateTo = now()->toDateString();
+        }
 
         // Build base query for imaging orders only
         $query = LabOrder::query()
@@ -115,7 +123,7 @@ class RadiologyController extends Controller
                 $context = 'Consultation';
             } elseif ($order->orderable instanceof \App\Models\WardRound) {
                 $patient = $order->orderable->patientAdmission?->patient;
-                $context = 'Ward Round - Day '.$order->orderable->day_number;
+                $context = 'Ward Round - Day ' . $order->orderable->day_number;
             }
 
             $order->patient = $patient;
@@ -132,7 +140,9 @@ class RadiologyController extends Controller
             'completed_today' => LabOrder::imaging()
                 ->excludeExternalReferral()
                 ->byStatus('completed')
-                ->whereDate('result_entered_at', today())
+                ->when($dateFrom, fn($q) => $q->whereDate('result_entered_at', '>=', $dateFrom))
+                ->when($dateTo, fn($q) => $q->whereDate('result_entered_at', '<=', $dateTo))
+                ->when(!$dateFrom && !$dateTo, fn($q) => $q->whereDate('result_entered_at', today()))
                 ->count(),
         ];
 
@@ -156,6 +166,7 @@ class RadiologyController extends Controller
                 'search' => $search,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
+                'date_preset' => $datePreset,
             ],
         ]);
     }
@@ -168,7 +179,7 @@ class RadiologyController extends Controller
         Gate::authorize('viewWorklist-radiology');
 
         // Ensure this is an imaging order
-        if (! $labOrder->isImaging()) {
+        if (!$labOrder->isImaging()) {
             abort(404, 'This is not an imaging order.');
         }
 
@@ -229,7 +240,7 @@ class RadiologyController extends Controller
         Gate::authorize('uploadImages-radiology', $labOrder);
 
         // Ensure this is an imaging order
-        if (! $labOrder->isImaging()) {
+        if (!$labOrder->isImaging()) {
             return back()->with('error', 'This is not an imaging order.');
         }
 
@@ -248,11 +259,11 @@ class RadiologyController extends Controller
     public function complete(CompleteImagingOrderRequest $request, LabOrder $labOrder): RedirectResponse
     {
         // Ensure this is an imaging order
-        if (! $labOrder->isImaging()) {
+        if (!$labOrder->isImaging()) {
             return back()->with('error', 'This is not an imaging order.');
         }
 
-        if (! in_array($labOrder->status, ['ordered', 'in_progress'])) {
+        if (!in_array($labOrder->status, ['ordered', 'in_progress'])) {
             return back()->with('error', 'Can only complete imaging studies that are ordered or in progress.');
         }
 

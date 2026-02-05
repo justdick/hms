@@ -25,7 +25,8 @@ class InsuranceClaimController extends Controller
 {
     public function __construct(
         protected ClaimVettingService $claimVettingService
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): Response
     {
@@ -56,6 +57,11 @@ class InsuranceClaimController extends Controller
             $query->where('date_of_attendance', '<=', $request->date_to);
         }
 
+        // Filter by service type (OPD/IPD)
+        if ($request->filled('service_type')) {
+            $query->where('type_of_service', $request->service_type);
+        }
+
         // Search by claim code or patient name
         if ($request->filled('search')) {
             $search = $request->search;
@@ -70,18 +76,19 @@ class InsuranceClaimController extends Controller
         // Sort by claim_check_code first (for CCC grouping), then by date_of_attendance
         // This ensures same-day claims with the same CCC appear together
         $sortBy = $request->get('sort_by', 'date_of_attendance');
-        $sortOrder = $request->get('sort_order', 'desc');
+        $sortOrder = $request->get('sort_order', 'asc');
 
-        // Primary sort by claim_check_code to group same-CCC claims together
-        $query->orderBy('claim_check_code', 'asc')
-            ->orderBy($sortBy, $sortOrder)
+        // Sort by date_of_attendance first (default ASC), then group by claim_check_code
+        // This ensures oldest claims appear first, with same-CCC claims grouped together
+        $query->orderBy($sortBy, $sortOrder)
+            ->orderBy('claim_check_code', 'asc')
             ->orderBy('id', 'asc');
 
         $perPage = $request->input('per_page', 5);
         $paginated = $query->paginate($perPage)->withQueryString();
 
         // Transform data while keeping flat pagination structure
-        $claims = $paginated->through(fn ($claim) => (new InsuranceClaimResource($claim))->resolve());
+        $claims = $paginated->through(fn($claim) => (new InsuranceClaimResource($claim))->resolve());
 
         // Get all providers for filter dropdown
         $providers = InsuranceProvider::orderBy('name')->get();
@@ -90,7 +97,7 @@ class InsuranceClaimController extends Controller
             'claims' => $claims,
             'providers' => InsuranceProviderResource::collection($providers),
             'filters' => array_merge(
-                $request->only(['provider_id', 'date_from', 'date_to', 'search']),
+                $request->only(['provider_id', 'date_from', 'date_to', 'search', 'service_type', 'date_preset']),
                 ['status' => $status]
             ),
             'stats' => [
@@ -118,7 +125,7 @@ class InsuranceClaimController extends Controller
             'attendance' => $vettingData['attendance'],
             'diagnoses' => $vettingData['diagnoses'],
             'items' => [
-                'investigations' => $vettingData['items']['investigations']->map(fn ($item) => [
+                'investigations' => $vettingData['items']['investigations']->map(fn($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -127,9 +134,9 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
                 ]),
-                'prescriptions' => $vettingData['items']['prescriptions']->map(fn ($item) => [
+                'prescriptions' => $vettingData['items']['prescriptions']->map(fn($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -138,9 +145,9 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
                 ]),
-                'procedures' => $vettingData['items']['procedures']->map(fn ($item) => [
+                'procedures' => $vettingData['items']['procedures']->map(fn($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -149,12 +156,12 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
                 ]),
             ],
             'totals' => $vettingData['totals'],
             'is_nhis' => $vettingData['is_nhis'],
-            'gdrg_tariffs' => $vettingData['gdrg_tariffs']->map(fn ($tariff) => [
+            'gdrg_tariffs' => $vettingData['gdrg_tariffs']->map(fn($tariff) => [
                 'id' => $tariff->id,
                 'code' => $tariff->code,
                 'name' => $tariff->name,
@@ -212,7 +219,7 @@ class InsuranceClaimController extends Controller
             $claim->refresh();
 
             // Process item-level approvals if provided
-            if (! empty($validated['items'])) {
+            if (!empty($validated['items'])) {
                 $approvedAmount = 0;
 
                 foreach ($validated['items'] as $itemData) {
@@ -282,7 +289,7 @@ class InsuranceClaimController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Claim diagnoses updated successfully.',
-                'diagnoses' => $claim->claimDiagnoses->map(fn ($cd) => [
+                'diagnoses' => $claim->claimDiagnoses->map(fn($cd) => [
                     'id' => $cd->id,
                     'diagnosis_id' => $cd->diagnosis_id,
                     'name' => $cd->diagnosis->name ?? $cd->diagnosis->diagnosis ?? '',
@@ -295,7 +302,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update diagnoses: '.$e->getMessage(),
+                'message' => 'Failed to update diagnoses: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -318,7 +325,7 @@ class InsuranceClaimController extends Controller
 
         try {
             // Determine if using NHIS or GDRG tariff
-            $isGdrg = ! empty($validated['gdrg_tariff_id']);
+            $isGdrg = !empty($validated['gdrg_tariff_id']);
 
             if ($isGdrg) {
                 $gdrgTariff = \App\Models\GdrgTariff::findOrFail($validated['gdrg_tariff_id']);
@@ -398,7 +405,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to add item: '.$e->getMessage(),
+                'message' => 'Failed to add item: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -438,7 +445,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to remove item: '.$e->getMessage(),
+                'message' => 'Failed to remove item: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -457,7 +464,7 @@ class InsuranceClaimController extends Controller
             // For NHIS, sum only items with NHIS prices
             $itemsTotal = $claim->items
                 ->whereNotNull('nhis_price')
-                ->sum(fn ($item) => (float) $item->nhis_price * (int) $item->quantity);
+                ->sum(fn($item) => (float) $item->nhis_price * (int) $item->quantity);
         } else {
             $itemsTotal = $claim->items->sum('subtotal');
         }
@@ -477,7 +484,7 @@ class InsuranceClaimController extends Controller
     {
         // Update batch items in draft batches only
         $claim->batchItems()
-            ->whereHas('batch', fn ($q) => $q->where('status', 'draft'))
+            ->whereHas('batch', fn($q) => $q->where('status', 'draft'))
             ->each(function ($batchItem) use ($claim) {
                 $batchItem->claim_amount = $claim->total_claim_amount ?? 0;
                 $batchItem->save();
@@ -501,13 +508,13 @@ class InsuranceClaimController extends Controller
 
         try {
             $submissionDate = $request->input('submission_date', now()->toDateString());
-            $batchReference = $isBatch ? ($request->input('batch_reference') ?: 'BATCH-'.now()->format('YmdHis')) : null;
+            $batchReference = $isBatch ? ($request->input('batch_reference') ?: 'BATCH-' . now()->format('YmdHis')) : null;
 
             foreach ($claimIds as $claimId) {
                 $claim = InsuranceClaim::findOrFail($claimId);
 
                 // Check authorization
-                if (! auth()->user()->can('submitClaim', $claim)) {
+                if (!auth()->user()->can('submitClaim', $claim)) {
                     $errors[] = "Not authorized to submit claim {$claim->claim_check_code}";
 
                     continue;
@@ -535,22 +542,22 @@ class InsuranceClaimController extends Controller
             DB::commit();
 
             if ($submittedCount === 0) {
-                return back()->with('error', 'No claims were submitted. '.implode(', ', $errors));
+                return back()->with('error', 'No claims were submitted. ' . implode(', ', $errors));
             }
 
             $message = $isBatch
                 ? "{$submittedCount} claim(s) submitted successfully in batch {$batchReference}."
                 : 'Claim submitted successfully.';
 
-            if (! empty($errors)) {
-                $message .= ' Some claims failed: '.implode(', ', $errors);
+            if (!empty($errors)) {
+                $message .= ' Some claims failed: ' . implode(', ', $errors);
             }
 
             return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to submit claims: '.$e->getMessage());
+            return back()->with('error', 'Failed to submit claims: ' . $e->getMessage());
         }
     }
 
@@ -585,7 +592,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to record payment: '.$e->getMessage());
+            return back()->with('error', 'Failed to record payment: ' . $e->getMessage());
         }
     }
 
@@ -610,7 +617,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to reject claim: '.$e->getMessage());
+            return back()->with('error', 'Failed to reject claim: ' . $e->getMessage());
         }
     }
 
@@ -646,7 +653,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to resubmit claim: '.$e->getMessage());
+            return back()->with('error', 'Failed to resubmit claim: ' . $e->getMessage());
         }
     }
 
@@ -692,7 +699,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to update claim: '.$e->getMessage());
+            return back()->with('error', 'Failed to update claim: ' . $e->getMessage());
         }
     }
 
@@ -721,8 +728,8 @@ class InsuranceClaimController extends Controller
             // Clear rejection data but keep the reason in notes for reference
             $previousRejectionReason = $claim->rejection_reason;
             if ($previousRejectionReason) {
-                $claim->notes = ($claim->notes ? $claim->notes."\n\n" : '')
-                    .'Previous rejection reason: '.$previousRejectionReason;
+                $claim->notes = ($claim->notes ? $claim->notes . "\n\n" : '')
+                    . 'Previous rejection reason: ' . $previousRejectionReason;
             }
             $claim->rejection_reason = null;
             $claim->rejected_by = null;
@@ -744,7 +751,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to prepare claim for resubmission: '.$e->getMessage());
+            return back()->with('error', 'Failed to prepare claim for resubmission: ' . $e->getMessage());
         }
     }
 
@@ -783,7 +790,7 @@ class InsuranceClaimController extends Controller
 
     private function exportToExcel($claims)
     {
-        $filename = 'insurance-claims-'.now()->format('Y-m-d-His').'.csv';
+        $filename = 'insurance-claims-' . now()->format('Y-m-d-His') . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -816,7 +823,7 @@ class InsuranceClaimController extends Controller
             foreach ($claims as $claim) {
                 fputcsv($file, [
                     $claim->claim_check_code,
-                    $claim->patient_surname.' '.$claim->patient_other_names,
+                    $claim->patient_surname . ' ' . $claim->patient_other_names,
                     $claim->membership_id,
                     $claim->patientInsurance->plan->provider->name ?? '',
                     $claim->patientInsurance->plan->name ?? '',

@@ -23,6 +23,7 @@ interface DateFilterPresetsProps {
     value: DateFilterValue;
     onChange: (value: DateFilterValue) => void;
     className?: string;
+    variant?: 'default' | 'primary';
 }
 
 const presets = [
@@ -90,6 +91,7 @@ export function DateFilterPresets({
     value,
     onChange,
     className,
+    variant = 'default',
 }: DateFilterPresetsProps) {
     const [showCustom, setShowCustom] = React.useState(value.preset === 'custom');
 
@@ -120,13 +122,17 @@ export function DateFilterPresets({
 
     const hasActiveFilter = value.preset || value.from || value.to;
 
+    const triggerClassName = variant === 'primary'
+        ? 'w-[160px] border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900'
+        : 'w-[160px]';
+
     return (
         <div className={`flex items-center gap-2 ${className || ''}`}>
             <Select
                 value={value.preset || ''}
                 onValueChange={handlePresetChange}
             >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className={triggerClassName}>
                     <SelectValue placeholder="Filter by date" />
                 </SelectTrigger>
                 <SelectContent>

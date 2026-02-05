@@ -1,8 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DateFilterPresets,
+    DateFilterValue,
+} from '@/components/ui/date-filter-presets';
 import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     Activity,
     FileText,
@@ -45,6 +49,9 @@ interface Filters {
     priority?: string;
     category?: string;
     search?: string;
+    date_from?: string;
+    date_to?: string;
+    date_preset?: string;
 }
 
 interface Props {
@@ -54,6 +61,33 @@ interface Props {
 }
 
 export default function LabIndex({ groupedOrders, stats, filters }: Props) {
+    const handleDateFilterChange = (value: DateFilterValue) => {
+        router.get(
+            '/lab',
+            {
+                ...filters,
+                date_from: value.from || undefined,
+                date_to: value.to || undefined,
+                date_preset: value.preset || undefined,
+                page: 1,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const getCompletedLabel = () => {
+        const presetLabels: Record<string, string> = {
+            today: 'Completed Today',
+            yesterday: 'Completed Yesterday',
+            this_week: 'Completed This Week',
+            last_week: 'Completed Last Week',
+            this_month: 'Completed This Month',
+            last_month: 'Completed Last Month',
+            custom: 'Completed (Custom Range)',
+        };
+        return presetLabels[filters.date_preset || ''] || 'Completed Today';
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Laboratory', href: '/lab' }]}>
             <Head title="Laboratory Dashboard" />
@@ -68,12 +102,23 @@ export default function LabIndex({ groupedOrders, stats, filters }: Props) {
                             Manage lab orders and process test results
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/lab/services/configuration">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Configure Test Parameters
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <DateFilterPresets
+                            value={{
+                                from: filters.date_from,
+                                to: filters.date_to,
+                                preset: filters.date_preset || 'today',
+                            }}
+                            onChange={handleDateFilterChange}
+                            variant="primary"
+                        />
+                        <Button asChild>
+                            <Link href="/lab/services/configuration">
+                                <Settings className="mr-2 h-4 w-4" />
+                                Configure Test Parameters
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -97,7 +142,7 @@ export default function LabIndex({ groupedOrders, stats, filters }: Props) {
                         variant="info"
                     />
                     <StatCard
-                        label="Completed Today"
+                        label={getCompletedLabel()}
                         value={stats.completed_today}
                         icon={<Activity className="h-4 w-4" />}
                         variant="success"

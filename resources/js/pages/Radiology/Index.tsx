@@ -2,6 +2,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+    DateFilterPresets,
+    DateFilterValue,
+} from '@/components/ui/date-filter-presets';
+import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
@@ -98,6 +102,7 @@ interface Filters {
     search?: string;
     date_from?: string;
     date_to?: string;
+    date_preset?: string;
 }
 
 interface Props {
@@ -144,8 +149,6 @@ export default function RadiologyIndex({
     filters,
 }: Props) {
     const [search, setSearch] = React.useState(filters.search || '');
-    const [dateFrom, setDateFrom] = React.useState(filters.date_from || '');
-    const [dateTo, setDateTo] = React.useState(filters.date_to || '');
 
     const currentStatus = filters.status || 'pending';
     const currentPriority = filters.priority || '';
@@ -191,13 +194,14 @@ export default function RadiologyIndex({
         );
     };
 
-    const handleDateFilterChange = () => {
+    const handleDateFilterChange = (value: DateFilterValue) => {
         router.get(
             '/radiology',
             {
                 ...filters,
-                date_from: dateFrom || undefined,
-                date_to: dateTo || undefined,
+                date_from: value.from || undefined,
+                date_to: value.to || undefined,
+                date_preset: value.preset || undefined,
                 page: 1,
             },
             { preserveState: true, preserveScroll: true },
@@ -227,6 +231,19 @@ export default function RadiologyIndex({
                 preserveScroll: true,
             },
         );
+    };
+
+    const getCompletedLabel = () => {
+        const presetLabels: Record<string, string> = {
+            today: 'Completed Today',
+            yesterday: 'Completed Yesterday',
+            this_week: 'Completed This Week',
+            last_week: 'Completed Last Week',
+            this_month: 'Completed This Month',
+            last_month: 'Completed Last Month',
+            custom: 'Completed (Custom Range)',
+        };
+        return presetLabels[filters.date_preset || ''] || 'Completed Today';
     };
 
     const prevLink = orders.links.find((link) =>
@@ -270,7 +287,7 @@ export default function RadiologyIndex({
                         variant="info"
                     />
                     <StatCard
-                        label="Completed Today"
+                        label={getCompletedLabel()}
                         value={stats.completed_today}
                         icon={<Image className="h-4 w-4" />}
                         variant="success"
@@ -491,95 +508,15 @@ export default function RadiologyIndex({
                                 )}
 
                                 {/* Date Range Filter */}
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="border-dashed"
-                                        >
-                                            <Calendar className="mr-2 h-4 w-4" />
-                                            Date Range
-                                            {(dateFrom || dateTo) && (
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="ml-2"
-                                                >
-                                                    {dateFrom && dateTo
-                                                        ? `${dateFrom} - ${dateTo}`
-                                                        : dateFrom || dateTo}
-                                                </Badge>
-                                            )}
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent
-                                        align="start"
-                                        className="w-72 p-4"
-                                        onCloseAutoFocus={(e) =>
-                                            e.preventDefault()
-                                        }
-                                    >
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-sm font-medium">
-                                                    From
-                                                </label>
-                                                <Input
-                                                    type="date"
-                                                    value={dateFrom}
-                                                    onChange={(e) =>
-                                                        setDateFrom(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium">
-                                                    To
-                                                </label>
-                                                <Input
-                                                    type="date"
-                                                    value={dateTo}
-                                                    onChange={(e) =>
-                                                        setDateTo(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1"
-                                                />
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={
-                                                        handleDateFilterChange
-                                                    }
-                                                >
-                                                    Apply
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setDateFrom('');
-                                                        setDateTo('');
-                                                        handleFilterChange(
-                                                            'date_from',
-                                                            undefined,
-                                                        );
-                                                        handleFilterChange(
-                                                            'date_to',
-                                                            undefined,
-                                                        );
-                                                    }}
-                                                >
-                                                    Clear
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <DateFilterPresets
+                                    value={{
+                                        from: filters.date_from,
+                                        to: filters.date_to,
+                                        preset: filters.date_preset || 'today',
+                                    }}
+                                    onChange={handleDateFilterChange}
+                                    variant="primary"
+                                />
                             </div>
 
                             {/* Table */}
@@ -606,7 +543,7 @@ export default function RadiologyIndex({
                                                     key={order.id}
                                                     className={
                                                         order.priority ===
-                                                        'stat'
+                                                            'stat'
                                                             ? 'bg-red-50 dark:bg-red-950/20'
                                                             : ''
                                                     }
@@ -617,8 +554,8 @@ export default function RadiologyIndex({
                                                         >
                                                             {order.priority ===
                                                                 'stat' && (
-                                                                <AlertCircle className="mr-1 h-3 w-3" />
-                                                            )}
+                                                                    <AlertCircle className="mr-1 h-3 w-3" />
+                                                                )}
                                                             {priorityConfig[
                                                                 order.priority
                                                             ]?.label ||
@@ -752,19 +689,19 @@ export default function RadiologyIndex({
                                                         <div className="flex items-center justify-end gap-2">
                                                             {order.status ===
                                                                 'ordered' && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() =>
-                                                                        handleMarkInProgress(
-                                                                            order.id,
-                                                                        )
-                                                                    }
-                                                                    title="Start Processing"
-                                                                >
-                                                                    <Play className="h-4 w-4" />
-                                                                </Button>
-                                                            )}
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            handleMarkInProgress(
+                                                                                order.id,
+                                                                            )
+                                                                        }
+                                                                        title="Start Processing"
+                                                                    >
+                                                                        <Play className="h-4 w-4" />
+                                                                    </Button>
+                                                                )}
                                                             <Button
                                                                 size="sm"
                                                                 variant="default"

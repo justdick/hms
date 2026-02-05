@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Auth;
 class PharmacyBillingService
 {
     public function __construct(
-        protected InsuranceCoverageService $coverageService
-    ) {}
+        protected InsuranceCoverageService $coverageService,
+        protected InsuranceClaimService $claimService
+    ) {
+    }
 
     /**
      * Create a charge for a prescription when it's created by the doctor.
@@ -39,7 +41,7 @@ class PharmacyBillingService
             $quantity
         );
 
-        return Charge::create([
+        $charge = Charge::create([
             'patient_checkin_id' => $patientCheckinId,
             'prescription_id' => $prescription->id,
             'service_type' => 'pharmacy',
@@ -57,6 +59,11 @@ class PharmacyBillingService
             'created_by_id' => $user?->id,
             'notes' => "Auto-generated from prescription #{$prescription->id}",
         ]);
+
+        // Auto-link charge to insurance claim if patient has one for this check-in
+        $this->linkChargeToInsuranceClaim($charge, $patientCheckinId);
+
+        return $charge;
     }
 
     /**
@@ -77,14 +84,14 @@ class PharmacyBillingService
             'insurance_tariff' => $amount,
         ];
 
-        if (! $patientCheckinId) {
+        if (!$patientCheckinId) {
             return $defaultResult;
         }
 
         // Get patient's active insurance from checkin
         $checkin = PatientCheckin::with('patient.activeInsurance.plan')->find($patientCheckinId);
 
-        if (! $checkin || ! $checkin->patient || ! $checkin->patient->activeInsurance) {
+        if (!$checkin || !$checkin->patient || !$checkin->patient->activeInsurance) {
             return $defaultResult;
         }
 
@@ -137,7 +144,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // For unpriced drugs, no charge exists - just return null
-        if (! $charge) {
+        if (!$charge) {
             return null;
         }
 
@@ -162,7 +169,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // For unpriced drugs, no charge exists - just return null
-        if (! $charge) {
+        if (!$charge) {
             return null;
         }
 
@@ -183,7 +190,7 @@ class PharmacyBillingService
         $requirePayment = BillingConfiguration::getValue('pharmacy.require_payment_before_dispensing', true);
 
         // If payment is not required by configuration, allow dispensing
-        if (! $requirePayment) {
+        if (!$requirePayment) {
             return true;
         }
 
@@ -197,7 +204,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // No charge and not an unpriced drug - shouldn't happen, but deny dispensing
-        if (! $charge) {
+        if (!$charge) {
             return false;
         }
 
@@ -295,5 +302,35 @@ class PharmacyBillingService
                 'quantity' => $quantity,
             ],
         ]);
+    }
+
+    /**
+     * Link a charge to its insurance claim if one exists for the check-in.
+     * This ensures prescriptions and other charges are added to claims automatically.
+     */
+    protected function linkChargeToInsuranceClaim(Charge $charge, ?int $patientCheckinId): void
+    {
+        if (!$patientCheckinId) {
+            return;
+        }
+
+        // Find the insurance claim for this check-in
+        $claim = \App\Models\InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
+
+        if (!$claim) {
+            return;
+        }
+
+        // Skip if charge is already linked to this claim
+        $alreadyLinked = \App\Models\InsuranceClaimItem::where('insurance_claim_id', $claim->id)
+            ->where('charge_id', $charge->id)
+            ->exists();
+
+        if ($alreadyLinked) {
+            return;
+        }
+
+        // Link the charge to the claim
+        $this->claimService->addChargesToClaim($claim, [$charge->id]);
     }
 }

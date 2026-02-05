@@ -17,7 +17,7 @@ class BillingService
 {
     public function createConsultationCharge(PatientCheckin $checkin): ?Charge
     {
-        if (! BillingConfiguration::getValue('auto_billing_enabled', true)) {
+        if (!BillingConfiguration::getValue('auto_billing_enabled', true)) {
             return null;
         }
 
@@ -28,7 +28,7 @@ class BillingService
 
         $departmentBilling = DepartmentBilling::getForDepartment($checkin->department_id);
 
-        if (! $departmentBilling) {
+        if (!$departmentBilling) {
             return null;
         }
 
@@ -104,7 +104,7 @@ class BillingService
     {
         $departmentBilling = DepartmentBilling::getForDepartment($checkin->department_id);
 
-        if (! $departmentBilling || $departmentBilling->emergency_surcharge <= 0) {
+        if (!$departmentBilling || $departmentBilling->emergency_surcharge <= 0) {
             return null;
         }
 
@@ -159,7 +159,7 @@ class BillingService
             ->first();
 
         // If no rule or payment not mandatory, allow service
-        if (! $rule || $rule->payment_required !== 'mandatory') {
+        if (!$rule || $rule->payment_required !== 'mandatory') {
             return true;
         }
 
@@ -180,7 +180,7 @@ class BillingService
             return true;
         }
 
-        return $charges->every(fn ($charge) => $charge->canProceedWithService());
+        return $charges->every(fn($charge) => $charge->canProceedWithService());
     }
 
     public function getPendingCharges(PatientCheckin $checkin, ?string $serviceType = null): \Illuminate\Database\Eloquent\Collection
@@ -208,7 +208,7 @@ class BillingService
     {
         $charge = Charge::find($chargeId);
 
-        if (! $charge) {
+        if (!$charge) {
             return false;
         }
 
@@ -235,7 +235,7 @@ class BillingService
             $notes = 'Auto-marked as owing for credit-eligible patient';
         }
 
-        return Charge::create([
+        $charge = Charge::create([
             'patient_checkin_id' => $checkin->id,
             'service_type' => $serviceType,
             'service_code' => $serviceCode,
@@ -249,7 +249,13 @@ class BillingService
             'created_by_type' => Auth::user()?->getTable() ?? 'system',
             'created_by_id' => Auth::id() ?? 0,
         ]);
+
+        // Auto-link charge to insurance claim if patient has one for this check-in
+        $this->linkChargeToInsuranceClaim($charge, $checkin->id);
+
+        return $charge;
     }
+
 
     private function createChargeFromTemplate(
         PatientCheckin $checkin,
@@ -288,7 +294,7 @@ class BillingService
     {
         $conditions = $template->auto_trigger_conditions;
 
-        if (! $conditions || ! isset($conditions['auto_create_charges']) || ! $conditions['auto_create_charges']) {
+        if (!$conditions || !isset($conditions['auto_create_charges']) || !$conditions['auto_create_charges']) {
             return false;
         }
 
@@ -323,7 +329,7 @@ class BillingService
     private function isEmergencyOverride(): bool
     {
         return request()->boolean('emergency_override') ||
-               session()->get('emergency_override', false);
+            session()->get('emergency_override', false);
     }
 
     /**
@@ -357,7 +363,7 @@ class BillingService
     {
         $patient = $checkin->patient;
 
-        if (! $patient) {
+        if (!$patient) {
             return false;
         }
 
@@ -382,7 +388,7 @@ class BillingService
     {
         $patient = $checkin->patient;
 
-        if (! $patient) {
+        if (!$patient) {
             return false;
         }
 
@@ -405,7 +411,7 @@ class BillingService
      */
     public function isServiceBlocked(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): bool
     {
-        return ! $this->canProceedWithService($checkin, $serviceType, $serviceCode);
+        return !$this->canProceedWithService($checkin, $serviceType, $serviceCode);
     }
 
     /**
@@ -421,7 +427,7 @@ class BillingService
         $totalPending = $pendingCharges->sum('amount');
 
         if ($totalPending > 0) {
-            return 'Outstanding payment of GHS '.number_format($totalPending, 2)." required for {$serviceType} service";
+            return 'Outstanding payment of GHS ' . number_format($totalPending, 2) . " required for {$serviceType} service";
         }
 
         return 'Service blocked due to billing requirements';
@@ -434,18 +440,18 @@ class BillingService
     private function shouldSkipNhisConsultationFee(PatientCheckin $checkin): bool
     {
         // Check if the feature is enabled
-        if (! BillingConfiguration::getValue('nhis_consultation_fee_once_per_lifetime', false)) {
+        if (!BillingConfiguration::getValue('nhis_consultation_fee_once_per_lifetime', false)) {
             return false;
         }
 
         $patient = $checkin->patient;
 
-        if (! $patient) {
+        if (!$patient) {
             return false;
         }
 
         // Check if patient has active NHIS insurance
-        if (! $patient->hasValidNhis()) {
+        if (!$patient->hasValidNhis()) {
             return false;
         }
 
@@ -465,4 +471,32 @@ class BillingService
             ->where('status', '!=', 'voided')
             ->exists();
     }
+
+    /**
+     * Link a charge to its insurance claim if one exists for the check-in.
+     * This ensures lab tests and other charges are added to claims automatically.
+     */
+    private function linkChargeToInsuranceClaim(Charge $charge, int $patientCheckinId): void
+    {
+        // Find the insurance claim for this check-in
+        $claim = \App\Models\InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
+
+        if (!$claim) {
+            return;
+        }
+
+        // Skip if charge is already linked to this claim
+        $alreadyLinked = \App\Models\InsuranceClaimItem::where('insurance_claim_id', $claim->id)
+            ->where('charge_id', $charge->id)
+            ->exists();
+
+        if ($alreadyLinked) {
+            return;
+        }
+
+        // Link the charge to the claim using InsuranceClaimService
+        $claimService = app(\App\Services\InsuranceClaimService::class);
+        $claimService->addChargesToClaim($claim, [$charge->id]);
+    }
 }
+
