@@ -14,6 +14,7 @@ import {
     AlertCircle,
     CheckCircle,
     FileText,
+    Heart,
     Loader2,
     XCircle,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import { ClaimItemsTabs } from './ClaimItemsTabs';
 import { ClaimTotalDisplay } from './ClaimTotalDisplay';
 import { DiagnosesManager } from './DiagnosesManager';
 import { GdrgSelector } from './GdrgSelector';
+import { PatientMedicalHistoryModal } from '@/components/Patient/PatientMedicalHistoryModal';
 import { PatientInfoSection } from './PatientInfoSection';
 import type {
     Diagnosis,
@@ -75,6 +77,7 @@ export function VettingModal({
     const [attendanceUpdates, setAttendanceUpdates] = useState<
         Record<string, string>
     >({});
+    const [showMedicalHistory, setShowMedicalHistory] = useState(false);
 
     // Focus management
     const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -232,7 +235,6 @@ export function VettingModal({
 
         const grandTotal =
             gdrgAmount +
-            investigationsTotal +
             prescriptionsTotal +
             proceduresTotal;
 
@@ -364,28 +366,47 @@ export function VettingModal({
                 ) : vettingData ? (
                     <>
                         <DialogHeader className="border-b px-6 py-4">
-                            <DialogTitle
-                                id="vetting-modal-title"
-                                className="flex items-center gap-2"
-                            >
-                                <FileText
-                                    className="h-5 w-5"
-                                    aria-hidden="true"
-                                />
-                                {isViewOnly
-                                    ? 'Claim Details'
-                                    : isEditMode
-                                      ? 'Edit Claim'
-                                      : 'Claim Vetting'}{' '}
-                                - {vettingData.attendance.claim_check_code}
-                            </DialogTitle>
-                            <DialogDescription id="vetting-modal-description">
-                                {isViewOnly
-                                    ? 'View claim details and status'
-                                    : isEditMode
-                                      ? 'Edit claim details before submission'
-                                      : 'Review claim details and approve or reject for submission'}
-                            </DialogDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <DialogTitle
+                                        id="vetting-modal-title"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <FileText
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                        />
+                                        {isViewOnly
+                                            ? 'Claim Details'
+                                            : isEditMode
+                                              ? 'Edit Claim'
+                                              : 'Claim Vetting'}{' '}
+                                        -{' '}
+                                        {
+                                            vettingData.attendance
+                                                .claim_check_code
+                                        }
+                                    </DialogTitle>
+                                    <DialogDescription id="vetting-modal-description">
+                                        {isViewOnly
+                                            ? 'View claim details and status'
+                                            : isEditMode
+                                              ? 'Edit claim details before submission'
+                                              : 'Review claim details and approve or reject for submission'}
+                                    </DialogDescription>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setShowMedicalHistory(true)
+                                    }
+                                    className="shrink-0 border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
+                                >
+                                    <Heart className="mr-2 h-4 w-4" />
+                                    Medical History
+                                </Button>
+                            </div>
                         </DialogHeader>
 
                         <ScrollArea className="max-h-[calc(90vh-200px)]">
@@ -608,6 +629,13 @@ export function VettingModal({
                     </>
                 ) : null}
             </DialogContent>
+
+            {/* Medical History Modal */}
+            <PatientMedicalHistoryModal
+                patientId={vettingData?.patient?.id ?? null}
+                isOpen={showMedicalHistory}
+                onClose={() => setShowMedicalHistory(false)}
+            />
         </Dialog>
     );
 }

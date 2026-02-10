@@ -90,6 +90,7 @@ interface MARTableProps {
     prescriptions: Prescription[];
     admissionId: number;
     canDelete?: boolean;
+    canDeleteOld?: boolean;
 }
 
 const statusConfig: Record<
@@ -115,6 +116,7 @@ export function MARTable({
     prescriptions,
     admissionId,
     canDelete = false,
+    canDeleteOld = false,
 }: MARTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         { id: 'administered_at', desc: true },
@@ -133,12 +135,15 @@ export function MARTable({
         return prescriptions.find((p) => p.id === prescriptionId);
     };
 
-    // Check if a record can be deleted (within 3 days)
+    // Check if a record can be deleted (within 3 days, or any age with delete-old permission)
     const canDeleteRecord = (record: MedicationAdministration) => {
-        if (!canDelete) return false;
+        if (!canDelete && !canDeleteOld) return false;
         const administeredAt = new Date(record.administered_at);
         const hoursSince = differenceInHours(new Date(), administeredAt);
-        return hoursSince < 72; // 3 days = 72 hours
+        const isOld = hoursSince >= 72; // 3 days = 72 hours
+
+        if (isOld) return canDeleteOld;
+        return canDelete;
     };
 
     // Handle delete confirmation
@@ -316,7 +321,7 @@ export function MARTable({
                 );
             },
         },
-        ...(canDelete
+        ...(canDelete || canDeleteOld
             ? [
                   {
                       id: 'actions',
@@ -337,7 +342,7 @@ export function MARTable({
                                   size="sm"
                                   className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
                                   onClick={() => handleDeleteClick(record)}
-                                  title="Delete (within 3 days only)"
+                                  title="Delete record"
                               >
                                   <Trash2 className="h-4 w-4" />
                               </Button>

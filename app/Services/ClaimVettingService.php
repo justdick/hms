@@ -394,7 +394,7 @@ class ClaimVettingService
                 + $items['procedures']->whereNull('nhis_price')->count();
         }
 
-        $grandTotal = $gdrgAmount + $investigationsTotal + $prescriptionsTotal + $proceduresTotal;
+        $grandTotal = $gdrgAmount + $prescriptionsTotal + $proceduresTotal;
 
         return [
             'investigations' => round($investigationsTotal, 2),

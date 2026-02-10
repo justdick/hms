@@ -572,6 +572,117 @@ class PatientController extends Controller
     }
 
     /**
+     * Get patient medical history as JSON (for modal display in consultation/ward round pages).
+     */
+    public function medicalHistoryJson(Patient $patient): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('view', $patient);
+
+        $history = $this->getMedicalHistory($patient);
+
+        // Get admissions with full ward round details (including dedup)
+        $admissions = $patient->admissions()
+            ->with([
+                'ward:id,name',
+                'bed:id,bed_number',
+                'consultation.doctor:id,name',
+                'diagnoses',
+                'wardRounds' => fn ($q) => $q->with([
+                    'doctor:id,name',
+                    'prescriptions.drug:id,name,generic_name,form,strength',
+                    'labOrders.labService:id,name,code,is_imaging,test_parameters',
+                    'procedures.procedureType:id,name,code',
+                    'diagnoses',
+                ])->orderByDesc('round_datetime'),
+            ])
+            ->orderByDesc('admitted_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'admission_number' => $a->admission_number,
+                'admitted_at' => $a->admitted_at?->format('Y-m-d H:i'),
+                'discharged_at' => $a->discharged_at?->format('Y-m-d H:i'),
+                'status' => $a->status,
+                'ward' => $a->ward?->name,
+                'bed' => $a->bed?->bed_number,
+                'admission_reason' => $a->admission_reason,
+                'discharge_notes' => $a->discharge_notes,
+                'admitting_doctor' => $a->consultation?->doctor?->name,
+                'diagnoses' => $a->diagnoses->map(fn ($d) => [
+                    'type' => $d->diagnosis_type,
+                    'code' => $d->icd_code,
+                    'description' => $d->diagnosis_name,
+                    'is_active' => $d->is_active,
+                ]),
+                'ward_rounds' => $a->wardRounds
+                    ->groupBy(fn ($wr) => $wr->day_number.'-'.$wr->doctor_id.'-'.$wr->round_datetime?->format('Y-m-d'))
+                    ->map(function ($group) {
+                        $latest = $group->sortByDesc('id')->first();
+                        $allPrescriptions = $group->flatMap(fn ($wr) => $wr->prescriptions)->unique('id');
+                        $allLabOrders = $group->flatMap(fn ($wr) => $wr->labOrders)->unique('id');
+                        $allProcedures = $group->flatMap(fn ($wr) => $wr->procedures)->unique('id');
+
+                        return [
+                            'id' => $latest->id,
+                            'date' => $latest->round_datetime?->format('Y-m-d H:i'),
+                            'doctor' => $latest->doctor?->name,
+                            'day_number' => $latest->day_number,
+                            'round_type' => $latest->round_type,
+                            'presenting_complaint' => $latest->presenting_complaint,
+                            'examination_findings' => $latest->examination_findings,
+                            'assessment_notes' => $latest->assessment_notes,
+                            'plan_notes' => $latest->plan_notes,
+                            'patient_status' => $latest->patient_status,
+                            'prescriptions' => $allPrescriptions->values()->map(fn ($p) => [
+                                'drug_name' => $p->drug?->name ?? $p->medication_name,
+                                'generic_name' => $p->drug?->generic_name,
+                                'form' => $p->drug?->form ?? $p->dosage_form,
+                                'strength' => $p->drug?->strength,
+                                'dose_quantity' => $p->dose_quantity,
+                                'frequency' => $p->frequency,
+                                'duration' => $p->duration,
+                                'quantity' => $p->quantity,
+                                'instructions' => $p->instructions,
+                                'status' => $p->status,
+                            ]),
+                            'lab_orders' => $allLabOrders->values()->map(fn ($l) => [
+                                'id' => $l->id,
+                                'service_name' => $l->labService?->name,
+                                'code' => $l->labService?->code,
+                                'is_imaging' => $l->labService?->is_imaging,
+                                'status' => $l->status,
+                                'result_values' => $l->result_values,
+                                'result_notes' => $l->result_notes,
+                                'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                                'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                            ]),
+                            'procedures' => $allProcedures->values()->map(fn ($p) => [
+                                'name' => $p->procedureType?->name,
+                                'code' => $p->procedureType?->code,
+                                'notes' => $p->comments,
+                            ]),
+                        ];
+                    })
+                    ->values(),
+            ]);
+
+        return response()->json([
+            'patient_name' => $patient->full_name ?? ($patient->first_name.' '.$patient->last_name),
+            'background_history' => [
+                'past_medical_surgical_history' => $patient->past_medical_surgical_history,
+                'drug_history' => $patient->drug_history,
+                'family_history' => $patient->family_history,
+                'social_history' => $patient->social_history,
+            ],
+            'medical_history' => [
+                'consultations' => $history['consultations'],
+                'admissions' => $admissions,
+            ],
+        ]);
+    }
+
+    /**
      * Get comprehensive medical history for a patient
      */
     private function getMedicalHistory(Patient $patient): array

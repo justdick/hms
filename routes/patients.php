@@ -10,6 +10,7 @@ Route::middleware(['auth'])->prefix('patients')->name('patients.')->group(functi
     // Patient List and Management
     Route::get('/', [PatientController::class, 'index'])->name('index');
     Route::get('/{patient}', [PatientController::class, 'show'])->name('show');
+    Route::get('/{patient}/medical-history', [PatientController::class, 'medicalHistoryJson'])->name('medical-history');
     Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('edit');
     Route::patch('/{patient}', [PatientController::class, 'update'])->name('update');
 });

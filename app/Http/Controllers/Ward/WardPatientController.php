@@ -127,6 +127,7 @@ class WardPatientController extends Controller
             'can_edit_vitals_timestamp' => $request->user()->can('vitals.edit-timestamp'),
             'can_edit_medication_timestamp' => $request->user()->can('medications.edit-timestamp'),
             'can_delete_medication_administration' => $request->user()->can('medications.delete'),
+            'can_delete_old_medication_administration' => $request->user()->can('medications.delete-old'),
             'can_transfer' => $request->user()->can('admissions.transfer'),
             'can_create_ward_round' => $request->user()->can('ward_rounds.create'),
             'can_update_ward_round' => $request->user()->can('ward_rounds.update'),

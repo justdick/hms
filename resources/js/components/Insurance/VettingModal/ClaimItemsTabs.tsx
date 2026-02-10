@@ -357,6 +357,8 @@ export function ClaimItemsTabs({
     ) => {
         const subtotal = calculateSubtotal(categoryItems);
         const uncoveredCount = countUncovered(categoryItems);
+        const isInvestigations = category === 'investigations';
+        const isPrescriptions = category === 'prescriptions';
 
         return (
             <div className="space-y-3">
@@ -378,15 +380,24 @@ export function ClaimItemsTabs({
                                         Item
                                     </TableHead>
                                     {isNhis && <TableHead>NHIS Code</TableHead>}
+                                    {isPrescriptions && (
+                                        <TableHead>Frequency</TableHead>
+                                    )}
                                     <TableHead className="text-right">
                                         Qty
                                     </TableHead>
-                                    <TableHead className="text-right">
-                                        {isNhis ? 'NHIS Price' : 'Unit Price'}
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                        Subtotal
-                                    </TableHead>
+                                    {!isInvestigations && (
+                                        <>
+                                            <TableHead className="text-right">
+                                                {isNhis
+                                                    ? 'NHIS Price'
+                                                    : 'Unit Price'}
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Subtotal
+                                            </TableHead>
+                                        </>
+                                    )}
                                     {!disabled && (
                                         <TableHead className="w-[60px]"></TableHead>
                                     )}
@@ -431,28 +442,40 @@ export function ClaimItemsTabs({
                                                 )}
                                             </TableCell>
                                         )}
+                                        {isPrescriptions && (
+                                            <TableCell>
+                                                <span className="text-sm">
+                                                    {item.frequency || '-'}
+                                                </span>
+                                            </TableCell>
+                                        )}
                                         <TableCell className="text-right">
                                             {item.quantity}
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            {isNhis
-                                                ? formatCurrency(
-                                                      item.nhis_price,
-                                                  )
-                                                : formatCurrency(
-                                                      item.unit_price,
-                                                  )}
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {item.is_covered
-                                                ? formatCurrency(
-                                                      (isNhis
-                                                          ? item.nhis_price || 0
-                                                          : item.unit_price) *
-                                                          item.quantity,
-                                                  )
-                                                : '-'}
-                                        </TableCell>
+                                        {!isInvestigations && (
+                                            <>
+                                                <TableCell className="text-right">
+                                                    {isNhis
+                                                        ? formatCurrency(
+                                                              item.nhis_price,
+                                                          )
+                                                        : formatCurrency(
+                                                              item.unit_price,
+                                                          )}
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {item.is_covered
+                                                        ? formatCurrency(
+                                                              (isNhis
+                                                                  ? item.nhis_price ||
+                                                                    0
+                                                                  : item.unit_price) *
+                                                                  item.quantity,
+                                                          )
+                                                        : '-'}
+                                                </TableCell>
+                                            </>
+                                        )}
                                         {!disabled && (
                                             <TableCell>
                                                 <Button
@@ -499,14 +522,16 @@ export function ClaimItemsTabs({
                             </span>
                         )}
                     </div>
-                    <div className="text-right">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Subtotal:{' '}
-                        </span>
-                        <span className="font-semibold">
-                            {formatCurrency(subtotal)}
-                        </span>
-                    </div>
+                    {!isInvestigations && (
+                        <div className="text-right">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Subtotal:{' '}
+                            </span>
+                            <span className="font-semibold">
+                                {formatCurrency(subtotal)}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400">

@@ -374,6 +374,7 @@ interface Props {
     can_edit_vitals_timestamp?: boolean;
     can_edit_medication_timestamp?: boolean;
     can_delete_medication_administration?: boolean;
+    can_delete_old_medication_administration?: boolean;
     can_transfer?: boolean;
     can_create_ward_round?: boolean;
     can_update_ward_round?: boolean;
@@ -434,6 +435,7 @@ export default function WardPatientShow({
     can_edit_vitals_timestamp = false,
     can_edit_medication_timestamp = false,
     can_delete_medication_administration = false,
+    can_delete_old_medication_administration = false,
     can_transfer = false,
     can_create_ward_round = false,
     can_update_ward_round = false,
@@ -1313,6 +1315,7 @@ export default function WardPatientShow({
                                 prescriptions={allPrescriptions}
                                 admissionId={admission.id}
                                 canDelete={can_delete_medication_administration}
+                                canDeleteOld={can_delete_old_medication_administration}
                             />
                         </div>
                     </TabsContent>

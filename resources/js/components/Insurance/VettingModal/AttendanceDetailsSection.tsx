@@ -1,5 +1,12 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -7,7 +14,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Calendar, ClipboardList, Stethoscope, UserCheck } from 'lucide-react';
+import {
+    Calendar as CalendarIcon,
+    ClipboardList,
+    Stethoscope,
+    UserCheck,
+} from 'lucide-react';
 import type { AttendanceDetails } from './types';
 
 interface AttendanceDetailsSectionProps {
@@ -148,30 +160,114 @@ export function AttendanceDetailsSection({
 
                     {/* Date of Attendance */}
                     <div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                        <label className="text-sm text-gray-500 dark:text-gray-400">
                             Date of Attendance
-                        </span>
-                        <p className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
-                            <Calendar
-                                className="h-4 w-4 text-gray-400"
-                                aria-hidden="true"
-                            />
-                            {formatDate(attendance.date_of_attendance)}
-                        </p>
+                        </label>
+                        {onAttendanceChange && !disabled ? (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="mt-1 w-full justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {formatDate(
+                                            attendance.date_of_attendance,
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={
+                                            attendance.date_of_attendance
+                                                ? new Date(
+                                                      attendance.date_of_attendance,
+                                                  )
+                                                : undefined
+                                        }
+                                        onSelect={(date) => {
+                                            if (date) {
+                                                const formatted = date
+                                                    .toISOString()
+                                                    .split('T')[0];
+                                                onAttendanceChange(
+                                                    'date_of_attendance',
+                                                    formatted,
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        ) : (
+                            <p className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                                <CalendarIcon
+                                    className="h-4 w-4 text-gray-400"
+                                    aria-hidden="true"
+                                />
+                                {formatDate(attendance.date_of_attendance)}
+                            </p>
+                        )}
                     </div>
 
                     {/* Date of Discharge */}
                     <div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                        <label className="text-sm text-gray-500 dark:text-gray-400">
                             Date of Discharge
-                        </span>
-                        <p className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
-                            <Calendar
-                                className="h-4 w-4 text-gray-400"
-                                aria-hidden="true"
-                            />
-                            {formatDate(attendance.date_of_discharge)}
-                        </p>
+                        </label>
+                        {onAttendanceChange && !disabled ? (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="mt-1 w-full justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {formatDate(
+                                            attendance.date_of_discharge,
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={
+                                            attendance.date_of_discharge
+                                                ? new Date(
+                                                      attendance.date_of_discharge,
+                                                  )
+                                                : undefined
+                                        }
+                                        onSelect={(date) => {
+                                            if (date) {
+                                                const formatted = date
+                                                    .toISOString()
+                                                    .split('T')[0];
+                                                onAttendanceChange(
+                                                    'date_of_discharge',
+                                                    formatted,
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        ) : (
+                            <p className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                                <CalendarIcon
+                                    className="h-4 w-4 text-gray-400"
+                                    aria-hidden="true"
+                                />
+                                {formatDate(attendance.date_of_discharge)}
+                            </p>
+                        )}
                     </div>
 
                     {/* Type of Service */}

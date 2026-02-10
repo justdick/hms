@@ -35,7 +35,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::get('coverage-rules/create', function () {
         $planId = request()->query('plan');
 
-        return redirect('/admin/pricing-dashboard' . ($planId ? "?plan={$planId}" : ''));
+        return redirect('/admin/pricing-dashboard'.($planId ? "?plan={$planId}" : ''));
     })->name('coverage-rules.create');
     Route::get('coverage-rules/{coverageRule}/edit', function () {
         return redirect('/admin/pricing-dashboard');
@@ -66,6 +66,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::get('claims', [InsuranceClaimController::class, 'index'])->name('claims.index');
     Route::get('claims/export', [InsuranceClaimController::class, 'export'])->name('claims.export');
     Route::get('claims/{claim}/vetting-data', [InsuranceClaimController::class, 'getVettingData'])->name('claims.vetting-data');
+    Route::get('claims/{claim}/medical-history', [InsuranceClaimController::class, 'getMedicalHistory'])->name('claims.medical-history');
     Route::post('claims/{claim}/vet', [InsuranceClaimController::class, 'vet'])->name('claims.vet');
     Route::post('claims/{claim}/diagnoses', [InsuranceClaimController::class, 'updateDiagnoses'])->name('claims.diagnoses');
     Route::post('claims/{claim}/items', [InsuranceClaimController::class, 'addItem'])->name('claims.items.store');

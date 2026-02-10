@@ -25,8 +25,7 @@ class InsuranceClaimController extends Controller
 {
     public function __construct(
         protected ClaimVettingService $claimVettingService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -88,7 +87,7 @@ class InsuranceClaimController extends Controller
         $paginated = $query->paginate($perPage)->withQueryString();
 
         // Transform data while keeping flat pagination structure
-        $claims = $paginated->through(fn($claim) => (new InsuranceClaimResource($claim))->resolve());
+        $claims = $paginated->through(fn ($claim) => (new InsuranceClaimResource($claim))->resolve());
 
         // Get all providers for filter dropdown
         $providers = InsuranceProvider::orderBy('name')->get();
@@ -125,7 +124,7 @@ class InsuranceClaimController extends Controller
             'attendance' => $vettingData['attendance'],
             'diagnoses' => $vettingData['diagnoses'],
             'items' => [
-                'investigations' => $vettingData['items']['investigations']->map(fn($item) => [
+                'investigations' => $vettingData['items']['investigations']->map(fn ($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -134,9 +133,9 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
                 ]),
-                'prescriptions' => $vettingData['items']['prescriptions']->map(fn($item) => [
+                'prescriptions' => $vettingData['items']['prescriptions']->map(fn ($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -145,9 +144,10 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'frequency' => $item->charge?->prescription?->frequency,
                 ]),
-                'procedures' => $vettingData['items']['procedures']->map(fn($item) => [
+                'procedures' => $vettingData['items']['procedures']->map(fn ($item) => [
                     'id' => $item->id,
                     'name' => $item->description,
                     'code' => $item->code,
@@ -156,12 +156,12 @@ class InsuranceClaimController extends Controller
                     'unit_price' => $item->unit_price,
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
-                    'is_covered' => $item->nhis_price !== null || !$vettingData['is_nhis'],
+                    'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
                 ]),
             ],
             'totals' => $vettingData['totals'],
             'is_nhis' => $vettingData['is_nhis'],
-            'gdrg_tariffs' => $vettingData['gdrg_tariffs']->map(fn($tariff) => [
+            'gdrg_tariffs' => $vettingData['gdrg_tariffs']->map(fn ($tariff) => [
                 'id' => $tariff->id,
                 'code' => $tariff->code,
                 'name' => $tariff->name,
@@ -171,6 +171,202 @@ class InsuranceClaimController extends Controller
             // Diagnoses loaded via async search - too many to load upfront
             'can' => [
                 'vet' => auth()->user()->can('vetClaim', $claim),
+            ],
+        ]);
+    }
+
+    /**
+     * Get medical history for the patient associated with a claim.
+     */
+    public function getMedicalHistory(InsuranceClaim $claim): JsonResponse
+    {
+        $this->authorize('view', $claim);
+
+        $patient = $claim->patient;
+
+        if (! $patient) {
+            return response()->json(['error' => 'Patient not found'], 404);
+        }
+
+        // Get consultations with related data
+        $consultations = \App\Models\Consultation::with([
+            'doctor:id,name',
+            'patientCheckin:id,department_id,checked_in_at',
+            'patientCheckin.department:id,name',
+            'patientCheckin.vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
+            'diagnoses.diagnosis:id,code,diagnosis',
+            'prescriptions.drug:id,name,generic_name,form,strength',
+            'labOrders.labService:id,name,code,is_imaging,test_parameters',
+            'procedures.procedureType:id,name,code',
+        ])
+            ->whereHas('patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
+            ->where('status', 'completed')
+            ->orderByDesc('started_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($consultation) {
+                $vitals = $consultation->patientCheckin?->vitalSigns?->first();
+
+                return [
+                    'id' => $consultation->id,
+                    'date' => $consultation->started_at?->format('Y-m-d H:i'),
+                    'doctor' => $consultation->doctor?->name,
+                    'department' => $consultation->patientCheckin?->department?->name,
+                    'presenting_complaint' => $consultation->presenting_complaint,
+                    'history_presenting_complaint' => $consultation->history_presenting_complaint,
+                    'examination_findings' => $consultation->examination_findings,
+                    'assessment_notes' => $consultation->assessment_notes,
+                    'plan_notes' => $consultation->plan_notes,
+                    'vitals' => $vitals ? [
+                        'blood_pressure' => $vitals->blood_pressure,
+                        'temperature' => $vitals->temperature,
+                        'pulse_rate' => $vitals->pulse_rate,
+                        'respiratory_rate' => $vitals->respiratory_rate,
+                        'oxygen_saturation' => $vitals->oxygen_saturation,
+                        'weight' => $vitals->weight,
+                        'height' => $vitals->height,
+                        'bmi' => $vitals->bmi,
+                        'recorded_at' => $vitals->recorded_at?->format('Y-m-d H:i'),
+                        'recorded_by' => $vitals->recordedBy?->name,
+                    ] : null,
+                    'diagnoses' => $consultation->diagnoses->map(fn ($d) => [
+                        'type' => $d->type,
+                        'code' => $d->diagnosis?->code,
+                        'description' => $d->diagnosis?->diagnosis,
+                        'notes' => $d->notes,
+                    ]),
+                    'prescriptions' => $consultation->prescriptions->map(fn ($p) => [
+                        'drug_name' => $p->drug?->name ?? $p->medication_name,
+                        'generic_name' => $p->drug?->generic_name,
+                        'form' => $p->drug?->form ?? $p->dosage_form,
+                        'strength' => $p->drug?->strength,
+                        'dose_quantity' => $p->dose_quantity,
+                        'frequency' => $p->frequency,
+                        'duration' => $p->duration,
+                        'quantity' => $p->quantity,
+                        'instructions' => $p->instructions,
+                        'status' => $p->status,
+                    ]),
+                    'lab_orders' => $consultation->labOrders->map(fn ($l) => [
+                        'id' => $l->id,
+                        'service_name' => $l->labService?->name,
+                        'code' => $l->labService?->code,
+                        'is_imaging' => $l->labService?->is_imaging,
+                        'test_parameters' => $l->labService?->test_parameters,
+                        'status' => $l->status,
+                        'result_values' => $l->result_values,
+                        'result_notes' => $l->result_notes,
+                        'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                        'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                    ]),
+                    'procedures' => $consultation->procedures->map(fn ($p) => [
+                        'name' => $p->procedureType?->name,
+                        'code' => $p->procedureType?->code,
+                        'notes' => $p->notes,
+                    ]),
+                ];
+            });
+
+        // Get admissions history
+        $admissions = $patient->admissions()
+            ->with([
+                'ward:id,name',
+                'bed:id,bed_number',
+                'consultation.doctor:id,name',
+                'diagnoses',
+                'wardRounds' => fn ($q) => $q->with([
+                    'doctor:id,name',
+                    'prescriptions.drug:id,name,generic_name,form,strength',
+                    'labOrders.labService:id,name,code,is_imaging,test_parameters',
+                    'procedures.procedureType:id,name,code',
+                    'diagnoses',
+                ])->orderByDesc('round_datetime'),
+            ])
+            ->orderByDesc('admitted_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'admission_number' => $a->admission_number,
+                'admitted_at' => $a->admitted_at?->format('Y-m-d H:i'),
+                'discharged_at' => $a->discharged_at?->format('Y-m-d H:i'),
+                'status' => $a->status,
+                'ward' => $a->ward?->name,
+                'bed' => $a->bed?->bed_number,
+                'admission_reason' => $a->admission_reason,
+                'discharge_notes' => $a->discharge_notes,
+                'admitting_doctor' => $a->consultation?->doctor?->name,
+                'diagnoses' => $a->diagnoses->map(fn ($d) => [
+                    'type' => $d->diagnosis_type,
+                    'code' => $d->icd_code,
+                    'description' => $d->diagnosis_name,
+                    'is_active' => $d->is_active,
+                ]),
+                'ward_rounds' => $a->wardRounds
+                    // Deduplicate: merge near-duplicate rounds per day+doctor+date combo
+                    // Keep latest SOAP notes but aggregate prescriptions/labs/procedures from all
+                    ->groupBy(fn ($wr) => $wr->day_number.'-'.$wr->doctor_id.'-'.$wr->round_datetime?->format('Y-m-d'))
+                    ->map(function ($group) {
+                        $latest = $group->sortByDesc('id')->first();
+                        $allPrescriptions = $group->flatMap(fn ($wr) => $wr->prescriptions)->unique('id');
+                        $allLabOrders = $group->flatMap(fn ($wr) => $wr->labOrders)->unique('id');
+                        $allProcedures = $group->flatMap(fn ($wr) => $wr->procedures)->unique('id');
+
+                        return [
+                            'id' => $latest->id,
+                            'date' => $latest->round_datetime?->format('Y-m-d H:i'),
+                            'doctor' => $latest->doctor?->name,
+                            'day_number' => $latest->day_number,
+                            'round_type' => $latest->round_type,
+                            'presenting_complaint' => $latest->presenting_complaint,
+                            'examination_findings' => $latest->examination_findings,
+                            'assessment_notes' => $latest->assessment_notes,
+                            'plan_notes' => $latest->plan_notes,
+                            'patient_status' => $latest->patient_status,
+                            'prescriptions' => $allPrescriptions->values()->map(fn ($p) => [
+                                'drug_name' => $p->drug?->name ?? $p->medication_name,
+                                'generic_name' => $p->drug?->generic_name,
+                                'form' => $p->drug?->form ?? $p->dosage_form,
+                                'strength' => $p->drug?->strength,
+                                'dose_quantity' => $p->dose_quantity,
+                                'frequency' => $p->frequency,
+                                'duration' => $p->duration,
+                                'quantity' => $p->quantity,
+                                'instructions' => $p->instructions,
+                                'status' => $p->status,
+                            ]),
+                            'lab_orders' => $allLabOrders->values()->map(fn ($l) => [
+                                'id' => $l->id,
+                                'service_name' => $l->labService?->name,
+                                'code' => $l->labService?->code,
+                                'is_imaging' => $l->labService?->is_imaging,
+                                'status' => $l->status,
+                                'result_values' => $l->result_values,
+                                'result_notes' => $l->result_notes,
+                                'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                                'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                            ]),
+                            'procedures' => $allProcedures->values()->map(fn ($p) => [
+                                'name' => $p->procedureType?->name,
+                                'code' => $p->procedureType?->code,
+                                'notes' => $p->comments,
+                            ]),
+                        ];
+                    })
+                    ->values(),
+            ]);
+
+        return response()->json([
+            'patient_name' => $patient->full_name ?? ($patient->first_name.' '.$patient->last_name),
+            'background_history' => [
+                'past_medical_surgical_history' => $patient->past_medical_surgical_history,
+                'drug_history' => $patient->drug_history,
+                'family_history' => $patient->family_history,
+                'social_history' => $patient->social_history,
+            ],
+            'medical_history' => [
+                'consultations' => $consultations,
+                'admissions' => $admissions,
             ],
         ]);
     }
@@ -200,7 +396,7 @@ class InsuranceClaimController extends Controller
         // Handle approval using ClaimVettingService
         try {
             // Update attendance details if provided
-            $attendanceFields = ['type_of_attendance', 'type_of_service', 'specialty_attended', 'attending_prescriber'];
+            $attendanceFields = ['type_of_attendance', 'type_of_service', 'specialty_attended', 'attending_prescriber', 'date_of_attendance', 'date_of_discharge'];
             foreach ($attendanceFields as $field) {
                 if (isset($validated[$field])) {
                     $claim->$field = $validated[$field];
@@ -219,7 +415,7 @@ class InsuranceClaimController extends Controller
             $claim->refresh();
 
             // Process item-level approvals if provided
-            if (!empty($validated['items'])) {
+            if (! empty($validated['items'])) {
                 $approvedAmount = 0;
 
                 foreach ($validated['items'] as $itemData) {
@@ -289,7 +485,7 @@ class InsuranceClaimController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Claim diagnoses updated successfully.',
-                'diagnoses' => $claim->claimDiagnoses->map(fn($cd) => [
+                'diagnoses' => $claim->claimDiagnoses->map(fn ($cd) => [
                     'id' => $cd->id,
                     'diagnosis_id' => $cd->diagnosis_id,
                     'name' => $cd->diagnosis->name ?? $cd->diagnosis->diagnosis ?? '',
@@ -302,7 +498,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update diagnoses: ' . $e->getMessage(),
+                'message' => 'Failed to update diagnoses: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -325,7 +521,7 @@ class InsuranceClaimController extends Controller
 
         try {
             // Determine if using NHIS or GDRG tariff
-            $isGdrg = !empty($validated['gdrg_tariff_id']);
+            $isGdrg = ! empty($validated['gdrg_tariff_id']);
 
             if ($isGdrg) {
                 $gdrgTariff = \App\Models\GdrgTariff::findOrFail($validated['gdrg_tariff_id']);
@@ -405,7 +601,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to add item: ' . $e->getMessage(),
+                'message' => 'Failed to add item: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -445,7 +641,7 @@ class InsuranceClaimController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to remove item: ' . $e->getMessage(),
+                'message' => 'Failed to remove item: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -464,7 +660,7 @@ class InsuranceClaimController extends Controller
             // For NHIS, sum only items with NHIS prices
             $itemsTotal = $claim->items
                 ->whereNotNull('nhis_price')
-                ->sum(fn($item) => (float) $item->nhis_price * (int) $item->quantity);
+                ->sum(fn ($item) => (float) $item->nhis_price * (int) $item->quantity);
         } else {
             $itemsTotal = $claim->items->sum('subtotal');
         }
@@ -484,7 +680,7 @@ class InsuranceClaimController extends Controller
     {
         // Update batch items in draft batches only
         $claim->batchItems()
-            ->whereHas('batch', fn($q) => $q->where('status', 'draft'))
+            ->whereHas('batch', fn ($q) => $q->where('status', 'draft'))
             ->each(function ($batchItem) use ($claim) {
                 $batchItem->claim_amount = $claim->total_claim_amount ?? 0;
                 $batchItem->save();
@@ -508,13 +704,13 @@ class InsuranceClaimController extends Controller
 
         try {
             $submissionDate = $request->input('submission_date', now()->toDateString());
-            $batchReference = $isBatch ? ($request->input('batch_reference') ?: 'BATCH-' . now()->format('YmdHis')) : null;
+            $batchReference = $isBatch ? ($request->input('batch_reference') ?: 'BATCH-'.now()->format('YmdHis')) : null;
 
             foreach ($claimIds as $claimId) {
                 $claim = InsuranceClaim::findOrFail($claimId);
 
                 // Check authorization
-                if (!auth()->user()->can('submitClaim', $claim)) {
+                if (! auth()->user()->can('submitClaim', $claim)) {
                     $errors[] = "Not authorized to submit claim {$claim->claim_check_code}";
 
                     continue;
@@ -542,22 +738,22 @@ class InsuranceClaimController extends Controller
             DB::commit();
 
             if ($submittedCount === 0) {
-                return back()->with('error', 'No claims were submitted. ' . implode(', ', $errors));
+                return back()->with('error', 'No claims were submitted. '.implode(', ', $errors));
             }
 
             $message = $isBatch
                 ? "{$submittedCount} claim(s) submitted successfully in batch {$batchReference}."
                 : 'Claim submitted successfully.';
 
-            if (!empty($errors)) {
-                $message .= ' Some claims failed: ' . implode(', ', $errors);
+            if (! empty($errors)) {
+                $message .= ' Some claims failed: '.implode(', ', $errors);
             }
 
             return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to submit claims: ' . $e->getMessage());
+            return back()->with('error', 'Failed to submit claims: '.$e->getMessage());
         }
     }
 
@@ -592,7 +788,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to record payment: ' . $e->getMessage());
+            return back()->with('error', 'Failed to record payment: '.$e->getMessage());
         }
     }
 
@@ -617,7 +813,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to reject claim: ' . $e->getMessage());
+            return back()->with('error', 'Failed to reject claim: '.$e->getMessage());
         }
     }
 
@@ -653,7 +849,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to resubmit claim: ' . $e->getMessage());
+            return back()->with('error', 'Failed to resubmit claim: '.$e->getMessage());
         }
     }
 
@@ -699,7 +895,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to update claim: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update claim: '.$e->getMessage());
         }
     }
 
@@ -728,8 +924,8 @@ class InsuranceClaimController extends Controller
             // Clear rejection data but keep the reason in notes for reference
             $previousRejectionReason = $claim->rejection_reason;
             if ($previousRejectionReason) {
-                $claim->notes = ($claim->notes ? $claim->notes . "\n\n" : '')
-                    . 'Previous rejection reason: ' . $previousRejectionReason;
+                $claim->notes = ($claim->notes ? $claim->notes."\n\n" : '')
+                    .'Previous rejection reason: '.$previousRejectionReason;
             }
             $claim->rejection_reason = null;
             $claim->rejected_by = null;
@@ -751,7 +947,7 @@ class InsuranceClaimController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Failed to prepare claim for resubmission: ' . $e->getMessage());
+            return back()->with('error', 'Failed to prepare claim for resubmission: '.$e->getMessage());
         }
     }
 
@@ -790,7 +986,7 @@ class InsuranceClaimController extends Controller
 
     private function exportToExcel($claims)
     {
-        $filename = 'insurance-claims-' . now()->format('Y-m-d-His') . '.csv';
+        $filename = 'insurance-claims-'.now()->format('Y-m-d-His').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -823,7 +1019,7 @@ class InsuranceClaimController extends Controller
             foreach ($claims as $claim) {
                 fputcsv($file, [
                     $claim->claim_check_code,
-                    $claim->patient_surname . ' ' . $claim->patient_other_names,
+                    $claim->patient_surname.' '.$claim->patient_other_names,
                     $claim->membership_id,
                     $claim->patientInsurance->plan->provider->name ?? '',
                     $claim->patientInsurance->plan->name ?? '',

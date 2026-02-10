@@ -1,6 +1,6 @@
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
-import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
+import { PatientMedicalHistoryModal } from '@/components/Patient/PatientMedicalHistoryModal';
 import PrescriptionSection from '@/components/Consultation/PrescriptionSection';
 import LabOrdersSection from '@/components/Consultation/LabOrdersSection';
 import WardRoundProceduresTab from '@/components/Ward/WardRoundProceduresTab';
@@ -47,6 +47,7 @@ import {
     Clock,
     FileText,
     Heart,
+    History,
     Pill,
     Plus,
     Stethoscope,
@@ -256,6 +257,7 @@ export default function WardRoundCreate({
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [showMedicalHistory, setShowMedicalHistory] = useState(false);
     const [dateManuallyChanged, setDateManuallyChanged] = useState(false);
     const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -759,10 +761,14 @@ export default function WardRoundCreate({
                 {/* Quick Actions */}
                 <div className="mb-6 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <PatientHistorySidebar
-                            previousConsultations={[]}
-                            allergies={patientHistory?.allergies || []}
-                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowMedicalHistory(true)}
+                            className="gap-2 border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:text-violet-400 dark:hover:bg-violet-600 dark:hover:text-white"
+                        >
+                            <History className="h-4 w-4" />
+                            Medical History
+                        </Button>
                         <Button onClick={handleSaveAndExit} variant="outline">
                             Save & Exit
                         </Button>
@@ -1197,6 +1203,13 @@ export default function WardRoundCreate({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Medical History Modal */}
+            <PatientMedicalHistoryModal
+                patientId={admission.patient?.id ?? null}
+                isOpen={showMedicalHistory}
+                onClose={() => setShowMedicalHistory(false)}
+            />
         </AppLayout>
     );
 }

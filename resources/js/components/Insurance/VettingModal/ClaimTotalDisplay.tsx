@@ -52,16 +52,6 @@ export function ClaimTotalDisplay({ totals, isNhis }: ClaimTotalDisplayProps) {
                         </div>
                     )}
 
-                    {/* Investigations */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">
-                            Investigations
-                        </span>
-                        <span className="font-medium">
-                            {formatCurrency(totals.investigations)}
-                        </span>
-                    </div>
-
                     {/* Prescriptions */}
                     <div className="flex items-center justify-between">
                         <span className="text-gray-600 dark:text-gray-400">
@@ -124,8 +114,9 @@ export function ClaimTotalDisplay({ totals, isNhis }: ClaimTotalDisplayProps) {
                 {/* NHIS Calculation Note */}
                 {isNhis && (
                     <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        Total calculated as: G-DRG Tariff + Investigations +
-                        Prescriptions + Procedures (using NHIS tariff prices)
+                        Total calculated as: G-DRG Tariff +
+                        Prescriptions + Procedures (using NHIS tariff prices).
+                        Investigation prices are excluded.
                     </p>
                 )}
             </div>

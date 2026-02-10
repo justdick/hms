@@ -38,19 +38,18 @@ class MedicationAdministrationPolicy
 
     /**
      * Determine whether the user can delete medication administrations.
-     * Can only delete within 3 days of recording.
+     * Users with medications.delete can delete within 3 days.
+     * Users with medications.delete-old can delete records older than 3 days.
      */
     public function delete(User $user, MedicationAdministration $medicationAdministration): bool
     {
-        if (! $user->can('medications.delete')) {
-            return false;
+        $isOld = $medicationAdministration->administered_at
+            && $medicationAdministration->administered_at < now()->subDays(3);
+
+        if ($isOld) {
+            return $user->can('medications.delete-old');
         }
 
-        // Can only delete if recorded within the last 3 days
-        if ($medicationAdministration->administered_at) {
-            return $medicationAdministration->administered_at >= now()->subDays(3);
-        }
-
-        return true;
+        return $user->can('medications.delete');
     }
 }

@@ -30,6 +30,7 @@ export interface ClaimItem {
     subtotal: number;
     is_covered: boolean;
     item_type?: 'drug' | 'lab' | 'procedure';
+    frequency?: string | null;
 }
 
 export interface NhisTariffOption {

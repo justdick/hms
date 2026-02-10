@@ -19,6 +19,8 @@ beforeEach(function () {
     Permission::firstOrCreate(['name' => 'view medication administrations']);
     Permission::firstOrCreate(['name' => 'administer medications']);
     Permission::firstOrCreate(['name' => 'delete medication administrations']);
+    Permission::firstOrCreate(['name' => 'medications.delete']);
+    Permission::firstOrCreate(['name' => 'medications.delete-old']);
     Permission::firstOrCreate(['name' => 'medications.edit-timestamp']);
 
     // Create user with permissions
@@ -354,6 +356,75 @@ describe('Authorization', function () {
                 'prescription_id' => $this->prescription->id,
                 'dosage_given' => '2 tablets',
             ]);
+
+        $response->assertForbidden();
+    });
+
+    it('allows user with medications.delete to delete recent MAR record', function () {
+        $this->user->givePermissionTo('medications.delete');
+
+        $administration = MedicationAdministration::factory()->create([
+            'prescription_id' => $this->prescription->id,
+            'patient_admission_id' => $this->admission->id,
+            'administered_at' => now()->subHours(1),
+            'status' => 'given',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete("/admissions/{$this->admission->id}/medications/{$administration->id}");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        expect($administration->fresh()->trashed())->toBeTrue();
+    });
+
+    it('prevents user with only medications.delete from deleting old MAR record', function () {
+        $this->user->givePermissionTo('medications.delete');
+
+        $administration = MedicationAdministration::factory()->create([
+            'prescription_id' => $this->prescription->id,
+            'patient_admission_id' => $this->admission->id,
+            'administered_at' => now()->subDays(5),
+            'status' => 'given',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete("/admissions/{$this->admission->id}/medications/{$administration->id}");
+
+        $response->assertForbidden();
+        expect($administration->fresh()->trashed())->toBeFalse();
+    });
+
+    it('allows user with medications.delete-old to delete old MAR record', function () {
+        $this->user->givePermissionTo('medications.delete-old');
+
+        $administration = MedicationAdministration::factory()->create([
+            'prescription_id' => $this->prescription->id,
+            'patient_admission_id' => $this->admission->id,
+            'administered_at' => now()->subDays(5),
+            'status' => 'given',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete("/admissions/{$this->admission->id}/medications/{$administration->id}");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        expect($administration->fresh()->trashed())->toBeTrue();
+    });
+
+    it('prevents user without any delete permission from deleting MAR record', function () {
+        $userWithoutPermission = User::factory()->create();
+
+        $administration = MedicationAdministration::factory()->create([
+            'prescription_id' => $this->prescription->id,
+            'patient_admission_id' => $this->admission->id,
+            'administered_at' => now()->subHours(1),
+            'status' => 'given',
+        ]);
+
+        $response = $this->actingAs($userWithoutPermission)
+            ->delete("/admissions/{$this->admission->id}/medications/{$administration->id}");
 
         $response->assertForbidden();
     });

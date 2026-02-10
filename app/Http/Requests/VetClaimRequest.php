@@ -59,6 +59,8 @@ class VetClaimRequest extends FormRequest
             'type_of_service' => ['nullable', 'string', 'max:10'],
             'specialty_attended' => ['nullable', 'string', 'max:10'],
             'attending_prescriber' => ['nullable', 'string', 'max:255'],
+            'date_of_attendance' => ['nullable', 'date'],
+            'date_of_discharge' => ['nullable', 'date'],
         ];
     }
 

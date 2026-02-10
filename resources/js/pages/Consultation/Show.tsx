@@ -3,7 +3,7 @@ import VitalsModal from '@/components/Checkin/VitalsModal';
 import DiagnosisFormSection from '@/components/Consultation/DiagnosisFormSection';
 import { InvestigationsWithBatch } from '@/components/Consultation/InvestigationsWithBatch';
 import MedicalHistoryNotes from '@/components/Consultation/MedicalHistoryNotes';
-import { PatientHistorySidebar } from '@/components/Consultation/PatientHistorySidebar';
+import { PatientMedicalHistoryModal } from '@/components/Patient/PatientMedicalHistoryModal';
 import PrescriptionSection from '@/components/Consultation/PrescriptionSection';
 import TheatreProceduresTab from '@/components/Consultation/TheatreProceduresTab';
 import {
@@ -49,6 +49,7 @@ import {
     FileText,
     FlaskConical,
     Heart,
+    History,
     Pill,
     Stethoscope,
     User,
@@ -546,6 +547,7 @@ export default function ConsultationShow({
     const [activeTab, setActiveTab] = useState('vitals');
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [showMedicalHistory, setShowMedicalHistory] = useState(false);
     const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Vitals modal state
@@ -1184,18 +1186,14 @@ export default function ConsultationShow({
                 {/* Quick Actions */}
                 <div className="mb-6 flex items-center justify-between gap-4">
                     <div className="flex gap-4">
-                        <PatientHistorySidebar
-                            previousConsultations={
-                                patientHistory?.previousConsultations || []
-                            }
-                            previousMinorProcedures={
-                                patientHistory?.previousMinorProcedures || []
-                            }
-                            previousImagingStudies={
-                                patientHistory?.previousImagingStudies || []
-                            }
-                            allergies={patientHistory?.allergies || []}
-                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowMedicalHistory(true)}
+                            className="gap-2 border-violet-600 text-violet-600 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:text-violet-400 dark:hover:bg-violet-600 dark:hover:text-white"
+                        >
+                            <History className="h-4 w-4" />
+                            Medical History
+                        </Button>
                         {isEditable && (
                                 <>
                                     <Button
@@ -2028,6 +2026,13 @@ export default function ConsultationShow({
                     router.reload();
                 }}
                 mode={vitalsModalMode}
+            />
+
+            {/* Medical History Modal */}
+            <PatientMedicalHistoryModal
+                patientId={consultation.patient_checkin?.patient?.id ?? null}
+                isOpen={showMedicalHistory}
+                onClose={() => setShowMedicalHistory(false)}
             />
         </AppLayout>
     );
