@@ -70,6 +70,7 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     Route::post('claims/{claim}/vet', [InsuranceClaimController::class, 'vet'])->name('claims.vet');
     Route::post('claims/{claim}/diagnoses', [InsuranceClaimController::class, 'updateDiagnoses'])->name('claims.diagnoses');
     Route::post('claims/{claim}/items', [InsuranceClaimController::class, 'addItem'])->name('claims.items.store');
+    Route::patch('claims/{claim}/items/{item}', [InsuranceClaimController::class, 'updateItem'])->name('claims.items.update');
     Route::delete('claims/{claim}/items/{item}', [InsuranceClaimController::class, 'removeItem'])->name('claims.items.destroy');
 
     // Claims Submission & Tracking (Phase 8)

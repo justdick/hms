@@ -15,9 +15,9 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create permissions (including system.admin for policy check)
-    Permission::create(['name' => 'system.admin']);
-    Permission::create(['name' => 'insurance.view-claims']);
-    Permission::create(['name' => 'insurance.vet-claims']);
+    Permission::firstOrCreate(['name' => 'system.admin']);
+    Permission::firstOrCreate(['name' => 'insurance.view-claims']);
+    Permission::firstOrCreate(['name' => 'insurance.vet-claims']);
 
     $this->user = User::factory()->create();
     $this->user->givePermissionTo(['insurance.view-claims', 'insurance.vet-claims']);
@@ -39,7 +39,6 @@ beforeEach(function () {
     ]);
 
     $this->nhisTariff = NhisTariff::factory()->create([
-        'nhis_code' => 'TEST001',
         'name' => 'Test Medicine',
         'category' => 'medicine',
         'price' => 25.00,
@@ -65,7 +64,7 @@ it('can add an item to a claim from NHIS tariff', function () {
         'insurance_claim_id' => $this->claim->id,
         'charge_id' => null, // Manual item has no charge
         'nhis_tariff_id' => $this->nhisTariff->id,
-        'nhis_code' => 'TEST001',
+        'nhis_code' => $this->nhisTariff->nhis_code,
         'description' => 'Test Medicine',
         'quantity' => 2,
     ]);
@@ -193,4 +192,170 @@ it('validates quantity is required when adding item', function () {
 
     $response->assertUnprocessable();
     $response->assertJsonValidationErrors(['quantity']);
+});
+
+it('can update item quantity', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+        'quantity' => 1,
+        'unit_tariff' => 25.00,
+        'nhis_price' => 25.00,
+        'subtotal' => 25.00,
+        'insurance_pays' => 25.00,
+        'is_covered' => true,
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 3,
+        ]);
+
+    $response->assertSuccessful();
+    $response->assertJson([
+        'success' => true,
+        'item' => [
+            'id' => $item->id,
+            'quantity' => 3,
+        ],
+    ]);
+
+    $item->refresh();
+    expect($item->quantity)->toBe(3)
+        ->and((float) $item->subtotal)->toBe(75.0);
+});
+
+it('can update item frequency', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+        'item_type' => 'drug',
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'frequency' => 'TDS',
+        ]);
+
+    $response->assertSuccessful();
+    $response->assertJson([
+        'success' => true,
+        'item' => [
+            'id' => $item->id,
+            'frequency' => 'TDS',
+        ],
+    ]);
+
+    $item->refresh();
+    expect($item->frequency)->toBe('TDS');
+});
+
+it('can update both quantity and frequency at once', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+        'item_type' => 'drug',
+        'quantity' => 1,
+        'unit_tariff' => 10.00,
+        'nhis_price' => 10.00,
+        'subtotal' => 10.00,
+        'insurance_pays' => 10.00,
+        'is_covered' => true,
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 5,
+            'frequency' => 'Twice daily (BID)',
+        ]);
+
+    $response->assertSuccessful();
+
+    $item->refresh();
+    expect($item->quantity)->toBe(5)
+        ->and($item->frequency)->toBe('Twice daily (BID)')
+        ->and((float) $item->subtotal)->toBe(50.0);
+});
+
+it('cannot update item belonging to another claim', function () {
+    $otherClaim = InsuranceClaim::factory()->create();
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $otherClaim->id,
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 5,
+        ]);
+
+    $response->assertForbidden();
+});
+
+it('validates quantity minimum when updating item', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 0,
+        ]);
+
+    $response->assertUnprocessable();
+    $response->assertJsonValidationErrors(['quantity']);
+});
+
+it('requires permission to update items', function () {
+    $unauthorizedUser = User::factory()->create();
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+    ]);
+
+    $response = $this->actingAs($unauthorizedUser)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 2,
+        ]);
+
+    $response->assertForbidden();
+});
+
+it('recalculates claim totals after updating item quantity', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+        'nhis_price' => 20.00,
+        'unit_tariff' => 20.00,
+        'quantity' => 1,
+        'subtotal' => 20.00,
+        'insurance_pays' => 20.00,
+        'is_covered' => true,
+    ]);
+
+    $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'quantity' => 4,
+        ]);
+
+    $this->claim->refresh();
+    expect((float) $this->claim->total_claim_amount)->toBe(80.0);
+});
+
+it('can update item date', function () {
+    $item = InsuranceClaimItem::factory()->create([
+        'insurance_claim_id' => $this->claim->id,
+        'item_date' => '2026-01-01',
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson("/admin/insurance/claims/{$this->claim->id}/items/{$item->id}", [
+            'item_date' => '2026-02-15',
+        ]);
+
+    $response->assertSuccessful();
+    $response->assertJson([
+        'success' => true,
+        'item' => [
+            'id' => $item->id,
+            'item_date' => '2026-02-15',
+        ],
+    ]);
+
+    $item->refresh();
+    expect($item->item_date->format('Y-m-d'))->toBe('2026-02-15');
 });

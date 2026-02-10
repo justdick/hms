@@ -134,6 +134,7 @@ class InsuranceClaimController extends Controller
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'item_date' => $item->item_date?->format('Y-m-d'),
                 ]),
                 'prescriptions' => $vettingData['items']['prescriptions']->map(fn ($item) => [
                     'id' => $item->id,
@@ -145,7 +146,8 @@ class InsuranceClaimController extends Controller
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
-                    'frequency' => $item->charge?->prescription?->frequency,
+                    'frequency' => $item->frequency ?? $item->charge?->prescription?->frequency,
+                    'item_date' => $item->item_date?->format('Y-m-d'),
                 ]),
                 'procedures' => $vettingData['items']['procedures']->map(fn ($item) => [
                     'id' => $item->id,
@@ -157,6 +159,7 @@ class InsuranceClaimController extends Controller
                     'nhis_price' => $item->nhis_price,
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
+                    'item_date' => $item->item_date?->format('Y-m-d'),
                 ]),
             ],
             'totals' => $vettingData['totals'],
@@ -602,6 +605,73 @@ class InsuranceClaimController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add item: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update a claim item's quantity and/or frequency.
+     */
+    public function updateItem(Request $request, InsuranceClaim $claim, InsuranceClaimItem $item): JsonResponse
+    {
+        $this->authorize('vetClaim', $claim);
+
+        if ($item->insurance_claim_id !== $claim->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item does not belong to this claim.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'quantity' => ['sometimes', 'required', 'integer', 'min:1'],
+            'frequency' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'item_date' => ['sometimes', 'required', 'date'],
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            if (isset($validated['quantity'])) {
+                $item->quantity = $validated['quantity'];
+                $unitPrice = $item->nhis_price ?? $item->unit_tariff;
+                $item->subtotal = $unitPrice * $item->quantity;
+                $item->insurance_pays = $item->is_covered ? $item->subtotal : 0;
+                $item->patient_pays = $item->is_covered ? 0 : $item->subtotal;
+            }
+
+            if (array_key_exists('frequency', $validated)) {
+                $item->frequency = $validated['frequency'];
+            }
+
+            if (isset($validated['item_date'])) {
+                $item->item_date = $validated['item_date'];
+            }
+
+            $item->save();
+
+            $this->recalculateClaimTotals($claim);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item updated successfully.',
+                'item' => [
+                    'id' => $item->id,
+                    'quantity' => $item->quantity,
+                    'frequency' => $item->frequency,
+                    'item_date' => $item->item_date?->format('Y-m-d'),
+                    'subtotal' => (float) $item->subtotal,
+                    'insurance_pays' => (float) $item->insurance_pays,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update item: '.$e->getMessage(),
             ], 500);
         }
     }

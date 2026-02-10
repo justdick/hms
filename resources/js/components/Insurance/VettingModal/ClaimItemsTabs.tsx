@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
     Command,
     CommandEmpty,
@@ -8,11 +9,19 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -26,13 +35,14 @@ import { formatCurrency } from '@/lib/utils';
 import {
     AlertTriangle,
     Beaker,
+    Calendar as CalendarIcon,
     Loader2,
     Pill,
     Plus,
     Scissors,
     Trash2,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { ClaimItem, NhisTariffOption } from './types';
 
 interface ClaimItemsTabsProps {
@@ -53,6 +63,20 @@ interface ClaimItemsTabsProps {
 
 type ItemCategory = 'investigations' | 'prescriptions' | 'procedures';
 
+const FREQUENCY_OPTIONS = [
+    { value: 'STAT (Immediately)', label: 'STAT (Immediately)' },
+    { value: 'Once daily', label: 'Once daily' },
+    { value: 'Twice daily (BID)', label: 'Twice daily (BID)' },
+    { value: 'Three times daily (TID)', label: 'Three times daily (TID)' },
+    { value: 'Four times daily (QID)', label: 'Four times daily (QID)' },
+    { value: 'Every 4 hours', label: 'Every 4 hours' },
+    { value: 'Every 6 hours', label: 'Every 6 hours' },
+    { value: 'Every 8 hours', label: 'Every 8 hours' },
+    { value: 'Every 12 hours', label: 'Every 12 hours' },
+    { value: 'At night (Nocte)', label: 'At night (Nocte)' },
+    { value: 'As needed (PRN)', label: 'As needed (PRN)' },
+];
+
 /**
  * ClaimItemsTabs - Tabbed display of claim items with add/delete functionality
  */
@@ -72,11 +96,83 @@ export function ClaimItemsTabs({
     const [searchResults, setSearchResults] = useState<NhisTariffOption[]>([]);
     const [searching, setSearching] = useState(false);
     const [addingItem, setAddingItem] = useState(false);
+    const [savingItemId, setSavingItemId] = useState<number | null>(null);
+    const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
     const formatCurrencyOrDash = (amount: number | null) => {
         if (amount === null) return '-';
         return formatCurrency(amount);
     };
+
+    const handleItemFieldChange = useCallback(
+        (
+            itemId: number,
+            field: 'quantity' | 'frequency' | 'item_date',
+            value: string,
+            category: ItemCategory,
+        ) => {
+            // Update local state immediately
+            const updatedItems = { ...items };
+            updatedItems[category] = updatedItems[category].map((item) => {
+                if (item.id !== itemId) return item;
+                if (field === 'quantity') {
+                    const qty = parseInt(value, 10);
+                    if (isNaN(qty) || qty < 1) return item;
+                    const unitPrice = item.nhis_price ?? item.unit_price;
+                    return { ...item, quantity: qty, subtotal: unitPrice * qty };
+                }
+                if (field === 'item_date') {
+                    return { ...item, item_date: value || null };
+                }
+                return { ...item, frequency: value || null };
+            });
+            onItemsChange(updatedItems);
+
+            // Debounce the API call (no debounce for select/date — save immediately)
+            const timerKey = `${itemId}-${field}`;
+            if (debounceTimers.current[timerKey]) {
+                clearTimeout(debounceTimers.current[timerKey]);
+            }
+            const delay = field === 'quantity' ? 600 : 0;
+            debounceTimers.current[timerKey] = setTimeout(() => {
+                const payload: Record<string, string | number> = {};
+                if (field === 'quantity') {
+                    const qty = parseInt(value, 10);
+                    if (isNaN(qty) || qty < 1) return;
+                    payload.quantity = qty;
+                } else if (field === 'item_date') {
+                    payload.item_date = value;
+                } else {
+                    payload.frequency = value;
+                }
+                setSavingItemId(itemId);
+                fetch(`/admin/insurance/claims/${claimId}/items/${itemId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN':
+                            document.querySelector<HTMLMetaElement>(
+                                'meta[name="csrf-token"]',
+                            )?.content || '',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then((res) => {
+                        if (!res.ok) {
+                            res.json().then((err) =>
+                                console.error('Failed to update item:', err),
+                            );
+                        }
+                    })
+                    .catch((err) => console.error('Failed to update item:', err))
+                    .finally(() => setSavingItemId(null));
+                delete debounceTimers.current[timerKey];
+            }, delay);
+        },
+        [items, claimId, onItemsChange],
+    );
 
     const calculateSubtotal = (categoryItems: ClaimItem[]) => {
         if (isNhis) {
@@ -376,9 +472,10 @@ export function ClaimItemsTabs({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[40%]">
+                                    <TableHead className="w-[30%]">
                                         Item
                                     </TableHead>
+                                    <TableHead>Date</TableHead>
                                     {isNhis && <TableHead>NHIS Code</TableHead>}
                                     {isPrescriptions && (
                                         <TableHead>Frequency</TableHead>
@@ -425,6 +522,52 @@ export function ClaimItemsTabs({
                                                 )}
                                             </div>
                                         </TableCell>
+                                        <TableCell>
+                                            {!disabled ? (
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-7 w-32 justify-start text-left text-sm font-normal"
+                                                        >
+                                                            <CalendarIcon className="mr-1.5 h-3 w-3" />
+                                                            {item.item_date || 'Pick date'}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent
+                                                        className="w-auto p-0"
+                                                        align="start"
+                                                    >
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={
+                                                                item.item_date
+                                                                    ? new Date(item.item_date)
+                                                                    : undefined
+                                                            }
+                                                            onSelect={(date) => {
+                                                                if (date) {
+                                                                    const formatted = date
+                                                                        .toISOString()
+                                                                        .split('T')[0];
+                                                                    handleItemFieldChange(
+                                                                        item.id,
+                                                                        'item_date',
+                                                                        formatted,
+                                                                        category,
+                                                                    );
+                                                                }
+                                                            }}
+                                                            initialFocus
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
+                                            ) : (
+                                                <span className="text-sm">
+                                                    {item.item_date || '-'}
+                                                </span>
+                                            )}
+                                        </TableCell>
                                         {isNhis && (
                                             <TableCell>
                                                 {item.is_covered ? (
@@ -444,13 +587,59 @@ export function ClaimItemsTabs({
                                         )}
                                         {isPrescriptions && (
                                             <TableCell>
-                                                <span className="text-sm">
-                                                    {item.frequency || '-'}
-                                                </span>
+                                                {!disabled ? (
+                                                    <Select
+                                                        value={item.frequency || ''}
+                                                        onValueChange={(val) =>
+                                                            handleItemFieldChange(
+                                                                item.id,
+                                                                'frequency',
+                                                                val,
+                                                                category,
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger
+                                                            className="h-7 w-40 text-sm"
+                                                            aria-label={`Frequency for ${item.name}`}
+                                                        >
+                                                            <SelectValue placeholder="Select..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {FREQUENCY_OPTIONS.map((opt) => (
+                                                                <SelectItem key={opt.value} value={opt.value}>
+                                                                    {opt.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    <span className="text-sm">
+                                                        {item.frequency || '-'}
+                                                    </span>
+                                                )}
                                             </TableCell>
                                         )}
                                         <TableCell className="text-right">
-                                            {item.quantity}
+                                            {!disabled ? (
+                                                <Input
+                                                    type="number"
+                                                    min={1}
+                                                    value={item.quantity}
+                                                    onChange={(e) =>
+                                                        handleItemFieldChange(
+                                                            item.id,
+                                                            'quantity',
+                                                            e.target.value,
+                                                            category,
+                                                        )
+                                                    }
+                                                    className="ml-auto h-7 w-16 text-right text-sm"
+                                                    aria-label={`Quantity for ${item.name}`}
+                                                />
+                                            ) : (
+                                                item.quantity
+                                            )}
                                         </TableCell>
                                         {!isInvestigations && (
                                             <>

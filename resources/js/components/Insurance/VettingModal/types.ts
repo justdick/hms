@@ -31,6 +31,7 @@ export interface ClaimItem {
     is_covered: boolean;
     item_type?: 'drug' | 'lab' | 'procedure';
     frequency?: string | null;
+    item_date?: string | null;
 }
 
 export interface NhisTariffOption {
