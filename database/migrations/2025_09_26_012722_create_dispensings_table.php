@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('prescription_id')->constrained()->cascadeOnDelete();
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->foreignId('drug_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('drug_batch_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('drug_batch_id')->nullable()->constrained('drug_batches')->nullOnDelete();
             $table->foreignId('dispensed_by')->constrained('users')->cascadeOnDelete();
             $table->integer('quantity');
             $table->json('batch_info')->nullable(); // Tracks which batches were used and quantities
