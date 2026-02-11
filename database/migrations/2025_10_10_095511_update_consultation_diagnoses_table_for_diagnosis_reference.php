@@ -12,17 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('consultation_diagnoses', function (Blueprint $table) {
-            // Drop index first
+            // Drop foreign key first so the index can be dropped
+            $table->dropForeign(['consultation_id']);
             $table->dropIndex(['consultation_id', 'is_primary']);
 
             // Drop old columns
             $table->dropColumn(['icd_code', 'diagnosis_description', 'is_primary']);
+        });
 
+        Schema::table('consultation_diagnoses', function (Blueprint $table) {
             // Add new columns
             $table->foreignId('diagnosis_id')->after('consultation_id')->constrained('diagnoses')->cascadeOnDelete();
             $table->enum('type', ['provisional', 'principal'])->after('diagnosis_id')->default('provisional');
 
-            // Add index
+            // Re-add foreign key for consultation_id and new index
+            $table->foreign('consultation_id')->references('id')->on('consultations')->cascadeOnDelete();
             $table->index(['consultation_id', 'type']);
         });
     }
