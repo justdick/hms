@@ -101,9 +101,12 @@ Route::middleware('auth')->prefix('admin/insurance')->name('admin.insurance.')->
     // Claim Batches
     Route::get('batches', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'index'])->name('batches.index');
     Route::post('batches', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'store'])->name('batches.store');
+    Route::get('batches/vetted-claims-count', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'vettedClaimsCount'])->name('batches.vetted-claims-count');
     Route::get('batches/{batch}', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'show'])->name('batches.show');
     Route::post('batches/{batch}/claims', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'addClaims'])->name('batches.add-claims');
+    Route::post('batches/{batch}/refresh-claims', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'refreshClaims'])->name('batches.refresh-claims');
     Route::delete('batches/{batch}/claims/{claim}', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'removeClaim'])->name('batches.remove-claim');
+    Route::delete('batches/{batch}', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'destroy'])->name('batches.destroy');
     Route::post('batches/{batch}/finalize', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'finalize'])->name('batches.finalize');
     Route::post('batches/{batch}/unfinalize', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'unfinalize'])->name('batches.unfinalize');
     Route::post('batches/{batch}/submit', [\App\Http\Controllers\Admin\ClaimBatchController::class, 'markSubmitted'])->name('batches.submit');

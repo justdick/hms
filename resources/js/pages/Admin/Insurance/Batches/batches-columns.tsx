@@ -1,10 +1,27 @@
 'use client';
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Calendar, Eye } from 'lucide-react';
+import { ArrowUpDown, Calendar, Eye, RefreshCw, Trash2 } from 'lucide-react';
 
 export interface ClaimBatch {
     id: number;
@@ -65,7 +82,11 @@ const formatDate = (dateString: string | null) => {
     });
 };
 
-export const batchesColumns: ColumnDef<ClaimBatch>[] = [
+export const createBatchesColumns = (
+    onRefresh: (batchId: number) => void,
+    onDelete: (batchId: number) => void,
+    refreshingId: number | null,
+): ColumnDef<ClaimBatch>[] => [
     {
         accessorKey: 'batch_number',
         header: ({ column }) => (
@@ -206,14 +227,102 @@ export const batchesColumns: ColumnDef<ClaimBatch>[] = [
     {
         id: 'actions',
         enableHiding: false,
-        cell: ({ row }) => (
-            <div className="text-right">
-                <Link href={`/admin/insurance/batches/${row.original.id}`}>
-                    <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                    </Button>
-                </Link>
-            </div>
-        ),
+        cell: ({ row }) => {
+            const batch = row.original;
+            const isDraft = batch.status === 'draft';
+            const isRefreshing = refreshingId === batch.id;
+
+            return (
+                <div className="flex items-center justify-end gap-1">
+                    {isDraft && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onRefresh(batch.id)}
+                                        disabled={isRefreshing}
+                                        aria-label={`Refresh claims for ${batch.name}`}
+                                    >
+                                        <RefreshCw
+                                            className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    Pull new vetted claims
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Link
+                                    href={`/admin/insurance/batches/${batch.id}`}
+                                >
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label={`View ${batch.name}`}
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>View batch</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    {isDraft && (
+                        <AlertDialog>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                aria-label={`Delete ${batch.name}`}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        Delete batch
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete Batch?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will permanently delete &quot;
+                                        {batch.name}&quot; and remove all claims
+                                        from it. The claims themselves will
+                                        remain vetted.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => onDelete(batch.id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                </div>
+            );
+        },
     },
 ];

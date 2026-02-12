@@ -153,7 +153,25 @@ interface MedicalHistoryData {
     medical_history: {
         consultations: Consultation[];
         admissions: Admission[];
+        minor_procedures: MinorProcedureRecord[];
     };
+}
+
+interface MinorProcedureRecord {
+    id: number;
+    date: string | null;
+    nurse: string | null;
+    department: string | null;
+    procedure_name: string | null;
+    procedure_code: string | null;
+    procedure_notes: string | null;
+    vitals: ConsultationVitals | null;
+    diagnoses: { code: string | null; description: string | null }[];
+    supplies: {
+        drug_name: string | null;
+        quantity: number | null;
+        status: string;
+    }[];
 }
 
 interface MedicalHistoryModalProps {
@@ -265,7 +283,7 @@ export function MedicalHistoryModal({
                                 defaultValue="consultations"
                                 className="space-y-4"
                             >
-                                <TabsList className="grid w-full grid-cols-3">
+                                <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger
                                         value="background"
                                         className="gap-1.5 text-xs"
@@ -308,6 +326,24 @@ export function MedicalHistoryModal({
                                             {
                                                 data.medical_history.admissions
                                                     .length
+                                            }
+                                        </Badge>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="minor-procedures"
+                                        className="gap-1.5 text-xs"
+                                    >
+                                        <Scissors className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">
+                                            Minor Procedures
+                                        </span>
+                                        <Badge
+                                            variant="secondary"
+                                            className="ml-1"
+                                        >
+                                            {
+                                                data.medical_history
+                                                    .minor_procedures?.length ?? 0
                                             }
                                         </Badge>
                                     </TabsTrigger>
@@ -994,6 +1030,217 @@ export function MedicalHistoryModal({
                                     ) : (
                                         <div className="py-12 text-center text-gray-500">
                                             No admission records found
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                {/* Minor Procedures Tab */}
+                                <TabsContent
+                                    value="minor-procedures"
+                                    className="space-y-4"
+                                >
+                                    {(data.medical_history.minor_procedures?.length ?? 0) >
+                                    0 ? (
+                                        data.medical_history.minor_procedures.map(
+                                            (mp) => (
+                                                <Card key={mp.id}>
+                                                    <CardHeader className="pb-3">
+                                                        <div className="flex items-start justify-between">
+                                                            <div>
+                                                                <CardTitle className="text-base">
+                                                                    {mp.procedure_name ||
+                                                                        'Minor Procedure'}
+                                                                </CardTitle>
+                                                                <CardDescription className="mt-1 flex items-center gap-2">
+                                                                    <Calendar className="h-3.5 w-3.5" />
+                                                                    {formatDateTime(
+                                                                        mp.date,
+                                                                    )}
+                                                                    {mp.nurse && (
+                                                                        <span>
+                                                                            •{' '}
+                                                                            {
+                                                                                mp.nurse
+                                                                            }
+                                                                        </span>
+                                                                    )}
+                                                                </CardDescription>
+                                                            </div>
+                                                        </div>
+                                                    </CardHeader>
+                                                    <CardContent className="space-y-4">
+                                                        {/* Vitals */}
+                                                        {mp.vitals && (
+                                                            <div className="rounded-lg bg-muted/50 p-3">
+                                                                <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
+                                                                    <Thermometer className="h-3.5 w-3.5" />
+                                                                    Vitals
+                                                                </h4>
+                                                                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                                    {mp.vitals
+                                                                        .blood_pressure && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                BP:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .blood_pressure
+                                                                                }
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .temperature && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                Temp:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .temperature
+                                                                                }
+                                                                                °C
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .pulse_rate && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                Pulse:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .pulse_rate
+                                                                                }
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .oxygen_saturation && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                SpO2:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .oxygen_saturation
+                                                                                }
+                                                                                %
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Diagnoses */}
+                                                        {mp.diagnoses.length >
+                                                            0 && (
+                                                            <div>
+                                                                <h4 className="mb-2 text-sm font-medium">
+                                                                    Diagnoses
+                                                                </h4>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {mp.diagnoses.map(
+                                                                        (
+                                                                            d,
+                                                                            idx,
+                                                                        ) => (
+                                                                            <Badge
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                                variant="secondary"
+                                                                            >
+                                                                                {d.code &&
+                                                                                    `${d.code}: `}
+                                                                                {
+                                                                                    d.description
+                                                                                }
+                                                                            </Badge>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Procedure Notes */}
+                                                        {mp.procedure_notes && (
+                                                            <div className="text-sm">
+                                                                <span className="text-muted-foreground font-medium">
+                                                                    Notes:
+                                                                </span>
+                                                                <p className="mt-1">
+                                                                    {
+                                                                        mp.procedure_notes
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Supplies */}
+                                                        {mp.supplies.length >
+                                                            0 && (
+                                                            <div>
+                                                                <h4 className="mb-2 text-sm font-medium">
+                                                                    Supplies
+                                                                </h4>
+                                                                <div className="space-y-1">
+                                                                    {mp.supplies.map(
+                                                                        (
+                                                                            s,
+                                                                            idx,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                                className="flex items-center gap-2 text-sm"
+                                                                            >
+                                                                                <Pill className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                <span>
+                                                                                    {
+                                                                                        s.drug_name
+                                                                                    }
+                                                                                    {s.quantity &&
+                                                                                        ` x ${s.quantity}`}
+                                                                                </span>
+                                                                                <Badge
+                                                                                    variant={
+                                                                                        s.status ===
+                                                                                        'dispensed'
+                                                                                            ? 'default'
+                                                                                            : 'secondary'
+                                                                                    }
+                                                                                    className="text-xs"
+                                                                                >
+                                                                                    {
+                                                                                        s.status
+                                                                                    }
+                                                                                </Badge>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </CardContent>
+                                                </Card>
+                                            ),
+                                        )
+                                    ) : (
+                                        <div className="py-12 text-center text-gray-500">
+                                            No minor procedure records found
                                         </div>
                                     )}
                                 </TabsContent>

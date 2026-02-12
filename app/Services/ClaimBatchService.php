@@ -233,8 +233,8 @@ class ClaimBatchService
      */
     public function unfinalizeBatch(ClaimBatch $batch, ?User $user = null): ClaimBatch
     {
-        if (! $batch->isFinalized()) {
-            throw new InvalidArgumentException('Only finalized batches can be unfinalized.');
+        if (! $batch->isFinalized() && ! $batch->isSubmitted()) {
+            throw new InvalidArgumentException('Only finalized or submitted batches can be reverted to draft.');
         }
 
         $previousStatus = $batch->status;
@@ -242,7 +242,7 @@ class ClaimBatchService
         $batch->save();
 
         // Record status change
-        $this->recordStatusChange($batch, $previousStatus, 'draft', $user, 'Batch unfinalized for modifications');
+        $this->recordStatusChange($batch, $previousStatus, 'draft', $user, 'Batch reverted to draft for modifications');
 
         return $batch->fresh();
     }

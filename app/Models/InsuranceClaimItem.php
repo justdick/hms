@@ -20,6 +20,8 @@ class InsuranceClaimItem extends Model
         'description',
         'quantity',
         'frequency',
+        'dose',
+        'duration',
         'unit_tariff',
         'subtotal',
         'is_covered',

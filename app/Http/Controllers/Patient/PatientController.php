@@ -678,6 +678,7 @@ class PatientController extends Controller
             'medical_history' => [
                 'consultations' => $history['consultations'],
                 'admissions' => $admissions,
+                'minor_procedures' => $history['minor_procedures'],
             ],
         ]);
     }
@@ -709,7 +710,7 @@ class PatientController extends Controller
 
                 return [
                     'id' => $consultation->id,
-                    'date' => $consultation->started_at?->format('Y-m-d H:i'),
+                    'date' => $consultation->patientCheckin?->checked_in_at?->format('Y-m-d H:i'),
                     'doctor' => $consultation->doctor?->name,
                     'department' => $consultation->patientCheckin?->department?->name,
                     'presenting_complaint' => $consultation->presenting_complaint,
@@ -901,6 +902,7 @@ class PatientController extends Controller
             'prescriptions' => $allPrescriptions,
             'lab_results' => $allLabResults,
             'theatre_procedures' => $this->getTheatreProcedures($patient),
+            'minor_procedures' => $this->getMinorProceduresHistory($patient),
         ];
     }
 
@@ -938,6 +940,56 @@ class PatientController extends Controller
                 'estimated_gestational_age' => $p->estimated_gestational_age,
                 'parity' => $p->parity,
             ]);
+    }
+
+    private function getMinorProceduresHistory(Patient $patient): \Illuminate\Support\Collection
+    {
+        return \App\Models\MinorProcedure::with([
+            'patientCheckin:id,department_id,checked_in_at',
+            'patientCheckin.department:id,name',
+            'patientCheckin.vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
+            'nurse:id,name',
+            'procedureType:id,name,code',
+            'diagnoses:id,code,diagnosis',
+            'supplies.drug:id,name,generic_name,form,strength',
+        ])
+            ->whereHas('patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
+            ->where('status', 'completed')
+            ->orderByDesc('performed_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($mp) {
+                $vitals = $mp->patientCheckin?->vitalSigns?->first();
+
+                return [
+                    'id' => $mp->id,
+                    'date' => $mp->patientCheckin?->checked_in_at?->format('Y-m-d H:i'),
+                    'nurse' => $mp->nurse?->name,
+                    'department' => $mp->patientCheckin?->department?->name,
+                    'procedure_name' => $mp->procedureType?->name,
+                    'procedure_code' => $mp->procedureType?->code,
+                    'procedure_notes' => $mp->procedure_notes,
+                    'vitals' => $vitals ? [
+                        'blood_pressure' => $vitals->blood_pressure,
+                        'temperature' => $vitals->temperature,
+                        'pulse_rate' => $vitals->pulse_rate,
+                        'respiratory_rate' => $vitals->respiratory_rate,
+                        'oxygen_saturation' => $vitals->oxygen_saturation,
+                        'weight' => $vitals->weight,
+                        'height' => $vitals->height,
+                        'bmi' => $vitals->bmi,
+                    ] : null,
+                    'diagnoses' => $mp->diagnoses->map(fn ($d) => [
+                        'code' => $d->code,
+                        'description' => $d->diagnosis,
+                    ]),
+                    'supplies' => $mp->supplies->map(fn ($s) => [
+                        'drug_name' => $s->drug?->name,
+                        'quantity' => $s->quantity_dispensed ?? $s->quantity_requested,
+                        'status' => $s->status,
+                    ]),
+                ];
+            });
     }
 
     private function generatePatientNumber(): string

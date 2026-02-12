@@ -84,6 +84,24 @@ class ClaimBatchPolicy
     }
 
     /**
+     * Determine whether the user can revert the batch to draft.
+     * Finalized batches can be reverted by batch managers.
+     * Submitted batches can only be reverted by admins.
+     */
+    public function revertToDraft(User $user, ClaimBatch $claimBatch): bool
+    {
+        if ($claimBatch->isSubmitted()) {
+            return $user->hasRole('Admin');
+        }
+
+        if ($claimBatch->isFinalized()) {
+            return $this->checkPermission($user, 'insurance.manage-batches');
+        }
+
+        return false;
+    }
+
+    /**
      * Determine whether the user can export the claim batch.
      */
     public function export(User $user, ClaimBatch $claimBatch): bool

@@ -24,8 +24,7 @@ class ClaimBatchController extends Controller
     public function __construct(
         protected ClaimBatchService $claimBatchService,
         protected NhisXmlExportService $nhisXmlExportService
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of claim batches.
@@ -69,7 +68,7 @@ class ClaimBatchController extends Controller
         $paginated = $query->paginate($perPage)->withQueryString();
 
         // Transform data while keeping flat pagination structure
-        $batches = $paginated->through(fn($batch) => (new ClaimBatchResource($batch))->resolve());
+        $batches = $paginated->through(fn ($batch) => (new ClaimBatchResource($batch))->resolve());
 
         // Get vetted claims available for batching
         $vettedClaimsCount = InsuranceClaim::where('status', 'vetted')
@@ -101,15 +100,36 @@ class ClaimBatchController extends Controller
 
         $validated = $request->validated();
 
+        $submissionPeriod = Carbon::parse($validated['submission_period']);
+
+        // Auto-generate batch name from the month/year
+        $batchName = $submissionPeriod->format('F Y').' Claims';
+
         $batch = $this->claimBatchService->createBatch(
-            name: $validated['name'],
-            submissionPeriod: Carbon::parse($validated['submission_period']),
+            name: $batchName,
+            submissionPeriod: $submissionPeriod,
             createdBy: $request->user(),
             notes: $validated['notes'] ?? null
         );
 
+        // Always auto-populate with vetted claims for the selected month
+        $startOfMonth = $submissionPeriod->copy()->startOfMonth();
+        $endOfMonth = $submissionPeriod->copy()->endOfMonth();
+
+        $vettedClaimIds = InsuranceClaim::where('status', 'vetted')
+            ->whereBetween('date_of_attendance', [$startOfMonth, $endOfMonth])
+            ->pluck('id')
+            ->toArray();
+
+        if (! empty($vettedClaimIds)) {
+            $result = $this->claimBatchService->addClaimsToBatch($batch, $vettedClaimIds);
+
+            return redirect()->route('admin.insurance.batches.show', $batch)
+                ->with('success', "Batch '{$batch->name}' created with {$result['added']} claim(s) added.");
+        }
+
         return redirect()->route('admin.insurance.batches.show', $batch)
-            ->with('success', "Batch '{$batch->name}' created successfully.");
+            ->with('success', "Batch '{$batch->name}' created. No vetted claims found for this month.");
     }
 
     /**
@@ -139,10 +159,10 @@ class ClaimBatchController extends Controller
 
         return Inertia::render('Admin/Insurance/Batches/Show', [
             'batch' => ClaimBatchResource::make($batch)->resolve(),
-            'availableClaims' => $availableClaims->map(fn($claim) => [
+            'availableClaims' => $availableClaims->map(fn ($claim) => [
                 'id' => $claim->id,
                 'claim_check_code' => $claim->claim_check_code,
-                'patient_name' => $claim->patient_surname . ' ' . $claim->patient_other_names,
+                'patient_name' => $claim->patient_surname.' '.$claim->patient_other_names,
                 'membership_id' => $claim->membership_id,
                 'date_of_attendance' => $claim->date_of_attendance?->toDateString(),
                 'total_claim_amount' => $claim->total_claim_amount,
@@ -154,6 +174,8 @@ class ClaimBatchController extends Controller
                 'submit' => auth()->user()->can('submit', $batch) && $batch->isFinalized(),
                 'export' => auth()->user()->can('export', $batch),
                 'recordResponse' => auth()->user()->can('recordResponse', $batch) && $batch->isSubmitted(),
+                'revertToDraft' => auth()->user()->can('revertToDraft', $batch),
+                'delete' => auth()->user()->can('delete', $batch),
             ],
         ]);
     }
@@ -177,13 +199,45 @@ class ClaimBatchController extends Controller
                 $message .= " {$result['skipped']} claim(s) skipped.";
             }
 
-            if (!empty($result['errors'])) {
+            if (! empty($result['errors'])) {
                 return redirect()->back()
                     ->with('warning', $message)
                     ->with('errors_detail', $result['errors']);
             }
 
             return redirect()->back()->with('success', $message);
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Refresh batch by adding any new vetted claims for the batch's submission period.
+     */
+    public function refreshClaims(ClaimBatch $batch): RedirectResponse
+    {
+        $this->authorize('update', $batch);
+
+        $startOfMonth = $batch->submission_period->copy()->startOfMonth();
+        $endOfMonth = $batch->submission_period->copy()->endOfMonth();
+
+        $newClaimIds = InsuranceClaim::where('status', 'vetted')
+            ->whereBetween('date_of_attendance', [$startOfMonth, $endOfMonth])
+            ->whereDoesntHave('batchItems', function ($query) use ($batch) {
+                $query->where('claim_batch_id', $batch->id);
+            })
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($newClaimIds)) {
+            return redirect()->back()->with('info', 'No new vetted claims found for this month.');
+        }
+
+        try {
+            $result = $this->claimBatchService->addClaimsToBatch($batch, $newClaimIds);
+
+            return redirect()->back()
+                ->with('success', "{$result['added']} new claim(s) added to batch.");
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -206,6 +260,24 @@ class ClaimBatchController extends Controller
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Delete a batch.
+     */
+    public function destroy(ClaimBatch $batch): RedirectResponse
+    {
+        $this->authorize('delete', $batch);
+
+        $batchName = $batch->name;
+
+        // Remove all batch items first
+        $batch->batchItems()->delete();
+        $batch->statusHistory()->delete();
+        $batch->delete();
+
+        return redirect()->route('admin.insurance.batches.index')
+            ->with('success', "Batch '{$batchName}' has been deleted.");
     }
 
     /**
@@ -232,13 +304,13 @@ class ClaimBatchController extends Controller
      */
     public function unfinalize(ClaimBatch $batch): RedirectResponse
     {
-        $this->authorize('finalize', $batch);
+        $this->authorize('revertToDraft', $batch);
 
         try {
             $this->claimBatchService->unfinalizeBatch($batch, auth()->user());
 
             return redirect()->back()
-                ->with('success', 'Batch has been unfinalized. You can now modify it.');
+                ->with('success', 'Batch has been reverted to draft. You can now modify it.');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -293,8 +365,8 @@ class ClaimBatchController extends Controller
             );
 
             $message = "{$result['processed']} claim response(s) recorded.";
-            if (!empty($result['errors'])) {
-                $message .= ' Some errors occurred: ' . implode(', ', $result['errors']);
+            if (! empty($result['errors'])) {
+                $message .= ' Some errors occurred: '.implode(', ', $result['errors']);
 
                 return redirect()->back()->with('warning', $message);
             }
@@ -358,5 +430,31 @@ class ClaimBatchController extends Controller
             $filename
         );
     }
-}
 
+    /**
+     * Get the count of vetted claims for a given month (for auto-populate preview).
+     */
+    public function vettedClaimsCount(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'period' => ['required', 'date'],
+        ]);
+
+        $period = Carbon::parse($request->period);
+        $startOfMonth = $period->copy()->startOfMonth();
+        $endOfMonth = $period->copy()->endOfMonth();
+
+        $count = InsuranceClaim::where('status', 'vetted')
+            ->whereBetween('date_of_attendance', [$startOfMonth, $endOfMonth])
+            ->count();
+
+        $batchExists = ClaimBatch::whereYear('submission_period', $period->year)
+            ->whereMonth('submission_period', $period->month)
+            ->exists();
+
+        return response()->json([
+            'count' => $count,
+            'batch_exists' => $batchExists,
+        ]);
+    }
+}

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     CheckCircle,
     FileCheck,
@@ -12,8 +12,8 @@ import {
     Plus,
     Send,
 } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
-import { batchesColumns, ClaimBatch } from './batches-columns';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { createBatchesColumns, ClaimBatch } from './batches-columns';
 import { BatchesDataTable } from './batches-data-table';
 
 const CreateBatchModal = lazy(
@@ -60,6 +60,25 @@ interface Props {
 
 export default function BatchesIndex({ batches, filters, stats }: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [refreshingId, setRefreshingId] = useState<number | null>(null);
+
+    const handleRefresh = useCallback((batchId: number) => {
+        setRefreshingId(batchId);
+        router.post(
+            `/admin/insurance/batches/${batchId}/refresh-claims`,
+            {},
+            { onFinish: () => setRefreshingId(null) },
+        );
+    }, []);
+
+    const handleDelete = useCallback((batchId: number) => {
+        router.delete(`/admin/insurance/batches/${batchId}`);
+    }, []);
+
+    const columns = useMemo(
+        () => createBatchesColumns(handleRefresh, handleDelete, refreshingId),
+        [handleRefresh, handleDelete, refreshingId],
+    );
 
     const hasActiveFilters = Object.keys(filters).some(
         (key) => filters[key as keyof Filters] !== undefined,
@@ -139,7 +158,7 @@ export default function BatchesIndex({ batches, filters, stats }: Props) {
                     </CardHeader>
                     <CardContent>
                         <BatchesDataTable
-                            columns={batchesColumns}
+                            columns={columns}
                             data={batches.data}
                             pagination={batches}
                             filters={filters}

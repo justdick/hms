@@ -107,7 +107,7 @@ export function ClaimItemsTabs({
     const handleItemFieldChange = useCallback(
         (
             itemId: number,
-            field: 'quantity' | 'frequency' | 'item_date',
+            field: 'quantity' | 'frequency' | 'dose' | 'duration' | 'item_date',
             value: string,
             category: ItemCategory,
         ) => {
@@ -124,6 +124,12 @@ export function ClaimItemsTabs({
                 if (field === 'item_date') {
                     return { ...item, item_date: value || null };
                 }
+                if (field === 'dose') {
+                    return { ...item, dose: value || null };
+                }
+                if (field === 'duration') {
+                    return { ...item, duration: value || null };
+                }
                 return { ...item, frequency: value || null };
             });
             onItemsChange(updatedItems);
@@ -133,7 +139,7 @@ export function ClaimItemsTabs({
             if (debounceTimers.current[timerKey]) {
                 clearTimeout(debounceTimers.current[timerKey]);
             }
-            const delay = field === 'quantity' ? 600 : 0;
+            const delay = field === 'quantity' || field === 'dose' || field === 'duration' ? 600 : 0;
             debounceTimers.current[timerKey] = setTimeout(() => {
                 const payload: Record<string, string | number> = {};
                 if (field === 'quantity') {
@@ -142,6 +148,10 @@ export function ClaimItemsTabs({
                     payload.quantity = qty;
                 } else if (field === 'item_date') {
                     payload.item_date = value;
+                } else if (field === 'dose') {
+                    payload.dose = value;
+                } else if (field === 'duration') {
+                    payload.duration = value;
                 } else {
                     payload.frequency = value;
                 }
@@ -476,9 +486,12 @@ export function ClaimItemsTabs({
                                         Item
                                     </TableHead>
                                     <TableHead>Date</TableHead>
-                                    {isNhis && <TableHead>NHIS Code</TableHead>}
                                     {isPrescriptions && (
-                                        <TableHead>Frequency</TableHead>
+                                        <>
+                                            <TableHead>Dose</TableHead>
+                                            <TableHead>Frequency</TableHead>
+                                            <TableHead>Duration</TableHead>
+                                        </>
                                     )}
                                     <TableHead className="text-right">
                                         Qty
@@ -519,6 +532,15 @@ export function ClaimItemsTabs({
                                                     <p className="text-xs text-gray-500">
                                                         Code: {item.code}
                                                     </p>
+                                                )}
+                                                {!item.is_covered && (
+                                                    <Badge
+                                                        variant="destructive"
+                                                        className="mt-1 flex w-fit items-center gap-1"
+                                                    >
+                                                        <AlertTriangle className="h-3 w-3" />
+                                                        Not Covered
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </TableCell>
@@ -568,57 +590,88 @@ export function ClaimItemsTabs({
                                                 </span>
                                             )}
                                         </TableCell>
-                                        {isNhis && (
-                                            <TableCell>
-                                                {item.is_covered ? (
-                                                    <span className="font-mono text-sm">
-                                                        {item.nhis_code || '-'}
-                                                    </span>
-                                                ) : (
-                                                    <Badge
-                                                        variant="destructive"
-                                                        className="flex w-fit items-center gap-1"
-                                                    >
-                                                        <AlertTriangle className="h-3 w-3" />
-                                                        Not Covered
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-                                        )}
                                         {isPrescriptions && (
-                                            <TableCell>
-                                                {!disabled ? (
-                                                    <Select
-                                                        value={item.frequency || ''}
-                                                        onValueChange={(val) =>
-                                                            handleItemFieldChange(
-                                                                item.id,
-                                                                'frequency',
-                                                                val,
-                                                                category,
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger
-                                                            className="h-7 w-40 text-sm"
-                                                            aria-label={`Frequency for ${item.name}`}
+                                            <>
+                                                <TableCell>
+                                                    {!disabled ? (
+                                                        <Input
+                                                            type="text"
+                                                            value={item.dose || ''}
+                                                            onChange={(e) =>
+                                                                handleItemFieldChange(
+                                                                    item.id,
+                                                                    'dose',
+                                                                    e.target.value,
+                                                                    category,
+                                                                )
+                                                            }
+                                                            className="h-7 w-24 text-sm"
+                                                            placeholder="e.g. 1 tab"
+                                                            aria-label={`Dose for ${item.name}`}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm">
+                                                            {item.dose || '-'}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {!disabled ? (
+                                                        <Select
+                                                            value={item.frequency || ''}
+                                                            onValueChange={(val) =>
+                                                                handleItemFieldChange(
+                                                                    item.id,
+                                                                    'frequency',
+                                                                    val,
+                                                                    category,
+                                                                )
+                                                            }
                                                         >
-                                                            <SelectValue placeholder="Select..." />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {FREQUENCY_OPTIONS.map((opt) => (
-                                                                <SelectItem key={opt.value} value={opt.value}>
-                                                                    {opt.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    <span className="text-sm">
-                                                        {item.frequency || '-'}
-                                                    </span>
-                                                )}
-                                            </TableCell>
+                                                            <SelectTrigger
+                                                                className="h-7 w-40 text-sm"
+                                                                aria-label={`Frequency for ${item.name}`}
+                                                            >
+                                                                <SelectValue placeholder="Select..." />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {FREQUENCY_OPTIONS.map((opt) => (
+                                                                    <SelectItem key={opt.value} value={opt.value}>
+                                                                        {opt.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    ) : (
+                                                        <span className="text-sm">
+                                                            {item.frequency || '-'}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {!disabled ? (
+                                                        <Input
+                                                            type="text"
+                                                            value={item.duration || ''}
+                                                            onChange={(e) =>
+                                                                handleItemFieldChange(
+                                                                    item.id,
+                                                                    'duration',
+                                                                    e.target.value,
+                                                                    category,
+                                                                )
+                                                            }
+                                                            className="h-7 w-24 text-sm"
+                                                            placeholder="e.g. 5 days"
+                                                            aria-label={`Duration for ${item.name}`}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm">
+                                                            {item.duration || '-'}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                            </>
                                         )}
                                         <TableCell className="text-right">
                                             {!disabled ? (

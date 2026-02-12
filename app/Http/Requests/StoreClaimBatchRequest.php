@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ClaimBatch;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreClaimBatchRequest extends FormRequest
@@ -14,9 +16,20 @@ class StoreClaimBatchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'submission_period' => ['required', 'date'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'submission_period' => ['required', 'date', function (string $attribute, mixed $value, \Closure $fail) {
+                $period = Carbon::parse($value)->startOfMonth();
+
+                $exists = ClaimBatch::whereYear('submission_period', $period->year)
+                    ->whereMonth('submission_period', $period->month)
+                    ->exists();
+
+                if ($exists) {
+                    $fail("A batch already exists for {$period->format('F Y')}.");
+                }
+            }],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'auto_populate' => ['nullable', 'boolean'],
         ];
     }
 

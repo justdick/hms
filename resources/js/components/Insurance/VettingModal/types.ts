@@ -31,6 +31,8 @@ export interface ClaimItem {
     is_covered: boolean;
     item_type?: 'drug' | 'lab' | 'procedure';
     frequency?: string | null;
+    dose?: string | null;
+    duration?: string | null;
     item_date?: string | null;
 }
 

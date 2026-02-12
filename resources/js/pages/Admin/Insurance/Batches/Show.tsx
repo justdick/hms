@@ -39,7 +39,7 @@ import {
     FileText,
     Lock,
     Package,
-    Plus,
+    RefreshCw,
     Send,
     Trash2,
     Unlock,
@@ -48,9 +48,6 @@ import {
 import { lazy, Suspense, useState } from 'react';
 
 // Lazy load modals
-const AddClaimsModal = lazy(
-    () => import('@/components/Insurance/Batches/AddClaimsModal'),
-);
 const RecordResponseModal = lazy(
     () => import('@/components/Insurance/Batches/RecordResponseModal'),
 );
@@ -135,6 +132,8 @@ interface Props {
         submit: boolean;
         export: boolean;
         recordResponse: boolean;
+        revertToDraft: boolean;
+        delete: boolean;
     };
 }
 
@@ -177,12 +176,14 @@ const itemStatusConfig: Record<string, { label: string; color: string }> = {
 };
 
 export default function BatchShow({ batch, availableClaims, can }: Props) {
-    const [addClaimsModalOpen, setAddClaimsModalOpen] = useState(false);
     const [recordResponseModalOpen, setRecordResponseModalOpen] =
         useState(false);
     const [confirmFinalizeOpen, setConfirmFinalizeOpen] = useState(false);
     const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+    const [confirmRevertOpen, setConfirmRevertOpen] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [removingClaimId, setRemovingClaimId] = useState<number | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     const formatCurrency = (amount: string | null) => {
         if (!amount) return 'GHS 0.00';
@@ -247,6 +248,17 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
 
     const handleExcelExport = () => {
         window.location.href = `/admin/insurance/batches/${batch.id}/export-excel`;
+    };
+
+    const handleRefreshClaims = () => {
+        setRefreshing(true);
+        router.post(
+            `/admin/insurance/batches/${batch.id}/refresh-claims`,
+            {},
+            {
+                onFinish: () => setRefreshing(false),
+            },
+        );
     };
 
     return (
@@ -398,7 +410,7 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                             <CardTitle>Actions</CardTitle>
                             <CardDescription>
                                 {batch.is_draft &&
-                                    'This batch is in draft mode. Add claims and finalize when ready.'}
+                                    'This batch is in draft mode. Use Refresh Claims to pull in new vetted claims, then finalize when ready.'}
                                 {batch.is_finalized &&
                                     !batch.is_submitted &&
                                     'This batch is finalized. Export and submit to NHIA.'}
@@ -413,26 +425,26 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                             {can.modify && (
                                 <Button
                                     className="w-full"
-                                    onClick={() => setAddClaimsModalOpen(true)}
-                                    disabled={availableClaims.length === 0}
+                                    variant="outline"
+                                    onClick={handleRefreshClaims}
+                                    disabled={refreshing}
                                 >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Claims ({availableClaims.length}{' '}
-                                    available)
+                                    <RefreshCw
+                                        className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+                                    />
+                                    {refreshing
+                                        ? 'Refreshing...'
+                                        : 'Refresh Claims'}
                                 </Button>
                             )}
-                            {batch.is_finalized && !batch.is_submitted && (
+                            {can.revertToDraft && (
                                 <Button
                                     className="w-full"
                                     variant="outline"
-                                    onClick={() =>
-                                        router.post(
-                                            `/admin/insurance/batches/${batch.id}/unfinalize`,
-                                        )
-                                    }
+                                    onClick={() => setConfirmRevertOpen(true)}
                                 >
                                     <Unlock className="mr-2 h-4 w-4" />
-                                    Unfinalize Batch
+                                    Revert to Draft
                                 </Button>
                             )}
                             {can.finalize && (
@@ -486,6 +498,16 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                 >
                                     <ClipboardList className="mr-2 h-4 w-4" />
                                     Record NHIA Response
+                                </Button>
+                            )}
+                            {can.delete && (
+                                <Button
+                                    className="w-full"
+                                    variant="destructive"
+                                    onClick={() => setConfirmDeleteOpen(true)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Batch
                                 </Button>
                             )}
                         </CardContent>
@@ -628,20 +650,10 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                                 <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                                     No claims in this batch
                                 </h3>
-                                <p className="mb-4 text-gray-600 dark:text-gray-400">
-                                    Add vetted claims to this batch to prepare
-                                    for submission.
+                                <p className="text-gray-600 dark:text-gray-400">
+                                    Use the Refresh Claims button to pull in
+                                    vetted claims for this month.
                                 </p>
-                                {can.modify && availableClaims.length > 0 && (
-                                    <Button
-                                        onClick={() =>
-                                            setAddClaimsModalOpen(true)
-                                        }
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Claims
-                                    </Button>
-                                )}
                             </div>
                         )}
                     </CardContent>
@@ -708,16 +720,6 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                     </Card>
                 )}
             </div>
-
-            {/* Add Claims Modal */}
-            <Suspense fallback={null}>
-                <AddClaimsModal
-                    isOpen={addClaimsModalOpen}
-                    onClose={() => setAddClaimsModalOpen(false)}
-                    batchId={batch.id}
-                    availableClaims={availableClaims}
-                />
-            </Suspense>
 
             {/* Record Response Modal */}
             <Suspense fallback={null}>
@@ -798,6 +800,72 @@ export default function BatchShow({ batch, availableClaims, can }: Props) {
                             className="bg-red-600 hover:bg-red-700"
                         >
                             Remove Claim
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Confirm Revert to Draft Dialog */}
+            <AlertDialog
+                open={confirmRevertOpen}
+                onOpenChange={setConfirmRevertOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Revert Batch to Draft?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will revert the batch back to draft status,
+                            allowing you to add or remove claims. The batch will
+                            need to be finalized and submitted again.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                router.post(
+                                    `/admin/insurance/batches/${batch.id}/unfinalize`,
+                                    {},
+                                    {
+                                        onSuccess: () =>
+                                            setConfirmRevertOpen(false),
+                                    },
+                                );
+                            }}
+                        >
+                            Revert to Draft
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Confirm Delete Dialog */}
+            <AlertDialog
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Batch?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete this batch and remove
+                            all claims from it. The claims themselves will not be
+                            deleted and can be added to a new batch.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                router.delete(
+                                    `/admin/insurance/batches/${batch.id}`,
+                                );
+                            }}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Delete Batch
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

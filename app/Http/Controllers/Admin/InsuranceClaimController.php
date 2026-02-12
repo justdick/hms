@@ -61,14 +61,18 @@ class InsuranceClaimController extends Controller
             $query->where('type_of_service', $request->service_type);
         }
 
-        // Search by claim code or patient name
+        // Search by claim code, patient name, membership ID, or patient number
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('claim_check_code', 'like', "%{$search}%")
                     ->orWhere('patient_surname', 'like', "%{$search}%")
                     ->orWhere('patient_other_names', 'like', "%{$search}%")
-                    ->orWhere('membership_id', 'like', "%{$search}%");
+                    ->orWhere('membership_id', 'like', "%{$search}%")
+                    ->orWhere('folder_id', 'like', "%{$search}%")
+                    ->orWhereHas('patient', function ($q) use ($search) {
+                        $q->where('patient_number', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -147,6 +151,8 @@ class InsuranceClaimController extends Controller
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
                     'frequency' => $item->frequency ?? $item->charge?->prescription?->frequency,
+                    'dose' => $item->dose ?? $item->charge?->prescription?->dose_quantity,
+                    'duration' => $item->duration ?? $item->charge?->prescription?->duration,
                     'item_date' => $item->item_date?->format('Y-m-d'),
                 ]),
                 'procedures' => $vettingData['items']['procedures']->map(fn ($item) => [
@@ -212,7 +218,7 @@ class InsuranceClaimController extends Controller
 
                 return [
                     'id' => $consultation->id,
-                    'date' => $consultation->started_at?->format('Y-m-d H:i'),
+                    'date' => $consultation->patientCheckin?->checked_in_at?->format('Y-m-d H:i'),
                     'doctor' => $consultation->doctor?->name,
                     'department' => $consultation->patientCheckin?->department?->name,
                     'presenting_complaint' => $consultation->presenting_complaint,
@@ -370,6 +376,7 @@ class InsuranceClaimController extends Controller
             'medical_history' => [
                 'consultations' => $consultations,
                 'admissions' => $admissions,
+                'minor_procedures' => $this->getMinorProcedures($patient),
             ],
         ]);
     }
@@ -402,7 +409,16 @@ class InsuranceClaimController extends Controller
             $attendanceFields = ['type_of_attendance', 'type_of_service', 'specialty_attended', 'attending_prescriber', 'date_of_attendance', 'date_of_discharge'];
             foreach ($attendanceFields as $field) {
                 if (isset($validated[$field])) {
-                    $claim->$field = $validated[$field];
+                    // Map NHIS codes back to enum values for type_of_service
+                    if ($field === 'type_of_service') {
+                        $claim->$field = match (strtoupper($validated[$field])) {
+                            'IPD' => 'inpatient',
+                            'OPD' => 'outpatient',
+                            default => $validated[$field],
+                        };
+                    } else {
+                        $claim->$field = $validated[$field];
+                    }
                 }
             }
             $claim->save();
@@ -626,6 +642,8 @@ class InsuranceClaimController extends Controller
         $validated = $request->validate([
             'quantity' => ['sometimes', 'required', 'integer', 'min:1'],
             'frequency' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'dose' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'duration' => ['sometimes', 'nullable', 'string', 'max:100'],
             'item_date' => ['sometimes', 'required', 'date'],
         ]);
 
@@ -642,6 +660,14 @@ class InsuranceClaimController extends Controller
 
             if (array_key_exists('frequency', $validated)) {
                 $item->frequency = $validated['frequency'];
+            }
+
+            if (array_key_exists('dose', $validated)) {
+                $item->dose = $validated['dose'];
+            }
+
+            if (array_key_exists('duration', $validated)) {
+                $item->duration = $validated['duration'];
             }
 
             if (isset($validated['item_date'])) {
@@ -1133,5 +1159,55 @@ class InsuranceClaimController extends Controller
 
         return redirect()->route('admin.insurance.claims.index')
             ->with('success', 'Claim deleted successfully.');
+    }
+
+    private function getMinorProcedures(Patient $patient): \Illuminate\Support\Collection
+    {
+        return \App\Models\MinorProcedure::with([
+            'patientCheckin:id,department_id,checked_in_at',
+            'patientCheckin.department:id,name',
+            'patientCheckin.vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
+            'nurse:id,name',
+            'procedureType:id,name,code',
+            'diagnoses:id,code,diagnosis',
+            'supplies.drug:id,name,generic_name,form,strength',
+        ])
+            ->whereHas('patientCheckin', fn ($q) => $q->where('patient_id', $patient->id))
+            ->where('status', 'completed')
+            ->orderByDesc('performed_at')
+            ->limit(50)
+            ->get()
+            ->map(function ($mp) {
+                $vitals = $mp->patientCheckin?->vitalSigns?->first();
+
+                return [
+                    'id' => $mp->id,
+                    'date' => $mp->patientCheckin?->checked_in_at?->format('Y-m-d H:i'),
+                    'nurse' => $mp->nurse?->name,
+                    'department' => $mp->patientCheckin?->department?->name,
+                    'procedure_name' => $mp->procedureType?->name,
+                    'procedure_code' => $mp->procedureType?->code,
+                    'procedure_notes' => $mp->procedure_notes,
+                    'vitals' => $vitals ? [
+                        'blood_pressure' => $vitals->blood_pressure,
+                        'temperature' => $vitals->temperature,
+                        'pulse_rate' => $vitals->pulse_rate,
+                        'respiratory_rate' => $vitals->respiratory_rate,
+                        'oxygen_saturation' => $vitals->oxygen_saturation,
+                        'weight' => $vitals->weight,
+                        'height' => $vitals->height,
+                        'bmi' => $vitals->bmi,
+                    ] : null,
+                    'diagnoses' => $mp->diagnoses->map(fn ($d) => [
+                        'code' => $d->code,
+                        'description' => $d->diagnosis,
+                    ]),
+                    'supplies' => $mp->supplies->map(fn ($s) => [
+                        'drug_name' => $s->drug?->name,
+                        'quantity' => $s->quantity_dispensed ?? $s->quantity_requested,
+                        'status' => $s->status,
+                    ]),
+                ];
+            });
     }
 }

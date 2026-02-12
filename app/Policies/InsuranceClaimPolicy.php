@@ -24,9 +24,32 @@ class InsuranceClaimPolicy
 
     public function update(User $user, InsuranceClaim $insuranceClaim): bool
     {
-        // Allow updating draft or rejected claims (for correction before resubmission)
-        if (! in_array($insuranceClaim->status, ['draft', 'rejected'])) {
+        // Admins can update claims in any editable status
+        if ($user->hasRole('Admin')) {
+            // Only block truly locked statuses (submitted, approved, paid)
+            if (in_array($insuranceClaim->status, ['submitted', 'approved', 'paid'])) {
+                return false;
+            }
+
+            return true;
+        }
+
+        // Allow updating draft, rejected, pending_vetting, or vetted claims (before submission)
+        if (! in_array($insuranceClaim->status, ['draft', 'rejected', 'pending_vetting', 'vetted'])) {
             return false;
+        }
+
+        // For vetted claims, block if already in a finalized/submitted batch
+        if ($insuranceClaim->status === 'vetted') {
+            $inNonDraftBatch = $insuranceClaim->batchItems()
+                ->whereHas('batch', function ($query) {
+                    $query->whereIn('status', ['finalized', 'submitted', 'completed']);
+                })
+                ->exists();
+
+            if ($inNonDraftBatch) {
+                return false;
+            }
         }
 
         return $this->checkPermission($user, 'insurance.edit-claims');
@@ -50,7 +73,8 @@ class InsuranceClaimPolicy
         }
 
         // For vetted claims, check if they're in a non-draft batch (finalized/submitted/completed)
-        if ($insuranceClaim->status === 'vetted') {
+        // Admins can still edit vetted claims even if they're in a non-draft batch
+        if ($insuranceClaim->status === 'vetted' && ! $user->hasRole('Admin')) {
             $inNonDraftBatch = $insuranceClaim->batchItems()
                 ->whereHas('batch', function ($query) {
                     $query->whereIn('status', ['finalized', 'submitted', 'completed']);

@@ -266,7 +266,7 @@ class ChargeObserver
             'consultation' => 'consultation',
             'pharmacy', 'drug' => 'drug',
             'lab', 'laboratory' => 'lab',
-            'procedure' => 'procedure',
+            'procedure', 'minor_procedure' => 'procedure',
             'ward', 'admission' => 'ward',
             'nursing' => 'nursing',
             default => null,
@@ -282,6 +282,8 @@ class ChargeObserver
         return match ($charge->service_type) {
             // For consultations, the item ID is the department ID
             'consultation' => $checkin->department_id,
+            // For minor procedures, get the procedure type ID from charge metadata
+            'minor_procedure' => $charge->metadata['minor_procedure_type_id'] ?? null,
             // For other types, we would need to look up the item from the service_code
             // This can be extended as needed for drugs, labs, procedures, etc.
             default => null,

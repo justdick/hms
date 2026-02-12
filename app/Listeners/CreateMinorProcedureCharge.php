@@ -32,8 +32,13 @@ class CreateMinorProcedureCharge
         // Get procedure fee from procedure type
         $procedureFee = $procedure->procedureType->price;
 
-        // Only create procedure charge if procedure has a specific price set
-        if ($procedureFee <= 0) {
+        // Check if patient is insured — insured patients need the charge
+        // for claim items even if the facility price is 0 (NHIS has its own tariff)
+        $checkin = $procedure->patientCheckin;
+        $isInsured = $checkin?->claim_check_code !== null;
+
+        // Only skip charge creation for non-insured patients with 0 price
+        if ($procedureFee <= 0 && ! $isInsured) {
             return; // No procedure-specific charge
         }
 
