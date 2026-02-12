@@ -334,7 +334,7 @@ export function VettingModal({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
-                className="max-h-[90vh] w-[90vw] max-w-7xl overflow-hidden p-0 sm:max-w-7xl"
+                className="max-h-[90vh] w-[95vw] max-w-[1600px] overflow-hidden p-0 sm:max-w-[1600px]"
                 aria-labelledby="vetting-modal-title"
                 aria-describedby="vetting-modal-description"
             >

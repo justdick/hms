@@ -73,6 +73,7 @@ const FREQUENCY_OPTIONS = [
     { value: 'Every 6 hours', label: 'Every 6 hours' },
     { value: 'Every 8 hours', label: 'Every 8 hours' },
     { value: 'Every 12 hours', label: 'Every 12 hours' },
+    { value: 'At 0, 12, 24 hours', label: 'At 0, 12, 24 hours' },
     { value: 'At night (Nocte)', label: 'At night (Nocte)' },
     { value: 'As needed (PRN)', label: 'As needed (PRN)' },
 ];
