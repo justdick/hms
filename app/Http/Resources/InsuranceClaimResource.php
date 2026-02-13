@@ -42,6 +42,8 @@ class InsuranceClaimResource extends JsonResource
             'primary_diagnosis_description' => $this->primary_diagnosis_description,
             'secondary_diagnoses' => $this->secondary_diagnoses,
             'c_drg_code' => $this->c_drg_code,
+            'gdrg_tariff_id' => $this->gdrg_tariff_id,
+            'gdrg_amount' => $this->gdrg_amount,
             'hin_number' => $this->hin_number,
 
             // Financial

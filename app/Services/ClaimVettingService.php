@@ -260,6 +260,8 @@ class ClaimVettingService
             $consultation->loadMissing('diagnoses.diagnosis');
 
             // Get principal diagnoses first (they take priority)
+            // Use toBase() to convert from Eloquent Collection to Support Collection
+            // since we're mapping to arrays, not models (avoids getKey() error on merge)
             $principalDiagnoses = $consultation->diagnoses
                 ->where('type', 'principal')
                 ->map(function ($consultationDiagnosis) {
@@ -271,7 +273,7 @@ class ClaimVettingService
                         'is_primary' => true,
                         'type' => 'principal',
                     ];
-                });
+                })->toBase();
 
             // Get provisional diagnoses
             $provisionalDiagnoses = $consultation->diagnoses
@@ -285,7 +287,7 @@ class ClaimVettingService
                         'is_primary' => false,
                         'type' => 'provisional',
                     ];
-                });
+                })->toBase();
 
             // Get diagnosis IDs that are already in principal diagnoses
             $principalDiagnosisIds = $principalDiagnoses->pluck('diagnosis_id')->toArray();
