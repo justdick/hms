@@ -57,9 +57,22 @@ class InsuranceClaimPolicy
 
     public function delete(User $user, InsuranceClaim $insuranceClaim): bool
     {
-        // Only allow deleting draft or pending_vetting claims
-        if (! in_array($insuranceClaim->status, ['draft', 'pending_vetting'])) {
+        // Allow deleting draft, pending_vetting, or vetted claims
+        if (! in_array($insuranceClaim->status, ['draft', 'pending_vetting', 'vetted'])) {
             return false;
+        }
+
+        // For vetted claims, block if already in a finalized/submitted batch
+        if ($insuranceClaim->status === 'vetted') {
+            $inNonDraftBatch = $insuranceClaim->batchItems()
+                ->whereHas('batch', function ($query) {
+                    $query->whereIn('status', ['finalized', 'submitted', 'completed']);
+                })
+                ->exists();
+
+            if ($inNonDraftBatch) {
+                return false;
+            }
         }
 
         return $this->checkPermission($user, 'insurance.delete-claims');

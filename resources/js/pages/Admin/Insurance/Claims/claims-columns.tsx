@@ -266,7 +266,8 @@ export const createClaimsColumns = (
                         >
                             <Eye className="h-4 w-4" />
                         </Button>
-                        {claim.status === 'pending_vetting' && (
+                        {(claim.status === 'pending_vetting' ||
+                            claim.status === 'vetted') && (
                             <Button
                                 variant="ghost"
                                 size="sm"
