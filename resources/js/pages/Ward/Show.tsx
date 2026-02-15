@@ -79,6 +79,10 @@ interface Props {
     admissions: PaginatedAdmissions;
     filters?: {
         search?: string;
+        status?: string;
+        date_from?: string;
+        date_to?: string;
+        date_preset?: string;
     };
 }
 
@@ -414,6 +418,12 @@ export default function WardShow({
                                     searchValue={filters.search ?? ''}
                                     wardId={ward.id}
                                     onBedAction={handleBedAction}
+                                    filters={{
+                                        status: filters.status,
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                        date_preset: filters.date_preset,
+                                    }}
                                 />
                             </CardContent>
                         </Card>

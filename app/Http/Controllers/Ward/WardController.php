@@ -68,10 +68,20 @@ class WardController extends Controller
 
         $search = $request->input('search');
         $perPage = $request->input('per_page', 10);
+        $status = $request->input('status', 'admitted');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $datePreset = $request->input('date_preset');
+
+        // Default to this_month if no date filter provided
+        if (! $dateFrom && ! $dateTo && ! $datePreset) {
+            $datePreset = 'this_month';
+            $dateFrom = now()->startOfMonth()->toDateString();
+            $dateTo = now()->toDateString();
+        }
 
         // Build admissions query with pagination
         $admissionsQuery = $ward->admissions()
-            ->where('status', 'admitted')
             ->with([
                 'patient:id,first_name,last_name,date_of_birth,gender,patient_number',
                 'patient.activeInsurance.plan.provider',
@@ -89,6 +99,19 @@ class WardController extends Controller
                 'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
             ])
             ->withCount(['wardRounds', 'nursingNotes']);
+
+        // Apply status filter (defaults to 'admitted')
+        if ($status && $status !== 'all') {
+            $admissionsQuery->where('status', $status);
+        }
+
+        // Apply date filter on admitted_at
+        if ($dateFrom) {
+            $admissionsQuery->whereDate('admitted_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $admissionsQuery->whereDate('admitted_at', '<=', $dateTo);
+        }
 
         // Apply search filter
         if ($search) {
@@ -127,7 +150,7 @@ class WardController extends Controller
             return $admissionArray;
         });
 
-        // Get all admissions for stats calculation (without pagination)
+        // Stats are always based on currently admitted patients (real-time operational data)
         $allAdmissions = $ward->admissions()
             ->where('status', 'admitted')
             ->with([
@@ -138,7 +161,7 @@ class WardController extends Controller
             ])
             ->get();
 
-        // Calculate ward statistics from all admissions
+        // Calculate ward statistics from currently admitted patients
         $stats = [
             'total_patients' => $allAdmissions->count(),
             'meds_given_today' => $allAdmissions->sum(function ($admission) {
@@ -172,6 +195,10 @@ class WardController extends Controller
             ],
             'filters' => [
                 'search' => $search,
+                'status' => $status,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'date_preset' => $datePreset,
             ],
         ]);
     }

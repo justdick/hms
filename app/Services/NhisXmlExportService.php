@@ -8,6 +8,7 @@ use App\Models\InsuranceClaimDiagnosis;
 use App\Models\InsuranceClaimItem;
 use DOMDocument;
 use DOMElement;
+use XMLWriter;
 
 /**
  * Service for generating NHIA-compliant XML exports for claim batches.
@@ -56,6 +57,161 @@ class NhisXmlExportService
         }
 
         return $this->dom->saveXML();
+    }
+
+    /**
+     * Write NHIA-compliant XML for a claim batch directly to output using XMLWriter.
+     * Uses chunked queries to keep memory usage low for large batches.
+     *
+     * @param  ClaimBatch  $batch  The batch to export
+     * @param  resource  $output  A writable stream (e.g. php://output)
+     *
+     * _Requirements: 15.1, 15.2_
+     */
+    public function writeXmlToStream(ClaimBatch $batch, $output): void
+    {
+        $writer = new XMLWriter;
+        $writer->openUri('php://output');
+        $writer->startDocument('1.0', 'UTF-8');
+        $writer->setIndent(true);
+        $writer->setIndentString('  ');
+
+        $writer->startElement('claims');
+
+        $batch->batchItems()
+            ->with([
+                'insuranceClaim.patient',
+                'insuranceClaim.gdrgTariff',
+                'insuranceClaim.claimDiagnoses.diagnosis',
+                'insuranceClaim.items.nhisTariff',
+                'insuranceClaim.items.charge.prescription.drug',
+            ])
+            ->chunk(50, function ($batchItems) use ($writer) {
+                foreach ($batchItems as $batchItem) {
+                    if ($batchItem->insuranceClaim) {
+                        $this->writeClaimElement($writer, $batchItem->insuranceClaim);
+                    }
+                }
+            });
+
+        $writer->endElement(); // </claims>
+        $writer->endDocument();
+        $writer->flush();
+    }
+
+    /**
+     * Sanitize an ICD-10 code for NHIS submission.
+     * Replaces placeholder values like '-' with empty string so NHIS doesn't reject it.
+     */
+    protected function sanitizeIcd10(?string $code): string
+    {
+        if (empty($code) || $code === '-') {
+            return '';
+        }
+
+        return $code;
+    }
+
+    /**
+     * Write a single claim element using XMLWriter.
+     */
+    protected function writeClaimElement(XMLWriter $writer, InsuranceClaim $claim): void
+    {
+        $writer->startElement('claim');
+
+        $writer->writeElement('claimID', (string) $claim->id);
+        $writer->writeElement('claimCheckCode', $this->escapeXml($claim->claim_check_code ?? ''));
+        $writer->writeElement('preAuthorizationCodes', '');
+        $writer->writeElement('physicianID', '');
+
+        $nhisMemberId = $claim->membership_id ?? $claim->patientInsurance?->membership_id ?? '';
+        $writer->writeElement('memberNo', $this->escapeXml($nhisMemberId));
+        $writer->writeElement('cardSerialNo', '');
+        $writer->writeElement('surname', $this->escapeXml($claim->patient_surname ?? ''));
+        $writer->writeElement('otherNames', $this->escapeXml($claim->patient_other_names ?? ''));
+        $writer->writeElement('dateOfBirth', $claim->patient_dob?->format('Y-m-d') ?? '');
+        $writer->writeElement('gender', $this->formatGender($claim->patient_gender));
+        $writer->writeElement('hospitalRecNo', $this->escapeXml($claim->folder_id ?? ''));
+        $writer->writeElement('isDependant', '0');
+
+        $writer->writeElement('typeOfService', $this->mapToNhisServiceCode($claim->type_of_service));
+        $writer->writeElement('isUnbundled', $claim->is_unbundled ? '1' : '0');
+        $writer->writeElement('includesPharmacy', $this->hasPharmacyItems($claim) ? '1' : '0');
+        $writer->writeElement('typeOfAttendance', $this->mapToNhisAttendanceCode($claim->type_of_attendance));
+        $writer->writeElement('serviceOutcome', 'DISC');
+
+        $serviceDate = $claim->date_of_attendance?->format('Y-m-d') ?? '';
+        $writer->writeElement('dateOfService', $serviceDate);
+        $writer->writeElement('dateOfService', $claim->date_of_discharge?->format('Y-m-d') ?? $serviceDate);
+
+        $writer->writeElement('specialtyAttended', $this->escapeXml($claim->specialty_attended ?? 'OPDC'));
+
+        // Procedures
+        $procedureItems = $claim->items?->filter(fn ($item) => $item->item_type === 'procedure') ?? collect();
+        $primaryIcd10 = $this->sanitizeIcd10($this->getPrimaryIcd10($claim));
+        foreach ($procedureItems as $item) {
+            $writer->startElement('procedure');
+            $writer->writeElement('serviceDate', $item->item_date?->format('Y-m-d') ?? $serviceDate);
+            $procedureCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
+            $writer->writeElement('gdrgCode', $this->escapeXml($procedureCode));
+            $writer->writeElement('ICD10', $this->escapeXml($primaryIcd10));
+            $writer->endElement();
+        }
+
+        // Diagnoses
+        $claimDiagnoses = $claim->claimDiagnoses ?? collect();
+        $gdrgCode = $claim->gdrgTariff?->code ?? $claim->c_drg_code ?? '';
+        if ($claimDiagnoses->isNotEmpty()) {
+            foreach ($claimDiagnoses as $claimDiagnosis) {
+                $diagnosis = $claimDiagnosis->diagnosis;
+                $icd10Code = $this->sanitizeIcd10($diagnosis?->icd_10 ?? $diagnosis?->code ?? '');
+                $writer->startElement('diagnosis');
+                $writer->writeElement('serviceDate', $serviceDate);
+                $writer->writeElement('gdrgCode', $this->escapeXml($gdrgCode));
+                $writer->writeElement('ICD10', $this->escapeXml($icd10Code));
+                $writer->writeElement('diagnosis', $this->escapeXml($diagnosis?->diagnosis ?? ''));
+                $writer->endElement();
+            }
+        } elseif ($claim->primary_diagnosis_code || $claim->primary_diagnosis_description) {
+            $writer->startElement('diagnosis');
+            $writer->writeElement('serviceDate', $serviceDate);
+            $writer->writeElement('gdrgCode', $this->escapeXml($gdrgCode));
+            $writer->writeElement('ICD10', $this->escapeXml($this->sanitizeIcd10($claim->primary_diagnosis_code)));
+            $writer->writeElement('diagnosis', $this->escapeXml($claim->primary_diagnosis_description ?? ''));
+            $writer->endElement();
+        }
+
+        // Medicines
+        $drugItems = $claim->items?->filter(fn ($item) => $item->item_type === 'drug') ?? collect();
+        foreach ($drugItems as $item) {
+            $writer->startElement('medicine');
+            $nhisCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
+            $writer->writeElement('medicineCode', $this->escapeXml($nhisCode));
+            $prescription = $item->charge?->prescription;
+            $dispensedQty = ($prescription?->drug?->nhis_claim_qty_as_one)
+                ? 1
+                : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1);
+            $writer->writeElement('dispensedQty', (string) $dispensedQty);
+            $writer->writeElement('serviceDate', $item->item_date?->format('Y-m-d') ?? $serviceDate);
+
+            $writer->startElement('prescription');
+            $writer->writeElement('dose', '');
+            $writer->writeElement('frequency', '');
+            $writer->writeElement('duration', '');
+            $writer->writeElement('unparsed', $this->escapeXml($this->buildPrescriptionUnparsed($prescription, $item)));
+            $writer->endElement(); // </prescription>
+
+            $writer->endElement(); // </medicine>
+        }
+
+        // Referral info
+        $writer->startElement('referralInfo');
+        $writer->writeElement('claimCheckCode', '');
+        $writer->writeElement('facilityID', '');
+        $writer->writeElement('facilityName', '');
+        $writer->endElement();
+
+        $writer->endElement(); // </claim>
     }
 
     /**
@@ -125,7 +281,7 @@ class NhisXmlExportService
         $procedureItems = $claim->items?->filter(fn ($item) => $item->item_type === 'procedure') ?? collect();
 
         // Get primary ICD-10 code from claim diagnoses or fallback to primary_diagnosis_code
-        $primaryIcd10 = $this->getPrimaryIcd10($claim);
+        $primaryIcd10 = $this->sanitizeIcd10($this->getPrimaryIcd10($claim));
 
         foreach ($procedureItems as $item) {
             $procedureElement = $this->dom->createElement('procedure');
@@ -164,7 +320,7 @@ class NhisXmlExportService
             return $claim->primary_diagnosis_code;
         }
 
-        return '-';
+        return '';
     }
 
     /**
@@ -186,7 +342,7 @@ class NhisXmlExportService
             $diagnosisElement = $this->dom->createElement('diagnosis');
             $this->appendElement($diagnosisElement, 'serviceDate', $serviceDate);
             $this->appendElement($diagnosisElement, 'gdrgCode', $gdrgCode);
-            $this->appendElement($diagnosisElement, 'ICD10', $claim->primary_diagnosis_code ?? '-');
+            $this->appendElement($diagnosisElement, 'ICD10', $this->sanitizeIcd10($claim->primary_diagnosis_code));
             $this->appendElement($diagnosisElement, 'diagnosis', $claim->primary_diagnosis_description ?? '');
             $claimElement->appendChild($diagnosisElement);
         }
@@ -202,7 +358,7 @@ class NhisXmlExportService
 
         $this->appendElement($diagnosisElement, 'serviceDate', $serviceDate);
         $this->appendElement($diagnosisElement, 'gdrgCode', $gdrgCode);
-        $this->appendElement($diagnosisElement, 'ICD10', $diagnosis?->icd_10 ?? $diagnosis?->code ?? '-');
+        $this->appendElement($diagnosisElement, 'ICD10', $this->sanitizeIcd10($diagnosis?->icd_10 ?? $diagnosis?->code ?? ''));
         $this->appendElement($diagnosisElement, 'diagnosis', $diagnosis?->diagnosis ?? '');
 
         return $diagnosisElement;
@@ -235,7 +391,9 @@ class NhisXmlExportService
 
         // Get quantity from prescription (preferred) or fall back to item quantity
         $prescription = $item->charge?->prescription;
-        $dispensedQty = $prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1;
+        $dispensedQty = ($prescription?->drug?->nhis_claim_qty_as_one)
+            ? 1
+            : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1);
         $this->appendElement($medicineElement, 'dispensedQty', (string) $dispensedQty);
 
         $this->appendElement($medicineElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
@@ -249,7 +407,7 @@ class NhisXmlExportService
         $this->appendElement($prescriptionElement, 'duration', '');
 
         // Build unparsed prescription string
-        $unparsed = $this->buildPrescriptionUnparsed($prescription);
+        $unparsed = $this->buildPrescriptionUnparsed($prescription, $item);
         $this->appendElement($prescriptionElement, 'unparsed', $unparsed);
 
         $medicineElement->appendChild($prescriptionElement);
@@ -261,27 +419,29 @@ class NhisXmlExportService
      * Build the unparsed prescription string in NHIS format.
      * Format: "DOSE FREQUENCY X DURATION" e.g., "2 BD X 5DAYS"
      */
-    protected function buildPrescriptionUnparsed($prescription): string
+    protected function buildPrescriptionUnparsed($prescription, ?InsuranceClaimItem $claimItem = null): string
     {
-        if (! $prescription) {
+        // Try prescription first, fall back to claim item fields
+        $doseQty = $prescription?->dose_quantity ?? $claimItem?->dose;
+        $frequency = $prescription?->frequency ?? $claimItem?->frequency;
+        $duration = $prescription?->duration ?? $claimItem?->duration;
+
+        if (! $doseQty && ! $frequency && ! $duration) {
             return '';
         }
 
         $parts = [];
 
-        // Add dose quantity if available
-        if ($prescription->dose_quantity) {
-            $parts[] = $prescription->dose_quantity;
+        if ($doseQty) {
+            $parts[] = $doseQty;
         }
 
-        // Add frequency
-        if ($prescription->frequency) {
-            $parts[] = strtoupper($prescription->frequency);
+        if ($frequency) {
+            $parts[] = strtoupper($frequency);
         }
 
-        // Add duration
-        if ($prescription->duration) {
-            $parts[] = 'X '.strtoupper($prescription->duration);
+        if ($duration) {
+            $parts[] = 'X '.strtoupper($duration);
         }
 
         return implode(' ', $parts);
@@ -371,7 +531,7 @@ class NhisXmlExportService
         $procedureElement = $this->dom->createElement('procedure');
         $this->appendElement($procedureElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? '');
         $this->appendElement($procedureElement, 'gdrgCode', $item->nhis_code ?? $item->code ?? '');
-        $this->appendElement($procedureElement, 'ICD10', '-');
+        $this->appendElement($procedureElement, 'ICD10', '');
 
         return $procedureElement;
     }

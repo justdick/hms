@@ -65,13 +65,13 @@ class InsuranceClaimController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('claim_check_code', 'like', "%{$search}%")
+                $q->where('claim_check_code', $search)
                     ->orWhere('patient_surname', 'like', "%{$search}%")
                     ->orWhere('patient_other_names', 'like', "%{$search}%")
-                    ->orWhere('membership_id', 'like', "%{$search}%")
-                    ->orWhere('folder_id', 'like', "%{$search}%")
+                    ->orWhere('membership_id', $search)
+                    ->orWhere('folder_id', $search)
                     ->orWhereHas('patient', function ($q) use ($search) {
-                        $q->where('patient_number', 'like', "%{$search}%");
+                        $q->where('patient_number', $search);
                     });
             });
         }
@@ -1157,7 +1157,7 @@ class InsuranceClaimController extends Controller
 
         $claim->delete();
 
-        return redirect()->route('admin.insurance.claims.index')
+        return redirect()->back()
             ->with('success', 'Claim deleted successfully.');
     }
 

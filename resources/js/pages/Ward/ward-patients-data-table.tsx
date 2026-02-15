@@ -11,19 +11,29 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { Bed, ChevronDown, Filter, Search } from 'lucide-react';
+import { Bed, ChevronDown, Search } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
+    DateFilterPresets,
+    DateFilterValue,
+    calculateDateRange,
+} from '@/components/ui/date-filter-presets';
+import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -59,6 +69,12 @@ interface WardPatientsDataTableProps<TData, TValue> {
     searchValue?: string;
     wardId: number;
     onBedAction?: (admission: TData, action: 'assign' | 'change') => void;
+    filters?: {
+        status?: string;
+        date_from?: string;
+        date_to?: string;
+        date_preset?: string;
+    };
 }
 
 export function WardPatientsDataTable<TData, TValue>({
@@ -68,6 +84,7 @@ export function WardPatientsDataTable<TData, TValue>({
     searchValue = '',
     wardId,
     onBedAction,
+    filters = {},
 }: WardPatientsDataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -76,6 +93,21 @@ export function WardPatientsDataTable<TData, TValue>({
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [search, setSearch] = React.useState(searchValue ?? '');
+    const [statusFilter, setStatusFilter] = React.useState(filters.status ?? 'admitted');
+
+    // Initialize date filter - default to this_month
+    const [dateFilter, setDateFilter] = React.useState<DateFilterValue>(() => {
+        if (filters.date_from || filters.date_to) {
+            return {
+                preset: filters.date_preset || 'custom',
+                from: filters.date_from,
+                to: filters.date_to,
+            };
+        }
+        // Default to this_month
+        const range = calculateDateRange('this_month');
+        return { preset: 'this_month', ...range };
+    });
 
     const table = useReactTable({
         data,
@@ -108,7 +140,13 @@ export function WardPatientsDataTable<TData, TValue>({
     const debouncedSearch = useDebouncedCallback((value: string) => {
         router.get(
             window.location.pathname,
-            { search: value || undefined },
+            {
+                search: value || undefined,
+                status: statusFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                date_preset: dateFilter.preset || undefined,
+            },
             { preserveState: true, preserveScroll: true },
         );
     }, 300);
@@ -116,6 +154,37 @@ export function WardPatientsDataTable<TData, TValue>({
     const handleSearchChange = (value: string) => {
         setSearch(value);
         debouncedSearch(value);
+    };
+
+    const handleDateFilterChange = (value: DateFilterValue) => {
+        setDateFilter(value);
+        router.get(
+            window.location.pathname,
+            {
+                search: search || undefined,
+                status: statusFilter || undefined,
+                date_from: value.from || undefined,
+                date_to: value.to || undefined,
+                date_preset: value.preset || undefined,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const handleStatusFilterChange = (value: string) => {
+        const newStatus = value === 'all' ? '' : value;
+        setStatusFilter(newStatus);
+        router.get(
+            window.location.pathname,
+            {
+                search: search || undefined,
+                status: newStatus || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                date_preset: dateFilter.preset || undefined,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const handlePageChange = (url: string | null) => {
@@ -127,21 +196,17 @@ export function WardPatientsDataTable<TData, TValue>({
     const handlePerPageChange = (perPage: string) => {
         router.get(
             window.location.pathname,
-            { per_page: perPage, search: search || undefined },
+            {
+                per_page: perPage,
+                search: search || undefined,
+                status: statusFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                date_preset: dateFilter.preset || undefined,
+            },
             { preserveState: true, preserveScroll: true },
         );
     };
-
-    // Get unique statuses for filtering
-    const statuses = React.useMemo(() => {
-        const statusSet = new Set<string>();
-        data.forEach((item: any) => {
-            if (item.status) {
-                statusSet.add(item.status);
-            }
-        });
-        return Array.from(statusSet);
-    }, [data]);
 
     // Find prev/next links from pagination
     const prevLink = pagination.links.find((link) =>
@@ -154,7 +219,7 @@ export function WardPatientsDataTable<TData, TValue>({
     return (
         <TooltipProvider>
             <div className="w-full space-y-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     <div className="relative max-w-sm flex-1">
                         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                         <Input
@@ -188,67 +253,28 @@ export function WardPatientsDataTable<TData, TValue>({
                     </div>
 
                     {/* Status Filter */}
-                    {statuses.length > 0 && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="border-dashed"
-                                >
-                                    <Filter className="mr-2 h-4 w-4" />
-                                    Status
-                                    <ChevronDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuLabel>
-                                    Filter by Status
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {statuses.map((status) => (
-                                    <DropdownMenuCheckboxItem
-                                        key={status}
-                                        checked={
-                                            (
-                                                table
-                                                    .getColumn('status')
-                                                    ?.getFilterValue() as string[]
-                                            )?.includes(status) ?? false
-                                        }
-                                        onCheckedChange={(checked) => {
-                                            const currentFilter =
-                                                (table
-                                                    .getColumn('status')
-                                                    ?.getFilterValue() as string[]) ||
-                                                [];
-                                            if (checked) {
-                                                table
-                                                    .getColumn('status')
-                                                    ?.setFilterValue([
-                                                        ...currentFilter,
-                                                        status,
-                                                    ]);
-                                            } else {
-                                                table
-                                                    .getColumn('status')
-                                                    ?.setFilterValue(
-                                                        currentFilter.filter(
-                                                            (s) => s !== status,
-                                                        ),
-                                                    );
-                                            }
-                                        }}
-                                    >
-                                        {status
-                                            .replace('_', ' ')
-                                            .charAt(0)
-                                            .toUpperCase() +
-                                            status.replace('_', ' ').slice(1)}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <Select
+                            value={statusFilter || 'all'}
+                            onValueChange={handleStatusFilterChange}
+                        >
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="admitted">Admitted</SelectItem>
+                                <SelectItem value="discharged">Discharged</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Date Filter */}
+                    <DateFilterPresets
+                        value={dateFilter}
+                        onChange={handleDateFilterChange}
+                    />
 
                     {/* Column Visibility */}
                     <DropdownMenu>

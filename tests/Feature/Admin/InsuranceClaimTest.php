@@ -11,11 +11,12 @@ use Spatie\Permission\Models\Permission;
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    // Create the permission if it doesn't exist
+    // Create permissions if they don't exist
     Permission::firstOrCreate(['name' => 'system.admin', 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => 'insurance.view-claims', 'guard_name' => 'web']);
 
     $this->user = User::factory()->create();
-    $this->user->givePermissionTo('system.admin');
+    $this->user->givePermissionTo(['system.admin', 'insurance.view-claims']);
     actingAs($this->user);
 });
 
@@ -135,4 +136,119 @@ it('searches claims by claim code', function () {
         ->has('claims.data', 1)
         ->where('claims.data.0.claim_check_code', 'CLM-123456')
     );
+});
+
+
+it('searches claims by folder_id using exact match', function () {
+    $provider = InsuranceProvider::factory()->create();
+    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    $patient = Patient::factory()->create();
+    $patientInsurance = PatientInsurance::factory()->create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $plan->id,
+    ]);
+
+    $exactMatch = InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'folder_id' => '32/2025',
+        'status' => 'pending_vetting',
+    ]);
+
+    $partialMatch = InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'folder_id' => '3132/2025',
+        'status' => 'pending_vetting',
+    ]);
+
+    $response = $this->get(route('admin.insurance.claims.index', ['search' => '32/2025', 'status' => 'all']));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/Insurance/Claims/Index')
+        ->has('claims.data', 1)
+        ->where('claims.data.0.folder_id', '32/2025')
+    );
+});
+
+it('searches claims by membership_id using exact match', function () {
+    $provider = InsuranceProvider::factory()->create();
+    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    $patient = Patient::factory()->create();
+    $patientInsurance = PatientInsurance::factory()->create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $plan->id,
+    ]);
+
+    $exactMatch = InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'membership_id' => '12345678',
+        'status' => 'pending_vetting',
+    ]);
+
+    $partialMatch = InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'membership_id' => '912345678',
+        'status' => 'pending_vetting',
+    ]);
+
+    $response = $this->get(route('admin.insurance.claims.index', ['search' => '12345678', 'status' => 'all']));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/Insurance/Claims/Index')
+        ->has('claims.data', 1)
+        ->where('claims.data.0.membership_id', '12345678')
+    );
+});
+
+it('searches claims by patient name using partial match', function () {
+    $provider = InsuranceProvider::factory()->create();
+    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    $patient = Patient::factory()->create();
+    $patientInsurance = PatientInsurance::factory()->create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $plan->id,
+    ]);
+
+    InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'patient_surname' => 'AGYEIWAA',
+        'status' => 'pending_vetting',
+    ]);
+
+    InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'patient_surname' => 'MENSAH',
+        'status' => 'pending_vetting',
+    ]);
+
+    $response = $this->get(route('admin.insurance.claims.index', ['search' => 'AGYE', 'status' => 'all']));
+
+    $response->assertSuccessful();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Admin/Insurance/Claims/Index')
+        ->has('claims.data', 1)
+        ->where('claims.data.0.patient.surname', 'AGYEIWAA')
+    );
+});
+
+
+it('redirects back to the same filtered page after deleting a claim', function () {
+    $provider = InsuranceProvider::factory()->create();
+    $plan = InsurancePlan::factory()->create(['insurance_provider_id' => $provider->id]);
+    $patient = Patient::factory()->create();
+    $patientInsurance = PatientInsurance::factory()->create([
+        'patient_id' => $patient->id,
+        'insurance_plan_id' => $plan->id,
+    ]);
+
+    $claim = InsuranceClaim::factory()->create([
+        'patient_insurance_id' => $patientInsurance->id,
+        'status' => 'vetted',
+    ]);
+
+    $response = $this->from(route('admin.insurance.claims.index', ['status' => 'vetted']))
+        ->delete(route('admin.insurance.claims.destroy', $claim));
+
+    $response->assertRedirect(route('admin.insurance.claims.index', ['status' => 'vetted']));
 });

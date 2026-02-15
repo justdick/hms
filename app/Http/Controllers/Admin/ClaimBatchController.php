@@ -382,18 +382,9 @@ class ClaimBatchController extends Controller
      *
      * _Requirements: 15.1, 15.4, 15.5_
      */
-    public function exportXml(ClaimBatch $batch): Response
+    public function exportXml(ClaimBatch $batch): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->authorize('export', $batch);
-
-        $batch->load([
-            'batchItems.insuranceClaim.patient',
-            'batchItems.insuranceClaim.claimDiagnoses.diagnosis',
-            'batchItems.insuranceClaim.items.nhisTariff',
-            'batchItems.insuranceClaim.gdrgTariff',
-        ]);
-
-        $xml = $this->nhisXmlExportService->generateXml($batch);
 
         // Record export timestamp
         $batch->exported_at = now();
@@ -401,7 +392,9 @@ class ClaimBatchController extends Controller
 
         $filename = "nhis-batch-{$batch->batch_number}.xml";
 
-        return response($xml, 200, [
+        return response()->stream(function () use ($batch) {
+            $this->nhisXmlExportService->writeXmlToStream($batch, fopen('php://output', 'w'));
+        }, 200, [
             'Content-Type' => 'application/xml',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
