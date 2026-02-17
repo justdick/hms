@@ -504,6 +504,7 @@ class ConsultationController extends Controller
             'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
             'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
+            'prescribed_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Prescription added successfully.');
@@ -599,6 +600,7 @@ class ConsultationController extends Controller
                 'quantity_to_dispense' => $original->quantity_to_dispense ?? $original->quantity,
                 'instructions' => $original->instructions,
                 'status' => 'prescribed',
+                'prescribed_at' => now(),
             ]);
 
             $refillCount++;
@@ -634,6 +636,7 @@ class ConsultationController extends Controller
                 'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'],
                 'instructions' => $prescriptionData['instructions'],
                 'status' => 'prescribed',
+                'prescribed_at' => now(),
             ]);
             $createdCount++;
         }

@@ -49,6 +49,7 @@ class Prescription extends Model
         'reviewed_at',
         'dispensing_notes',
         'external_reason',
+        'prescribed_at',
         'migrated_from_mittag',
     ];
 
@@ -58,6 +59,7 @@ class Prescription extends Model
             'status' => 'string',
             'is_unpriced' => 'boolean',
             'reviewed_at' => 'datetime',
+            'prescribed_at' => 'datetime',
         ];
     }
 

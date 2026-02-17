@@ -203,6 +203,11 @@ class WardRoundController extends Controller
 
         $wardRound->update($updateData);
 
+        // If date changed, propagate to existing related records
+        if (isset($updateData['round_datetime'])) {
+            $this->propagateDateToRelatedRecords($wardRound);
+        }
+
         // Update patient medical histories if provided
         $patient = $admission->patient;
         if (isset($validated['past_medical_surgical_history'])) {
@@ -248,7 +253,7 @@ class WardRoundController extends Controller
             'source_type' => WardRound::class,
             'source_id' => $wardRound->id,
             'diagnosed_by' => auth()->id(),
-            'diagnosed_at' => now(),
+            'diagnosed_at' => $wardRound->round_datetime ?? now(),
             'clinical_notes' => $validated['clinical_notes'] ?? null,
         ]);
 
@@ -295,6 +300,7 @@ class WardRoundController extends Controller
             'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'], // Set for dispensing
             'instructions' => $prescriptionData['instructions'],
             'status' => 'prescribed',
+            'prescribed_at' => $wardRound->round_datetime ?? now(),
         ]);
 
         return back();
@@ -322,6 +328,7 @@ class WardRoundController extends Controller
                 'quantity_to_dispense' => $prescriptionData['quantity_to_dispense'],
                 'instructions' => $prescriptionData['instructions'],
                 'status' => 'prescribed',
+                'prescribed_at' => $wardRound->round_datetime ?? now(),
             ]);
             $createdCount++;
         }
@@ -369,7 +376,7 @@ class WardRoundController extends Controller
             'priority' => $validated['priority'],
             'special_instructions' => $validated['special_instructions'] ?? null,
             'ordered_by' => auth()->id(),
-            'ordered_at' => now(),
+            'ordered_at' => $wardRound->round_datetime ?? now(),
             'status' => 'ordered',
         ]);
 
@@ -417,7 +424,7 @@ class WardRoundController extends Controller
             $labOrder = $wardRound->labOrders()->create([
                 'lab_service_id' => $orderData['lab_service_id'],
                 'ordered_by' => auth()->id(),
-                'ordered_at' => now(),
+                'ordered_at' => $wardRound->round_datetime ?? now(),
                 'status' => 'ordered',
                 'priority' => $orderData['priority'],
                 'special_instructions' => $orderData['special_instructions'],
@@ -517,9 +524,25 @@ class WardRoundController extends Controller
         $validated = $request->validated();
 
         // Update ward round status to completed
+        // Apply same date comparison logic as autoSave
+        $roundDatetime = $wardRound->round_datetime;
+        if (isset($validated['round_datetime'])) {
+            $newDate = \Carbon\Carbon::parse($validated['round_datetime'])->startOfDay();
+            $currentDate = \Carbon\Carbon::parse($wardRound->round_datetime)->startOfDay();
+
+            if (! $newDate->equalTo($currentDate)) {
+                $originalTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+                $roundDatetime = $newDate->setTime(
+                    $originalTime->hour,
+                    $originalTime->minute,
+                    $originalTime->second
+                );
+            }
+        }
+
         $wardRound->update([
             'status' => 'completed',
-            'round_datetime' => $validated['round_datetime'] ?? $wardRound->round_datetime,
+            'round_datetime' => $roundDatetime,
             'presenting_complaint' => $validated['presenting_complaint'] ?? $wardRound->presenting_complaint,
             'history_presenting_complaint' => $validated['history_presenting_complaint'] ?? $wardRound->history_presenting_complaint,
             'on_direct_questioning' => $validated['on_direct_questioning'] ?? $wardRound->on_direct_questioning,
@@ -527,6 +550,11 @@ class WardRoundController extends Controller
             'assessment_notes' => $validated['assessment_notes'] ?? $wardRound->assessment_notes,
             'plan_notes' => $validated['plan_notes'] ?? $wardRound->plan_notes,
         ]);
+
+        // If date changed, propagate to existing related records
+        if ($roundDatetime !== $wardRound->getOriginal('round_datetime')) {
+            $this->propagateDateToRelatedRecords($wardRound);
+        }
 
         // Update patient medical histories if provided
         $patient = $admission->patient;
@@ -557,13 +585,33 @@ class WardRoundController extends Controller
 
         $validated = $request->validated();
 
+        $roundDatetime = $wardRound->round_datetime;
+        if (isset($validated['round_datetime'])) {
+            $newDate = \Carbon\Carbon::parse($validated['round_datetime'])->startOfDay();
+            $currentDate = \Carbon\Carbon::parse($wardRound->round_datetime)->startOfDay();
+
+            if (! $newDate->equalTo($currentDate)) {
+                $originalTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+                $roundDatetime = $newDate->setTime(
+                    $originalTime->hour,
+                    $originalTime->minute,
+                    $originalTime->second
+                );
+            }
+        }
+
         $wardRound->update([
             'progress_note' => $validated['progress_note'],
             'patient_status' => $validated['patient_status'],
             'clinical_impression' => $validated['clinical_impression'] ?? $wardRound->clinical_impression,
             'plan' => $validated['plan'] ?? $wardRound->plan,
-            'round_datetime' => $validated['round_datetime'] ?? $wardRound->round_datetime,
+            'round_datetime' => $roundDatetime,
         ]);
+
+        // If date changed, propagate to existing related records
+        if ($roundDatetime !== $wardRound->getOriginal('round_datetime')) {
+            $this->propagateDateToRelatedRecords($wardRound);
+        }
 
         $wardRound->load('doctor:id,name');
 
@@ -582,6 +630,25 @@ class WardRoundController extends Controller
     /**
      * Calculate day number based on admission date
      */
+    /**
+     * Update timestamps on related records when ward round date changes.
+     */
+    private function propagateDateToRelatedRecords(WardRound $wardRound): void
+    {
+        $roundDatetime = $wardRound->round_datetime;
+
+        // Update lab orders ordered_at
+        $wardRound->labOrders()->update(['ordered_at' => $roundDatetime]);
+
+        // Update prescriptions prescribed_at
+        $wardRound->prescriptions()->update(['prescribed_at' => $roundDatetime]);
+
+        // Update diagnoses diagnosed_at
+        \App\Models\AdmissionDiagnosis::where('source_type', WardRound::class)
+            ->where('source_id', $wardRound->id)
+            ->update(['diagnosed_at' => $roundDatetime]);
+    }
+
     private function calculateDayNumber(PatientAdmission $admission): int
     {
         $admissionDate = \Carbon\Carbon::parse($admission->admitted_at)->startOfDay();
