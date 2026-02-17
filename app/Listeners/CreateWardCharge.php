@@ -11,8 +11,7 @@ class CreateWardCharge
 {
     public function __construct(
         private BillingService $billingService
-    ) {
-    }
+    ) {}
 
     public function handleAdmission(PatientAdmitted $event): void
     {
@@ -25,8 +24,8 @@ class CreateWardCharge
         // Update the claim to 'inpatient' when patient is admitted
         // This ensures services done before admission are correctly classified as IPD
         InsuranceClaim::where('patient_checkin_id', $event->checkin->id)
-            ->where('type_of_service', '!=', 'inpatient')
-            ->update(['type_of_service' => 'inpatient']);
+            ->where('type_of_service', '!=', 'IPD')
+            ->update(['type_of_service' => 'IPD']);
     }
 
     public function handleBedAssignment(BedAssigned $event): void

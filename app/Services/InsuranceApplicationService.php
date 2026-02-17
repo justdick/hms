@@ -70,7 +70,7 @@ class InsuranceApplicationService
                 'membership_id' => $patientInsurance->membership_id,
                 'date_of_attendance' => $checkin->checked_in_at,
                 'type_of_service' => $typeOfService,
-                'type_of_attendance' => 'routine',
+                'type_of_attendance' => 'EAE',
                 'status' => 'pending_vetting',
                 'total_claim_amount' => 0,
                 'approved_amount' => 0,

@@ -54,7 +54,7 @@ test('charge is automatically linked to insurance claim when created', function 
         'patient_insurance_id' => $patientInsurance->id,
         'patient_checkin_id' => $checkin->id,
         'date_of_attendance' => now()->toDateString(),
-        'type_of_service' => 'outpatient',
+        'type_of_service' => 'OPD',
         'status' => 'draft',
     ]);
 
@@ -133,7 +133,7 @@ test('charge calculates partial coverage correctly', function () {
         'patient_insurance_id' => $patientInsurance->id,
         'patient_checkin_id' => $checkin->id,
         'date_of_attendance' => now()->toDateString(),
-        'type_of_service' => 'outpatient',
+        'type_of_service' => 'OPD',
         'status' => 'draft',
     ]);
 
@@ -237,7 +237,7 @@ test('updating charge amount recalculates insurance coverage', function () {
         'patient_insurance_id' => $patientInsurance->id,
         'patient_checkin_id' => $checkin->id,
         'date_of_attendance' => now()->toDateString(),
-        'type_of_service' => 'outpatient',
+        'type_of_service' => 'OPD',
         'status' => 'draft',
     ]);
 
@@ -314,7 +314,7 @@ test('deleting charge updates claim totals', function () {
         'patient_insurance_id' => $patientInsurance->id,
         'patient_checkin_id' => $checkin->id,
         'date_of_attendance' => now()->toDateString(),
-        'type_of_service' => 'outpatient',
+        'type_of_service' => 'OPD',
         'status' => 'draft',
     ]);
 
@@ -403,7 +403,7 @@ test('charge maps service types to insurance item types correctly', function () 
         'patient_insurance_id' => $patientInsurance->id,
         'patient_checkin_id' => $checkin->id,
         'date_of_attendance' => now()->toDateString(),
-        'type_of_service' => 'outpatient',
+        'type_of_service' => 'OPD',
         'status' => 'draft',
     ]);
 

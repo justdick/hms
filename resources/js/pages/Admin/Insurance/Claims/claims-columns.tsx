@@ -35,8 +35,8 @@ export interface InsuranceClaim {
     patient_full_name: string;
     membership_id: string;
     date_of_attendance: string;
-    type_of_service: 'inpatient' | 'outpatient';
-    type_of_attendance: 'emergency' | 'acute' | 'routine';
+    type_of_service: 'OPD' | 'IPD';
+    type_of_attendance: 'EAE' | 'ANC' | 'PNC' | 'FP' | 'CWC' | 'REV';
     total_claim_amount: string;
     approved_amount: string;
     status:

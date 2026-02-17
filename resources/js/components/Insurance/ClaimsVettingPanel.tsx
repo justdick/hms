@@ -76,8 +76,8 @@ interface InsuranceClaim {
     membership_id: string;
     date_of_attendance: string;
     date_of_discharge?: string;
-    type_of_service: 'inpatient' | 'outpatient';
-    type_of_attendance: 'emergency' | 'acute' | 'routine';
+    type_of_service: 'OPD' | 'IPD';
+    type_of_attendance: 'EAE' | 'ANC' | 'PNC' | 'FP' | 'CWC' | 'REV';
     specialty_attended?: string;
     attending_prescriber?: string;
     primary_diagnosis_code?: string;
