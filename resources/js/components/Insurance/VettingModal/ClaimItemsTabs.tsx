@@ -54,6 +54,7 @@ interface ClaimItemsTabsProps {
     };
     isNhis: boolean;
     disabled?: boolean;
+    highlightMissingDates?: boolean;
     onItemsChange: (items: {
         investigations: ClaimItem[];
         prescriptions: ClaimItem[];
@@ -86,6 +87,7 @@ export function ClaimItemsTabs({
     items,
     isNhis,
     disabled = false,
+    highlightMissingDates = false,
     onItemsChange,
 }: ClaimItemsTabsProps) {
     const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -551,10 +553,14 @@ export function ClaimItemsTabs({
                                                     <PopoverTrigger asChild>
                                                         <Button
                                                             variant="outline"
-                                                            className="h-7 w-32 justify-start text-left text-sm font-normal"
+                                                            className={`h-7 w-32 justify-start text-left text-sm font-normal ${
+                                                                highlightMissingDates && !item.item_date
+                                                                    ? 'border-red-500 ring-1 ring-red-500 text-red-500'
+                                                                    : ''
+                                                            }`}
                                                         >
                                                             <CalendarIcon className="mr-1.5 h-3 w-3" />
-                                                            {item.item_date || 'Pick date'}
+                                                            {item.item_date || (highlightMissingDates ? 'Date required' : 'Pick date')}
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent

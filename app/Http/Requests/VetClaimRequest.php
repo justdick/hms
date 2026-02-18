@@ -60,7 +60,10 @@ class VetClaimRequest extends FormRequest
             'specialty_attended' => ['nullable', 'string', 'max:10'],
             'attending_prescriber' => ['nullable', 'string', 'max:255'],
             'date_of_attendance' => ['nullable', 'date'],
-            'date_of_discharge' => ['nullable', 'date'],
+            'date_of_discharge' => [
+                $this->isIpdService() && $this->input('action') === 'approve' ? 'required' : 'nullable',
+                'date',
+            ],
         ];
     }
 
@@ -79,6 +82,30 @@ class VetClaimRequest extends FormRequest
             'diagnoses.*.diagnosis_id.exists' => 'One or more selected diagnoses are invalid.',
             'items.*.id.required' => 'Each item must have a valid ID.',
             'items.*.is_approved.required' => 'Each item must have an approval status.',
+            'date_of_discharge.required' => 'Date of Discharge is required when Type of Service is IPD.',
         ];
+    }
+
+    /**
+     * Determine if the type of service is IPD (inpatient).
+     */
+    protected function isIpdService(): bool
+    {
+        // Check the submitted value first
+        $submitted = strtoupper((string) $this->input('type_of_service', ''));
+        if ($submitted === 'IPD') {
+            return true;
+        }
+
+        // Fall back to the claim's existing value
+        $claim = $this->route('claim');
+        if ($claim instanceof InsuranceClaim && $claim->type_of_service === 'inpatient') {
+            // Only if no type_of_service was submitted (i.e. user didn't change it)
+            if (! $this->has('type_of_service') || $submitted === '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

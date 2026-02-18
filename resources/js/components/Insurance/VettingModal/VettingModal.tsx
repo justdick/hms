@@ -78,6 +78,8 @@ export function VettingModal({
         Record<string, string>
     >({});
     const [showMedicalHistory, setShowMedicalHistory] = useState(false);
+    const [dischargeDateError, setDischargeDateError] = useState(false);
+    const [itemDateErrors, setItemDateErrors] = useState(false);
 
     // Focus management
     const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -136,6 +138,8 @@ export function VettingModal({
             setAttendanceUpdates({});
             setShowRejectForm(false);
             setRejectionReason('');
+            setDischargeDateError(false);
+            setItemDateErrors(false);
             setError(null);
         }
     }, [isOpen]);
@@ -144,6 +148,10 @@ export function VettingModal({
     const handleAttendanceChange = useCallback(
         (field: string, value: string) => {
             setAttendanceUpdates((prev) => ({ ...prev, [field]: value }));
+            // Clear discharge date error when user sets the discharge date
+            if (field === 'date_of_discharge' && value) {
+                setDischargeDateError(false);
+            }
             // Also update the vettingData for immediate UI feedback
             if (vettingData) {
                 setVettingData({
@@ -248,8 +256,41 @@ export function VettingModal({
         };
     }, [vettingData, selectedGdrg]);
 
+    // Determine the effective type_of_service (local edits take precedence)
+    const effectiveTypeOfService =
+        attendanceUpdates.type_of_service ??
+        vettingData?.attendance.type_of_service ??
+        'OPD';
+
+    const effectiveDateOfDischarge =
+        attendanceUpdates.date_of_discharge ??
+        vettingData?.attendance.date_of_discharge ??
+        null;
+
+    const effectiveDateOfAttendance =
+        attendanceUpdates.date_of_attendance ??
+        vettingData?.attendance.date_of_attendance ??
+        null;
+
+    const isIpd = effectiveTypeOfService === 'IPD';
+
+    // Check if any claim items are missing dates
+    const getItemsMissingDates = () => {
+        if (!vettingData) return [];
+        const allItems = [
+            ...vettingData.items.investigations,
+            ...vettingData.items.prescriptions,
+            ...vettingData.items.procedures,
+        ];
+        return allItems.filter((item) => !item.item_date);
+    };
+
     const handleApprove = () => {
         if (!vettingData) return;
+
+        // Reset error states
+        setDischargeDateError(false);
+        setItemDateErrors(false);
 
         // Validate G-DRG required for NHIS claims
         if (vettingData.is_nhis && !selectedGdrg) {
@@ -257,8 +298,33 @@ export function VettingModal({
             return;
         }
 
+        // Validate date_of_discharge is required for IPD
+        if (isIpd && !effectiveDateOfDischarge) {
+            setDischargeDateError(true);
+            setError(
+                'Date of Discharge is required when Type of Service is IPD.',
+            );
+            return;
+        }
+
+        // Validate all claim items have dates
+        const missingDates = getItemsMissingDates();
+        if (missingDates.length > 0) {
+            setItemDateErrors(true);
+            setError(
+                `${missingDates.length} claim item(s) are missing dates. Please set a date for all investigations, prescriptions, and procedures.`,
+            );
+            return;
+        }
+
         setProcessing(true);
         setError(null);
+
+        // For OPD, auto-set date_of_discharge to date_of_attendance
+        const submissionUpdates = { ...attendanceUpdates };
+        if (!isIpd && effectiveDateOfAttendance) {
+            submissionUpdates.date_of_discharge = effectiveDateOfAttendance;
+        }
 
         router.post(
             `/admin/insurance/claims/${vettingData.claim.id}/vet`,
@@ -270,7 +336,7 @@ export function VettingModal({
                     is_primary: d.is_primary,
                 })),
                 // Include attendance updates
-                ...attendanceUpdates,
+                ...submissionUpdates,
             },
             {
                 preserveScroll: true,
@@ -433,6 +499,7 @@ export function VettingModal({
                                             handleAttendanceChange
                                         }
                                         disabled={processing || isViewOnly}
+                                        dischargeDateError={dischargeDateError}
                                     />
                                 </div>
 
@@ -465,6 +532,7 @@ export function VettingModal({
                                     items={vettingData.items}
                                     isNhis={vettingData.is_nhis}
                                     disabled={processing || isViewOnly}
+                                    highlightMissingDates={itemDateErrors}
                                     onItemsChange={(newItems) => {
                                         setVettingData({
                                             ...vettingData,

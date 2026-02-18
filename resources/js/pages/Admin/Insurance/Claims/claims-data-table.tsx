@@ -117,8 +117,8 @@ const statusOptions = [
 
 const serviceTypeOptions = [
     { value: 'all', label: 'All Types' },
-    { value: 'outpatient', label: 'OPD' },
-    { value: 'inpatient', label: 'IPD' },
+    { value: 'OPD', label: 'OPD' },
+    { value: 'IPD', label: 'IPD' },
 ];
 
 export function ClaimsDataTable<TData, TValue>({

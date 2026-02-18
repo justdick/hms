@@ -26,6 +26,7 @@ interface AttendanceDetailsSectionProps {
     attendance: AttendanceDetails;
     onAttendanceChange?: (field: string, value: string) => void;
     disabled?: boolean;
+    dischargeDateError?: boolean;
 }
 
 const attendanceTypeColors: Record<string, string> = {
@@ -60,6 +61,7 @@ export function AttendanceDetailsSection({
     attendance,
     onAttendanceChange,
     disabled = false,
+    dischargeDateError = false,
 }: AttendanceDetailsSectionProps) {
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';
@@ -218,47 +220,61 @@ export function AttendanceDetailsSection({
                     <div>
                         <label className="text-sm text-gray-500 dark:text-gray-400">
                             Date of Discharge
+                            {attendance.type_of_service === 'IPD' && (
+                                <span className="ml-1 text-red-500">*</span>
+                            )}
                         </label>
                         {onAttendanceChange && !disabled ? (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="mt-1 w-full justify-start text-left font-normal"
+                            <div>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={`mt-1 w-full justify-start text-left font-normal ${
+                                                dischargeDateError
+                                                    ? 'border-red-500 ring-1 ring-red-500'
+                                                    : ''
+                                            }`}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {formatDate(
+                                                attendance.date_of_discharge,
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        className="w-auto p-0"
+                                        align="start"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {formatDate(
-                                            attendance.date_of_discharge,
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto p-0"
-                                    align="start"
-                                >
-                                    <Calendar
-                                        mode="single"
-                                        selected={
-                                            attendance.date_of_discharge
-                                                ? new Date(
-                                                      attendance.date_of_discharge,
-                                                  )
-                                                : undefined
-                                        }
-                                        onSelect={(date) => {
-                                            if (date) {
-                                                const formatted = date
-                                                    .toISOString()
-                                                    .split('T')[0];
-                                                onAttendanceChange(
-                                                    'date_of_discharge',
-                                                    formatted,
-                                                );
+                                        <Calendar
+                                            mode="single"
+                                            selected={
+                                                attendance.date_of_discharge
+                                                    ? new Date(
+                                                          attendance.date_of_discharge,
+                                                      )
+                                                    : undefined
                                             }
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const formatted = date
+                                                        .toISOString()
+                                                        .split('T')[0];
+                                                    onAttendanceChange(
+                                                        'date_of_discharge',
+                                                        formatted,
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                {dischargeDateError && (
+                                    <p className="mt-1 text-xs text-red-500">
+                                        Required for IPD claims
+                                    </p>
+                                )}
+                            </div>
                         ) : (
                             <p className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
                                 <CalendarIcon
