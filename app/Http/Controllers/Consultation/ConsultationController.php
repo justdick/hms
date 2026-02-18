@@ -664,16 +664,7 @@ class ConsultationController extends Controller
             return redirect()->back()->with('error', 'Please add at least one Secondary (Provisional) diagnosis before completing the consultation.');
         }
 
-        $consultation->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
-        // Update patient check-in status
-        $consultation->patientCheckin->update([
-            'consultation_completed_at' => now(),
-            'status' => 'completed',
-        ]);
+        $consultation->markCompleted();
 
         // Generate billing if there are services
         $this->generateBilling($consultation);

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Consultation;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class AutoCompleteConsultations extends Command
 {
@@ -30,6 +31,7 @@ class AutoCompleteConsultations extends Command
 
         $consultations = Consultation::where('status', 'in_progress')
             ->where('started_at', '<', $cutoffTime)
+            ->with('patientCheckin')
             ->get();
 
         if ($consultations->isEmpty()) {
@@ -41,18 +43,15 @@ class AutoCompleteConsultations extends Command
         $count = $consultations->count();
 
         foreach ($consultations as $consultation) {
-            $consultation->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
+            try {
+                DB::transaction(function () use ($consultation) {
+                    $consultation->markCompleted();
+                });
 
-            // Also update check-in status to completed
-            $consultation->patientCheckin->update([
-                'consultation_completed_at' => now(),
-                'status' => 'completed',
-            ]);
-
-            $this->line("Auto-completed consultation #{$consultation->id} (started: {$consultation->started_at->format('Y-m-d H:i')})");
+                $this->line("Auto-completed consultation #{$consultation->id} (started: {$consultation->started_at->format('Y-m-d H:i')})");
+            } catch (\Throwable $e) {
+                $this->error("Failed to auto-complete consultation #{$consultation->id}: {$e->getMessage()}");
+            }
         }
 
         $this->info("Successfully auto-completed {$count} consultation(s).");
