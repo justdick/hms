@@ -315,23 +315,12 @@ class ClaimVettingService
 
         $items = $claim->items;
 
-        // Enrich items with correct quantities and NHIS tariff data
+        // Enrich items with NHIS tariff data (quantity is managed via claim item directly)
         $items = $items->map(function ($item) use ($isNhis) {
-            // Fix quantity from prescription if available (for drugs)
-            if ($item->item_type === 'drug' && $item->charge?->prescription) {
-                $prescription = $item->charge->prescription;
-
-                // For drugs flagged as nhis_claim_qty_as_one (e.g. Artemether, Pessaries),
-                // NHIS requires quantity = 1 regardless of actual dispensed quantity
-                if ($isNhis && $prescription->drug?->nhis_claim_qty_as_one) {
-                    $correctQuantity = 1;
-                } else {
-                    $correctQuantity = $prescription->quantity_to_dispense ?? $prescription->quantity ?? 1;
-                }
-
-                if ($item->quantity !== $correctQuantity) {
-                    $item->quantity = $correctQuantity;
-                }
+            // For NHIS drugs flagged as nhis_claim_qty_as_one (e.g. Artemether, Pessaries),
+            // NHIS requires quantity = 1 regardless of actual dispensed quantity
+            if ($isNhis && $item->item_type === 'drug' && $item->charge?->prescription?->drug?->nhis_claim_qty_as_one) {
+                $item->quantity = 1;
             }
 
             // For NHIS claims, enrich with NHIS tariff data

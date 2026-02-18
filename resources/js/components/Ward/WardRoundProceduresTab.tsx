@@ -78,6 +78,7 @@ interface ProcedureTemplate {
 interface Props {
     admissionId: number;
     wardRoundId: number;
+    roundDatetime?: string;
     procedures: WardRoundProcedure[];
     availableProcedures: ProcedureType[];
 }
@@ -102,6 +103,7 @@ const CSECTION_SUBTYPES = [
 export default function WardRoundProceduresTab({
     admissionId,
     wardRoundId,
+    roundDatetime,
     procedures,
 }: Props) {
     // Form state
@@ -235,7 +237,8 @@ export default function WardRoundProceduresTab({
                 findings: findings || null,
                 plan: plan || null,
                 comments: comments || null,
-                performed_at: new Date().toISOString(),
+                performed_at: roundDatetime || new Date().toISOString(),
+                round_datetime: roundDatetime ? roundDatetime.split('T')[0] : undefined,
             },
             {
                 onSuccess: () => {

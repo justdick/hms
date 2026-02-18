@@ -237,6 +237,9 @@ class WardRoundController extends Controller
             return response()->json(['error' => 'Cannot update completed ward round'], 403);
         }
 
+        // Sync round date in case user changed it but auto-save hasn't fired yet
+        $this->syncRoundDateIfChanged($wardRound);
+
         $validated = request()->validate([
             'diagnosis_id' => 'required|exists:diagnoses,id',
             'diagnosis_type' => 'required|in:working,complication,comorbidity',
@@ -287,6 +290,9 @@ class WardRoundController extends Controller
             return response()->json(['error' => 'Cannot update completed ward round'], 403);
         }
 
+        // Sync round date in case user changed it but auto-save hasn't fired yet
+        $this->syncRoundDateIfChanged($wardRound);
+
         // Get prescription data (handles both Smart and Classic modes)
         $prescriptionData = $request->getPrescriptionData();
 
@@ -313,6 +319,9 @@ class WardRoundController extends Controller
         if ($wardRound->status !== 'in_progress') {
             return back()->with('error', 'Cannot update completed ward round');
         }
+
+        // Sync round date in case user changed it but auto-save hasn't fired yet
+        $this->syncRoundDateIfChanged($wardRound);
 
         $prescriptions = $request->getPrescriptions();
         $createdCount = 0;
@@ -365,6 +374,9 @@ class WardRoundController extends Controller
             return response()->json(['error' => 'Cannot update completed ward round'], 403);
         }
 
+        // Sync round date in case user changed it but auto-save hasn't fired yet
+        $this->syncRoundDateIfChanged($wardRound);
+
         $validated = request()->validate([
             'lab_service_id' => 'required|exists:lab_services,id',
             'priority' => 'required|in:routine,urgent,stat',
@@ -395,6 +407,9 @@ class WardRoundController extends Controller
         if ($wardRound->status !== 'in_progress') {
             return back()->with('error', 'Cannot update completed ward round');
         }
+
+        // Sync round date in case user changed it but auto-save hasn't fired yet
+        $this->syncRoundDateIfChanged($wardRound);
 
         $labOrders = $request->getLabOrders();
         $createdCount = 0;
@@ -647,6 +662,38 @@ class WardRoundController extends Controller
         \App\Models\AdmissionDiagnosis::where('source_type', WardRound::class)
             ->where('source_id', $wardRound->id)
             ->update(['diagnosed_at' => $roundDatetime]);
+
+        // Update procedures performed_at
+        $wardRound->procedures()->update(['performed_at' => $roundDatetime]);
+    }
+
+    /**
+     * Sync the ward round date from the frontend if it has changed.
+     * This handles the case where the user changes the date picker but
+     * auto-save hasn't fired yet before adding a record.
+     */
+    private function syncRoundDateIfChanged(WardRound $wardRound): void
+    {
+        $requestDate = request()->input('round_datetime');
+
+        if (! $requestDate) {
+            return;
+        }
+
+        $newDate = \Carbon\Carbon::parse($requestDate)->startOfDay();
+        $currentDate = \Carbon\Carbon::parse($wardRound->round_datetime)->startOfDay();
+
+        if (! $newDate->equalTo($currentDate)) {
+            $originalTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+            $roundDatetime = $newDate->setTime(
+                $originalTime->hour,
+                $originalTime->minute,
+                $originalTime->second
+            );
+
+            $wardRound->update(['round_datetime' => $roundDatetime]);
+            $this->propagateDateToRelatedRecords($wardRound);
+        }
     }
 
     private function calculateDayNumber(PatientAdmission $admission): int

@@ -326,6 +326,19 @@ export function VettingModal({
             submissionUpdates.date_of_discharge = effectiveDateOfAttendance;
         }
 
+        // Collect current item data so any pending edits (e.g. quantity) are saved
+        const allItems = [
+            ...vettingData.items.investigations,
+            ...vettingData.items.prescriptions,
+            ...vettingData.items.procedures,
+        ].map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            frequency: item.frequency || null,
+            dose: item.dose || null,
+            duration: item.duration || null,
+        }));
+
         router.post(
             `/admin/insurance/claims/${vettingData.claim.id}/vet`,
             {
@@ -335,6 +348,8 @@ export function VettingModal({
                     diagnosis_id: d.diagnosis_id,
                     is_primary: d.is_primary,
                 })),
+                // Include current item data to persist any pending edits
+                claim_items: allItems,
                 // Include attendance updates
                 ...submissionUpdates,
             },

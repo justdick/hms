@@ -423,6 +423,32 @@ class InsuranceClaimController extends Controller
             }
             $claim->save();
 
+            // Update claim item fields (quantity, frequency, dose, duration) if provided
+            if (! empty($validated['claim_items'])) {
+                foreach ($validated['claim_items'] as $itemData) {
+                    $item = $claim->items()->find($itemData['id']);
+                    if ($item) {
+                        $item->quantity = $itemData['quantity'];
+                        $unitPrice = $item->nhis_price ?? $item->unit_tariff;
+                        $item->subtotal = $unitPrice * $item->quantity;
+                        $item->insurance_pays = $item->is_covered ? $item->subtotal : 0;
+                        $item->patient_pays = $item->is_covered ? 0 : $item->subtotal;
+
+                        if (array_key_exists('frequency', $itemData)) {
+                            $item->frequency = $itemData['frequency'];
+                        }
+                        if (array_key_exists('dose', $itemData)) {
+                            $item->dose = $itemData['dose'];
+                        }
+                        if (array_key_exists('duration', $itemData)) {
+                            $item->duration = $itemData['duration'];
+                        }
+
+                        $item->save();
+                    }
+                }
+            }
+
             $this->claimVettingService->vetClaim(
                 $claim,
                 auth()->user(),

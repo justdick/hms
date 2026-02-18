@@ -68,6 +68,7 @@ interface Props {
     prescribableType?: 'consultation' | 'ward_round';
     prescribableId?: number;
     admissionId?: number; // Required for ward_round type
+    roundDatetime?: string; // Ward round date for date sync
     // Card wrapper control
     withCard?: boolean;
     cardTitle?: string;
@@ -92,6 +93,7 @@ export default function PrescriptionSection({
     prescribableType = 'consultation',
     prescribableId,
     admissionId,
+    roundDatetime,
     withCard = false,
     cardTitle = 'Prescriptions',
 }: Props) {
@@ -122,6 +124,7 @@ export default function PrescriptionSection({
             prescribableType={prescribableType}
             prescribableId={prescribableId ?? consultationId}
             admissionId={admissionId}
+            roundDatetime={roundDatetime}
             isEditable={canEdit}
             onDelete={onDelete}
             onEdit={onEdit}

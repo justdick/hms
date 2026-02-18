@@ -64,6 +64,7 @@ interface Props {
     orderableType: 'consultation' | 'ward_round';
     orderableId: number;
     admissionId?: number;
+    roundDatetime?: string;
 }
 
 export default function LabOrdersSection({
@@ -81,6 +82,7 @@ export default function LabOrdersSection({
     orderableType,
     orderableId,
     admissionId,
+    roundDatetime,
 }: Props) {
     const [batchMode, setBatchMode] = useState(false);
 
@@ -117,6 +119,7 @@ export default function LabOrdersSection({
                         orderableType={orderableType}
                         orderableId={orderableId}
                         admissionId={admissionId}
+                        roundDatetime={roundDatetime}
                         isEditable={isEditable}
                         onDelete={onDelete}
                         filterType="laboratory"

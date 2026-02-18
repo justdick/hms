@@ -54,6 +54,13 @@ class VetClaimRequest extends FormRequest
             ],
             'items.*.is_approved' => ['required', 'boolean'],
             'items.*.rejection_reason' => ['nullable', 'string', 'max:500'],
+            // Claim item edits (quantity, frequency, dose, duration)
+            'claim_items' => ['nullable', 'array'],
+            'claim_items.*.id' => ['required', 'integer'],
+            'claim_items.*.quantity' => ['required', 'integer', 'min:1'],
+            'claim_items.*.frequency' => ['nullable', 'string', 'max:100'],
+            'claim_items.*.dose' => ['nullable', 'string', 'max:100'],
+            'claim_items.*.duration' => ['nullable', 'string', 'max:100'],
             // Attendance details (editable during vetting)
             'type_of_attendance' => ['nullable', 'string', 'max:10'],
             'type_of_service' => ['nullable', 'string', 'max:10'],

@@ -57,6 +57,7 @@ interface Props {
     orderableType: 'consultation' | 'ward_round';
     orderableId: number;
     admissionId?: number; // Required for ward_round type
+    roundDatetime?: string; // Ward round date for date sync
     isEditable?: boolean;
     onDelete?: (id: number) => void;
     filterType?: 'laboratory' | 'imaging';
@@ -68,6 +69,7 @@ export default function BatchLabOrderForm({
     orderableType,
     orderableId,
     admissionId,
+    roundDatetime,
     isEditable = true,
     onDelete,
     filterType = 'laboratory',
@@ -127,6 +129,7 @@ export default function BatchLabOrderForm({
                 priority: o.priority,
                 special_instructions: o.special_instructions,
             })),
+            ...(roundDatetime ? { round_datetime: roundDatetime } : {}),
         }, {
             preserveScroll: true,
             onSuccess: () => {

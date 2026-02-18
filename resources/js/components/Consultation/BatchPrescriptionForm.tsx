@@ -84,6 +84,7 @@ interface Props {
     prescribableType: 'consultation' | 'ward_round';
     prescribableId: number;
     admissionId?: number; // Required for ward_round type
+    roundDatetime?: string; // Ward round date for date sync
     isEditable?: boolean;
     onDelete?: (id: number) => void;
     onEdit?: (prescription: ExistingPrescription) => void;
@@ -187,6 +188,7 @@ export default function BatchPrescriptionForm({
     prescribableType,
     prescribableId,
     admissionId,
+    roundDatetime,
     isEditable = true,
     onDelete,
     onEdit,
@@ -348,6 +350,7 @@ export default function BatchPrescriptionForm({
                 quantity_to_dispense: p.quantity_to_dispense,
                 instructions: p.instructions,
             })),
+            ...(roundDatetime ? { round_datetime: roundDatetime } : {}),
         }, {
             preserveScroll: true,
             onSuccess: () => {

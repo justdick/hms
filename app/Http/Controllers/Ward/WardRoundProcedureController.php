@@ -28,6 +28,9 @@ class WardRoundProcedureController extends Controller
     {
         $this->authorize('update', $wardRound);
 
+        // Sync round date if the frontend has a newer date than what's persisted
+        $this->syncRoundDateIfChanged($wardRound);
+
         $validated = $request->validate([
             'minor_procedure_type_id' => 'required|exists:minor_procedure_types,id',
             'indication' => 'nullable|string',
@@ -43,6 +46,7 @@ class WardRoundProcedureController extends Controller
             'plan' => 'nullable|string',
             'comments' => 'nullable|string',
             'performed_at' => 'required|date',
+            'round_datetime' => 'nullable|date',
         ]);
 
         $procedure = WardRoundProcedure::create([
@@ -61,7 +65,7 @@ class WardRoundProcedureController extends Controller
             'findings' => $validated['findings'] ?? null,
             'plan' => $validated['plan'] ?? null,
             'comments' => $validated['comments'] ?? null,
-            'performed_at' => $validated['performed_at'],
+            'performed_at' => $wardRound->round_datetime ?? $validated['performed_at'],
         ]);
 
         // Dispatch event for automatic billing
@@ -86,5 +90,39 @@ class WardRoundProcedureController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Procedure removed successfully.');
+    }
+
+    /**
+     * Sync the ward round date from the frontend if it has changed.
+     */
+    private function syncRoundDateIfChanged(WardRound $wardRound): void
+    {
+        $requestDate = request()->input('round_datetime');
+
+        if (! $requestDate) {
+            return;
+        }
+
+        $newDate = \Carbon\Carbon::parse($requestDate)->startOfDay();
+        $currentDate = \Carbon\Carbon::parse($wardRound->round_datetime)->startOfDay();
+
+        if (! $newDate->equalTo($currentDate)) {
+            $originalTime = \Carbon\Carbon::parse($wardRound->round_datetime);
+            $roundDatetime = $newDate->setTime(
+                $originalTime->hour,
+                $originalTime->minute,
+                $originalTime->second
+            );
+
+            $wardRound->update(['round_datetime' => $roundDatetime]);
+
+            // Propagate to existing related records
+            $wardRound->labOrders()->update(['ordered_at' => $roundDatetime]);
+            $wardRound->prescriptions()->update(['prescribed_at' => $roundDatetime]);
+            \App\Models\AdmissionDiagnosis::where('source_type', WardRound::class)
+                ->where('source_id', $wardRound->id)
+                ->update(['diagnosed_at' => $roundDatetime]);
+            $wardRound->procedures()->update(['performed_at' => $roundDatetime]);
+        }
     }
 }
