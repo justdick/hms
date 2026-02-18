@@ -144,7 +144,7 @@ export function WardRoundViewModal({
                     <div className="flex items-center justify-between pr-8">
                         <div>
                             <DialogTitle className="text-2xl">
-                                Ward Round - Day {wardRound.day_number}
+                                Ward Round
                             </DialogTitle>
                             {patientName && (
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">

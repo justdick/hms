@@ -44,7 +44,6 @@ import {
     Activity,
     Bed,
     Building,
-    Clock,
     FileText,
     Heart,
     History,
@@ -228,7 +227,6 @@ interface WardRound {
 interface Props {
     admission: PatientAdmission;
     wardRound: WardRound;
-    dayNumber: number;
     availableDrugs: Drug[];
     availableProcedures?: ProcedureType[];
     patientHistories: {
@@ -247,7 +245,6 @@ interface Props {
 export default function WardRoundCreate({
     admission,
     wardRound,
-    dayNumber,
     availableDrugs = [],
     availableProcedures = [],
     patientHistories,
@@ -434,9 +431,15 @@ export default function WardRoundCreate({
 
     const handlePrescriptionSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        postPrescription(
+        const { schedule_pattern, ...rest } = prescriptionData;
+        router.post(
             `/admissions/${admission.id}/ward-rounds/${wardRound.id}/prescriptions`,
             {
+                ...rest,
+                round_datetime: data.round_datetime,
+            },
+            {
+                preserveScroll: true,
                 onSuccess: () => {
                     resetPrescription();
                 },
@@ -483,6 +486,7 @@ export default function WardRoundCreate({
             {
                 diagnosis_id: diagnosisId,
                 diagnosis_type: diagnosis_type,
+                round_datetime: data.round_datetime,
             },
             {
                 preserveScroll: true,
@@ -492,9 +496,14 @@ export default function WardRoundCreate({
 
     const handleLabOrderSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        postLabOrder(
+        router.post(
             `/admissions/${admission.id}/ward-rounds/${wardRound.id}/lab-orders`,
             {
+                ...labOrderData,
+                round_datetime: data.round_datetime,
+            },
+            {
+                preserveScroll: true,
                 onSuccess: () => {
                     resetLabOrder();
                     setSelectedLabService(null);
@@ -605,10 +614,10 @@ export default function WardRoundCreate({
             title: `${admission.patient.first_name} ${admission.patient.last_name}`,
             href: `/wards/${admission.ward.id}/patients/${admission.id}`,
         },
-        { title: `Ward Round - Day ${dayNumber}`, href: '' },
+        { title: `Ward Round`, href: '' },
     ];
 
-    const pageTitle = `Ward Round - Day ${dayNumber} - ${admission.patient.first_name} ${admission.patient.last_name}`;
+    const pageTitle = `Ward Round - ${admission.patient.first_name} ${admission.patient.last_name}`;
 
     // Convert ward round diagnoses to display format
     // Convert ward round diagnoses to display format
@@ -680,18 +689,8 @@ export default function WardRoundCreate({
                                                 Bed {admission.bed_number}
                                             </span>
                                         </div>
-                                        <Separator
-                                            orientation="vertical"
-                                            className="h-4"
-                                        />
                                     </>
                                 )}
-                                <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                    <span className="text-gray-700 dark:text-gray-300">
-                                        Day {dayNumber}
-                                    </span>
-                                </div>
                             </div>
                         </div>
 
@@ -1126,6 +1125,7 @@ export default function WardRoundCreate({
                             prescribableType="ward_round"
                             prescribableId={wardRound.id}
                             admissionId={admission.id}
+                            roundDatetime={data.round_datetime}
                             withCard={true}
                         />
                     </TabsContent>
@@ -1153,6 +1153,7 @@ export default function WardRoundCreate({
                             orderableType="ward_round"
                             orderableId={wardRound.id}
                             admissionId={admission.id}
+                            roundDatetime={data.round_datetime}
                         />
                     </TabsContent>
 
@@ -1161,6 +1162,7 @@ export default function WardRoundCreate({
                         <WardRoundProceduresTab
                             admissionId={admission.id}
                             wardRoundId={wardRound.id}
+                            roundDatetime={data.round_datetime ? new Date(data.round_datetime).toISOString() : undefined}
                             procedures={wardRound.procedures || []}
                             availableProcedures={availableProcedures || []}
                         />
