@@ -265,24 +265,12 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
         );
     }, [admission]);
 
-    // Calculate admission day number
-    const admissionDayNumber = useMemo(() => {
-        const admissionDate = new Date(admission.admitted_at);
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - admissionDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    }, [admission.admitted_at]);
-
     return (
         <div className="space-y-4">
             {/* Admission Info Banner */}
             <div className="rounded-lg border bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                            Admission Day {admissionDayNumber}
-                        </p>
                         <p className="text-xs text-blue-700 dark:text-blue-300">
                             Admitted on{' '}
                             {new Date(admission.admitted_at).toLocaleDateString(

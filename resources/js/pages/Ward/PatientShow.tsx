@@ -646,15 +646,6 @@ export default function WardPatientShow({
         setWardRoundViewModalOpen(true);
     };
 
-    // Calculate next day number
-    const calculateAdmissionDays = () => {
-        const admissionDate = new Date(admission.admitted_at);
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - admissionDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    };
-
     const getNoteTypeStyle = (
         type: string,
     ): { badge: string; icon: any; label: string } => {
@@ -955,9 +946,6 @@ export default function WardPatientShow({
                             </p>
                             <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </div>
-                        <p className="font-semibold text-amber-700 dark:text-amber-300">
-                            Day {calculateAdmissionDays()}
-                        </p>
                         <p className="text-xs text-amber-600 dark:text-amber-400">
                             {formatDateTime(admission.admitted_at)}
                         </p>
@@ -1811,17 +1799,8 @@ export default function WardPatientShow({
                             </AlertDialogTitle>
                             <AlertDialogDescription className="space-y-2">
                                 <p>
-                                    This will complete{' '}
-                                    <strong>
-                                        Ward Round Day{' '}
-                                        {inProgressRound?.day_number}
-                                    </strong>{' '}
-                                    and create a new{' '}
-                                    <strong>
-                                        Ward Round Day{' '}
-                                        {calculateAdmissionDays()}
-                                    </strong>
-                                    .
+                                    This will complete the current ward round
+                                    and create a new one.
                                 </p>
                                 <p className="text-muted-foreground">
                                     All current data will be saved

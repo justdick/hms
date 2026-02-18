@@ -34,6 +34,7 @@ export interface MedicationHistoryRow {
     route?: string;
     instructions?: string;
     status?: string;
+    prescribed_at?: string;
     created_at?: string;
     discontinued_at?: string;
     discontinued_by?: User;
@@ -111,7 +112,8 @@ export const medicationHistoryColumns = (
         },
     },
     {
-        accessorKey: 'created_at',
+        id: 'prescribed_at',
+        accessorFn: (row) => row.prescribed_at || row.created_at,
         header: ({ column }) => {
             return (
                 <Button
@@ -127,11 +129,11 @@ export const medicationHistoryColumns = (
             );
         },
         cell: ({ row }) => {
-            const createdAt = row.original.created_at;
+            const prescribedAt = row.original.prescribed_at || row.original.created_at;
             return (
                 <div className="text-sm">
-                    {createdAt
-                        ? format(new Date(createdAt), 'MMM d, yyyy')
+                    {prescribedAt
+                        ? format(new Date(prescribedAt), 'MMM d, yyyy')
                         : '-'}
                 </div>
             );
