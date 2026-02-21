@@ -57,6 +57,8 @@ class ChargeObserver
         $itemId = $this->getItemIdForCharge($charge, $checkin);
 
         // Calculate coverage
+        // Note: quantity=1 is used here because the charge amount already represents the total.
+        // The correct quantity is applied when creating the InsuranceClaimItem in handleInsuranceClaimItem().
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
@@ -124,13 +126,16 @@ class ChargeObserver
         $checkin = $charge->patientCheckin;
         $itemId = $checkin ? $this->getItemIdForCharge($charge, $checkin) : null;
 
+        // Determine the correct quantity from charge metadata
+        $claimQuantity = $this->getClaimQuantity($charge);
+
         // Calculate coverage again (in case it wasn't done in creating)
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
             $charge->service_code ?? 'GENERAL',
             (float) $charge->amount,
-            1,
+            $claimQuantity,
             null,
             $itemId
         );
@@ -143,7 +148,7 @@ class ChargeObserver
             'item_type' => $itemType,
             'code' => $charge->service_code ?? 'GENERAL',
             'description' => $charge->description,
-            'quantity' => 1,
+            'quantity' => $claimQuantity,
             'unit_tariff' => $coverage['insurance_tariff'],
             'subtotal' => $coverage['subtotal'],
             'is_covered' => $coverage['is_covered'],
@@ -191,12 +196,13 @@ class ChargeObserver
                 if ($patientInsurance) {
                     $itemType = $this->mapServiceTypeToItemType($charge->service_type);
                     if ($itemType) {
+                        $claimQuantity = $this->getClaimQuantity($charge);
                         $coverage = $this->insuranceService->calculateCoverage(
                             $patientInsurance,
                             $itemType,
                             $charge->service_code ?? 'GENERAL',
                             (float) $charge->amount,
-                            1
+                            $claimQuantity
                         );
 
                         // Update the claim item
@@ -271,6 +277,28 @@ class ChargeObserver
             'nursing' => 'nursing',
             default => null,
         };
+    }
+
+    /**
+     * Get the claim quantity for a charge.
+     * Uses metadata quantity, with special handling for drugs that require qty = 1 for NHIS.
+     */
+    protected function getClaimQuantity(Charge $charge): int
+    {
+        // For pharmacy charges, get quantity from the prescription directly
+        if ($charge->service_type === 'pharmacy' && $charge->prescription) {
+            $prescription = $charge->prescription;
+
+            // Check if this drug requires qty = 1 for NHIS
+            if ($prescription->drug?->nhis_claim_qty_as_one) {
+                return 1;
+            }
+
+            return (int) ($prescription->quantity_to_dispense ?? $prescription->quantity ?? 1);
+        }
+
+        // For non-pharmacy charges, use metadata or default to 1
+        return (int) ($charge->metadata['quantity'] ?? 1);
     }
 
     /**

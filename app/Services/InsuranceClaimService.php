@@ -243,18 +243,20 @@ class InsuranceClaimService
      */
     protected function getClaimQuantity(Charge $charge): int
     {
-        $actualQuantity = $charge->metadata['quantity'] ?? 1;
+        // For pharmacy charges, get quantity from the prescription directly
+        if ($charge->service_type === 'pharmacy' && $charge->prescription) {
+            $prescription = $charge->prescription;
 
-        // Check if this is a pharmacy charge with a drug that requires qty = 1 for NHIS
-        if ($charge->service_type === 'pharmacy' && $charge->prescription?->drug) {
-            $drug = $charge->prescription->drug;
-
-            if ($drug->nhis_claim_qty_as_one) {
+            // Check if this drug requires qty = 1 for NHIS
+            if ($prescription->drug?->nhis_claim_qty_as_one) {
                 return 1;
             }
+
+            return (int) ($prescription->quantity_to_dispense ?? $prescription->quantity ?? 1);
         }
 
-        return $actualQuantity;
+        // For non-pharmacy charges, use metadata or default to 1
+        return (int) ($charge->metadata['quantity'] ?? 1);
     }
 
     /**

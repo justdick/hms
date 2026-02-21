@@ -12,25 +12,36 @@ Tests MUST use the dedicated test database: `hmst_testing`
 
 ## Before Running Any Tests
 
-1. **Check if `hmst_testing` database exists** before running tests
-2. **If it doesn't exist, STOP and ask the user** to create it:
+1. **ALWAYS clear config cache first** — cached config ignores phpunit.xml env vars:
+   ```bash
+   php artisan config:clear
+   ```
+2. **Check if `hmst_testing` database exists** before running tests
+3. **If it doesn't exist, STOP and ask the user** to create it:
    ```sql
    CREATE DATABASE hmst_testing;
    ```
-3. **Never proceed with tests** if the test database doesn't exist
+4. **Never proceed with tests** if the test database doesn't exist
 
 ## Test Commands
 
-When running tests, always verify the test database first:
+When running tests, always clear config cache and verify the test database first:
 
 ```bash
-# Check if test database exists (run this first)
+# Step 1: ALWAYS clear config cache (MANDATORY - prevents tests hitting production DB)
+php artisan config:clear
+
+# Step 2: Check if test database exists
 mysql -u root -p -e "SHOW DATABASES LIKE 'hmst_testing'"
 
-# Only run tests after confirming hmst_testing exists
+# Step 3: Only run tests after confirming hmst_testing exists
 php artisan test
 php artisan test --filter=SomeTest
 ```
+
+## ⚠️ Why Config Cache Must Be Cleared
+
+When Laravel's config is cached (`bootstrap/cache/config.php` exists), the `phpunit.xml` `<env>` values are **completely ignored**. This means tests will run against the production database instead of `hmst_testing`. Always run `php artisan config:clear` before any test execution.
 
 ## Configuration
 

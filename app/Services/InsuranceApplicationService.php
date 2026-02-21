@@ -120,13 +120,24 @@ class InsuranceApplicationService
         // Get item ID for NHIS coverage lookup (same logic as ChargeObserver)
         $itemId = $this->getItemIdForCharge($charge);
 
+        // Determine the correct quantity for the claim item
+        $claimQuantity = 1;
+        if ($charge->service_type === 'pharmacy' && $charge->prescription) {
+            $prescription = $charge->prescription;
+            if ($prescription->drug?->nhis_claim_qty_as_one) {
+                $claimQuantity = 1;
+            } else {
+                $claimQuantity = (int) ($prescription->quantity_to_dispense ?? $prescription->quantity ?? 1);
+            }
+        }
+
         // Calculate coverage
         $coverage = $this->insuranceService->calculateCoverage(
             $patientInsurance,
             $itemType,
             $charge->service_code ?? 'GENERAL',
             (float) $charge->amount,
-            1,
+            $claimQuantity,
             null,
             $itemId
         );
@@ -149,7 +160,7 @@ class InsuranceApplicationService
             'item_type' => $itemType,
             'code' => $charge->service_code ?? 'GENERAL',
             'description' => $charge->description,
-            'quantity' => 1,
+            'quantity' => $claimQuantity,
             'unit_tariff' => $coverage['insurance_tariff'],
             'subtotal' => $coverage['subtotal'],
             'is_covered' => $coverage['is_covered'],
