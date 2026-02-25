@@ -115,12 +115,22 @@ class BackfillClaimItemQuantities extends Command
 
         $updated = 0;
         $skipped = 0;
+        $skippedItems = collect();
         $claimsToRecalculate = collect();
 
-        $this->withProgressBar($items, function ($item) use (&$updated, &$skipped, &$claimsToRecalculate) {
+        $this->withProgressBar($items, function ($item) use (&$updated, &$skipped, &$skippedItems, &$claimsToRecalculate) {
             // Skip drugs flagged as nhis_claim_qty_as_one — those should stay at 1
             if ($item->nhis_claim_qty_as_one && $item->current_qty == 1) {
                 $skipped++;
+                $skippedItems->push([
+                    'id' => $item->id,
+                    'claim_id' => $item->claim_id,
+                    'description' => $item->description,
+                    'current_qty' => $item->current_qty,
+                    'correct_qty' => $item->correct_qty,
+                    'unit_price' => $item->nhis_price ?? $item->unit_tariff,
+                    'reason' => 'NHIS claim qty as one flag',
+                ]);
 
                 return;
             }
@@ -130,12 +140,39 @@ class BackfillClaimItemQuantities extends Command
             // Skip if already correct
             if ((int) $item->current_qty === $correctQty) {
                 $skipped++;
+                $skippedItems->push([
+                    'id' => $item->id,
+                    'claim_id' => $item->claim_id,
+                    'description' => $item->description,
+                    'current_qty' => $item->current_qty,
+                    'correct_qty' => $correctQty,
+                    'unit_price' => $item->nhis_price ?? $item->unit_tariff,
+                    'reason' => 'Already correct',
+                ]);
 
                 return;
             }
 
             $unitPrice = $item->nhis_price ?? $item->unit_tariff;
             $subtotal = $unitPrice * $correctQty;
+            
+            // Skip if subtotal exceeds DECIMAL(10,2) limit (99,999,999.99)
+            if ($subtotal > 99999999.99) {
+                $skipped++;
+                $skippedItems->push([
+                    'id' => $item->id,
+                    'claim_id' => $item->claim_id,
+                    'description' => $item->description,
+                    'current_qty' => $item->current_qty,
+                    'correct_qty' => $correctQty,
+                    'unit_price' => $unitPrice,
+                    'calculated_subtotal' => $subtotal,
+                    'reason' => 'Subtotal exceeds DECIMAL(10,2) limit',
+                ]);
+
+                return;
+            }
+
             $insurancePays = $item->is_covered ? $subtotal : 0;
             $patientPays = $item->is_covered ? 0 : $subtotal;
 
@@ -187,6 +224,23 @@ class BackfillClaimItemQuantities extends Command
         }
 
         $this->info("Done. Updated: {$updated}, Skipped: {$skipped}");
+
+        // Save report of skipped items
+        if ($skippedItems->isNotEmpty()) {
+            $reportPath = storage_path('logs/claim-backfill-skipped-'.now()->format('Y-m-d_His').'.json');
+            file_put_contents($reportPath, json_encode([
+                'summary' => [
+                    'total_processed' => $items->count(),
+                    'updated' => $updated,
+                    'skipped' => $skipped,
+                    'timestamp' => now()->toDateTimeString(),
+                ],
+                'skipped_items' => $skippedItems->toArray(),
+            ], JSON_PRETTY_PRINT));
+
+            $this->newLine();
+            $this->info("Skipped items report saved to: {$reportPath}");
+        }
 
         return self::SUCCESS;
     }
