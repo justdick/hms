@@ -21,6 +21,7 @@ Route::middleware(['auth'])->prefix('consultation')->name('consultation.')->grou
     // Consultation management
     Route::get('/', [ConsultationController::class, 'index'])->name('index');
     Route::post('/', [ConsultationController::class, 'store'])->middleware('billing.enforce:consultation')->name('store');
+    Route::delete('/{consultation}', [ConsultationController::class, 'destroy'])->name('destroy');
     Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('show');
     Route::patch('/{consultation}', [ConsultationController::class, 'update'])->name('update');
     Route::post('/{consultation}/complete', [ConsultationController::class, 'complete'])->name('complete');

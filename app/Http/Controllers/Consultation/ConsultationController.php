@@ -7,6 +7,7 @@ use App\Http\Requests\Prescription\RefillPrescriptionsRequest;
 use App\Http\Requests\Prescription\StoreBatchPrescriptionsRequest;
 use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Http\Requests\Prescription\UpdatePrescriptionRequest;
+use App\Models\Charge;
 use App\Models\Consultation;
 use App\Models\Department;
 use App\Models\Drug;
@@ -88,6 +89,8 @@ class ConsultationController extends Controller
             'patientCheckin.department:id,name',
             'doctor:id,name',
         ])
+            ->withCount(['diagnoses', 'prescriptions', 'labOrders', 'procedures'])
+            ->withExists('patientAdmission as has_admission')
             ->accessibleTo($user)
             ->inProgress();
 
@@ -232,6 +235,8 @@ class ConsultationController extends Controller
                 'per_page' => (int) $perPage,
             ],
             'canFilterByDate' => $canFilterByDate,
+            'canDeleteConsultations' => $user->can('consultations.delete') || $user->hasRole('Admin'),
+            'canCancelCheckins' => $user->can('checkins.cancel') || $user->can('checkins.update') || $user->hasRole('Admin'),
         ]);
     }
 
@@ -671,6 +676,50 @@ class ConsultationController extends Controller
 
         return redirect()->route('consultation.index')
             ->with('success', 'Consultation completed successfully.');
+    }
+
+    public function destroy(Consultation $consultation)
+    {
+        $this->authorize('delete', $consultation);
+
+        // Only allow deletion if consultation has no downstream records
+        $hasDiagnoses = $consultation->diagnoses()->exists();
+        $hasPrescriptions = $consultation->prescriptions()->exists();
+        $hasLabOrders = $consultation->labOrders()->exists();
+        $hasProcedures = $consultation->procedures()->exists();
+        $hasAdmission = $consultation->patientAdmission()->exists();
+
+        if ($hasDiagnoses || $hasPrescriptions || $hasLabOrders || $hasProcedures || $hasAdmission) {
+            $records = collect([
+                $hasDiagnoses ? 'diagnoses' : null,
+                $hasPrescriptions ? 'prescriptions' : null,
+                $hasLabOrders ? 'lab orders' : null,
+                $hasProcedures ? 'procedures' : null,
+                $hasAdmission ? 'admission' : null,
+            ])->filter()->implode(', ');
+
+            return redirect()->back()->with('error', "Cannot delete consultation with existing {$records}. Remove them first.");
+        }
+
+        $checkin = $consultation->patientCheckin;
+
+        // Void any consultation charges for this checkin
+        Charge::where('patient_checkin_id', $checkin->id)
+            ->where('service_type', 'consultation')
+            ->where('status', 'pending')
+            ->each(fn (Charge $charge) => $charge->markAsVoided('Consultation deleted'));
+
+        // Delete the consultation
+        $consultation->delete();
+
+        // Revert checkin status back to awaiting consultation
+        $checkin->update([
+            'status' => 'awaiting_consultation',
+            'consultation_started_at' => null,
+        ]);
+
+        return redirect()->route('consultation.index')
+            ->with('success', 'Consultation deleted successfully.');
     }
 
     protected function generateBilling(Consultation $consultation): void

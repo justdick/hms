@@ -36,7 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pagination } from '@/components/ui/pagination';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePoll } from '@inertiajs/react';
-import { CheckCircle, Clock, Eye, List, RefreshCw, Search } from 'lucide-react';
+import { CheckCircle, Clock, Eye, List, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface Patient {
@@ -103,6 +103,11 @@ interface ActiveConsultation {
     started_at: string;
     status: string;
     doctor?: Doctor;
+    diagnoses_count: number;
+    prescriptions_count: number;
+    lab_orders_count: number;
+    procedures_count: number;
+    has_admission: boolean;
     patient_checkin: {
         patient: Pick<
             Patient,
@@ -169,6 +174,8 @@ interface Props {
     departments: Department[];
     filters: Filters;
     canFilterByDate: boolean;
+    canDeleteConsultations: boolean;
+    canCancelCheckins: boolean;
 }
 
 export default function ConsultationIndex({
@@ -181,6 +188,8 @@ export default function ConsultationIndex({
     departments,
     filters,
     canFilterByDate,
+    canDeleteConsultations,
+    canCancelCheckins,
 }: Props) {
     const [activeTab, setActiveTab] = useState<string>('search');
     const [search, setSearch] = useState(filters.search || '');
@@ -224,6 +233,14 @@ export default function ConsultationIndex({
         open: false,
         type: 'start',
     });
+    const [deleteDialog, setDeleteDialog] = useState<{
+        open: boolean;
+        consultation?: ActiveConsultation;
+    }>({ open: false });
+    const [cancelCheckinDialog, setCancelCheckinDialog] = useState<{
+        open: boolean;
+        checkin?: PatientCheckin;
+    }>({ open: false });
 
     // Auto-poll every 30 seconds for queue updates
     const { stop, start } = usePoll(
@@ -563,6 +580,32 @@ export default function ConsultationIndex({
             router.visit(`/consultation/${consultation.id}`);
             setConfirmDialog({ open: false, type: 'continue' });
         }
+    };
+
+    const canDeleteConsultation = (consultation: ActiveConsultation): boolean => {
+        return (
+            consultation.diagnoses_count === 0 &&
+            consultation.prescriptions_count === 0 &&
+            consultation.lab_orders_count === 0 &&
+            consultation.procedures_count === 0 &&
+            !consultation.has_admission
+        );
+    };
+
+    const handleDeleteConsultation = () => {
+        if (!deleteDialog.consultation) return;
+
+        router.delete(`/consultation/${deleteDialog.consultation.id}`, {
+            onSuccess: () => setDeleteDialog({ open: false }),
+        });
+    };
+
+    const handleCancelCheckin = () => {
+        if (!cancelCheckinDialog.checkin) return;
+
+        router.post(`/checkin/checkins/${cancelCheckinDialog.checkin.id}/cancel`, {}, {
+            onSuccess: () => setCancelCheckinDialog({ open: false }),
+        });
     };
 
     const getDialogPatient = () => {
@@ -931,16 +974,29 @@ export default function ConsultationIndex({
                                                                             )}
                                                                         </TableCell>
                                                                         <TableCell className="text-right">
-                                                                            <Button
-                                                                                size="sm"
-                                                                                onClick={() =>
-                                                                                    openContinueDialog(
-                                                                                        consultation,
-                                                                                    )
-                                                                                }
-                                                                            >
-                                                                                Continue
-                                                                            </Button>
+                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                {canDeleteConsultations && canDeleteConsultation(consultation) && (
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                                                                                        onClick={() => setDeleteDialog({ open: true, consultation })}
+                                                                                        title="Delete consultation"
+                                                                                    >
+                                                                                        <Trash2 className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                )}
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        openContinueDialog(
+                                                                                            consultation,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Continue
+                                                                                </Button>
+                                                                            </div>
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 ),
@@ -1086,16 +1142,29 @@ export default function ConsultationIndex({
                                                                             )}
                                                                         </TableCell>
                                                                         <TableCell className="text-right">
-                                                                            <Button
-                                                                                size="sm"
-                                                                                onClick={() =>
-                                                                                    openStartDialog(
-                                                                                        checkin,
-                                                                                    )
-                                                                                }
-                                                                            >
-                                                                                Start
-                                                                            </Button>
+                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                {canCancelCheckins && (
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                                                                                        onClick={() => setCancelCheckinDialog({ open: true, checkin })}
+                                                                                        title="Cancel check-in"
+                                                                                    >
+                                                                                        <Trash2 className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                )}
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    onClick={() =>
+                                                                                        openStartDialog(
+                                                                                            checkin,
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    Start
+                                                                                </Button>
+                                                                            </div>
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 ),
@@ -1196,16 +1265,29 @@ export default function ConsultationIndex({
                                                             )}
                                                         </TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    openContinueDialog(
-                                                                        consultation,
-                                                                    )
-                                                                }
-                                                            >
-                                                                Continue
-                                                            </Button>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {canDeleteConsultations && canDeleteConsultation(consultation) && (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                                                                        onClick={() => setDeleteDialog({ open: true, consultation })}
+                                                                        title="Delete consultation"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        openContinueDialog(
+                                                                            consultation,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Continue
+                                                                </Button>
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 ),
@@ -1335,16 +1417,29 @@ export default function ConsultationIndex({
                                                             )}
                                                         </TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    openStartDialog(
-                                                                        checkin,
-                                                                    )
-                                                                }
-                                                            >
-                                                                Start
-                                                            </Button>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {canCancelCheckins && (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                                                                        onClick={() => setCancelCheckinDialog({ open: true, checkin })}
+                                                                        title="Cancel check-in"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        openStartDialog(
+                                                                            checkin,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    Start
+                                                                </Button>
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 ),
@@ -1625,6 +1720,82 @@ export default function ConsultationIndex({
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleConfirm}>
                             Confirm & Proceed
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete Consultation Confirmation Dialog */}
+            <AlertDialog
+                open={deleteDialog.open}
+                onOpenChange={(open) => !open && setDeleteDialog({ open: false })}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Consultation?</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-2">
+                                {deleteDialog.consultation && (
+                                    <>
+                                        <p>
+                                            This will delete the consultation for{' '}
+                                            <span className="font-semibold text-foreground">
+                                                {deleteDialog.consultation.patient_checkin.patient.first_name}{' '}
+                                                {deleteDialog.consultation.patient_checkin.patient.last_name}
+                                            </span>{' '}
+                                            and return the patient to the waiting queue.
+                                        </p>
+                                        <p>Any pending consultation charges will be voided.</p>
+                                    </>
+                                )}
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteConsultation}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Delete Consultation
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Cancel Check-in Confirmation Dialog */}
+            <AlertDialog
+                open={cancelCheckinDialog.open}
+                onOpenChange={(open) => !open && setCancelCheckinDialog({ open: false })}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Check-in?</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-2">
+                                {cancelCheckinDialog.checkin && (
+                                    <>
+                                        <p>
+                                            This will cancel the check-in for{' '}
+                                            <span className="font-semibold text-foreground">
+                                                {cancelCheckinDialog.checkin.patient.first_name}{' '}
+                                                {cancelCheckinDialog.checkin.patient.last_name}
+                                            </span>{' '}
+                                            and remove them from the queue.
+                                        </p>
+                                        <p>Any unpaid charges will be voided.</p>
+                                    </>
+                                )}
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Keep</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleCancelCheckin}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Cancel Check-in
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -1581,12 +1581,12 @@ export default function ConsultationShow({
                                 </CardHeader>
                                 <CardContent>
                                     {latestVitals ? (
-                                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4">
-                                            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                                                <p className="text-xs font-medium text-red-900">
+                                        <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
+                                            <div className="rounded-md border border-red-200 bg-red-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-red-900">
                                                     Blood Pressure
                                                 </p>
-                                                <p className="text-xl font-bold text-red-600">
+                                                <p className="text-base font-bold text-red-600">
                                                     {Math.round(
                                                         latestVitals.blood_pressure_systolic ??
                                                             0,
@@ -1596,84 +1596,86 @@ export default function ConsultationShow({
                                                         latestVitals.blood_pressure_diastolic ??
                                                             0,
                                                     )}
-                                                </p>
-                                                <p className="text-xs text-red-700">
-                                                    mmHg
+                                                    <span className="ml-1 text-[10px] font-normal text-red-700">mmHg</span>
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                                                <p className="text-xs font-medium text-blue-900">
+                                            <div className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-blue-900">
                                                     Temperature
                                                 </p>
-                                                <p className="text-xl font-bold text-blue-600">
+                                                <p className="text-base font-bold text-blue-600">
                                                     {latestVitals.temperature}°C
                                                 </p>
-                                                <p className="text-xs text-blue-700">
-                                                    Normal: 36.1-37.2
+                                                <p className="text-[10px] text-blue-700">
+                                                    36.1-37.2
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                                                <p className="text-xs font-medium text-green-900">
+                                            <div className="rounded-md border border-green-200 bg-green-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-green-900">
                                                     Pulse Rate
                                                 </p>
-                                                <p className="text-xl font-bold text-green-600">
+                                                <p className="text-base font-bold text-green-600">
                                                     {latestVitals.pulse_rate}
-                                                </p>
-                                                <p className="text-xs text-green-700">
-                                                    bpm
+                                                    <span className="ml-1 text-[10px] font-normal text-green-700">bpm</span>
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                                                <p className="text-xs font-medium text-purple-900">
-                                                    Respiratory Rate
+                                            <div className="rounded-md border border-purple-200 bg-purple-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-purple-900">
+                                                    Respiratory
                                                 </p>
-                                                <p className="text-xl font-bold text-purple-600">
-                                                    {
-                                                        latestVitals.respiratory_rate
-                                                    }
-                                                </p>
-                                                <p className="text-xs text-purple-700">
-                                                    /min
+                                                <p className="text-base font-bold text-purple-600">
+                                                    {latestVitals.respiratory_rate}
+                                                    <span className="ml-1 text-[10px] font-normal text-purple-700">/min</span>
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
-                                                <p className="text-xs font-medium text-cyan-900">
+                                            <div className="rounded-md border border-cyan-200 bg-cyan-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-cyan-900">
                                                     SpO₂
                                                 </p>
-                                                <p className="text-xl font-bold text-cyan-600">
-                                                    {latestVitals.oxygen_saturation ??
-                                                        '-'}
-                                                    %
+                                                <p className="text-base font-bold text-cyan-600">
+                                                    {latestVitals.oxygen_saturation ?? '-'}%
                                                 </p>
-                                                <p className="text-xs text-cyan-700">
-                                                    Normal: 95-100
+                                                <p className="text-[10px] text-cyan-700">
+                                                    95-100
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                                                <p className="text-xs font-medium text-amber-900">
+                                            <div className="rounded-md border border-pink-200 bg-pink-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-pink-900">
+                                                    Blood Sugar
+                                                </p>
+                                                <p className="text-base font-bold text-pink-600">
+                                                    {latestVitals.blood_sugar ?? '-'}
+                                                    <span className="ml-1 text-[10px] font-normal text-pink-700">mmol/L</span>
+                                                </p>
+                                                <p className="text-[10px] text-pink-700">
+                                                    4.0-7.8
+                                                </p>
+                                            </div>
+                                            <div className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-amber-900">
                                                     Weight
                                                 </p>
-                                                <p className="text-xl font-bold text-amber-600">
-                                                    {latestVitals.weight ?? '-'}{' '}
-                                                    kg
+                                                <p className="text-base font-bold text-amber-600">
+                                                    {latestVitals.weight ?? '-'}
+                                                    <span className="ml-1 text-[10px] font-normal text-amber-700">kg</span>
                                                 </p>
                                             </div>
-                                            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
-                                                <p className="text-xs font-medium text-indigo-900">
+                                            <div className="rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-2">
+                                                <p className="text-[10px] font-medium text-indigo-900">
                                                     Height
                                                 </p>
-                                                <p className="text-xl font-bold text-indigo-600">
-                                                    {latestVitals.height ?? '-'}{' '}
-                                                    cm
+                                                <p className="text-base font-bold text-indigo-600">
+                                                    {latestVitals.height ?? '-'}
+                                                    <span className="ml-1 text-[10px] font-normal text-indigo-700">cm</span>
                                                 </p>
                                             </div>
                                             {latestVitals.weight &&
                                                 latestVitals.height && (
-                                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                                        <p className="text-xs font-medium text-gray-900">
+                                                    <div className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2">
+                                                        <p className="text-[10px] font-medium text-gray-900">
                                                             BMI
                                                         </p>
-                                                        <p className="text-xl font-bold text-gray-600">
+                                                        <p className="text-base font-bold text-gray-600">
                                                             {(
                                                                 latestVitals.weight /
                                                                 Math.pow(
@@ -1682,9 +1684,7 @@ export default function ConsultationShow({
                                                                     2,
                                                                 )
                                                             ).toFixed(1)}
-                                                        </p>
-                                                        <p className="text-xs text-gray-700">
-                                                            kg/m²
+                                                            <span className="ml-1 text-[10px] font-normal text-gray-700">kg/m²</span>
                                                         </p>
                                                     </div>
                                                 )}
@@ -1785,6 +1785,17 @@ export default function ConsultationShow({
                                                                     /min
                                                                 </p>
                                                             </div>
+                                                            {vitals.blood_sugar && (
+                                                                <div>
+                                                                    <p className="text-gray-500">
+                                                                        Blood Sugar
+                                                                    </p>
+                                                                    <p className="font-medium text-gray-900">
+                                                                        {vitals.blood_sugar}{' '}
+                                                                        mmol/L
+                                                                    </p>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}

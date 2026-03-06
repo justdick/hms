@@ -1049,17 +1049,84 @@ export default function PatientsShow({
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-12">
-                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                                            <Shield className="h-10 w-10 text-muted-foreground/50" />
+                                    <div className="space-y-6">
+                                        <div className="flex flex-col items-center justify-center py-8">
+                                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                                <Shield className="h-10 w-10 text-muted-foreground/50" />
+                                            </div>
+                                            <p className="mt-4 text-sm font-medium">
+                                                No Active Insurance
+                                            </p>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                This patient doesn't have
+                                                active insurance coverage
+                                            </p>
                                         </div>
-                                        <p className="mt-4 text-sm font-medium">
-                                            No Active Insurance
-                                        </p>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            This patient doesn't have active
-                                            insurance coverage
-                                        </p>
+
+                                        {patient.insurance_plans.length >
+                                            0 && (
+                                            <div className="space-y-3">
+                                                <h4 className="text-sm font-semibold text-muted-foreground">
+                                                    Previous Insurance
+                                                    Records
+                                                </h4>
+                                                {patient.insurance_plans.map(
+                                                    (insurance) => (
+                                                        <div
+                                                            key={
+                                                                insurance.id
+                                                            }
+                                                            className="rounded-lg border bg-muted/30 p-4"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-sm font-medium">
+                                                                    {
+                                                                        insurance
+                                                                            .insurance_plan
+                                                                            .name
+                                                                    }
+                                                                </p>
+                                                                <Badge variant="secondary">
+                                                                    {
+                                                                        insurance.status
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+                                                            <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                                                                <div className="space-y-1">
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        Membership
+                                                                        ID
+                                                                    </p>
+                                                                    <p className="text-sm font-semibold">
+                                                                        {
+                                                                            insurance.membership_id
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        Coverage
+                                                                        Period
+                                                                    </p>
+                                                                    <p className="text-sm">
+                                                                        {formatDate(
+                                                                            insurance.coverage_start_date,
+                                                                        )}{' '}
+                                                                        -{' '}
+                                                                        {insurance.coverage_end_date
+                                                                            ? formatDate(
+                                                                                  insurance.coverage_end_date,
+                                                                              )
+                                                                            : 'No expiry'}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </CardContent>

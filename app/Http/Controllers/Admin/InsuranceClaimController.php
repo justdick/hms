@@ -409,16 +409,7 @@ class InsuranceClaimController extends Controller
             $attendanceFields = ['type_of_attendance', 'type_of_service', 'specialty_attended', 'attending_prescriber', 'date_of_attendance', 'date_of_discharge'];
             foreach ($attendanceFields as $field) {
                 if (isset($validated[$field])) {
-                    // Map NHIS codes back to enum values for type_of_service
-                    if ($field === 'type_of_service') {
-                        $claim->$field = match (strtoupper($validated[$field])) {
-                            'IPD' => 'inpatient',
-                            'OPD' => 'outpatient',
-                            default => $validated[$field],
-                        };
-                    } else {
-                        $claim->$field = $validated[$field];
-                    }
+                    $claim->$field = $validated[$field];
                 }
             }
             $claim->save();
