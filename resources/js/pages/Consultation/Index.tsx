@@ -191,7 +191,13 @@ export default function ConsultationIndex({
     canDeleteConsultations,
     canCancelCheckins,
 }: Props) {
-    const [activeTab, setActiveTab] = useState<string>('search');
+    const [activeTab, setActiveTab] = useState<string>(() => {
+        try {
+            return sessionStorage.getItem('consultation_active_tab') || 'search';
+        } catch {
+            return 'search';
+        }
+    });
     const [search, setSearch] = useState(filters.search || '');
     const [queueSearch, setQueueSearch] = useState(filters.queue_search || '');
     const [completedSearch, setCompletedSearch] = useState(filters.completed_search || '');
@@ -199,28 +205,43 @@ export default function ConsultationIndex({
     const [departmentFilter, setDepartmentFilter] = useState(
         filters.department_id || '',
     );
-    // Initialize date filter - default to "today" preset
+    // Initialize date filter - restore from session or default to "today" preset
     const [dateFilter, setDateFilter] = useState<DateFilterValue>(() => {
-        if (filters.date_from || filters.date_to) {
-            // Check if it matches a preset
-            const todayRange = calculateDateRange('today');
-            if (
-                filters.date_from === todayRange.from &&
-                filters.date_to === todayRange.to
-            ) {
-                return {
-                    preset: 'today',
-                    from: filters.date_from,
-                    to: filters.date_to,
-                };
+        // Check if the URL actually has date params (not just server defaults)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlHasDateParams = urlParams.has('date_from') || urlParams.has('date_to');
+
+        // 1. If URL explicitly has date params, use the server-provided filters
+        if (urlHasDateParams && (filters.date_from || filters.date_to)) {
+            // Try to match a known preset
+            const presets = ['today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month'] as const;
+            for (const preset of presets) {
+                const range = calculateDateRange(preset);
+                if (filters.date_from === range.from && filters.date_to === range.to) {
+                    return { preset, from: filters.date_from, to: filters.date_to };
+                }
             }
-            return {
-                preset: 'custom',
-                from: filters.date_from,
-                to: filters.date_to,
-            };
+            return { preset: 'custom', from: filters.date_from, to: filters.date_to };
         }
-        // Default to today
+
+        // 2. Restore from sessionStorage so filter survives navigation
+        try {
+            const saved = sessionStorage.getItem('consultation_date_filter');
+            if (saved) {
+                const parsed: DateFilterValue = JSON.parse(saved);
+                if (parsed.preset && parsed.preset !== 'custom') {
+                    const range = calculateDateRange(parsed.preset);
+                    return { preset: parsed.preset, ...range };
+                }
+                if (parsed.from || parsed.to) {
+                    return { preset: 'custom', from: parsed.from, to: parsed.to };
+                }
+            }
+        } catch {
+            // Ignore parse errors
+        }
+
+        // 3. Default to today
         const todayRange = calculateDateRange('today');
         return { preset: 'today', ...todayRange };
     });
@@ -241,6 +262,33 @@ export default function ConsultationIndex({
         open: boolean;
         checkin?: PatientCheckin;
     }>({ open: false });
+
+    // Sync: if sessionStorage restored a different date filter than what the server sent,
+    // re-fetch with the correct dates so the data matches the UI
+    useEffect(() => {
+        if (!canFilterByDate) return;
+        // Only trigger if the URL had no date params (fresh navigation back)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('date_from') || urlParams.has('date_to')) return;
+        // If the restored filter is different from today (the server default), re-fetch
+        const todayRange = calculateDateRange('today');
+        if (dateFilter.from !== todayRange.from || dateFilter.to !== todayRange.to) {
+            router.get(
+                '/consultation',
+                {
+                    date_from: dateFilter.from || undefined,
+                    date_to: dateFilter.to || undefined,
+                    per_page: perPage,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Auto-poll every 30 seconds for queue updates
     const { stop, start } = usePoll(
@@ -418,6 +466,13 @@ export default function ConsultationIndex({
     // Date filter change
     const handleDateFilterChange = (value: DateFilterValue) => {
         setDateFilter(value);
+
+        // Persist to sessionStorage so it survives navigation
+        try {
+            sessionStorage.setItem('consultation_date_filter', JSON.stringify(value));
+        } catch {
+            // Ignore storage errors
+        }
 
         router.get(
             '/consultation',
@@ -676,7 +731,14 @@ export default function ConsultationIndex({
 
                 <Tabs
                     value={activeTab}
-                    onValueChange={setActiveTab}
+                    onValueChange={(value) => {
+                        setActiveTab(value);
+                        try {
+                            sessionStorage.setItem('consultation_active_tab', value);
+                        } catch {
+                            // Ignore storage errors
+                        }
+                    }}
                     className="w-full"
                 >
                     <div className="flex items-center justify-between gap-4">
