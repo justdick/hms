@@ -41,6 +41,7 @@ export default function VitalsRecordingForm({
         weight: '',
         height: '',
         oxygen_saturation: '',
+        blood_sugar: '',
         notes: '',
     });
 
@@ -205,6 +206,26 @@ export default function VitalsRecordingForm({
                         {errors.oxygen_saturation && (
                             <p className="text-sm text-destructive">
                                 {errors.oxygen_saturation}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="blood_sugar">
+                            Blood Sugar (mmol/L)
+                        </Label>
+                        <Input
+                            id="blood_sugar"
+                            type="number"
+                            step="0.1"
+                            value={data.blood_sugar}
+                            onChange={(e) =>
+                                setData('blood_sugar', e.target.value)
+                            }
+                        />
+                        {errors.blood_sugar && (
+                            <p className="text-sm text-destructive">
+                                {errors.blood_sugar}
                             </p>
                         )}
                     </div>

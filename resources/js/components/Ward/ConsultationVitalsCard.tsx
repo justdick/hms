@@ -23,6 +23,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     weight?: number;
     height?: number;
     recorded_at: string;
@@ -95,6 +96,15 @@ export function ConsultationVitalsCard({ vitalSign }: Props) {
             show:
                 vitalSign.oxygen_saturation !== undefined &&
                 vitalSign.oxygen_saturation !== null,
+        },
+        {
+            icon: Droplets,
+            label: 'Blood Sugar',
+            value: vitalSign.blood_sugar,
+            unit: 'mmol/L',
+            show:
+                vitalSign.blood_sugar !== undefined &&
+                vitalSign.blood_sugar !== null,
         },
         {
             icon: Weight,

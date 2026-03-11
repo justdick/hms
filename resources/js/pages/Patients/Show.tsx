@@ -182,6 +182,7 @@ interface MedicalHistoryData {
         pulse_rate: number | null;
         respiratory_rate: number | null;
         oxygen_saturation: number | null;
+        blood_sugar: number | null;
         weight: number | null;
         height: number | null;
         bmi: number | null;

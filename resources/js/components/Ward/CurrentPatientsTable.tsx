@@ -67,6 +67,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     recorded_at: string;
     recorded_by?: User;
 }

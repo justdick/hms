@@ -16,6 +16,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     weight?: number;
     height?: number;
     recorded_at: string;
@@ -129,6 +130,19 @@ export function VitalsSummaryCard({
                                         </p>
                                         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                             {latestVital.respiratory_rate}/min
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                            {latestVital.blood_sugar && (
+                                <div className="flex items-center gap-2">
+                                    <Activity className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                    <div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            Blood Sugar
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                            {latestVital.blood_sugar} mmol/L
                                         </p>
                                     </div>
                                 </div>

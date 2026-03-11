@@ -53,6 +53,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     recorded_at: string;
 }
 
@@ -68,6 +69,7 @@ interface VitalTypeFilter {
     pulse: boolean;
     respiratory: boolean;
     oxygen: boolean;
+    bloodSugar: boolean;
 }
 
 interface IndividualChartProps {
@@ -424,6 +426,7 @@ export function VitalsChart({ vitals }: Props) {
         pulse: true,
         respiratory: true,
         oxygen: true,
+        bloodSugar: true,
     });
 
     const formatDateTime = (dateString: string) => {
@@ -522,6 +525,11 @@ export function VitalsChart({ vitals }: Props) {
     const oxygenData = reversedVitals.map((vital) => ({
         date: formatDateTime(vital.recorded_at),
         value: vital.oxygen_saturation,
+    }));
+
+    const bloodSugarData = reversedVitals.map((vital) => ({
+        date: formatDateTime(vital.recorded_at),
+        value: vital.blood_sugar,
     }));
 
     return (
@@ -650,6 +658,22 @@ export function VitalsChart({ vitals }: Props) {
                                             Oxygen Saturation
                                         </Label>
                                     </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="bloodSugar"
+                                            checked={vitalTypeFilter.bloodSugar}
+                                            onCheckedChange={() =>
+                                                toggleVitalType('bloodSugar')
+                                            }
+                                        />
+                                        <Label
+                                            htmlFor="bloodSugar"
+                                            className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                                        >
+                                            <Activity className="h-4 w-4 text-chart-3" />
+                                            Blood Sugar
+                                        </Label>
+                                    </div>
                                 </div>
                             </div>
                         </PopoverContent>
@@ -726,6 +750,17 @@ export function VitalsChart({ vitals }: Props) {
                             color="var(--chart-1)"
                             unit="%"
                             icon={<Activity className="h-4 w-4 text-chart-1" />}
+                        />
+                    )}
+
+                    {vitalTypeFilter.bloodSugar && (
+                        <IndividualVitalChart
+                            data={bloodSugarData}
+                            dataKey="bloodSugar"
+                            label="Blood Sugar"
+                            color="var(--chart-3)"
+                            unit="mmol/L"
+                            icon={<Activity className="h-4 w-4 text-chart-3" />}
                         />
                     )}
                 </div>

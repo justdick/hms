@@ -22,6 +22,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     weight?: number;
     height?: number;
     notes?: string | null;
@@ -82,6 +83,7 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                         </TableHead>
                         <TableHead>RR (/min)</TableHead>
                         <TableHead>SpO₂ (%)</TableHead>
+                        <TableHead>BS (mmol/L)</TableHead>
                         <TableHead>Recorded By</TableHead>
                         {onEdit && (
                             <TableHead className="w-16">Actions</TableHead>
@@ -149,6 +151,17 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                                 {vital.oxygen_saturation ? (
                                     <span className="font-mono">
                                         {vital.oxygen_saturation}
+                                    </span>
+                                ) : (
+                                    <span className="text-gray-400 dark:text-gray-500">
+                                        -
+                                    </span>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {vital.blood_sugar ? (
+                                    <span className="font-mono">
+                                        {vital.blood_sugar}
                                     </span>
                                 ) : (
                                     <span className="text-gray-400 dark:text-gray-500">

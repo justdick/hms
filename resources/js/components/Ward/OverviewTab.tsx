@@ -43,6 +43,7 @@ interface VitalSign {
     pulse_rate?: number;
     respiratory_rate?: number;
     oxygen_saturation?: number;
+    blood_sugar?: number;
     weight?: number;
     height?: number;
     recorded_at: string;

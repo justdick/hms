@@ -76,6 +76,7 @@ interface ConsultationVitals {
     pulse_rate: number | null;
     respiratory_rate: number | null;
     oxygen_saturation: number | null;
+    blood_sugar: number | null;
     weight: number | null;
     height: number | null;
     bmi: number | null;
@@ -523,6 +524,22 @@ export function PatientMedicalHistoryModal({
                                                                                         .oxygen_saturation
                                                                                 }
                                                                                 %
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {c.vitals
+                                                                        .blood_sugar && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                BS:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    c
+                                                                                        .vitals
+                                                                                        .blood_sugar
+                                                                                }
+                                                                                {' '}mmol/L
                                                                             </span>
                                                                         </div>
                                                                     )}
@@ -1159,6 +1176,22 @@ export function PatientMedicalHistoryModal({
                                                                                         .oxygen_saturation
                                                                                 }
                                                                                 %
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .blood_sugar && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                BS:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .blood_sugar
+                                                                                }
+                                                                                {' '}mmol/L
                                                                             </span>
                                                                         </div>
                                                                     )}
