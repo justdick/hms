@@ -807,6 +807,34 @@ export default function PatientsShow({
                                             </div>
                                         </div>
                                     )}
+                                    {!patient.active_insurance && patient.insurance_plans.length > 0 && (
+                                        <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                                            <div className="flex items-start gap-3">
+                                                <Shield className="h-5 w-5 text-muted-foreground" />
+                                                <div className="flex-1 space-y-1">
+                                                    <p className="text-sm font-medium">
+                                                        Insurance Inactive
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {
+                                                            patient
+                                                                .insurance_plans[0]
+                                                                .insurance_plan
+                                                                .name
+                                                        }
+                                                    </p>
+                                                    <p className="font-mono text-xs text-muted-foreground">
+                                                        ID:{' '}
+                                                        {
+                                                            patient
+                                                                .insurance_plans[0]
+                                                                .membership_id
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>

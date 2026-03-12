@@ -8,6 +8,7 @@ use App\Models\InsuranceClaimItem;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Models\PatientInsurance;
+use App\Models\Prescription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -54,7 +55,7 @@ class InsuranceApplicationService
             $patient = $checkin->patient;
 
             // Determine type of service based on check-in status
-            $typeOfService = $checkin->status === 'admitted' ? 'inpatient' : 'outpatient';
+            $typeOfService = $checkin->status === 'admitted' ? 'IPD' : 'OPD';
 
             // Create the insurance claim
             $claim = InsuranceClaim::create([
@@ -94,6 +95,9 @@ class InsuranceApplicationService
                 $chargesUpdated++;
             }
 
+            // Also link unpriced prescriptions that have no charges but must appear in claims
+            $this->linkUnpricedPrescriptionsToClaim($claim, $checkin);
+
             return [
                 'success' => true,
                 'message' => "Insurance applied successfully. {$chargesUpdated} charge(s) updated with coverage.",
@@ -101,6 +105,33 @@ class InsuranceApplicationService
                 'charges_updated' => $chargesUpdated,
             ];
         });
+    }
+
+    /**
+     * Link unpriced prescriptions (no charge) to an insurance claim.
+     * All prescriptions must appear in claims for NHIS auditing.
+     */
+    protected function linkUnpricedPrescriptionsToClaim(InsuranceClaim $claim, PatientCheckin $checkin): void
+    {
+        // Get unpriced prescriptions from consultations for this checkin
+        $unpricedPrescriptions = Prescription::where('is_unpriced', true)
+            ->whereNotNull('drug_id')
+            ->whereNotNull('quantity')
+            ->whereHas('consultation', function ($query) use ($checkin) {
+                $query->where('patient_checkin_id', $checkin->id);
+            })
+            ->with('drug')
+            ->get();
+
+        if ($unpricedPrescriptions->isEmpty()) {
+            return;
+        }
+
+        $claimService = app(InsuranceClaimService::class);
+
+        foreach ($unpricedPrescriptions as $prescription) {
+            $claimService->addPrescriptionToClaimDirectly($claim, $prescription);
+        }
     }
 
     /**

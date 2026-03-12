@@ -17,7 +17,7 @@ class BillingService
 {
     public function createConsultationCharge(PatientCheckin $checkin): ?Charge
     {
-        if (!BillingConfiguration::getValue('auto_billing_enabled', true)) {
+        if (! BillingConfiguration::getValue('auto_billing_enabled', true)) {
             return null;
         }
 
@@ -28,7 +28,7 @@ class BillingService
 
         $departmentBilling = DepartmentBilling::getForDepartment($checkin->department_id);
 
-        if (!$departmentBilling) {
+        if (! $departmentBilling) {
             return null;
         }
 
@@ -104,7 +104,7 @@ class BillingService
     {
         $departmentBilling = DepartmentBilling::getForDepartment($checkin->department_id);
 
-        if (!$departmentBilling || $departmentBilling->emergency_surcharge <= 0) {
+        if (! $departmentBilling || $departmentBilling->emergency_surcharge <= 0) {
             return null;
         }
 
@@ -159,7 +159,7 @@ class BillingService
             ->first();
 
         // If no rule or payment not mandatory, allow service
-        if (!$rule || $rule->payment_required !== 'mandatory') {
+        if (! $rule || $rule->payment_required !== 'mandatory') {
             return true;
         }
 
@@ -180,13 +180,14 @@ class BillingService
             return true;
         }
 
-        return $charges->every(fn($charge) => $charge->canProceedWithService());
+        return $charges->every(fn ($charge) => $charge->canProceedWithService());
     }
 
     public function getPendingCharges(PatientCheckin $checkin, ?string $serviceType = null): \Illuminate\Database\Eloquent\Collection
     {
         // Exclude voided charges from cancelled check-ins
-        $query = Charge::forPatient($checkin->id)->pending()->notVoided();
+        $query = Charge::forPatient($checkin->id)->pending()->notVoided()
+            ->with('insuranceClaimItem:id,coverage_percentage,is_covered');
 
         if ($serviceType) {
             $query->where('service_type', $serviceType);
@@ -208,7 +209,7 @@ class BillingService
     {
         $charge = Charge::find($chargeId);
 
-        if (!$charge) {
+        if (! $charge) {
             return false;
         }
 
@@ -256,7 +257,6 @@ class BillingService
         return $charge;
     }
 
-
     private function createChargeFromTemplate(
         PatientCheckin $checkin,
         WardBillingTemplate $template,
@@ -294,7 +294,7 @@ class BillingService
     {
         $conditions = $template->auto_trigger_conditions;
 
-        if (!$conditions || !isset($conditions['auto_create_charges']) || !$conditions['auto_create_charges']) {
+        if (! $conditions || ! isset($conditions['auto_create_charges']) || ! $conditions['auto_create_charges']) {
             return false;
         }
 
@@ -363,7 +363,7 @@ class BillingService
     {
         $patient = $checkin->patient;
 
-        if (!$patient) {
+        if (! $patient) {
             return false;
         }
 
@@ -388,7 +388,7 @@ class BillingService
     {
         $patient = $checkin->patient;
 
-        if (!$patient) {
+        if (! $patient) {
             return false;
         }
 
@@ -411,7 +411,7 @@ class BillingService
      */
     public function isServiceBlocked(PatientCheckin $checkin, string $serviceType, ?string $serviceCode = null): bool
     {
-        return !$this->canProceedWithService($checkin, $serviceType, $serviceCode);
+        return ! $this->canProceedWithService($checkin, $serviceType, $serviceCode);
     }
 
     /**
@@ -427,7 +427,7 @@ class BillingService
         $totalPending = $pendingCharges->sum('amount');
 
         if ($totalPending > 0) {
-            return 'Outstanding payment of GHS ' . number_format($totalPending, 2) . " required for {$serviceType} service";
+            return 'Outstanding payment of GHS '.number_format($totalPending, 2)." required for {$serviceType} service";
         }
 
         return 'Service blocked due to billing requirements';
@@ -440,18 +440,18 @@ class BillingService
     private function shouldSkipNhisConsultationFee(PatientCheckin $checkin): bool
     {
         // Check if the feature is enabled
-        if (!BillingConfiguration::getValue('nhis_consultation_fee_once_per_lifetime', false)) {
+        if (! BillingConfiguration::getValue('nhis_consultation_fee_once_per_lifetime', false)) {
             return false;
         }
 
         $patient = $checkin->patient;
 
-        if (!$patient) {
+        if (! $patient) {
             return false;
         }
 
         // Check if patient has active NHIS insurance
-        if (!$patient->hasValidNhis()) {
+        if (! $patient->hasValidNhis()) {
             return false;
         }
 
@@ -481,7 +481,7 @@ class BillingService
         // Find the insurance claim for this check-in
         $claim = \App\Models\InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
 
-        if (!$claim) {
+        if (! $claim) {
             return;
         }
 
@@ -499,4 +499,3 @@ class BillingService
         $claimService->addChargesToClaim($claim, [$charge->id]);
     }
 }
-

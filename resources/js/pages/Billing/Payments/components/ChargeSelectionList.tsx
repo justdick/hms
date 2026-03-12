@@ -12,6 +12,7 @@ export interface ChargeItem {
     is_insurance_claim: boolean;
     insurance_covered_amount: number;
     patient_copay_amount: number;
+    coverage_percentage?: number | null;
     service_type: string;
     charged_at: string;
     status?: string;
@@ -253,6 +254,9 @@ export function ChargeSelectionList({
                                                     charge.patient_copay_amount
                                                 }
                                                 amount={charge.amount}
+                                                coveragePercentage={
+                                                    charge.coverage_percentage
+                                                }
                                                 className="text-xs"
                                             />
                                         )}

@@ -13,6 +13,7 @@ interface InsuranceCoverageBadgeProps {
     insuranceCoveredAmount: number;
     patientCopayAmount: number;
     amount: number;
+    coveragePercentage?: number | null;
     showTooltip?: boolean;
     className?: string;
 }
@@ -22,6 +23,7 @@ export function InsuranceCoverageBadge({
     insuranceCoveredAmount,
     patientCopayAmount,
     amount,
+    coveragePercentage: externalCoveragePercentage,
     showTooltip = true,
     className,
 }: InsuranceCoverageBadgeProps) {
@@ -44,9 +46,14 @@ export function InsuranceCoverageBadge({
     // Total cost = tariff amount + patient copay (what insurance pays + what patient pays)
     const totalCost = numInsuranceCovered + numPatientCopay;
 
-    // Coverage percentage based on total cost, not just tariff amount
+    // Use externally provided coverage percentage (from claim item) when available,
+    // otherwise fall back to calculated percentage
     const coveragePercentage =
-        totalCost > 0 ? Math.round((numInsuranceCovered / totalCost) * 100) : 0;
+        externalCoveragePercentage != null
+            ? Math.round(externalCoveragePercentage)
+            : totalCost > 0
+              ? Math.round((numInsuranceCovered / totalCost) * 100)
+              : 0;
 
     // "Fully Covered" should only show when patient pays nothing
     const isFullyCovered = numPatientCopay === 0 && numInsuranceCovered > 0;
@@ -65,7 +72,7 @@ export function InsuranceCoverageBadge({
 
     const getBadgeText = () => {
         if (isFullyCovered) return 'Fully Covered';
-        if (coveragePercentage > 0) return `${coveragePercentage}% Covered`;
+        if (coveragePercentage > 0) return 'Partially Covered';
         return 'Not Covered';
     };
 

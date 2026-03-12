@@ -99,10 +99,10 @@ class Patient extends Model
     {
         return $this->hasOne(PatientInsurance::class)
             ->where('status', 'active')
-            ->where('coverage_start_date', '<=', now())
+            ->where('coverage_start_date', '<=', today())
             ->where(function ($query) {
                 $query->whereNull('coverage_end_date')
-                    ->orWhere('coverage_end_date', '>=', now());
+                    ->orWhere('coverage_end_date', '>=', today());
             });
     }
 
@@ -160,10 +160,10 @@ class Patient extends Model
         return $this->hasOne(PatientInsurance::class)
             ->whereHas('plan.provider', fn ($q) => $q->where('is_nhis', true))
             ->where('status', 'active')
-            ->where('coverage_start_date', '<=', now())
+            ->where('coverage_start_date', '<=', today())
             ->where(function ($query) {
                 $query->whereNull('coverage_end_date')
-                    ->orWhere('coverage_end_date', '>=', now());
+                    ->orWhere('coverage_end_date', '>=', today());
             });
     }
 

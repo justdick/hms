@@ -375,7 +375,7 @@ test('insurance applied to admitted patient creates inpatient claim', function (
     // Verify claim was created with inpatient type
     $claim = InsuranceClaim::where('claim_check_code', 'CC-INPATIENT-001')->first();
     expect($claim)->not->toBeNull()
-        ->and($claim->type_of_service)->toBe('inpatient');
+        ->and($claim->type_of_service)->toBe('IPD');
 });
 
 test('insurance applied to OPD patient creates outpatient claim', function () {
@@ -421,7 +421,7 @@ test('insurance applied to OPD patient creates outpatient claim', function () {
     // Verify claim was created with outpatient type
     $claim = InsuranceClaim::where('claim_check_code', 'CC-OUTPATIENT-001')->first();
     expect($claim)->not->toBeNull()
-        ->and($claim->type_of_service)->toBe('outpatient');
+        ->and($claim->type_of_service)->toBe('OPD');
 });
 
 test('apply insurance endpoint applies CCC to checkin', function () {

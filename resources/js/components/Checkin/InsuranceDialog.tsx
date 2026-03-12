@@ -462,11 +462,40 @@ export default function InsuranceDialog({
 
                     {/* Expired Insurance Warning - from stored data */}
                     {!cccData && isExpired && (
-                        <div className="rounded-lg border border-amber-500/50 bg-amber-50 p-2 dark:bg-amber-950/20">
+                        <div className="space-y-2 rounded-lg border border-amber-500/50 bg-amber-50 p-2 dark:bg-amber-950/20">
                             <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                                ⚠️ Coverage expired - please renew to use
-                                insurance
+                                ⚠️ Insurance expired
+                                {insurance.coverage_end_date
+                                    ? ` on ${new Date(insurance.coverage_end_date).toLocaleDateString()}`
+                                    : ''}{' '}
+                                {isNhisProvider && isExtensionMode
+                                    ? '— verify if patient has renewed online'
+                                    : '— update insurance dates in patient profile if renewed'}
                             </p>
+
+                            {/* NHIS Extension Mode: Verify button for expired insurance */}
+                            {isNhisProvider && isExtensionMode && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleVerifyNhis}
+                                    disabled={isVerifying}
+                                    className="w-full border-amber-500/50 bg-white hover:bg-amber-50 dark:bg-amber-950/30 dark:hover:bg-amber-950/50"
+                                >
+                                    {isVerifying ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                            Verifying NHIS...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="mr-2 h-3 w-3" />
+                                            Verify NHIS Membership
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                         </div>
                     )}
 
@@ -709,12 +738,21 @@ export default function InsuranceDialog({
                     </div>
 
                     {/* Cash Payment Confirmation */}
-                    <AlertDialog open={showCashConfirm} onOpenChange={setShowCashConfirm}>
+                    <AlertDialog
+                        open={showCashConfirm}
+                        onOpenChange={setShowCashConfirm}
+                    >
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Proceed without Insurance?</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                    Proceed without Insurance?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This patient has active insurance coverage ({insurance.plan.provider.name} - {insurance.plan.plan_name}). Proceeding without insurance means the patient will pay the full amount out-of-pocket.
+                                    This patient has active insurance coverage (
+                                    {insurance.plan.provider.name} -{' '}
+                                    {insurance.plan.plan_name}). Proceeding
+                                    without insurance means the patient will pay
+                                    the full amount out-of-pocket.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

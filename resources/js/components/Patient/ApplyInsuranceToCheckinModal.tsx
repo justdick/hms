@@ -31,6 +31,8 @@ interface ActiveCheckin {
     };
     status: string;
     is_admitted: boolean;
+    pending_charges_count?: number;
+    pending_charges_total?: number;
 }
 
 interface PatientInsurance {
@@ -218,6 +220,17 @@ export default function ApplyInsuranceToCheckinModal({
                             </div>
                         </div>
                     </div>
+
+                    {/* Pending Charges Summary */}
+                    {checkin.pending_charges_count != null && checkin.pending_charges_count > 0 && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+                            <div className="flex items-center gap-2 text-sm font-medium text-amber-800 dark:text-amber-300">
+                                <AlertTriangle className="h-4 w-4" />
+                                {checkin.pending_charges_count} pending {checkin.pending_charges_count === 1 ? 'charge' : 'charges'} totaling GHS{' '}
+                                {Number(checkin.pending_charges_total ?? 0).toFixed(2)} will have insurance coverage applied
+                            </div>
+                        </div>
+                    )}
 
                     {/* CCC Verification Section */}
                     <div className="space-y-3 rounded-lg border bg-primary/5 p-3">

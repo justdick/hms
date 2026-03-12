@@ -16,7 +16,15 @@ class NhisSettingsController extends Controller
         $settings = NhisSettings::getInstance();
 
         return Inertia::render('Admin/NhisSettings/Index', [
-            'settings' => $settings,
+            'settings' => [
+                'id' => $settings->id,
+                'verification_mode' => $settings->verification_mode,
+                'nhia_portal_url' => $settings->nhia_portal_url,
+                'facility_code' => $settings->facility_code,
+                'nhia_username' => $settings->nhia_username,
+                'auto_open_portal' => $settings->auto_open_portal,
+                'has_password' => $settings->getRawOriginal('nhia_password') !== null,
+            ],
         ]);
     }
 
@@ -33,14 +41,19 @@ class NhisSettingsController extends Controller
             'auto_open_portal' => 'required|boolean',
         ]);
 
+        // Use a query update to avoid triggering the encrypted cast on the
+        // existing (potentially undecryptable) nhia_password value.
         $settings = NhisSettings::getInstance();
 
-        // Only update password if provided
-        if (empty($validated['nhia_password'])) {
-            unset($validated['nhia_password']);
+        $updateData = collect($validated)->except('nhia_password')->toArray();
+
+        // Only update password if a new one was provided — encrypt it manually
+        // Use encryptString() to match the 'encrypted' cast (no serialization)
+        if (! empty($validated['nhia_password'])) {
+            $updateData['nhia_password'] = \Illuminate\Support\Facades\Crypt::encryptString($validated['nhia_password']);
         }
 
-        $settings->update($validated);
+        NhisSettings::where('id', $settings->id)->update($updateData);
 
         return redirect()->back()->with('success', 'NHIS settings updated successfully');
     }

@@ -59,6 +59,7 @@ interface Charge {
     is_insurance_claim: boolean;
     insurance_covered_amount: string;
     patient_copay_amount: string;
+    coverage_percentage?: number | null;
     service_type: string;
     service_code?: string;
     status: 'pending' | 'paid' | 'partial' | 'waived' | 'cancelled';
@@ -552,6 +553,9 @@ export default function PaymentShow({
                                                             amount={parseFloat(
                                                                 charge.amount,
                                                             )}
+                                                            coveragePercentage={
+                                                                charge.coverage_percentage
+                                                            }
                                                             className="text-xs"
                                                         />
                                                     )}

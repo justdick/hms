@@ -8,6 +8,7 @@ use App\Models\InsuranceClaimItem;
 use App\Models\Patient;
 use App\Models\PatientCheckin;
 use App\Models\PatientInsurance;
+use App\Models\Prescription;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -232,6 +233,70 @@ class InsuranceClaimService
                 'has_flexible_copay' => $coverage['has_flexible_copay'] ?? false,
             ]);
         }
+
+        // Recalculate claim totals
+        $this->recalculateClaimTotals($claim);
+    }
+
+    /**
+     * Add an unpriced prescription directly to a claim without a charge.
+     * All prescriptions must appear in claims for NHIS auditing, even if copay is zero.
+     */
+    public function addPrescriptionToClaimDirectly(InsuranceClaim $claim, Prescription $prescription): void
+    {
+        $drug = $prescription->drug;
+
+        if (! $drug) {
+            return;
+        }
+
+        $patientInsurance = $claim->patientInsurance;
+
+        // Skip if this prescription is already in the claim (by matching code + description)
+        $alreadyExists = InsuranceClaimItem::where('insurance_claim_id', $claim->id)
+            ->where('code', $drug->drug_code)
+            ->where('description', 'LIKE', $drug->name.'%')
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        $quantity = $prescription->quantity;
+
+        // Check if this drug requires qty = 1 for NHIS
+        $claimQuantity = $drug->nhis_claim_qty_as_one ? 1 : $quantity;
+
+        // Calculate coverage using the insurance service
+        // Use 0 as standard price since the drug is unpriced — NHIS tariff will be used
+        $coverage = $this->insuranceService->calculateCoverage(
+            $patientInsurance,
+            'pharmacy',
+            $drug->drug_code,
+            0.00,
+            $claimQuantity,
+            null,
+            $drug->id
+        );
+
+        InsuranceClaimItem::create([
+            'insurance_claim_id' => $claim->id,
+            'charge_id' => null,
+            'item_date' => $prescription->created_at ?? now(),
+            'item_type' => 'drug',
+            'code' => $drug->drug_code,
+            'description' => "{$drug->name} ({$quantity} {$drug->form})",
+            'quantity' => $claimQuantity,
+            'unit_tariff' => $coverage['insurance_tariff'],
+            'subtotal' => $coverage['subtotal'],
+            'is_covered' => $coverage['is_covered'],
+            'coverage_percentage' => $coverage['coverage_percentage'],
+            'insurance_pays' => $coverage['insurance_pays'],
+            'patient_pays' => $coverage['patient_pays'],
+            'is_approved' => null,
+            'is_unmapped' => $coverage['is_unmapped'] ?? false,
+            'has_flexible_copay' => $coverage['has_flexible_copay'] ?? false,
+        ]);
 
         // Recalculate claim totals
         $this->recalculateClaimTotals($claim);
@@ -535,11 +600,32 @@ class InsuranceClaimService
             ->whereDoesntHave('claimItems')
             ->get();
 
-        if ($charges->isEmpty()) {
-            return;
+        if ($charges->isNotEmpty()) {
+            $this->addChargesToClaim($claim, $charges->pluck('id')->toArray());
         }
 
-        $this->addChargesToClaim($claim, $charges->pluck('id')->toArray());
+        // Also link unpriced prescriptions that have no charges but must appear in claims
+        $this->autoLinkUnpricedPrescriptions($claim);
+    }
+
+    /**
+     * Auto-link unpriced prescriptions (no charge) to a claim.
+     * All prescriptions must appear in claims for NHIS auditing.
+     */
+    protected function autoLinkUnpricedPrescriptions(InsuranceClaim $claim): void
+    {
+        $unpricedPrescriptions = Prescription::where('is_unpriced', true)
+            ->whereNotNull('drug_id')
+            ->whereNotNull('quantity')
+            ->whereHas('consultation', function ($query) use ($claim) {
+                $query->where('patient_checkin_id', $claim->patient_checkin_id);
+            })
+            ->with('drug')
+            ->get();
+
+        foreach ($unpricedPrescriptions as $prescription) {
+            $this->addPrescriptionToClaimDirectly($claim, $prescription);
+        }
     }
 
     /**

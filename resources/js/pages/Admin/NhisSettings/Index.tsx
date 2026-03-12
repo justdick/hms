@@ -23,6 +23,7 @@ interface NhisSettings {
     facility_code: string | null;
     nhia_username: string | null;
     auto_open_portal: boolean;
+    has_password: boolean;
 }
 
 interface Props {
@@ -267,7 +268,7 @@ export default function NhisSettingsIndex({ settings }: Props) {
                                                 nhia_password: e.target.value,
                                             })
                                         }
-                                        placeholder="Leave blank to keep existing"
+                                        placeholder={settings.has_password ? 'Leave blank to keep existing' : 'Enter password'}
                                     />
                                 </div>
                             </div>

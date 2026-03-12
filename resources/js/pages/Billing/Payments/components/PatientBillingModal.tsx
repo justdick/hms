@@ -70,8 +70,11 @@ interface ChargeItem {
     is_insurance_claim: boolean;
     insurance_covered_amount: number;
     patient_copay_amount: number;
+    coverage_percentage?: number | null;
     service_type: string;
     charged_at: string;
+    quantity?: number | null;
+    unit_price?: number | null;
 }
 
 interface Visit {
@@ -306,23 +309,11 @@ export function PatientBillingModal({
             .join(' ');
     };
 
-    const formatDateTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-        });
-    };
-
     if (!patient) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
+            <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
                 <DialogHeader className="flex-shrink-0">
                     <DialogTitle>
                         {step === 'charges' && 'Patient Billing'}
@@ -503,7 +494,7 @@ export function PatientBillingModal({
                                                 {visit.charges.map((charge) => (
                                                     <div
                                                         key={charge.id}
-                                                        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                                                        className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
                                                             selectedCharges.has(
                                                                 charge.id,
                                                             )
@@ -512,6 +503,7 @@ export function PatientBillingModal({
                                                         }`}
                                                     >
                                                         <Checkbox
+                                                            className="mt-0.5"
                                                             checked={selectedCharges.has(
                                                                 charge.id,
                                                             )}
@@ -523,7 +515,7 @@ export function PatientBillingModal({
                                                         />
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex flex-wrap items-center gap-2">
-                                                                <span className="truncate text-sm font-medium">
+                                                                <span className="text-sm font-medium">
                                                                     {
                                                                         charge.description
                                                                     }
@@ -541,33 +533,53 @@ export function PatientBillingModal({
                                                                     amount={
                                                                         charge.amount
                                                                     }
+                                                                    coveragePercentage={
+                                                                        charge.coverage_percentage
+                                                                    }
                                                                     className="text-xs"
                                                                 />
                                                             </div>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {formatServiceType(
-                                                                    charge.service_type,
-                                                                )}{' '}
-                                                                •{' '}
-                                                                {formatDateTime(
-                                                                    charge.charged_at,
+                                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+                                                                {charge.service_type !== 'pharmacy' && (
+                                                                    <span>
+                                                                        {formatServiceType(
+                                                                            charge.service_type,
+                                                                        )}
+                                                                    </span>
                                                                 )}
-                                                            </p>
+                                                                <span>
+                                                                    {charge.charged_at}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex shrink-0 items-start gap-2">
                                                             <div className="text-right">
-                                                                <p className="text-sm font-semibold text-orange-600">
-                                                                    {formatCurrency(
-                                                                        charge.is_insurance_claim
-                                                                            ? charge.patient_copay_amount
-                                                                            : charge.amount,
-                                                                    )}
-                                                                </p>
-                                                                {charge.is_insurance_claim && (
-                                                                    <p className="text-[10px] text-muted-foreground">
-                                                                        of{' '}
+                                                                {charge.is_insurance_claim ? (
+                                                                    <>
+                                                                        <p className="text-sm font-semibold text-orange-600">
+                                                                            {formatCurrency(
+                                                                                charge.patient_copay_amount,
+                                                                            )}
+                                                                        </p>
+                                                                        <p className="text-[10px] text-green-600">
+                                                                            Ins. pays{' '}
+                                                                            {formatCurrency(
+                                                                                charge.insurance_covered_amount,
+                                                                            )}
+                                                                        </p>
+                                                                    </>
+                                                                ) : (
+                                                                    <p className="text-sm font-semibold text-orange-600">
                                                                         {formatCurrency(
                                                                             charge.amount,
+                                                                        )}
+                                                                    </p>
+                                                                )}
+                                                                {charge.quantity != null && charge.quantity > 0 && (
+                                                                    <p className="text-[10px] text-muted-foreground">
+                                                                        {charge.quantity}
+                                                                        {charge.unit_price != null && (
+                                                                            <> × {formatCurrency(Number(charge.unit_price))}</>
                                                                         )}
                                                                     </p>
                                                                 )}

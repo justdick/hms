@@ -57,18 +57,18 @@ class PatientInsurance extends Model
     public function scopeActive($query): void
     {
         $query->where('status', 'active')
-            ->where('coverage_start_date', '<=', now())
+            ->where('coverage_start_date', '<=', today())
             ->where(function ($q) {
                 $q->whereNull('coverage_end_date')
-                    ->orWhere('coverage_end_date', '>=', now());
+                    ->orWhere('coverage_end_date', '>=', today());
             });
     }
 
     public function isActive(): bool
     {
         return $this->status === 'active'
-            && $this->coverage_start_date <= now()
-            && ($this->coverage_end_date === null || $this->coverage_end_date >= now());
+            && $this->coverage_start_date <= today()
+            && ($this->coverage_end_date === null || $this->coverage_end_date >= today());
     }
 
     /**
@@ -88,6 +88,6 @@ class PatientInsurance extends Model
             return false;
         }
 
-        return $this->coverage_end_date->isPast();
+        return $this->coverage_end_date->isBefore(today());
     }
 }

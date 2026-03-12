@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Patient;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Models\Charge;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
 use Illuminate\Http\Request;
@@ -445,11 +446,14 @@ class PatientController extends Controller
                     'status' => 'active',
                 ];
 
-                // Update existing active insurance or create new one
-                $activeInsurance = $patient->activeInsurance;
-                $insuranceWasAdded = ! $activeInsurance;
-                if ($activeInsurance) {
-                    $activeInsurance->update($insuranceData);
+                // Find any existing insurance record for the same plan (regardless of status or dates)
+                $existingInsurance = $patient->insurancePlans()
+                    ->where('insurance_plan_id', $validated['insurance_plan_id'])
+                    ->first();
+
+                $insuranceWasAdded = ! $existingInsurance;
+                if ($existingInsurance) {
+                    $existingInsurance->update($insuranceData);
                 } else {
                     $patient->insurancePlans()->create($insuranceData);
                 }
@@ -1095,6 +1099,10 @@ class PatientController extends Controller
             return null;
         }
 
+        $pendingCharges = Charge::where('patient_checkin_id', $checkin->id)
+            ->where('status', 'pending')
+            ->where('is_insurance_claim', false);
+
         return [
             'id' => $checkin->id,
             'checked_in_at' => $checkin->checked_in_at->format('Y-m-d H:i'),
@@ -1104,6 +1112,8 @@ class PatientController extends Controller
             ],
             'status' => $checkin->status,
             'is_admitted' => $checkin->status === 'admitted',
+            'pending_charges_count' => $pendingCharges->count(),
+            'pending_charges_total' => (float) $pendingCharges->sum('amount'),
         ];
     }
 

@@ -39,10 +39,16 @@ class PrescriptionObserver
     /**
      * Handle the Prescription "created" event.
      */
+    /**
+     * Handle the Prescription "created" event.
+     */
     public function created(Prescription $prescription): void
     {
         // Skip charge creation for unpriced drugs (they are marked external)
         if ($prescription->is_unpriced) {
+            // Even though we skip billing, insured patients still need this in their claim
+            $this->linkUnpricedPrescriptionToClaim($prescription);
+
             return;
         }
 
@@ -55,6 +61,50 @@ class PrescriptionObserver
         // Note: Medication schedules are NOT auto-generated here.
         // Ward staff must configure medication schedules via "Medication History" tab
         // to ensure appropriate timing for ward rounds.
+    }
+
+    /**
+     * For unpriced drugs: skip billing but still add to insurance claim if patient is insured.
+     * All prescriptions must appear in claims for NHIS auditing purposes.
+     */
+    protected function linkUnpricedPrescriptionToClaim(Prescription $prescription): void
+    {
+        if (! $prescription->drug_id || ! $prescription->quantity) {
+            return;
+        }
+
+        $patientCheckinId = $this->getPatientCheckinId($prescription);
+
+        if (! $patientCheckinId) {
+            return;
+        }
+
+        // Find the insurance claim for this check-in
+        $claim = \App\Models\InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
+
+        if (! $claim) {
+            return;
+        }
+
+        // Delegate to the claim service to add the prescription directly
+        $claimService = app(\App\Services\InsuranceClaimService::class);
+        $claimService->addPrescriptionToClaimDirectly($claim, $prescription);
+    }
+
+    /**
+     * Get the patient checkin ID from a prescription.
+     */
+    protected function getPatientCheckinId(Prescription $prescription): ?int
+    {
+        if ($prescription->consultation_id && $prescription->consultation) {
+            return $prescription->consultation->patient_checkin_id;
+        }
+
+        if ($prescription->prescribable_type === 'App\Models\WardRound' && $prescription->prescribable) {
+            return $prescription->prescribable->patientAdmission?->consultation?->patient_checkin_id;
+        }
+
+        return null;
     }
 
     /**

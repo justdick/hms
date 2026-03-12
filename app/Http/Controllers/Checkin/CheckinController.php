@@ -518,7 +518,7 @@ class CheckinController extends Controller
         $isNhisProvider = $activeInsurance->plan->provider->is_nhis ?? false;
 
         // Check if coverage has expired
-        $isExpired = $activeInsurance->coverage_end_date && $activeInsurance->coverage_end_date->isPast();
+        $isExpired = $activeInsurance->coverage_end_date && $activeInsurance->coverage_end_date->isBefore(today());
 
         return response()->json([
             'has_insurance' => true,

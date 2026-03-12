@@ -74,7 +74,12 @@ class PaymentController extends Controller
         // Find patients with pending charges across all their visits
         $patients = \App\Models\Patient::with([
             'checkins.charges' => function ($q) {
-                $q->where('status', 'pending');
+                $q->where('status', 'pending')
+                    ->with([
+                        'insuranceClaimItem:id,coverage_percentage,is_covered',
+                        'prescription:id,quantity,drug_id',
+                        'prescription.drug:id,unit_price',
+                    ]);
             },
             'checkins.department:id,name',
             'activeInsurance.plan.provider',
@@ -154,8 +159,11 @@ class PaymentController extends Controller
                                     'is_insurance_claim' => $charge->is_insurance_claim,
                                     'insurance_covered_amount' => $charge->insurance_covered_amount,
                                     'patient_copay_amount' => $patientOwes,
+                                    'coverage_percentage' => $charge->insuranceClaimItem?->coverage_percentage,
                                     'service_type' => $charge->service_type,
                                     'charged_at' => $charge->charged_at->format('M j, Y'),
+                                    'quantity' => $charge->prescription?->quantity,
+                                    'unit_price' => $charge->prescription?->drug?->unit_price,
                                 ];
                             }),
                         ];
@@ -215,6 +223,14 @@ class PaymentController extends Controller
         $totalPatientOwes = $charges->sum('patient_copay_amount');
         $totalInsuranceCovered = $charges->sum('insurance_covered_amount');
 
+        // Append coverage_percentage from claim item for accurate badge display
+        $chargesWithCoverage = $charges->map(function ($charge) {
+            $data = $charge->toArray();
+            $data['coverage_percentage'] = $charge->insuranceClaimItem?->coverage_percentage;
+
+            return $data;
+        });
+
         $paidCharges = Charge::forPatient($checkin->id)->paid()->get();
 
         // Get active overrides
@@ -241,7 +257,7 @@ class PaymentController extends Controller
 
         return Inertia::render('Billing/Payments/Show', [
             'checkin' => $checkin,
-            'charges' => $charges,
+            'charges' => $chargesWithCoverage,
             'paidCharges' => $paidCharges,
             'totalAmount' => $totalAmount,
             'totalPatientOwes' => $totalPatientOwes,
