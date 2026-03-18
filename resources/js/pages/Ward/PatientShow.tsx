@@ -749,12 +749,14 @@ export default function WardPatientShow({
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href={`/wards/${admission.ward?.id}`}>
-                            <Button variant="ghost" size="sm">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Ward
-                            </Button>
-                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.history.back()}
+                        >
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Ward
+                        </Button>
                         <div>
                             <div className="flex items-center gap-3">
                                 <h1 className="flex items-center gap-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
