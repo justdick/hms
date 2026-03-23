@@ -800,7 +800,11 @@ export default function MedicalHistoryTab({
                         </Card>
                     ))
                 ) : (
-                    <EmptyState message="No minor procedure records found" />
+                    <EmptyState
+                        icon={Scissors}
+                        title="No Minor Procedures"
+                        description="No minor procedure records found"
+                    />
                 )}
             </TabsContent>
 

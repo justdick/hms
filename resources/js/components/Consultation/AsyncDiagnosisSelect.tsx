@@ -19,6 +19,22 @@ import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Loader2, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+function getCsrfToken(): string {
+    const metaToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+    if (metaToken) return metaToken;
+
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'XSRF-TOKEN') {
+            return decodeURIComponent(value);
+        }
+    }
+    return '';
+}
+
 interface Diagnosis {
     id: number;
     name: string;
@@ -241,10 +257,8 @@ export default function AsyncDiagnosisSelect({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        document.querySelector<HTMLMetaElement>(
-                            'meta[name="csrf-token"]',
-                        )?.content || '',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({
                     diagnosis: search,
@@ -253,9 +267,16 @@ export default function AsyncDiagnosisSelect({
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                console.error('Failed to create custom diagnosis:', error);
-                setCustomError(error.message || 'Failed to create diagnosis');
+                let errorMessage = 'Failed to create diagnosis';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch {
+                    if (response.status === 419) {
+                        errorMessage = 'Session expired. Please refresh the page and try again.';
+                    }
+                }
+                setCustomError(errorMessage);
                 return;
             }
 
