@@ -655,6 +655,7 @@ class PatientController extends Controller
                                 'service_name' => $l->labService?->name,
                                 'code' => $l->labService?->code,
                                 'is_imaging' => $l->labService?->is_imaging,
+                                'test_parameters' => $l->labService?->test_parameters,
                                 'status' => $l->status,
                                 'result_values' => $l->result_values,
                                 'result_notes' => $l->result_notes,

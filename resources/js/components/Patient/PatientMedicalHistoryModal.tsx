@@ -19,6 +19,7 @@ import {
     Beaker,
     Calendar,
     ClipboardList,
+    Eye,
     FileText,
     Heart,
     Hospital,
@@ -57,6 +58,18 @@ interface LabOrder {
     service_name: string | null;
     code: string | null;
     is_imaging: boolean;
+    test_parameters?: {
+        parameters: Array<{
+            name: string;
+            label: string;
+            type: string;
+            unit?: string;
+            normal_range?: {
+                min?: number;
+                max?: number;
+            };
+        }>;
+    } | null;
     status?: string;
     result_values: Record<string, unknown> | null;
     result_notes: string | null;
@@ -180,6 +193,7 @@ export function PatientMedicalHistoryModal({
     const [data, setData] = useState<MedicalHistoryData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedLabResult, setSelectedLabResult] = useState<LabOrder | null>(null);
 
     useEffect(() => {
         if (patientId && isOpen) {
@@ -716,6 +730,17 @@ export function PatientMedicalHistoryModal({
                                                                                         l.status
                                                                                     }
                                                                                 </Badge>
+                                                                                {l.status === 'completed' && l.result_values && (
+                                                                                    <Button
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        className="h-6 px-2 text-xs"
+                                                                                        onClick={() => setSelectedLabResult(l)}
+                                                                                    >
+                                                                                        <Eye className="mr-1 h-3 w-3" />
+                                                                                        View Results
+                                                                                    </Button>
+                                                                                )}
                                                                             </div>
                                                                         ),
                                                                     )}
@@ -1018,6 +1043,17 @@ export function PatientMedicalHistoryModal({
                                                                                                                 l.status
                                                                                                             }
                                                                                                         </Badge>
+                                                                                                        {l.status === 'completed' && l.result_values && (
+                                                                                                            <Button
+                                                                                                                variant="ghost"
+                                                                                                                size="sm"
+                                                                                                                className="h-6 px-2 text-xs"
+                                                                                                                onClick={() => setSelectedLabResult(l)}
+                                                                                                            >
+                                                                                                                <Eye className="mr-1 h-3 w-3" />
+                                                                                                                View Results
+                                                                                                            </Button>
+                                                                                                        )}
                                                                                                     </div>
                                                                                                 ),
                                                                                             )}
@@ -1304,6 +1340,141 @@ export function PatientMedicalHistoryModal({
                         )}
                     </div>
                 </ScrollArea>
+
+                {/* Lab Results Dialog */}
+                {selectedLabResult && (
+                    <Dialog
+                        open={!!selectedLabResult}
+                        onOpenChange={() => setSelectedLabResult(null)}
+                    >
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    {selectedLabResult.is_imaging ? (
+                                        <FileText className="h-5 w-5" />
+                                    ) : (
+                                        <Beaker className="h-5 w-5" />
+                                    )}
+                                    {selectedLabResult.service_name}
+                                    {selectedLabResult.code && (
+                                        <span className="text-sm font-normal text-muted-foreground">
+                                            ({selectedLabResult.code})
+                                        </span>
+                                    )}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                {selectedLabResult.result_entered_at && (
+                                    <div className="text-sm text-muted-foreground">
+                                        Results entered:{' '}
+                                        {formatDateTime(selectedLabResult.result_entered_at)}
+                                    </div>
+                                )}
+
+                                {selectedLabResult.result_values &&
+                                Object.keys(selectedLabResult.result_values).length > 0 ? (
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium">Results</h4>
+                                        <div className="max-h-[60vh] overflow-y-auto pr-1">
+                                            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+                                                {Object.entries(selectedLabResult.result_values).map(
+                                                    ([key, result]) => {
+                                                        const isObject =
+                                                            typeof result === 'object' && result !== null;
+                                                        const value = isObject
+                                                            ? (result as Record<string, unknown>).value
+                                                            : result;
+                                                        const unit = isObject
+                                                            ? String((result as Record<string, unknown>).unit || '')
+                                                            : '';
+                                                        let range: string = isObject
+                                                            ? String((result as Record<string, unknown>).range || '')
+                                                            : '';
+                                                        let flag = isObject
+                                                            ? ((result as Record<string, unknown>).flag as string)
+                                                            : 'normal';
+
+                                                        if (!range && selectedLabResult.test_parameters?.parameters) {
+                                                            const param = selectedLabResult.test_parameters.parameters.find(
+                                                                (p) => p.name === key || p.name.toLowerCase() === key.toLowerCase(),
+                                                            );
+                                                            if (param?.normal_range) {
+                                                                const { min, max } = param.normal_range;
+                                                                if (min !== undefined && max !== undefined) {
+                                                                    range = `${min}-${max}`;
+                                                                } else if (min !== undefined) {
+                                                                    range = `>${min}`;
+                                                                } else if (max !== undefined) {
+                                                                    range = `<${max}`;
+                                                                }
+                                                                if (flag === 'normal' && param.type === 'numeric') {
+                                                                    const numValue = parseFloat(String(value));
+                                                                    if (!isNaN(numValue)) {
+                                                                        if (min !== undefined && numValue < min) flag = 'low';
+                                                                        else if (max !== undefined && numValue > max) flag = 'high';
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        const getFlagColor = (f: string) => {
+                                                            switch (f) {
+                                                                case 'high':
+                                                                case 'critical':
+                                                                    return 'text-red-600 dark:text-red-400';
+                                                                case 'low':
+                                                                    return 'text-orange-600 dark:text-orange-400';
+                                                                default:
+                                                                    return '';
+                                                            }
+                                                        };
+
+                                                        return (
+                                                            <div key={key} className="rounded-lg border px-2.5 py-2">
+                                                                <span className="text-xs text-muted-foreground capitalize">
+                                                                    {key.replace(/_/g, ' ')}
+                                                                </span>
+                                                                <p className={`text-sm font-semibold leading-tight ${getFlagColor(flag)}`}>
+                                                                    {String(value)}
+                                                                    {unit && (
+                                                                        <span className="ml-1 text-xs font-normal text-muted-foreground">
+                                                                            {unit}
+                                                                        </span>
+                                                                    )}
+                                                                </p>
+                                                                <div className="flex items-center gap-1 mt-0.5">
+                                                                    {range && (
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            Ref: {range}
+                                                                        </span>
+                                                                    )}
+                                                                    {flag && flag !== 'normal' && (
+                                                                        <span className={`text-xs font-medium ${getFlagColor(flag)}`}>
+                                                                            ({flag.toUpperCase()})
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    },
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                {selectedLabResult.result_notes && (
+                                    <div>
+                                        <h4 className="mb-1 text-sm font-medium">Notes</h4>
+                                        <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+                                            {selectedLabResult.result_notes}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
             </DialogContent>
         </Dialog>
     );

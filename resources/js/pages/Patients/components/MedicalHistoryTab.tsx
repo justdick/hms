@@ -1127,7 +1127,7 @@ export default function MedicalHistoryTab({
                 open={!!selectedLabResult}
                 onOpenChange={() => setSelectedLabResult(null)}
             >
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             {selectedLabResult?.is_imaging ? (
@@ -1160,7 +1160,8 @@ export default function MedicalHistoryTab({
                             0 ? (
                             <div className="space-y-2">
                                 <h4 className="text-sm font-medium">Results</h4>
-                                <div className="grid gap-2 sm:grid-cols-2">
+                                <div className="max-h-[60vh] overflow-y-auto pr-1">
+                                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
                                     {Object.entries(
                                         selectedLabResult.result_values,
                                     ).map(([key, result]) => {
@@ -1270,36 +1271,39 @@ export default function MedicalHistoryTab({
                                         return (
                                             <div
                                                 key={key}
-                                                className="rounded-lg border p-2"
+                                                className="rounded-lg border px-2.5 py-2"
                                             >
-                                                <span className="text-xs text-muted-foreground">
+                                                <span className="text-xs text-muted-foreground capitalize">
                                                     {key.replace(/_/g, ' ')}
                                                 </span>
                                                 <p
-                                                    className={`font-medium ${getFlagColor(flag)}`}
+                                                    className={`text-sm font-semibold leading-tight ${getFlagColor(flag)}`}
                                                 >
                                                     {String(value)}
                                                     {unit && (
-                                                        <span className="ml-1 font-normal text-muted-foreground">
+                                                        <span className="ml-1 text-xs font-normal text-muted-foreground">
                                                             {unit}
                                                         </span>
                                                     )}
                                                 </p>
-                                                {range && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        Ref: {range}
-                                                    </span>
-                                                )}
-                                                {flag && flag !== 'normal' && (
-                                                    <span
-                                                        className={`ml-2 text-xs font-medium ${getFlagColor(flag)}`}
-                                                    >
-                                                        ({flag.toUpperCase()})
-                                                    </span>
-                                                )}
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    {range && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Ref: {range}
+                                                        </span>
+                                                    )}
+                                                    {flag && flag !== 'normal' && (
+                                                        <span
+                                                            className={`text-xs font-medium ${getFlagColor(flag)}`}
+                                                        >
+                                                            ({flag.toUpperCase()})
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
+                                </div>
                                 </div>
                             </div>
                         ) : null}
