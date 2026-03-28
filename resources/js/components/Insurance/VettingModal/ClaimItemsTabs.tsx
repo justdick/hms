@@ -102,11 +102,15 @@ export function ClaimItemsTabs({
     const [addingItem, setAddingItem] = useState(false);
     const [savingItemId, setSavingItemId] = useState<number | null>(null);
     const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+    const [editingQty, setEditingQty] = useState<Record<number, string>>({});
 
     const formatCurrencyOrDash = (amount: number | null) => {
         if (amount === null) return '-';
         return formatCurrency(amount);
     };
+
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
 
     const handleItemFieldChange = useCallback(
         (
@@ -120,8 +124,8 @@ export function ClaimItemsTabs({
             updatedItems[category] = updatedItems[category].map((item) => {
                 if (item.id !== itemId) return item;
                 if (field === 'quantity') {
-                    const qty = parseInt(value, 10);
-                    if (isNaN(qty) || qty < 1) return item;
+                    const qty = value === '' ? 0 : parseInt(value, 10);
+                    if (isNaN(qty)) return item;
                     const unitPrice = item.nhis_price ?? item.unit_price;
                     return { ...item, quantity: qty, subtotal: unitPrice * qty };
                 }
@@ -184,15 +188,20 @@ export function ClaimItemsTabs({
                         // Update local state to clear the pending flag and refresh financial fields.
                         res.json().then((data) => {
                             if (data.item && data.item.is_pending_quantity === false) {
-                                const updatedItems = { ...items };
+                                const currentItems = { ...itemsRef.current };
                                 for (const cat of ['investigations', 'prescriptions', 'procedures'] as const) {
-                                    updatedItems[cat] = updatedItems[cat].map((i) =>
+                                    currentItems[cat] = currentItems[cat].map((i) =>
                                         i.id === itemId
-                                            ? { ...i, is_pending_quantity: false, subtotal: data.item.subtotal ?? i.subtotal }
+                                            ? {
+                                                  ...i,
+                                                  is_pending_quantity: false,
+                                                  quantity: data.item.quantity ?? i.quantity,
+                                                  subtotal: data.item.subtotal ?? i.subtotal,
+                                              }
                                             : i,
                                     );
                                 }
-                                onItemsChange(updatedItems);
+                                onItemsChange(currentItems);
                             }
                         });
                     })
@@ -711,17 +720,36 @@ export function ClaimItemsTabs({
                                             {!disabled ? (
                                                 <Input
                                                     type="number"
-                                                    min={1}
-                                                    value={item.quantity}
-                                                    onChange={(e) =>
-                                                        handleItemFieldChange(
-                                                            item.id,
-                                                            'quantity',
-                                                            e.target.value,
-                                                            category,
-                                                        )
+                                                    value={editingQty[item.id] ?? item.quantity}
+                                                    onFocus={() =>
+                                                        setEditingQty((prev) => ({
+                                                            ...prev,
+                                                            [item.id]: String(item.quantity),
+                                                        }))
                                                     }
-                                                    className="ml-auto h-7 w-16 text-right text-sm"
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value;
+                                                        setEditingQty((prev) => ({
+                                                            ...prev,
+                                                            [item.id]: raw,
+                                                        }));
+                                                        if (raw !== '' && !isNaN(parseInt(raw, 10))) {
+                                                            handleItemFieldChange(
+                                                                item.id,
+                                                                'quantity',
+                                                                raw,
+                                                                category,
+                                                            );
+                                                        }
+                                                    }}
+                                                    onBlur={() =>
+                                                        setEditingQty((prev) => {
+                                                            const next = { ...prev };
+                                                            delete next[item.id];
+                                                            return next;
+                                                        })
+                                                    }
+                                                    className="ml-auto h-7 w-16 text-right text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                     aria-label={`Quantity for ${item.name}`}
                                                 />
                                             ) : (
