@@ -34,6 +34,7 @@ export interface ClaimItem {
     dose?: string | null;
     duration?: string | null;
     item_date?: string | null;
+    is_pending_quantity?: boolean;
 }
 
 export interface NhisTariffOption {

@@ -2,13 +2,16 @@
 
 namespace App\Observers;
 
+use App\Models\InsuranceClaim;
 use App\Models\Prescription;
+use App\Services\InsuranceClaimService;
 use App\Services\PharmacyBillingService;
 
 class PrescriptionObserver
 {
     public function __construct(
         protected PharmacyBillingService $billingService,
+        protected InsuranceClaimService $claimService,
     ) {}
 
     /**
@@ -52,6 +55,15 @@ class PrescriptionObserver
             return;
         }
 
+        // Injectable/infusion prescriptions: quantity is null at prescription time.
+        // Create a pending-quantity claim item so the prescription appears on the claim immediately.
+        // Skip charge creation — no quantity means no charge yet.
+        if ($prescription->drug_id && $prescription->quantity === null && $prescription->isPrescribed()) {
+            $this->createPendingQuantityClaimItem($prescription);
+
+            return;
+        }
+
         // Auto-create charge when prescription with drug and quantity is created
         // Skip if no quantity (ward rounds don't set quantity initially, it's set during pharmacy review)
         if ($prescription->drug_id && $prescription->quantity && $prescription->isPrescribed()) {
@@ -89,6 +101,34 @@ class PrescriptionObserver
         // Delegate to the claim service to add the prescription directly
         $claimService = app(\App\Services\InsuranceClaimService::class);
         $claimService->addPrescriptionToClaimDirectly($claim, $prescription);
+    }
+
+    /**
+     * For injectable/infusion prescriptions (quantity is null at prescription time):
+     * Create a pending-quantity claim item so the prescription appears on the insurance claim immediately.
+     * No billing charge is created — that happens when the pharmacist sets the quantity.
+     */
+    protected function createPendingQuantityClaimItem(Prescription $prescription): void
+    {
+        $drug = $prescription->drug ?? \App\Models\Drug::find($prescription->drug_id);
+
+        if (! $drug || ! $drug->drug_code) {
+            return;
+        }
+
+        $patientCheckinId = $this->getPatientCheckinId($prescription);
+
+        if (! $patientCheckinId) {
+            return;
+        }
+
+        $claim = InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
+
+        if (! $claim) {
+            return;
+        }
+
+        $this->claimService->createPendingQuantityClaimItem($claim, $prescription);
     }
 
     /**

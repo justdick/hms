@@ -36,6 +36,7 @@ import {
     AlertTriangle,
     Beaker,
     Calendar as CalendarIcon,
+    Clock,
     Loader2,
     Pill,
     Plus,
@@ -177,7 +178,23 @@ export function ClaimItemsTabs({
                             res.json().then((err) =>
                                 console.error('Failed to update item:', err),
                             );
+                            return;
                         }
+                        // When a pending-quantity item gets a quantity update, the backend resolves it.
+                        // Update local state to clear the pending flag and refresh financial fields.
+                        res.json().then((data) => {
+                            if (data.item && data.item.is_pending_quantity === false) {
+                                const updatedItems = { ...items };
+                                for (const cat of ['investigations', 'prescriptions', 'procedures'] as const) {
+                                    updatedItems[cat] = updatedItems[cat].map((i) =>
+                                        i.id === itemId
+                                            ? { ...i, is_pending_quantity: false, subtotal: data.item.subtotal ?? i.subtotal }
+                                            : i,
+                                    );
+                                }
+                                onItemsChange(updatedItems);
+                            }
+                        });
                     })
                     .catch((err) => console.error('Failed to update item:', err))
                     .finally(() => setSavingItemId(null));
@@ -521,9 +538,11 @@ export function ClaimItemsTabs({
                                     <TableRow
                                         key={item.id}
                                         className={
-                                            !item.is_covered
-                                                ? 'bg-red-50 dark:bg-red-950/20'
-                                                : ''
+                                            item.is_pending_quantity
+                                                ? '!bg-amber-50 dark:!bg-amber-950/20'
+                                                : !item.is_covered
+                                                    ? '!bg-red-50 dark:!bg-red-950/20'
+                                                    : ''
                                         }
                                     >
                                         <TableCell>
@@ -535,6 +554,14 @@ export function ClaimItemsTabs({
                                                     <p className="text-xs text-gray-500">
                                                         Code: {item.code}
                                                     </p>
+                                                )}
+                                                {item.is_pending_quantity && (
+                                                    <Badge
+                                                        className="mt-1 flex w-fit items-center gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                                    >
+                                                        <Clock className="h-3 w-3" />
+                                                        Pending Qty
+                                                    </Badge>
                                                 )}
                                                 {!item.is_covered && (
                                                     <Badge

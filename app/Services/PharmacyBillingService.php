@@ -13,8 +13,7 @@ class PharmacyBillingService
     public function __construct(
         protected InsuranceCoverageService $coverageService,
         protected InsuranceClaimService $claimService
-    ) {
-    }
+    ) {}
 
     /**
      * Create a charge for a prescription when it's created by the doctor.
@@ -84,14 +83,14 @@ class PharmacyBillingService
             'insurance_tariff' => $amount,
         ];
 
-        if (!$patientCheckinId) {
+        if (! $patientCheckinId) {
             return $defaultResult;
         }
 
         // Get patient's active insurance from checkin
         $checkin = PatientCheckin::with('patient.activeInsurance.plan')->find($patientCheckinId);
 
-        if (!$checkin || !$checkin->patient || !$checkin->patient->activeInsurance) {
+        if (! $checkin || ! $checkin->patient || ! $checkin->patient->activeInsurance) {
             return $defaultResult;
         }
 
@@ -144,7 +143,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // For unpriced drugs, no charge exists - just return null
-        if (!$charge) {
+        if (! $charge) {
             return null;
         }
 
@@ -169,7 +168,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // For unpriced drugs, no charge exists - just return null
-        if (!$charge) {
+        if (! $charge) {
             return null;
         }
 
@@ -190,7 +189,7 @@ class PharmacyBillingService
         $requirePayment = BillingConfiguration::getValue('pharmacy.require_payment_before_dispensing', true);
 
         // If payment is not required by configuration, allow dispensing
-        if (!$requirePayment) {
+        if (! $requirePayment) {
             return true;
         }
 
@@ -204,7 +203,7 @@ class PharmacyBillingService
         $charge = $prescription->charge;
 
         // No charge and not an unpriced drug - shouldn't happen, but deny dispensing
-        if (!$charge) {
+        if (! $charge) {
             return false;
         }
 
@@ -307,17 +306,22 @@ class PharmacyBillingService
     /**
      * Link a charge to its insurance claim if one exists for the check-in.
      * This ensures prescriptions and other charges are added to claims automatically.
+     *
+     * For injectable prescriptions, a pending claim item may already exist on the claim.
+     * In that case we update the existing item instead of creating a duplicate:
+     * - If is_pending_quantity = true: resolve it with quantity, tariffs, and charge link.
+     * - If is_pending_quantity = false (vetting officer already resolved): link charge_id only.
      */
     protected function linkChargeToInsuranceClaim(Charge $charge, ?int $patientCheckinId): void
     {
-        if (!$patientCheckinId) {
+        if (! $patientCheckinId) {
             return;
         }
 
         // Find the insurance claim for this check-in
         $claim = \App\Models\InsuranceClaim::where('patient_checkin_id', $patientCheckinId)->first();
 
-        if (!$claim) {
+        if (! $claim) {
             return;
         }
 
@@ -330,7 +334,40 @@ class PharmacyBillingService
             return;
         }
 
-        // Link the charge to the claim
+        // Check for an existing claim item for this drug code (pending or already resolved)
+        $drugCode = $charge->service_code;
+        $existingItem = $this->claimService->findPendingClaimItemForPrescription($claim, $drugCode);
+
+        if ($existingItem) {
+            if ($existingItem->is_pending_quantity) {
+                // Pharmacist resolves the pending item: update quantity, tariffs, link charge
+                $quantity = $this->getQuantityFromCharge($charge);
+
+                $this->claimService->updatePendingClaimItemQuantity($existingItem, $quantity);
+                $existingItem->update(['charge_id' => $charge->id]);
+            } else {
+                // Vetting officer already resolved: link charge_id only, no financial overwrite
+                $existingItem->update(['charge_id' => $charge->id]);
+            }
+
+            return;
+        }
+
+        // No existing item found — fall through to standard logic
         $this->claimService->addChargesToClaim($claim, [$charge->id]);
+    }
+
+    /**
+     * Extract the dispensed quantity from a charge's related prescription.
+     */
+    protected function getQuantityFromCharge(Charge $charge): int
+    {
+        if ($charge->prescription) {
+            return (int) ($charge->prescription->quantity_to_dispense
+                ?? $charge->prescription->quantity
+                ?? 1);
+        }
+
+        return 1;
     }
 }

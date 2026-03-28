@@ -6,7 +6,7 @@ inclusion: always
 
 ## ⚠️ CRITICAL: Test Database Protection
 
-**NEVER run tests against the production/development database (`hms3`).**
+**NEVER run tests against the production/development database (`hms`).**
 
 Tests MUST use the dedicated test database: `hmst_testing`
 

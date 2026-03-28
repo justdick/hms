@@ -14,6 +14,7 @@ use App\Models\InsuranceClaimItem;
 use App\Models\InsuranceProvider;
 use App\Models\NhisTariff;
 use App\Services\ClaimVettingService;
+use App\Services\InsuranceClaimService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,8 @@ use Inertia\Response;
 class InsuranceClaimController extends Controller
 {
     public function __construct(
-        protected ClaimVettingService $claimVettingService
+        protected ClaimVettingService $claimVettingService,
+        protected InsuranceClaimService $insuranceClaimService,
     ) {}
 
     public function index(Request $request): Response
@@ -139,6 +141,7 @@ class InsuranceClaimController extends Controller
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
                     'item_date' => $item->item_date?->format('Y-m-d'),
+                    'is_pending_quantity' => (bool) $item->is_pending_quantity,
                 ]),
                 'prescriptions' => $vettingData['items']['prescriptions']->map(fn ($item) => [
                     'id' => $item->id,
@@ -154,6 +157,7 @@ class InsuranceClaimController extends Controller
                     'dose' => $item->dose ?? $item->charge?->prescription?->dose_quantity,
                     'duration' => $item->duration ?? $item->charge?->prescription?->duration,
                     'item_date' => $item->item_date?->format('Y-m-d'),
+                    'is_pending_quantity' => (bool) $item->is_pending_quantity,
                 ]),
                 'procedures' => $vettingData['items']['procedures']->map(fn ($item) => [
                     'id' => $item->id,
@@ -166,6 +170,7 @@ class InsuranceClaimController extends Controller
                     'subtotal' => $item->subtotal,
                     'is_covered' => $item->nhis_price !== null || ! $vettingData['is_nhis'],
                     'item_date' => $item->item_date?->format('Y-m-d'),
+                    'is_pending_quantity' => (bool) $item->is_pending_quantity,
                 ]),
             ],
             'totals' => $vettingData['totals'],
@@ -668,6 +673,31 @@ class InsuranceClaimController extends Controller
         DB::beginTransaction();
 
         try {
+            // Pending quantity resolution: delegate to service for proper coverage recalculation
+            if ($item->is_pending_quantity && isset($validated['quantity'])) {
+                $item = $this->insuranceClaimService->updatePendingClaimItemQuantity(
+                    $item,
+                    $validated['quantity']
+                );
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pending quantity resolved successfully.',
+                    'item' => [
+                        'id' => $item->id,
+                        'quantity' => $item->quantity,
+                        'frequency' => $item->frequency,
+                        'item_date' => $item->item_date?->format('Y-m-d'),
+                        'subtotal' => (float) $item->subtotal,
+                        'insurance_pays' => (float) $item->insurance_pays,
+                        'patient_pays' => (float) $item->patient_pays,
+                        'is_pending_quantity' => $item->is_pending_quantity,
+                    ],
+                ]);
+            }
+
             if (isset($validated['quantity'])) {
                 $item->quantity = $validated['quantity'];
                 $unitPrice = $item->nhis_price ?? $item->unit_tariff;
@@ -708,6 +738,8 @@ class InsuranceClaimController extends Controller
                     'item_date' => $item->item_date?->format('Y-m-d'),
                     'subtotal' => (float) $item->subtotal,
                     'insurance_pays' => (float) $item->insurance_pays,
+                    'patient_pays' => (float) $item->patient_pays,
+                    'is_pending_quantity' => $item->is_pending_quantity,
                 ],
             ]);
         } catch (\Exception $e) {

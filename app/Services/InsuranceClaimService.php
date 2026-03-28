@@ -303,6 +303,84 @@ class InsuranceClaimService
     }
 
     /**
+     * Create a pending-quantity claim item for an injectable/infusion prescription.
+     * The item is created with qty=0 and all financial fields at 0, flagged as pending.
+     */
+    public function createPendingQuantityClaimItem(InsuranceClaim $claim, Prescription $prescription): InsuranceClaimItem
+    {
+        $drug = $prescription->drug;
+
+        $item = InsuranceClaimItem::create([
+            'insurance_claim_id' => $claim->id,
+            'charge_id' => null,
+            'item_date' => $prescription->created_at ?? now(),
+            'item_type' => 'drug',
+            'code' => $drug->drug_code,
+            'description' => "{$drug->name} (Pending quantity)",
+            'quantity' => 0,
+            'unit_tariff' => 0.00,
+            'subtotal' => 0.00,
+            'is_covered' => true,
+            'coverage_percentage' => 0.00,
+            'insurance_pays' => 0.00,
+            'patient_pays' => 0.00,
+            'is_approved' => null,
+            'is_pending_quantity' => true,
+        ]);
+
+        return $item;
+    }
+
+    /**
+     * Find an existing claim item for a drug code on a claim.
+     * Used to detect pending claim items before creating duplicates.
+     */
+    public function findPendingClaimItemForPrescription(InsuranceClaim $claim, string $drugCode): ?InsuranceClaimItem
+    {
+        return InsuranceClaimItem::where('insurance_claim_id', $claim->id)
+            ->where('code', $drugCode)
+            ->where('item_type', 'drug')
+            ->first();
+    }
+
+    /**
+     * Resolve a pending-quantity claim item by setting the actual quantity and recalculating tariffs.
+     * Does NOT create any billing charge — this is for vetting officer manual updates.
+     */
+    public function updatePendingClaimItemQuantity(InsuranceClaimItem $item, int $quantity): InsuranceClaimItem
+    {
+        $claim = $item->claim;
+        $patientInsurance = $claim->patientInsurance;
+
+        // Recalculate coverage with the actual quantity
+        $coverage = $this->insuranceService->calculateCoverage(
+            $patientInsurance,
+            'pharmacy',
+            $item->code,
+            0.00,
+            $quantity,
+            null,
+            null
+        );
+
+        $item->update([
+            'quantity' => $quantity,
+            'unit_tariff' => $coverage['insurance_tariff'],
+            'subtotal' => $coverage['subtotal'],
+            'is_covered' => $coverage['is_covered'],
+            'coverage_percentage' => $coverage['coverage_percentage'],
+            'insurance_pays' => $coverage['insurance_pays'],
+            'patient_pays' => $coverage['patient_pays'],
+            'is_pending_quantity' => false,
+            'description' => str_replace(' (Pending quantity)', '', $item->description),
+        ]);
+
+        $this->recalculateClaimTotals($claim);
+
+        return $item->refresh();
+    }
+
+    /**
      * Get the quantity to use for NHIS claims.
      * Some drugs (e.g., Arthemeter, Pessary) are counted as 1 pack regardless of actual dispensed qty.
      */

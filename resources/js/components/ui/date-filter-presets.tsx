@@ -94,6 +94,11 @@ export function DateFilterPresets({
     variant = 'default',
 }: DateFilterPresetsProps) {
     const [showCustom, setShowCustom] = React.useState(value.preset === 'custom');
+    // Local state for custom date inputs — only fires onChange when both dates are complete
+    const [localFrom, setLocalFrom] = React.useState(value.from || '');
+    const [localTo, setLocalTo] = React.useState(value.to || '');
+
+    const isCompleteDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
 
     const handlePresetChange = (preset: string) => {
         if (preset === 'custom') {
@@ -108,15 +113,23 @@ export function DateFilterPresets({
     };
 
     const handleFromChange = (from: string) => {
-        onChange({ ...value, from, preset: 'custom' });
+        setLocalFrom(from);
+        if (isCompleteDate(from) && isCompleteDate(localTo)) {
+            onChange({ from, to: localTo, preset: 'custom' });
+        }
     };
 
     const handleToChange = (to: string) => {
-        onChange({ ...value, to, preset: 'custom' });
+        setLocalTo(to);
+        if (isCompleteDate(localFrom) && isCompleteDate(to)) {
+            onChange({ from: localFrom, to, preset: 'custom' });
+        }
     };
 
     const handleClear = () => {
         setShowCustom(false);
+        setLocalFrom('');
+        setLocalTo('');
         onChange({});
     };
 
@@ -148,7 +161,7 @@ export function DateFilterPresets({
                 <div className="flex items-center gap-2">
                     <Input
                         type="date"
-                        value={value.from || ''}
+                        value={localFrom}
                         onChange={(e) => handleFromChange(e.target.value)}
                         className="w-[140px]"
                         aria-label="From date"
@@ -156,7 +169,7 @@ export function DateFilterPresets({
                     <span className="text-muted-foreground">to</span>
                     <Input
                         type="date"
-                        value={value.to || ''}
+                        value={localTo}
                         onChange={(e) => handleToChange(e.target.value)}
                         className="w-[140px]"
                         aria-label="To date"

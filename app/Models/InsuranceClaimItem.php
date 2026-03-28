@@ -31,6 +31,7 @@ class InsuranceClaimItem extends Model
         'is_approved',
         'is_unmapped',
         'has_flexible_copay',
+        'is_pending_quantity',
         'rejection_reason',
         'notes',
         'nhis_tariff_id',
@@ -52,6 +53,7 @@ class InsuranceClaimItem extends Model
             'is_approved' => 'boolean',
             'is_unmapped' => 'boolean',
             'has_flexible_copay' => 'boolean',
+            'is_pending_quantity' => 'boolean',
             'nhis_price' => 'decimal:2',
         ];
     }
