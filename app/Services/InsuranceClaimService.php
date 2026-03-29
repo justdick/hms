@@ -326,6 +326,9 @@ class InsuranceClaimService
             'patient_pays' => 0.00,
             'is_approved' => null,
             'is_pending_quantity' => true,
+            'dose' => $prescription->dose_quantity,
+            'frequency' => $prescription->frequency,
+            'duration' => $prescription->duration,
         ]);
 
         return $item;

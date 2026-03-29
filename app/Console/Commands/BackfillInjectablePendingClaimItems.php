@@ -13,7 +13,8 @@ class BackfillInjectablePendingClaimItems extends Command
     protected $signature = 'claims:backfill-injectable-pending
                             {--dry-run : Show what would be created without making changes}
                             {--claim-status= : Only target prescriptions on claims with this status (e.g. draft, pending_vetting)}
-                            {--since=2026-02-01 : Only include prescriptions created on or after this date (defaults to Feb 2026, excluding January)}';
+                            {--since=2026-02-01 : Only include prescriptions created on or after this date (defaults to Feb 2026, excluding January)}
+                            {--patch-existing : Patch dose/frequency/duration on already-created pending items that are missing them}';
 
     protected $description = 'Create pending-quantity claim items for historical injectable/infusion prescriptions that have no claim item yet';
 
@@ -156,6 +157,59 @@ class BackfillInjectablePendingClaimItems extends Command
         if ($isDryRun && $created > 0) {
             $this->newLine();
             $this->line("Run without --dry-run to create {$created} pending claim item(s).");
+        }
+
+        // Patch existing pending items that are missing dose/frequency/duration
+        if ($this->option('patch-existing')) {
+            $this->newLine();
+            $this->info('Patching existing pending items with missing dose/frequency/duration...');
+
+            // Join via claim → checkin → consultation → prescriptions (not via charges,
+            // since pending items have charge_id = NULL)
+            $pendingItems = DB::table('insurance_claim_items as ici')
+                ->join('insurance_claims as ic', 'ici.insurance_claim_id', '=', 'ic.id')
+                ->join('patient_checkins as pc', 'ic.patient_checkin_id', '=', 'pc.id')
+                ->join('consultations as con', 'con.patient_checkin_id', '=', 'pc.id')
+                ->join('prescriptions as p', function ($join) {
+                    $join->on('p.consultation_id', '=', 'con.id')
+                        ->whereNull('p.quantity')
+                        ->whereNotNull('p.drug_id');
+                })
+                ->join('drugs as d', function ($join) {
+                    $join->on('d.id', '=', 'p.drug_id')
+                        ->whereColumn('ici.code', 'd.drug_code');
+                })
+                ->where('ici.is_pending_quantity', true)
+                ->where(function ($q) {
+                    $q->whereNull('ici.dose')
+                        ->orWhereNull('ici.frequency');
+                })
+                ->select([
+                    'ici.id',
+                    'p.dose_quantity',
+                    'p.frequency',
+                    'p.duration',
+                ])
+                ->get();
+
+            if ($pendingItems->isEmpty()) {
+                $this->info('No existing pending items need patching.');
+            } else {
+                $patched = 0;
+                $this->withProgressBar($pendingItems, function ($row) use ($isDryRun, &$patched) {
+                    if (! $isDryRun) {
+                        DB::table('insurance_claim_items')->where('id', $row->id)->update([
+                            'dose' => $row->dose_quantity,
+                            'frequency' => $row->frequency,
+                            'duration' => $row->duration,
+                            'updated_at' => now(),
+                        ]);
+                    }
+                    $patched++;
+                });
+                $this->newLine(2);
+                $this->info($isDryRun ? "Would patch {$patched} existing pending item(s)." : "Patched {$patched} existing pending item(s).");
+            }
         }
 
         return self::SUCCESS;
