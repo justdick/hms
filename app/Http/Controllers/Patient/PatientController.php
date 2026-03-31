@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Charge;
+use App\Models\InsuranceClaim;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
 use Illuminate\Http\Request;
@@ -429,6 +430,16 @@ class PatientController extends Controller
                 'family_history' => $validated['family_history'] ?? null,
                 'social_history' => $validated['social_history'] ?? null,
             ]);
+
+            // Sync patient name to existing insurance claims (denormalized snapshot)
+            InsuranceClaim::where('patient_id', $patient->id)
+                ->whereNotIn('status', ['paid', 'submitted'])
+                ->update([
+                    'patient_surname' => $validated['last_name'],
+                    'patient_other_names' => $validated['first_name'],
+                    'patient_dob' => $validated['date_of_birth'],
+                    'patient_gender' => $validated['gender'],
+                ]);
 
             // Update or create insurance record if patient has insurance
             $newInsurance = null;

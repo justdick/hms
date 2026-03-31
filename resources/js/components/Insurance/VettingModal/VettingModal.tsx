@@ -320,8 +320,19 @@ export function VettingModal({
         setProcessing(true);
         setError(null);
 
+        // Always include current attendance values so they persist even if user didn't touch the dropdown.
+        // The UI shows fallback-computed values (e.g. OBGY from department), but Radix Select
+        // doesn't fire onValueChange when re-selecting the already-displayed value, so
+        // attendanceUpdates may be empty even though the user "selected" the value.
+        const submissionUpdates: Record<string, string | null> = {
+            type_of_attendance: attendanceUpdates.type_of_attendance ?? vettingData.attendance.type_of_attendance ?? null,
+            type_of_service: attendanceUpdates.type_of_service ?? vettingData.attendance.type_of_service ?? null,
+            specialty_attended: attendanceUpdates.specialty_attended ?? vettingData.attendance.specialty_attended ?? null,
+            attending_prescriber: attendanceUpdates.attending_prescriber ?? vettingData.attendance.attending_prescriber ?? null,
+            date_of_attendance: attendanceUpdates.date_of_attendance ?? vettingData.attendance.date_of_attendance ?? null,
+            date_of_discharge: attendanceUpdates.date_of_discharge ?? vettingData.attendance.date_of_discharge ?? null,
+        };
         // For OPD, auto-set date_of_discharge to date_of_attendance
-        const submissionUpdates = { ...attendanceUpdates };
         if (!isIpd && effectiveDateOfAttendance) {
             submissionUpdates.date_of_discharge = effectiveDateOfAttendance;
         }
