@@ -188,9 +188,9 @@ class NhisXmlExportService
             $nhisCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
             $writer->writeElement('medicineCode', $this->escapeXml($nhisCode));
             $prescription = $item->charge?->prescription;
-            $dispensedQty = ($prescription?->drug?->nhis_claim_qty_as_one)
-                ? 1
-                : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1);
+            // Use vetted claim item quantity first, fall back to prescription if missing
+            $dispensedQty = $item->quantity
+                ?? ($prescription?->drug?->nhis_claim_qty_as_one ? 1 : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? 1));
             $writer->writeElement('dispensedQty', (string) $dispensedQty);
             $writer->writeElement('serviceDate', $item->item_date?->format('Y-m-d') ?? $serviceDate);
 
@@ -389,11 +389,10 @@ class NhisXmlExportService
         $nhisCode = $item->nhis_code ?? $item->nhisTariff?->nhis_code ?? $item->code ?? '';
         $this->appendElement($medicineElement, 'medicineCode', $nhisCode);
 
-        // Get quantity from prescription (preferred) or fall back to item quantity
+        // Use vetted claim item quantity first, fall back to prescription if missing
         $prescription = $item->charge?->prescription;
-        $dispensedQty = ($prescription?->drug?->nhis_claim_qty_as_one)
-            ? 1
-            : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? $item->quantity ?? 1);
+        $dispensedQty = $item->quantity
+            ?? ($prescription?->drug?->nhis_claim_qty_as_one ? 1 : ($prescription?->quantity_to_dispense ?? $prescription?->quantity ?? 1));
         $this->appendElement($medicineElement, 'dispensedQty', (string) $dispensedQty);
 
         $this->appendElement($medicineElement, 'serviceDate', $item->item_date?->format('Y-m-d') ?? $claim->date_of_attendance?->format('Y-m-d') ?? '');
@@ -421,10 +420,10 @@ class NhisXmlExportService
      */
     protected function buildPrescriptionUnparsed($prescription, ?InsuranceClaimItem $claimItem = null): string
     {
-        // Try prescription first, fall back to claim item fields
-        $doseQty = $prescription?->dose_quantity ?? $claimItem?->dose;
-        $frequency = $prescription?->frequency ?? $claimItem?->frequency;
-        $duration = $prescription?->duration ?? $claimItem?->duration;
+        // Use vetted claim item fields first, fall back to prescription
+        $doseQty = $claimItem?->dose ?? $prescription?->dose_quantity;
+        $frequency = $claimItem?->frequency ?? $prescription?->frequency;
+        $duration = $claimItem?->duration ?? $prescription?->duration;
 
         if (! $doseQty && ! $frequency && ! $duration) {
             return '';

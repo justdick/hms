@@ -284,7 +284,7 @@ class InsuranceClaimService
             'item_date' => $prescription->created_at ?? now(),
             'item_type' => 'drug',
             'code' => $drug->drug_code,
-            'description' => "{$drug->name} ({$quantity} {$drug->form})",
+            'description' => $drug->name,
             'quantity' => $claimQuantity,
             'unit_tariff' => $coverage['insurance_tariff'],
             'subtotal' => $coverage['subtotal'],
