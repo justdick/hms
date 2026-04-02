@@ -17,7 +17,7 @@ class UpdateBackupSettingsRequest extends FormRequest
             // Schedule settings
             'schedule_enabled' => ['boolean'],
             'schedule_frequency' => ['nullable', 'in:daily,weekly,custom'],
-            'schedule_time' => ['nullable', 'date_format:H:i'],
+            'schedule_time' => ['nullable', 'date_format:H:i,H:i:s'],
             'cron_expression' => ['nullable', 'string', 'max:100'],
 
             // Retention settings

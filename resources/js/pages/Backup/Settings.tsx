@@ -78,7 +78,7 @@ export default function BackupSettingsPage({ settings }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         schedule_enabled: settings.schedule_enabled,
         schedule_frequency: settings.schedule_frequency || 'daily',
-        schedule_time: settings.schedule_time || '02:00',
+        schedule_time: settings.schedule_time ? settings.schedule_time.substring(0, 5) : '02:00',
         cron_expression: settings.cron_expression || '',
         retention_daily: settings.retention_daily,
         retention_weekly: settings.retention_weekly,
