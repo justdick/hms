@@ -277,7 +277,7 @@ class GoogleDriveService
         try {
             $this->client = new GoogleClient;
             $this->client->setApplicationName('HMS Backup System');
-            $this->client->setScopes([Drive::DRIVE_FILE]);
+            $this->client->setScopes([Drive::DRIVE]);
 
             // Parse credentials - can be JSON string or array
             $credentials = $settings->google_credentials;
