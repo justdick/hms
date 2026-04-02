@@ -83,6 +83,10 @@ class DropboxService
             // Allow 5 minutes for large files
             $timeout = max(300, (int) ceil($fileSize / 50000));
 
+            // Temporarily increase PHP execution time for large uploads
+            $previousMaxExecution = (int) ini_get('max_execution_time');
+            set_time_limit($timeout + 60);
+
             $response = Http::timeout($timeout)
                 ->withToken($settings->dropbox_access_token)
                 ->withHeaders([
@@ -98,6 +102,7 @@ class DropboxService
                 ->post($this->uploadUrl);
 
             if ($response->successful()) {
+                set_time_limit($previousMaxExecution);
                 Log::info('Dropbox upload successful', [
                     'path' => $destinationPath,
                     'filename' => $filename,
@@ -106,12 +111,14 @@ class DropboxService
                 return $destinationPath;
             }
 
+            set_time_limit($previousMaxExecution);
             $error = $response->json('error_summary') ?? $response->body();
             Log::error('Dropbox upload failed', ['filename' => $filename, 'error' => $error]);
 
             return null;
 
         } catch (\Exception $e) {
+            set_time_limit($previousMaxExecution ?? 120);
             Log::error('Dropbox upload failed', ['filename' => $filename, 'error' => $e->getMessage()]);
 
             return null;
