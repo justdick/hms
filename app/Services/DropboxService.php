@@ -79,7 +79,12 @@ class DropboxService
         $destinationPath = rtrim($folderPath, '/').'/'.$filename;
 
         try {
-            $response = Http::withToken($settings->dropbox_access_token)
+            $fileSize = filesize($filePath);
+            // Allow 5 minutes for large files
+            $timeout = max(300, (int) ceil($fileSize / 50000));
+
+            $response = Http::timeout($timeout)
+                ->withToken($settings->dropbox_access_token)
                 ->withHeaders([
                     'Content-Type' => 'application/octet-stream',
                     'Dropbox-API-Arg' => json_encode([
