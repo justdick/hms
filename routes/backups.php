@@ -9,6 +9,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('backups/settings', [BackupSettingsController::class, 'edit'])->name('backups.settings');
     Route::put('backups/settings', [BackupSettingsController::class, 'update'])->name('backups.settings.update');
     Route::post('backups/settings/test-google-drive', [BackupSettingsController::class, 'testGoogleDrive'])->name('backups.settings.test-google-drive');
+    Route::post('backups/settings/test-dropbox', [BackupSettingsController::class, 'testDropbox'])->name('backups.settings.test-dropbox');
 
     // Backup management routes
     Route::get('backups', [BackupController::class, 'index'])->name('backups.index');

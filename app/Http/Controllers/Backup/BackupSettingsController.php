@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateBackupSettingsRequest;
 use App\Models\Backup;
 use App\Models\BackupSettings;
+use App\Services\DropboxService;
 use App\Services\GoogleDriveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,8 @@ use RuntimeException;
 class BackupSettingsController extends Controller
 {
     public function __construct(
-        protected GoogleDriveService $googleDriveService
+        protected GoogleDriveService $googleDriveService,
+        protected DropboxService $dropboxService,
     ) {}
 
     /**
@@ -31,7 +33,8 @@ class BackupSettingsController extends Controller
         // Don't expose credentials to frontend, just indicate if configured
         $settingsData = $settings->toArray();
         $settingsData['has_google_credentials'] = ! empty($settings->google_credentials);
-        unset($settingsData['google_credentials']);
+        $settingsData['has_dropbox_token'] = ! empty($settings->dropbox_access_token);
+        unset($settingsData['google_credentials'], $settingsData['dropbox_access_token']);
 
         return Inertia::render('Backup/Settings', [
             'settings' => $settingsData,
@@ -54,6 +57,12 @@ class BackupSettingsController extends Controller
             $settings->google_credentials = $validated['google_credentials'];
         }
         unset($validated['google_credentials']);
+
+        // Handle Dropbox token separately - only update if provided
+        if (isset($validated['dropbox_access_token']) && ! empty($validated['dropbox_access_token'])) {
+            $settings->dropbox_access_token = $validated['dropbox_access_token'];
+        }
+        unset($validated['dropbox_access_token']);
 
         $settings->update($validated);
 
@@ -81,6 +90,35 @@ class BackupSettingsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Google Drive connection successful!',
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Test Dropbox connection.
+     */
+    public function testDropbox(): JsonResponse
+    {
+        $this->authorize('manageSettings', Backup::class);
+
+        try {
+            if (! $this->dropboxService->isConfigured()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dropbox is not configured. Please provide an access token.',
+                ]);
+            }
+
+            $this->dropboxService->testConnection();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dropbox connection successful!',
             ]);
         } catch (RuntimeException $e) {
             return response()->json([

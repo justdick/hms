@@ -21,6 +21,9 @@ class BackupSettings extends Model
         'google_drive_enabled',
         'google_drive_folder_id',
         'google_credentials',
+        'dropbox_enabled',
+        'dropbox_access_token',
+        'dropbox_folder_path',
         'notification_emails',
     ];
 
@@ -29,11 +32,13 @@ class BackupSettings extends Model
         return [
             'schedule_enabled' => 'boolean',
             'google_drive_enabled' => 'boolean',
+            'dropbox_enabled' => 'boolean',
             'notification_emails' => 'array',
             'retention_daily' => 'integer',
             'retention_weekly' => 'integer',
             'retention_monthly' => 'integer',
             'google_credentials' => 'encrypted',
+            'dropbox_access_token' => 'encrypted',
         ];
     }
 

@@ -30,6 +30,11 @@ class UpdateBackupSettingsRequest extends FormRequest
             'google_drive_folder_id' => ['nullable', 'string', 'max:255'],
             'google_credentials' => ['nullable', 'string'],
 
+            // Dropbox settings
+            'dropbox_enabled' => ['boolean'],
+            'dropbox_access_token' => ['nullable', 'string'],
+            'dropbox_folder_path' => ['nullable', 'string', 'max:255'],
+
             // Notification settings
             'notification_emails' => ['nullable', 'array'],
             'notification_emails.*' => ['email'],

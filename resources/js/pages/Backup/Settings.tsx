@@ -46,6 +46,9 @@ interface BackupSettings {
     google_drive_enabled: boolean;
     google_drive_folder_id: string | null;
     has_google_credentials: boolean;
+    dropbox_enabled: boolean;
+    dropbox_folder_path: string | null;
+    has_dropbox_token: boolean;
     notification_emails: string[] | null;
 }
 
@@ -65,6 +68,11 @@ export default function BackupSettingsPage({ settings }: Props) {
         success: boolean;
         message: string;
     } | null>(null);
+    const [testingDropbox, setTestingDropbox] = useState(false);
+    const [dropboxResult, setDropboxResult] = useState<{
+        success: boolean;
+        message: string;
+    } | null>(null);
     const [newEmail, setNewEmail] = useState('');
 
     const { data, setData, put, processing, errors } = useForm({
@@ -78,6 +86,9 @@ export default function BackupSettingsPage({ settings }: Props) {
         google_drive_enabled: settings.google_drive_enabled,
         google_drive_folder_id: settings.google_drive_folder_id || '',
         google_credentials: '',
+        dropbox_enabled: settings.dropbox_enabled,
+        dropbox_access_token: '',
+        dropbox_folder_path: settings.dropbox_folder_path || '/HMS Backups',
         notification_emails: settings.notification_emails || [],
     });
 
@@ -113,6 +124,36 @@ export default function BackupSettingsPage({ settings }: Props) {
             });
         } finally {
             setTestingConnection(false);
+        }
+    };
+
+    const handleTestDropbox = async () => {
+        setTestingDropbox(true);
+        setDropboxResult(null);
+
+        try {
+            const response = await fetch(
+                '/admin/backups/settings/test-dropbox',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
+                    },
+                },
+            );
+            const result = await response.json();
+            setDropboxResult(result);
+        } catch {
+            setDropboxResult({
+                success: false,
+                message: 'Failed to test connection. Please try again.',
+            });
+        } finally {
+            setTestingDropbox(false);
         }
     };
 
@@ -505,6 +546,144 @@ export default function BackupSettingsPage({ settings }: Props) {
                                                 )}
                                                 <span className="text-sm">
                                                     {connectionResult.message}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Dropbox Settings */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Cloud className="h-5 w-5" />
+                                Dropbox Integration
+                            </CardTitle>
+                            <CardDescription>
+                                Upload backups to Dropbox for off-site storage
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <Label htmlFor="dropbox_enabled">
+                                        Enable Dropbox
+                                    </Label>
+                                    <p className="text-sm text-gray-500">
+                                        Automatically upload backups to Dropbox
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="dropbox_enabled"
+                                    checked={data.dropbox_enabled}
+                                    onCheckedChange={(checked) =>
+                                        setData('dropbox_enabled', checked)
+                                    }
+                                />
+                            </div>
+
+                            {data.dropbox_enabled && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dropbox_access_token">
+                                            Access Token
+                                            {settings.has_dropbox_token && (
+                                                <span className="ml-2 text-green-600">
+                                                    (Configured)
+                                                </span>
+                                            )}
+                                        </Label>
+                                        <Input
+                                            id="dropbox_access_token"
+                                            type="password"
+                                            value={data.dropbox_access_token}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'dropbox_access_token',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder={
+                                                settings.has_dropbox_token
+                                                    ? 'Leave empty to keep existing token, or paste new token to update'
+                                                    : 'Paste your Dropbox access token here'
+                                            }
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            Generate a long-lived token from the{' '}
+                                            <a
+                                                href="https://www.dropbox.com/developers/apps"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-blue-600 underline"
+                                            >
+                                                Dropbox App Console
+                                            </a>
+                                        </p>
+                                        {errors.dropbox_access_token && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.dropbox_access_token}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dropbox_folder_path">
+                                            Folder Path
+                                        </Label>
+                                        <Input
+                                            id="dropbox_folder_path"
+                                            value={data.dropbox_folder_path}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'dropbox_folder_path',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="/HMS Backups"
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            Folder path in your Dropbox (e.g.
+                                            /HMS Backups)
+                                        </p>
+                                        {errors.dropbox_folder_path && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.dropbox_folder_path}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleTestDropbox}
+                                            disabled={testingDropbox}
+                                        >
+                                            {testingDropbox ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Testing...
+                                                </>
+                                            ) : (
+                                                'Test Connection'
+                                            )}
+                                        </Button>
+
+                                        {dropboxResult && (
+                                            <div
+                                                className={`flex items-center gap-2 ${dropboxResult.success ? 'text-green-600' : 'text-red-600'}`}
+                                            >
+                                                {dropboxResult.success ? (
+                                                    <CheckCircle className="h-5 w-5" />
+                                                ) : (
+                                                    <XCircle className="h-5 w-5" />
+                                                )}
+                                                <span className="text-sm">
+                                                    {dropboxResult.message}
                                                 </span>
                                             </div>
                                         )}

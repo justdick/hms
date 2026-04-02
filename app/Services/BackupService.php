@@ -17,6 +17,11 @@ class BackupService
     protected ?GoogleDriveService $googleDriveService = null;
 
     /**
+     * The Dropbox service instance.
+     */
+    protected ?DropboxService $dropboxService = null;
+
+    /**
      * The backup notification service instance.
      */
     protected ?BackupNotificationService $notificationService = null;
@@ -76,6 +81,13 @@ class BackupService
                 $backup->save();
             }
 
+            // Attempt Dropbox upload (graceful failure)
+            $dropboxPath = $this->uploadToDropbox($backup);
+            if ($dropboxPath) {
+                $backup->dropbox_file_path = $dropboxPath;
+                $backup->save();
+            }
+
             // Log audit entry for successful backup creation
             $this->getAuditService()->logCreated($backup, $user);
 
@@ -85,6 +97,7 @@ class BackupService
                 'file_size' => $fileSize,
                 'source' => $source,
                 'google_drive' => $googleDriveFileId ? 'uploaded' : 'skipped',
+                'dropbox' => $dropboxPath ? 'uploaded' : 'skipped',
             ]);
 
             return $backup;
@@ -138,6 +151,24 @@ class BackupService
         $fullPath = Storage::disk($this->disk)->path($backup->file_path);
 
         return $googleDriveService->upload($fullPath, $backup->filename);
+    }
+
+    /**
+     * Upload a backup to Dropbox.
+     */
+    protected function uploadToDropbox(Backup $backup): ?string
+    {
+        $dropboxService = $this->getDropboxService();
+
+        if (! $dropboxService->isConfigured()) {
+            Log::info('Dropbox upload skipped - not configured');
+
+            return null;
+        }
+
+        $fullPath = Storage::disk($this->disk)->path($backup->file_path);
+
+        return $dropboxService->upload($fullPath, $backup->filename);
     }
 
     /**
@@ -547,6 +578,26 @@ class BackupService
     public function setGoogleDriveService(GoogleDriveService $service): void
     {
         $this->googleDriveService = $service;
+    }
+
+    /**
+     * Get the Dropbox service instance.
+     */
+    protected function getDropboxService(): DropboxService
+    {
+        if ($this->dropboxService === null) {
+            $this->dropboxService = app(DropboxService::class);
+        }
+
+        return $this->dropboxService;
+    }
+
+    /**
+     * Set the Dropbox service instance (for testing).
+     */
+    public function setDropboxService(DropboxService $service): void
+    {
+        $this->dropboxService = $service;
     }
 
     /**

@@ -18,6 +18,7 @@ class Backup extends Model
         'file_size',
         'file_path',
         'google_drive_file_id',
+        'dropbox_file_path',
         'status',
         'source',
         'is_protected',
@@ -89,6 +90,14 @@ class Backup extends Model
     public function isOnGoogleDrive(): bool
     {
         return ! empty($this->google_drive_file_id);
+    }
+
+    /**
+     * Check if the backup exists on Dropbox.
+     */
+    public function isOnDropbox(): bool
+    {
+        return ! empty($this->dropbox_file_path);
     }
 
     /**
