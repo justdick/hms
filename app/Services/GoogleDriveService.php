@@ -60,9 +60,10 @@ class GoogleDriveService
             $driveService = $this->getDriveService();
             $settings = BackupSettings::getInstance();
 
-            // Try to get the folder to verify access
+            // Try to get the folder to verify access (supportsAllDrives for Shared Drives)
             $folder = $driveService->files->get($settings->google_drive_folder_id, [
                 'fields' => 'id,name',
+                'supportsAllDrives' => true,
             ]);
 
             Log::info('Google Drive connection test successful', [
@@ -117,12 +118,13 @@ class GoogleDriveService
             // Read file content
             $content = file_get_contents($filePath);
 
-            // Upload file
+            // Upload file (supportsAllDrives required for Shared Drives)
             $file = $driveService->files->create($fileMetadata, [
                 'data' => $content,
                 'mimeType' => 'application/gzip',
                 'uploadType' => 'multipart',
                 'fields' => 'id,name,size',
+                'supportsAllDrives' => true,
             ]);
 
             Log::info('Google Drive upload successful', [
@@ -201,7 +203,7 @@ class GoogleDriveService
         try {
             $driveService = $this->getDriveService();
 
-            $driveService->files->delete($fileId);
+            $driveService->files->delete($fileId, ['supportsAllDrives' => true]);
 
             Log::info('Google Drive file deleted', [
                 'file_id' => $fileId,
