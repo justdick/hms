@@ -15,12 +15,75 @@ class DropboxService
 
     protected string $listFolderUrl = 'https://api.dropboxapi.com/2/files/list_folder';
 
+    protected string $tokenUrl = 'https://api.dropboxapi.com/oauth2/token';
+
     public function isConfigured(): bool
     {
         $settings = BackupSettings::getInstance();
 
-        return $settings->dropbox_enabled
-            && ! empty($settings->dropbox_access_token);
+        if (! $settings->dropbox_enabled) {
+            return false;
+        }
+
+        // Need either a valid access token or a refresh token to get one
+        if (! empty($settings->dropbox_refresh_token) && ! empty($settings->dropbox_app_key) && ! empty($settings->dropbox_app_secret)) {
+            return true;
+        }
+
+        return ! empty($settings->dropbox_access_token);
+    }
+
+    /**
+     * Get a valid access token, refreshing if needed.
+     */
+    protected function getAccessToken(): string
+    {
+        $settings = BackupSettings::getInstance();
+
+        // If we have a refresh token, always use it to get a fresh access token
+        if (! empty($settings->dropbox_refresh_token) && ! empty($settings->dropbox_app_key) && ! empty($settings->dropbox_app_secret)) {
+            return $this->refreshAccessToken($settings);
+        }
+
+        if (! empty($settings->dropbox_access_token)) {
+            return $settings->dropbox_access_token;
+        }
+
+        throw new RuntimeException('No Dropbox access token or refresh token configured.');
+    }
+
+    /**
+     * Refresh the access token using the refresh token.
+     */
+    protected function refreshAccessToken(BackupSettings $settings): string
+    {
+        try {
+            $response = Http::asForm()->post($this->tokenUrl, [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $settings->dropbox_refresh_token,
+                'client_id' => $settings->dropbox_app_key,
+                'client_secret' => $settings->dropbox_app_secret,
+            ]);
+
+            if ($response->successful()) {
+                $newToken = $response->json('access_token');
+
+                // Save the new access token
+                $settings->dropbox_access_token = $newToken;
+                $settings->save();
+
+                Log::info('Dropbox access token refreshed successfully');
+
+                return $newToken;
+            }
+
+            $error = $response->json('error_description') ?? $response->body();
+            throw new RuntimeException('Failed to refresh Dropbox token: '.$error);
+        } catch (RuntimeException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new RuntimeException('Failed to refresh Dropbox token: '.$e->getMessage());
+        }
     }
 
     /**
@@ -34,10 +97,11 @@ class DropboxService
             throw new RuntimeException('Dropbox is not configured.');
         }
 
+        $token = $this->getAccessToken();
         $settings = BackupSettings::getInstance();
         $folderPath = $this->normalizePath($settings->dropbox_folder_path ?? '/HMS Backups');
 
-        $response = Http::withToken($settings->dropbox_access_token)
+        $response = Http::withToken($token)
             ->withHeaders(['Content-Type' => 'application/json'])
             ->post($this->listFolderUrl, [
                 'path' => $folderPath === '/' ? '' : $folderPath,
@@ -45,7 +109,6 @@ class DropboxService
             ]);
 
         if ($response->successful() || $response->status() === 409) {
-            // 409 means folder doesn't exist yet — that's fine, we'll create on upload
             Log::info('Dropbox connection test successful');
 
             return true;
@@ -74,21 +137,20 @@ class DropboxService
             return null;
         }
 
+        $token = $this->getAccessToken();
         $settings = BackupSettings::getInstance();
         $folderPath = $this->normalizePath($settings->dropbox_folder_path ?? '/HMS Backups');
         $destinationPath = rtrim($folderPath, '/').'/'.$filename;
 
         try {
             $fileSize = filesize($filePath);
-            // Allow 5 minutes for large files
             $timeout = max(300, (int) ceil($fileSize / 50000));
 
-            // Temporarily increase PHP execution time for large uploads
             $previousMaxExecution = (int) ini_get('max_execution_time');
             set_time_limit($timeout + 60);
 
             $response = Http::timeout($timeout)
-                ->withToken($settings->dropbox_access_token)
+                ->withToken($token)
                 ->withHeaders([
                     'Content-Type' => 'application/octet-stream',
                     'Dropbox-API-Arg' => json_encode([
@@ -135,9 +197,9 @@ class DropboxService
         }
 
         try {
-            $settings = BackupSettings::getInstance();
+            $token = $this->getAccessToken();
 
-            $response = Http::withToken($settings->dropbox_access_token)
+            $response = Http::withToken($token)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($this->deleteUrl, ['path' => $filePath]);
 
@@ -147,7 +209,6 @@ class DropboxService
                 return true;
             }
 
-            // 409 = file not found, treat as success
             if ($response->status() === 409) {
                 return true;
             }

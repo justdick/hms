@@ -34,7 +34,9 @@ class BackupSettingsController extends Controller
         $settingsData = $settings->toArray();
         $settingsData['has_google_credentials'] = ! empty($settings->google_credentials);
         $settingsData['has_dropbox_token'] = ! empty($settings->dropbox_access_token);
-        unset($settingsData['google_credentials'], $settingsData['dropbox_access_token']);
+        $settingsData['has_dropbox_refresh_token'] = ! empty($settings->dropbox_refresh_token);
+        $settingsData['has_dropbox_app_secret'] = ! empty($settings->dropbox_app_secret);
+        unset($settingsData['google_credentials'], $settingsData['dropbox_access_token'], $settingsData['dropbox_refresh_token'], $settingsData['dropbox_app_secret']);
 
         return Inertia::render('Backup/Settings', [
             'settings' => $settingsData,
@@ -63,6 +65,18 @@ class BackupSettingsController extends Controller
             $settings->dropbox_access_token = $validated['dropbox_access_token'];
         }
         unset($validated['dropbox_access_token']);
+
+        // Handle Dropbox refresh token separately - only update if provided
+        if (isset($validated['dropbox_refresh_token']) && ! empty($validated['dropbox_refresh_token'])) {
+            $settings->dropbox_refresh_token = $validated['dropbox_refresh_token'];
+        }
+        unset($validated['dropbox_refresh_token']);
+
+        // Handle Dropbox app secret separately - only update if provided
+        if (isset($validated['dropbox_app_secret']) && ! empty($validated['dropbox_app_secret'])) {
+            $settings->dropbox_app_secret = $validated['dropbox_app_secret'];
+        }
+        unset($validated['dropbox_app_secret']);
 
         $settings->update($validated);
 

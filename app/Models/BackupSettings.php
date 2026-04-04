@@ -23,6 +23,9 @@ class BackupSettings extends Model
         'google_credentials',
         'dropbox_enabled',
         'dropbox_access_token',
+        'dropbox_refresh_token',
+        'dropbox_app_key',
+        'dropbox_app_secret',
         'dropbox_folder_path',
         'notification_emails',
     ];
@@ -39,6 +42,8 @@ class BackupSettings extends Model
             'retention_monthly' => 'integer',
             'google_credentials' => 'encrypted',
             'dropbox_access_token' => 'encrypted',
+            'dropbox_refresh_token' => 'encrypted',
+            'dropbox_app_secret' => 'encrypted',
         ];
     }
 

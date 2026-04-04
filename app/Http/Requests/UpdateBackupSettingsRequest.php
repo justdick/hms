@@ -33,6 +33,9 @@ class UpdateBackupSettingsRequest extends FormRequest
             // Dropbox settings
             'dropbox_enabled' => ['boolean'],
             'dropbox_access_token' => ['nullable', 'string'],
+            'dropbox_refresh_token' => ['nullable', 'string'],
+            'dropbox_app_key' => ['nullable', 'string', 'max:255'],
+            'dropbox_app_secret' => ['nullable', 'string', 'max:255'],
             'dropbox_folder_path' => ['nullable', 'string', 'max:255'],
 
             // Notification settings

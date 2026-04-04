@@ -48,7 +48,10 @@ interface BackupSettings {
     has_google_credentials: boolean;
     dropbox_enabled: boolean;
     dropbox_folder_path: string | null;
+    dropbox_app_key: string | null;
     has_dropbox_token: boolean;
+    has_dropbox_refresh_token: boolean;
+    has_dropbox_app_secret: boolean;
     notification_emails: string[] | null;
 }
 
@@ -88,6 +91,9 @@ export default function BackupSettingsPage({ settings }: Props) {
         google_credentials: '',
         dropbox_enabled: settings.dropbox_enabled,
         dropbox_access_token: '',
+        dropbox_refresh_token: '',
+        dropbox_app_key: settings.dropbox_app_key || '',
+        dropbox_app_secret: '',
         dropbox_folder_path: settings.dropbox_folder_path || '/HMS Backups',
         notification_emails: settings.notification_emails || [],
     });
@@ -588,8 +594,98 @@ export default function BackupSettingsPage({ settings }: Props) {
                             {data.dropbox_enabled && (
                                 <>
                                     <div className="space-y-2">
+                                        <Label htmlFor="dropbox_app_key">
+                                            App Key
+                                        </Label>
+                                        <Input
+                                            id="dropbox_app_key"
+                                            value={data.dropbox_app_key}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'dropbox_app_key',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Your Dropbox App Key"
+                                        />
+                                        {errors.dropbox_app_key && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.dropbox_app_key}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dropbox_app_secret">
+                                            App Secret
+                                            {settings.has_dropbox_app_secret && (
+                                                <span className="ml-2 text-green-600">
+                                                    (Configured)
+                                                </span>
+                                            )}
+                                        </Label>
+                                        <Input
+                                            id="dropbox_app_secret"
+                                            type="password"
+                                            value={data.dropbox_app_secret}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'dropbox_app_secret',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder={
+                                                settings.has_dropbox_app_secret
+                                                    ? 'Leave empty to keep existing secret'
+                                                    : 'Your Dropbox App Secret'
+                                            }
+                                        />
+                                        {errors.dropbox_app_secret && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.dropbox_app_secret}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dropbox_refresh_token">
+                                            Refresh Token
+                                            {settings.has_dropbox_refresh_token && (
+                                                <span className="ml-2 text-green-600">
+                                                    (Configured)
+                                                </span>
+                                            )}
+                                        </Label>
+                                        <Input
+                                            id="dropbox_refresh_token"
+                                            type="password"
+                                            value={data.dropbox_refresh_token}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'dropbox_refresh_token',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder={
+                                                settings.has_dropbox_refresh_token
+                                                    ? 'Leave empty to keep existing token'
+                                                    : 'Paste your Dropbox refresh token here'
+                                            }
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            See setup instructions below to
+                                            generate a refresh token
+                                        </p>
+                                        {errors.dropbox_refresh_token && (
+                                            <p className="text-sm text-red-500">
+                                                {errors.dropbox_refresh_token}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
                                         <Label htmlFor="dropbox_access_token">
-                                            Access Token
+                                            Access Token (optional, auto-refreshed)
                                             {settings.has_dropbox_token && (
                                                 <span className="ml-2 text-green-600">
                                                     (Configured)
@@ -608,21 +704,10 @@ export default function BackupSettingsPage({ settings }: Props) {
                                             }
                                             placeholder={
                                                 settings.has_dropbox_token
-                                                    ? 'Leave empty to keep existing token, or paste new token to update'
-                                                    : 'Paste your Dropbox access token here'
+                                                    ? 'Auto-managed via refresh token'
+                                                    : 'Leave empty if using refresh token'
                                             }
                                         />
-                                        <p className="text-sm text-gray-500">
-                                            Generate a long-lived token from the{' '}
-                                            <a
-                                                href="https://www.dropbox.com/developers/apps"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-blue-600 underline"
-                                            >
-                                                Dropbox App Console
-                                            </a>
-                                        </p>
                                         {errors.dropbox_access_token && (
                                             <p className="text-sm text-red-500">
                                                 {errors.dropbox_access_token}
