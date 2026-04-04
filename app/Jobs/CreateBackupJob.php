@@ -28,6 +28,11 @@ class CreateBackupJob implements ShouldQueue
     public int $backoff = 60;
 
     /**
+     * The number of seconds the job can run before timing out.
+     */
+    public int $timeout = 600;
+
+    /**
      * The backup that was created (if any).
      */
     protected ?Backup $backup = null;
