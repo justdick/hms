@@ -1215,10 +1215,19 @@ export default function ConsultationShow({
                                         <DialogTrigger asChild>
                                             <Button
                                                 variant="outline"
-                                                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
+                                                className={
+                                                    consultation.patient_checkin.patient.active_admissions && consultation.patient_checkin.patient.active_admissions.length > 0
+                                                        ? "border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-600 dark:hover:text-white"
+                                                        : "border-green-600 text-green-600 hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white"
+                                                }
                                             >
                                                 <UserPlus className="mr-2 h-4 w-4" />
                                                 Admit Patient
+                                                {consultation.patient_checkin.patient.active_admissions && consultation.patient_checkin.patient.active_admissions.length > 0 && (
+                                                    <span className="ml-1 inline-flex items-center rounded-full bg-orange-100 px-1.5 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                                                        ⚠ {consultation.patient_checkin.patient.active_admissions.length} active
+                                                    </span>
+                                                )}
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-md">
@@ -1227,6 +1236,23 @@ export default function ConsultationShow({
                                                     Admit Patient
                                                 </DialogTitle>
                                             </DialogHeader>
+                                            {consultation.patient_checkin.patient.active_admissions && consultation.patient_checkin.patient.active_admissions.length > 0 && (
+                                                <div className="rounded-md border border-orange-300 bg-orange-50 p-3 dark:border-orange-700 dark:bg-orange-950">
+                                                    <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                                                        ⚠️ This patient already has {consultation.patient_checkin.patient.active_admissions.length} active admission(s):
+                                                    </p>
+                                                    <ul className="mt-1 list-inside list-disc text-sm text-orange-700 dark:text-orange-300">
+                                                        {consultation.patient_checkin.patient.active_admissions.map((adm) => (
+                                                            <li key={adm.id}>
+                                                                {adm.ward?.name || 'Unknown Ward'} — since {new Date(adm.admitted_at).toLocaleDateString()}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    <p className="mt-2 text-xs text-orange-600 dark:text-orange-400">
+                                                        Please ensure the previous admission(s) should remain active, or discharge them first to avoid medication conflicts.
+                                                    </p>
+                                                </div>
+                                            )}
                                             <form
                                                 onSubmit={handleAdmissionSubmit}
                                                 className="space-y-4"

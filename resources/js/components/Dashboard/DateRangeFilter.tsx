@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Calendar, CalendarDays, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
-export type DatePreset = 'today' | 'week' | 'month' | 'year' | 'custom';
+export type DatePreset = 'today' | 'yesterday' | 'week' | 'month' | 'last_month' | 'year' | 'custom';
 
 export interface DateFilterState {
     preset: DatePreset;
@@ -36,8 +36,10 @@ interface DateRangeFilterProps {
 
 const presetLabels: Record<DatePreset, string> = {
     today: 'Today',
+    yesterday: 'Yesterday',
     week: 'This Week',
     month: 'This Month',
+    last_month: 'Last Month',
     year: 'This Year',
     custom: 'Custom Range',
 };
@@ -57,10 +59,12 @@ export function DateRangeFilter({
         }
         return undefined;
     });
+    const triggerRef = useRef<HTMLButtonElement>(null);
 
     const handlePresetChange = (preset: DatePreset) => {
         if (preset === 'custom') {
-            setIsCalendarOpen(true);
+            // Open the calendar popover after the dropdown closes
+            setTimeout(() => setIsCalendarOpen(true), 0);
             return;
         }
 
@@ -70,7 +74,6 @@ export function DateRangeFilter({
             endDate: null,
         };
 
-        // Navigate with new filter
         router.get(
             '/dashboard',
             { date_preset: preset },
@@ -93,7 +96,6 @@ export function DateRangeFilter({
                 endDate,
             };
 
-            // Navigate with custom date range
             router.get(
                 '/dashboard',
                 {
@@ -120,6 +122,7 @@ export function DateRangeFilter({
 
     return (
         <div className={cn('flex items-center gap-2', className)}>
+            {/* Preset dropdown */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
@@ -147,6 +150,13 @@ export function DateRangeFilter({
                         Today
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                        onClick={() => handlePresetChange('yesterday')}
+                        className={cn(value.preset === 'yesterday' && 'bg-accent')}
+                    >
+                        Yesterday
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
                         onClick={() => handlePresetChange('week')}
                         className={cn(value.preset === 'week' && 'bg-accent')}
                     >
@@ -159,44 +169,52 @@ export function DateRangeFilter({
                         This Month
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                        onClick={() => handlePresetChange('last_month')}
+                        className={cn(value.preset === 'last_month' && 'bg-accent')}
+                    >
+                        Last Month
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                         onClick={() => handlePresetChange('year')}
                         className={cn(value.preset === 'year' && 'bg-accent')}
                     >
                         This Year
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <Popover
-                        open={isCalendarOpen}
-                        onOpenChange={setIsCalendarOpen}
+                    <DropdownMenuItem
+                        onClick={() => handlePresetChange('custom')}
+                        className={cn(
+                            'gap-2',
+                            value.preset === 'custom' && 'bg-accent',
+                        )}
                     >
-                        <PopoverTrigger asChild>
-                            <DropdownMenuItem
-                                onSelect={(e) => e.preventDefault()}
-                                className={cn(
-                                    'gap-2',
-                                    value.preset === 'custom' && 'bg-accent',
-                                )}
-                            >
-                                <Calendar className="h-4 w-4" />
-                                Custom Range...
-                            </DropdownMenuItem>
-                        </PopoverTrigger>
-                        <PopoverContent
-                            className="w-auto p-0"
-                            align="end"
-                            side="left"
-                        >
-                            <CalendarComponent
-                                mode="range"
-                                selected={dateRange}
-                                onSelect={handleDateRangeSelect}
-                                numberOfMonths={2}
-                                defaultMonth={dateRange?.from || new Date()}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                        <Calendar className="h-4 w-4" />
+                        Custom Range...
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Calendar popover — rendered outside the dropdown so it doesn't get unmounted */}
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                    <button ref={triggerRef} className="sr-only" tabIndex={-1} aria-hidden>
+                        Open calendar
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent
+                    className="w-auto p-0"
+                    align="end"
+                    side="bottom"
+                >
+                    <CalendarComponent
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={handleDateRangeSelect}
+                        numberOfMonths={2}
+                        defaultMonth={dateRange?.from || new Date()}
+                    />
+                </PopoverContent>
+            </Popover>
         </div>
     );
 }

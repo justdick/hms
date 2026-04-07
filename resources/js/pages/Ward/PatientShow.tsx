@@ -364,6 +364,13 @@ interface ServiceAccessOverride {
 
 interface Props {
     admission: PatientAdmission;
+    otherActiveAdmissions?: Array<{
+        id: number;
+        admission_number: string;
+        ward_id: number;
+        ward?: { id: number; name: string; code: string };
+        admitted_at: string;
+    }>;
     availableBeds?: BedType[];
     allBeds?: BedType[];
     hasAvailableBeds?: boolean;
@@ -425,6 +432,7 @@ const NOTE_TYPES = [
 
 export default function WardPatientShow({
     admission,
+    otherActiveAdmissions = [],
     availableBeds = [],
     allBeds = [],
     hasAvailableBeds = false,
@@ -746,6 +754,41 @@ export default function WardPatientShow({
             />
 
             <div className="space-y-6">
+                {/* Multiple Active Admissions Warning */}
+                {otherActiveAdmissions.length > 0 && (
+                    <div className="rounded-lg border border-orange-300 bg-orange-50 p-4 dark:border-orange-700 dark:bg-orange-950">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+                            <div>
+                                <p className="font-medium text-orange-800 dark:text-orange-200">
+                                    ⚠️ This patient has {otherActiveAdmissions.length} other active admission(s)
+                                </p>
+                                <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
+                                    Please verify you are working on the correct admission. Medications and vitals from other admissions may overlap.
+                                </p>
+                                <ul className="mt-2 space-y-1 text-sm text-orange-700 dark:text-orange-300">
+                                    {otherActiveAdmissions.map((adm) => (
+                                        <li key={adm.id} className="flex items-center gap-2">
+                                            <span>•</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (window.confirm(`You are about to leave this admission and navigate to ${adm.admission_number} in ${adm.ward?.name || 'Unknown Ward'}. Continue?`)) {
+                                                        router.visit(`/wards/${adm.ward_id}/patients/${adm.id}`);
+                                                    }
+                                                }}
+                                                className="underline hover:text-orange-900 dark:hover:text-orange-100 text-left"
+                                            >
+                                                {adm.admission_number} — {adm.ward?.name || 'Unknown Ward'} (since {new Date(adm.admitted_at).toLocaleDateString()})
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">

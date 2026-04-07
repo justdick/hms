@@ -75,23 +75,32 @@ class AdmissionController extends Controller
             'status' => 'admitted',
         ]);
 
-        // Create default vitals schedule (4 hours interval)
-        $this->vitalsScheduleService->createSchedule(
-            $admission,
-            240, // 4 hours = 240 minutes
-            $request->user()
-        );
-
-        // Note: Medication schedules are NOT auto-generated here.
-        // Ward staff must configure medication schedules via "Medication History" tab
-        // to ensure appropriate timing for ward rounds.
-
-        // Fire admission event for billing
+        // Fire admission event for billing (must run before optional steps
+        // so that insurance claims are correctly flipped to IPD)
         event(new PatientAdmitted(
             checkin: $consultation->patientCheckin,
             wardType: $ward->name, // Use ward name instead of type
             bedNumber: null
         ));
+
+        // Create default vitals schedule (4 hours interval)
+        // Wrapped in try-catch so a schedule failure doesn't break the admission
+        try {
+            $this->vitalsScheduleService->createSchedule(
+                $admission,
+                240, // 4 hours = 240 minutes
+                $request->user()
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('consultation.index')
+                ->with('warning', "Patient admitted (Admission Number: {$admission->admission_number}), but vitals schedule could not be created. Please set it up manually from the ward.");
+        }
+
+        // Note: Medication schedules are NOT auto-generated here.
+        // Ward staff must configure medication schedules via "Medication History" tab
+        // to ensure appropriate timing for ward rounds.
 
         return redirect()->route('consultation.index')
             ->with('success', "Patient admitted successfully. Admission Number: {$admission->admission_number}. Default vitals schedule (4 hours) created.");

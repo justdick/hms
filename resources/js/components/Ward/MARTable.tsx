@@ -30,22 +30,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { router } from '@inertiajs/react';
-import {
-    ColumnDef,
-    ColumnFiltersState,
-    SortingState,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
 import { differenceInHours, format, isToday } from 'date-fns';
 import {
-    ArrowUpDown,
     ChevronDown,
-    ChevronLeft,
     ChevronRight,
     Pill,
     Search,
@@ -93,6 +80,14 @@ interface MARTableProps {
     canDeleteOld?: boolean;
 }
 
+interface MedicationGroup {
+    prescriptionId: number;
+    drugName: string;
+    details: string;
+    frequency?: string;
+    administrations: MedicationAdministration[];
+}
+
 const statusConfig: Record<
     string,
     {
@@ -118,41 +113,34 @@ export function MARTable({
     canDelete = false,
     canDeleteOld = false,
 }: MARTableProps) {
-    const [sorting, setSorting] = React.useState<SortingState>([
-        { id: 'administered_at', desc: true },
-    ]);
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [statusFilter, setStatusFilter] = React.useState<string>('all');
+    const [collapsedGroups, setCollapsedGroups] = React.useState<Set<number>>(
+        new Set(),
+    );
     const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
     const [deletingRecord, setDeletingRecord] =
         React.useState<MedicationAdministration | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
 
-    // Helper to get prescription details
     const getPrescription = (prescriptionId: number) => {
         return prescriptions.find((p) => p.id === prescriptionId);
     };
 
-    // Check if a record can be deleted (within 3 days, or any age with delete-old permission)
     const canDeleteRecord = (record: MedicationAdministration) => {
         if (!canDelete && !canDeleteOld) return false;
         const administeredAt = new Date(record.administered_at);
         const hoursSince = differenceInHours(new Date(), administeredAt);
-        const isOld = hoursSince >= 72; // 3 days = 72 hours
-
+        const isOld = hoursSince >= 72;
         if (isOld) return canDeleteOld;
         return canDelete;
     };
 
-    // Handle delete confirmation
     const handleDeleteClick = (record: MedicationAdministration) => {
         setDeletingRecord(record);
         setDeleteConfirmOpen(true);
     };
 
-    // Handle actual delete
     const handleConfirmDelete = () => {
         if (!deletingRecord) return;
 
@@ -178,202 +166,99 @@ export function MARTable({
         );
     };
 
-    // Filter data by status
-    const filteredData = React.useMemo(() => {
-        if (statusFilter === 'all') return administrations;
-        return administrations.filter((a) => a.status === statusFilter);
-    }, [administrations, statusFilter]);
+    const toggleGroup = (prescriptionId: number) => {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(prescriptionId)) {
+                next.delete(prescriptionId);
+            } else {
+                next.add(prescriptionId);
+            }
+            return next;
+        });
+    };
 
-    const columns: ColumnDef<MedicationAdministration>[] = [
-        {
-            accessorKey: 'administered_at',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                    className="-ml-4"
-                >
-                    Date & Time
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => {
-                const date = new Date(row.getValue('administered_at'));
-                const dateIsToday = isToday(date);
-                return (
-                    <div className="font-medium">
-                        {dateIsToday ? (
-                            <span>{format(date, 'HH:mm')}</span>
-                        ) : (
-                            <div>
-                                <div>{format(date, 'MMM d, yyyy')}</div>
-                                <div className="text-xs text-muted-foreground">
-                                    {format(date, 'HH:mm')}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            },
-        },
-        {
-            id: 'medication',
-            header: 'Medication',
-            accessorFn: (row) => {
-                const prescription = getPrescription(row.prescription_id);
-                return (
-                    prescription?.drug?.name ||
-                    prescription?.medication_name ||
-                    'Unknown'
-                );
-            },
-            cell: ({ row }) => {
-                const prescription = getPrescription(
-                    row.original.prescription_id,
-                );
-                return (
-                    <div>
-                        <div className="font-medium">
-                            {prescription?.drug?.name ||
-                                prescription?.medication_name ||
-                                'Unknown'}
-                        </div>
-                        {prescription?.dose_quantity && (
-                            <div className="text-xs text-muted-foreground">
-                                {prescription.dose_quantity}
-                            </div>
-                        )}
-                        {prescription?.instructions && (
-                            <div className="text-xs text-amber-600 italic dark:text-amber-400">
-                                {prescription.instructions}
-                            </div>
-                        )}
-                    </div>
-                );
-            },
-        },
-        {
-            accessorKey: 'dosage_given',
-            header: 'Dosage',
-            cell: ({ row }) => {
-                const dosage = row.getValue('dosage_given') as string;
-                return (
-                    dosage || <span className="text-muted-foreground">-</span>
-                );
-            },
-        },
-        {
-            accessorKey: 'route',
-            header: 'Route',
-            cell: ({ row }) => {
-                const route = row.getValue('route') as string;
-                return route ? (
-                    <span className="capitalize">{route}</span>
-                ) : (
-                    <span className="text-muted-foreground">-</span>
-                );
-            },
-        },
-        {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ row }) => {
-                const status = row.getValue('status') as string;
-                const config = statusConfig[status] || statusConfig.given;
-                return (
-                    <Badge
-                        variant={config.variant}
-                        className={config.className}
-                    >
-                        {config.label}
-                    </Badge>
-                );
-            },
-        },
-        {
-            id: 'administered_by',
-            header: 'Recorded By',
-            accessorFn: (row) => row.administered_by?.name || 'Unknown',
-            cell: ({ row }) => {
-                return (
-                    <span className="text-sm text-muted-foreground">
-                        {row.original.administered_by?.name || 'Unknown'}
-                    </span>
-                );
-            },
-        },
-        {
-            accessorKey: 'notes',
-            header: 'Notes',
-            cell: ({ row }) => {
-                const notes = row.getValue('notes') as string;
-                if (!notes)
-                    return <span className="text-muted-foreground">-</span>;
-                return (
-                    <span
-                        className="max-w-[200px] truncate text-sm"
-                        title={notes}
-                    >
-                        {notes}
-                    </span>
-                );
-            },
-        },
-        ...(canDelete || canDeleteOld
-            ? [
-                  {
-                      id: 'actions',
-                      header: '',
-                      cell: ({
-                          row,
-                      }: {
-                          row: { original: MedicationAdministration };
-                      }) => {
-                          const record = row.original;
-                          const deletable = canDeleteRecord(record);
+    // Group administrations by prescription (drug), apply filters
+    const medicationGroups = React.useMemo(() => {
+        // Apply status filter
+        let filtered = administrations;
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter((a) => a.status === statusFilter);
+        }
 
-                          if (!deletable) return null;
+        // Group by prescription_id
+        const groupMap = new Map<number, MedicationAdministration[]>();
+        for (const admin of filtered) {
+            const existing = groupMap.get(admin.prescription_id) || [];
+            existing.push(admin);
+            groupMap.set(admin.prescription_id, existing);
+        }
 
-                          return (
-                              <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
-                                  onClick={() => handleDeleteClick(record)}
-                                  title="Delete record"
-                              >
-                                  <Trash2 className="h-4 w-4" />
-                              </Button>
-                          );
-                      },
-                  },
-              ]
-            : []),
-    ];
+        // Build groups with prescription details
+        const groups: MedicationGroup[] = [];
+        for (const [prescriptionId, admins] of groupMap) {
+            const prescription = getPrescription(prescriptionId);
+            const drugName =
+                prescription?.drug?.name ||
+                prescription?.medication_name ||
+                'Unknown Medication';
 
-    const table = useReactTable({
-        data: filteredData,
-        columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        onGlobalFilterChange: setGlobalFilter,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        state: {
-            sorting,
-            columnFilters,
-            globalFilter,
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
-        },
-    });
+            // Build details string like reference: "Drug Name, Strength [DOSE FREQUENCY]"
+            const parts: string[] = [];
+            if (prescription?.drug?.strength) {
+                parts.push(prescription.drug.strength);
+            }
+            const bracketParts: string[] = [];
+            if (prescription?.dose_quantity) {
+                bracketParts.push(prescription.dose_quantity);
+            }
+            if (prescription?.frequency) {
+                bracketParts.push(prescription.frequency);
+            }
+            let details = drugName;
+            if (parts.length > 0) {
+                details += ', ' + parts.join(' ');
+            }
+            if (bracketParts.length > 0) {
+                details += ' [' + bracketParts.join(' ') + ']';
+            }
+
+            // Sort administrations within group by date descending
+            admins.sort(
+                (a, b) =>
+                    new Date(b.administered_at).getTime() -
+                    new Date(a.administered_at).getTime(),
+            );
+
+            groups.push({
+                prescriptionId,
+                drugName,
+                details,
+                frequency: prescription?.frequency,
+                administrations: admins,
+            });
+        }
+
+        // Apply search filter on drug name
+        const searchLower = globalFilter.toLowerCase();
+        const filteredGroups = searchLower
+            ? groups.filter(
+                  (g) =>
+                      g.drugName.toLowerCase().includes(searchLower) ||
+                      g.details.toLowerCase().includes(searchLower),
+              )
+            : groups;
+
+        // Sort groups alphabetically by drug name
+        filteredGroups.sort((a, b) => a.drugName.localeCompare(b.drugName));
+
+        return filteredGroups;
+    }, [administrations, prescriptions, statusFilter, globalFilter]);
+
+    const totalRecords = medicationGroups.reduce(
+        (sum, g) => sum + g.administrations.length,
+        0,
+    );
 
     return (
         <div className="space-y-4">
@@ -419,100 +304,206 @@ export function MARTable({
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                <div className="text-sm text-muted-foreground">
+                    {medicationGroups.length} medication(s), {totalRecords}{' '}
+                    record(s)
+                </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext(),
-                                              )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
+            {/* Grouped by Medication */}
+            {medicationGroups.length > 0 ? (
+                <div className="space-y-4">
+                    {medicationGroups.map((group) => {
+                        const isCollapsed = collapsedGroups.has(
+                            group.prescriptionId,
+                        );
+                        return (
+                            <div
+                                key={group.prescriptionId}
+                                className="overflow-hidden rounded-lg border"
+                            >
+                                {/* Drug Header */}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        toggleGroup(group.prescriptionId)
+                                    }
+                                    className="flex w-full items-center gap-2 bg-muted/50 px-4 py-3 text-left transition-colors hover:bg-muted"
                                 >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Pill className="h-8 w-8 text-muted-foreground" />
-                                        <div>
-                                            No medication administrations found
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            Click "Record Medication" to log
-                                            administrations
-                                        </div>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                                    {isCollapsed ? (
+                                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    ) : (
+                                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    )}
+                                    <Pill className="h-4 w-4 shrink-0 text-primary" />
+                                    <span className="font-semibold text-foreground">
+                                        {group.details}
+                                    </span>
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-auto"
+                                    >
+                                        {group.administrations.length} record
+                                        {group.administrations.length !== 1
+                                            ? 's'
+                                            : ''}
+                                    </Badge>
+                                </button>
 
-            {/* Pagination */}
-            {filteredData.length > 0 && (
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
-                        Showing{' '}
-                        {table.getState().pagination.pageIndex *
-                            table.getState().pagination.pageSize +
-                            1}{' '}
-                        to{' '}
-                        {Math.min(
-                            (table.getState().pagination.pageIndex + 1) *
-                                table.getState().pagination.pageSize,
-                            filteredData.length,
-                        )}{' '}
-                        of {filteredData.length} record(s)
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
+                                {/* Administration Records Table */}
+                                {!isCollapsed && (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-[160px]">
+                                                    Date
+                                                </TableHead>
+                                                <TableHead className="w-[100px]">
+                                                    Time
+                                                </TableHead>
+                                                <TableHead className="w-[120px]">
+                                                    Dose
+                                                </TableHead>
+                                                <TableHead className="w-[100px]">
+                                                    Route
+                                                </TableHead>
+                                                <TableHead className="w-[100px]">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead>Given By</TableHead>
+                                                <TableHead>Notes</TableHead>
+                                                {(canDelete ||
+                                                    canDeleteOld) && (
+                                                    <TableHead className="w-[50px]" />
+                                                )}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {group.administrations.map(
+                                                (admin) => {
+                                                    const date = new Date(
+                                                        admin.administered_at,
+                                                    );
+                                                    const dateIsToday =
+                                                        isToday(date);
+                                                    const status =
+                                                        admin.status;
+                                                    const config =
+                                                        statusConfig[status] ||
+                                                        statusConfig.given;
+                                                    const deletable =
+                                                        canDeleteRecord(admin);
+
+                                                    return (
+                                                        <TableRow
+                                                            key={admin.id}
+                                                        >
+                                                            <TableCell className="font-medium">
+                                                                {dateIsToday
+                                                                    ? 'Today'
+                                                                    : format(
+                                                                          date,
+                                                                          'MMM d, yyyy',
+                                                                      )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {format(
+                                                                    date,
+                                                                    'h:mm a',
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {admin.dosage_given || (
+                                                                    <span className="text-muted-foreground">
+                                                                        -
+                                                                    </span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="capitalize">
+                                                                {admin.route || (
+                                                                    <span className="text-muted-foreground">
+                                                                        -
+                                                                    </span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge
+                                                                    variant={
+                                                                        config.variant
+                                                                    }
+                                                                    className={
+                                                                        config.className
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        config.label
+                                                                    }
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-sm text-muted-foreground">
+                                                                {admin
+                                                                    .administered_by
+                                                                    ?.name ||
+                                                                    'Unknown'}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {admin.notes ? (
+                                                                    <span
+                                                                        className="max-w-[200px] truncate text-sm"
+                                                                        title={
+                                                                            admin.notes
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            admin.notes
+                                                                        }
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground">
+                                                                        -
+                                                                    </span>
+                                                                )}
+                                                            </TableCell>
+                                                            {(canDelete ||
+                                                                canDeleteOld) && (
+                                                                <TableCell>
+                                                                    {deletable && (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                                                                            onClick={() =>
+                                                                                handleDeleteClick(
+                                                                                    admin,
+                                                                                )
+                                                                            }
+                                                                            title="Delete record"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    )}
+                                                                </TableCell>
+                                                            )}
+                                                        </TableRow>
+                                                    );
+                                                },
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="rounded-md border py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                        <Pill className="h-8 w-8 text-muted-foreground" />
+                        <div>No medication administrations found</div>
+                        <div className="text-sm text-muted-foreground">
+                            Click "Record Medication" to log administrations
+                        </div>
                     </div>
                 </div>
             )}

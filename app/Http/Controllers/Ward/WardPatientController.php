@@ -119,6 +119,11 @@ class WardPatientController extends Controller
 
         return Inertia::render('Ward/PatientShow', [
             'admission' => $admission,
+            'otherActiveAdmissions' => PatientAdmission::where('patient_id', $admission->patient_id)
+                ->where('id', '!=', $admission->id)
+                ->where('status', 'admitted')
+                ->with('ward:id,name,code')
+                ->get(['id', 'admission_number', 'patient_id', 'ward_id', 'status', 'admitted_at']),
             'availableBeds' => $availableBeds,
             'allBeds' => $allBeds,
             'hasAvailableBeds' => $availableBeds->isNotEmpty(),

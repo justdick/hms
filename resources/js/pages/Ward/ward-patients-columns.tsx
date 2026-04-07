@@ -56,6 +56,13 @@ interface Patient {
     gender?: string;
     patient_number: string;
     active_insurance?: PatientInsurance;
+    active_admissions?: Array<{
+        id: number;
+        patient_id: number;
+        ward_id: number;
+        admitted_at: string;
+        ward?: { id: number; name: string };
+    }>;
 }
 
 interface Doctor {
@@ -164,29 +171,44 @@ export const createWardPatientsColumns = (
             ),
             cell: ({ row }) => {
                 const admission = row.original;
+                const otherAdmissions = admission.patient.active_admissions?.filter(
+                    (a) => a.id !== admission.id
+                ) || [];
                 return (
                     <Link
                         href={`/wards/${wardId}/patients/${admission.id}`}
                         className="block"
                     >
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
-                            {admission.patient.first_name}{' '}
-                            {admission.patient.last_name}
-                        </div>
-                        {admission.patient.gender && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {admission.patient.gender}
-                                {admission.patient.date_of_birth && (
-                                    <>
-                                        {' '}
-                                        •{' '}
-                                        {new Date(
-                                            admission.patient.date_of_birth,
-                                        ).toLocaleDateString()}
-                                    </>
+                        <div className="flex items-center gap-2">
+                            <div>
+                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                    {admission.patient.first_name}{' '}
+                                    {admission.patient.last_name}
+                                </div>
+                                {admission.patient.gender && (
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        {admission.patient.gender}
+                                        {admission.patient.date_of_birth && (
+                                            <>
+                                                {' '}
+                                                •{' '}
+                                                {new Date(
+                                                    admission.patient.date_of_birth,
+                                                ).toLocaleDateString()}
+                                            </>
+                                        )}
+                                    </div>
                                 )}
                             </div>
-                        )}
+                            {otherAdmissions.length > 0 && (
+                                <span
+                                    className="inline-flex items-center rounded-full bg-orange-100 px-1.5 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+                                    title={`Patient has ${otherAdmissions.length} other active admission(s): ${otherAdmissions.map(a => a.ward?.name || 'Unknown').join(', ')}`}
+                                >
+                                    ⚠ {otherAdmissions.length + 1}
+                                </span>
+                            )}
+                        </div>
                     </Link>
                 );
             },

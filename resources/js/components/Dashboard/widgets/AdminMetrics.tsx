@@ -21,16 +21,20 @@ export interface AdminMetricsData {
 export interface AdminMetricsProps {
     metrics: AdminMetricsData;
     patientsHref?: string;
-    datePreset?: 'today' | 'week' | 'month' | 'year' | 'custom';
+    datePreset?: 'today' | 'yesterday' | 'week' | 'month' | 'last_month' | 'year' | 'custom';
 }
 
 // Helper function to get the appropriate label based on date preset
 function getAttendanceLabel(preset?: string): string {
     switch (preset) {
+        case 'yesterday':
+            return 'Patients yesterday';
         case 'week':
             return 'Patients this week';
         case 'month':
             return 'Patients this month';
+        case 'last_month':
+            return 'Patients last month';
         case 'year':
             return 'Patients this year';
         case 'custom':

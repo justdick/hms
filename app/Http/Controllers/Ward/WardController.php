@@ -85,6 +85,8 @@ class WardController extends Controller
             ->with([
                 'patient:id,first_name,last_name,date_of_birth,gender,patient_number',
                 'patient.activeInsurance.plan.provider',
+                'patient.activeAdmissions:id,patient_id,ward_id,admitted_at',
+                'patient.activeAdmissions.ward:id,name',
                 'bed:id,bed_number',
                 'consultation.doctor:id,name',
                 'latestVitalSigns' => function ($q) {

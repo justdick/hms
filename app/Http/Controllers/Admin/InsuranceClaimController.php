@@ -33,40 +33,34 @@ class InsuranceClaimController extends Controller
     {
         $this->authorize('viewAny', InsuranceClaim::class);
 
-        $query = InsuranceClaim::query()
-            ->with(['patientInsurance.plan.provider', 'vettedBy', 'submittedBy']);
-
-        // Filter by status - default to pending_vetting if no status specified
-        $status = $request->input('status', 'pending_vetting');
-        if ($status && $status !== 'all') {
-            $query->where('status', $status);
-        }
+        // Build base query with all non-status filters (shared by stats and listing)
+        $baseQuery = InsuranceClaim::query();
 
         // Filter by insurance provider
         if ($request->filled('provider_id')) {
-            $query->whereHas('patientInsurance.plan', function ($q) use ($request) {
+            $baseQuery->whereHas('patientInsurance.plan', function ($q) use ($request) {
                 $q->where('insurance_provider_id', $request->provider_id);
             });
         }
 
         // Filter by date range
         if ($request->filled('date_from')) {
-            $query->where('date_of_attendance', '>=', $request->date_from);
+            $baseQuery->where('date_of_attendance', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->where('date_of_attendance', '<=', $request->date_to);
+            $baseQuery->where('date_of_attendance', '<=', $request->date_to);
         }
 
         // Filter by service type (OPD/IPD)
         if ($request->filled('service_type')) {
-            $query->where('type_of_service', $request->service_type);
+            $baseQuery->where('type_of_service', $request->service_type);
         }
 
         // Search by claim code, patient name, membership ID, or patient number
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $baseQuery->where(function ($q) use ($search) {
                 $q->where('claim_check_code', $search)
                     ->orWhere('patient_surname', 'like', "%{$search}%")
                     ->orWhere('patient_other_names', 'like', "%{$search}%")
@@ -76,6 +70,16 @@ class InsuranceClaimController extends Controller
                         $q->where('patient_number', $search);
                     });
             });
+        }
+
+        // Clone base query for listing, then add status filter and eager loading
+        $query = clone $baseQuery;
+        $query->with(['patientInsurance.plan.provider', 'vettedBy', 'submittedBy']);
+
+        // Filter by status - default to pending_vetting if no status specified
+        $status = $request->input('status', 'pending_vetting');
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
         }
 
         // Sort by claim_check_code first (for CCC grouping), then by date_of_attendance
@@ -106,10 +110,10 @@ class InsuranceClaimController extends Controller
                 ['status' => $status]
             ),
             'stats' => [
-                'total' => InsuranceClaim::count(),
-                'pending_vetting' => InsuranceClaim::where('status', 'pending_vetting')->count(),
-                'vetted' => InsuranceClaim::where('status', 'vetted')->count(),
-                'submitted' => InsuranceClaim::where('status', 'submitted')->count(),
+                'total' => (clone $baseQuery)->count(),
+                'pending_vetting' => (clone $baseQuery)->where('status', 'pending_vetting')->count(),
+                'vetted' => (clone $baseQuery)->where('status', 'vetted')->count(),
+                'submitted' => (clone $baseQuery)->where('status', 'submitted')->count(),
             ],
         ]);
     }

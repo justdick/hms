@@ -23,7 +23,8 @@
         "browser_run_code",
         "browser_select_option",
         "browser_tabs",
-        "browser_handle_dialog"
+        "browser_handle_dialog",
+        "browser_navigate_back"
       ]
     },
     "laravel-boost": {

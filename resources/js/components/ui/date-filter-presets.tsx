@@ -43,7 +43,8 @@ const presets = [
  */
 export function calculateDateRange(preset: string): { from: string; to: string } {
     const today = new Date();
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    const formatDate = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
     switch (preset) {
         case 'today':

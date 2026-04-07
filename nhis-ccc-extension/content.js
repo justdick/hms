@@ -29,20 +29,21 @@
     }
 
     const currentUrl = window.location.href;
+    const currentUrlLower = currentUrl.toLowerCase();
     const membershipNumber = pending.membershipNumber;
     const credentials = pending.credentials;
 
     console.log('HMS NHIS Extension: Processing page', currentUrl, 'with membership', membershipNumber);
 
-    // Handle different pages in the NHIA flow
-    if (currentUrl.includes('/Home/Index') || currentUrl === 'https://ccc.nhia.gov.gh/') {
+    // Handle different pages in the NHIA flow (case-insensitive URL matching)
+    if (currentUrlLower.includes('/home/index') || currentUrl === 'https://ccc.nhia.gov.gh/') {
         // Login page - auto-fill credentials if available
         if (credentials && credentials.username && credentials.password) {
             await handleLogin(credentials);
         } else {
             console.log('HMS NHIS Extension: No credentials available, waiting for manual login');
         }
-    } else if (currentUrl.includes('/Home/membershipCheck')) {
+    } else if (currentUrlLower.includes('/home/membershipcheck')) {
         // Main page - click "Generate New Claims Code"
         await sleep(800);
         // The button is: <a id="newclaimsCode1" class="btn btn-generate">
@@ -55,7 +56,7 @@
         } else {
             console.log('HMS NHIS Extension: Generate button not found');
         }
-    } else if (currentUrl.includes('/Home/cardType')) {
+    } else if (currentUrlLower.includes('/home/cardtype')) {
         // Card type selection - click NHIS Card or Ghana Card based on idType
         await sleep(500);
         const idType = pending.idType || 'nhis';
@@ -68,10 +69,10 @@
             await waitAndClick('#nhiaCard', true);
             console.log('HMS NHIS Extension: Selected NHIS Card');
         }
-    } else if (currentUrl.includes('/Home/cardNumber')) {
+    } else if (currentUrlLower.includes('/home/cardnumber')) {
         // Card number entry - fill and submit
         await fillCardNumber(membershipNumber);
-    } else if (currentUrl.includes('/Home/claimCode')) {
+    } else if (currentUrlLower.includes('/home/claimcode')) {
         // Result page - extract CCC and send to HMS
         await extractAndSendCcc();
     }

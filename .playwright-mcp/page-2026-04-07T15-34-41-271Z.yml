@@ -1,0 +1,373 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e7]:
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "ROYAL GATE FAMILY HOSPITAL" [ref=e11] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e13]
+            - generic [ref=e16]: ROYAL GATE FAMILY HOSPITAL
+      - generic [ref=e18]:
+        - generic [ref=e19]: Platform
+        - list [ref=e20]:
+          - listitem [ref=e21]:
+            - link "Dashboard" [ref=e22] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e23]
+              - generic [ref=e28]: Dashboard
+          - listitem [ref=e29]:
+            - link "Check-in" [ref=e30] [cursor=pointer]:
+              - /url: /checkin
+              - img [ref=e31]
+              - generic [ref=e35]: Check-in
+          - listitem [ref=e36]:
+            - link "Patients" [ref=e37] [cursor=pointer]:
+              - /url: /patients
+              - img [ref=e38]
+              - generic [ref=e43]: Patients
+          - listitem [ref=e44]:
+            - link "Consultation" [ref=e45] [cursor=pointer]:
+              - /url: /consultation
+              - img [ref=e46]
+              - generic [ref=e50]: Consultation
+          - listitem [ref=e51]:
+            - link "Wards" [ref=e52] [cursor=pointer]:
+              - /url: /wards
+              - img [ref=e53]
+              - generic [ref=e56]: Wards
+          - listitem [ref=e57]:
+            - button "Investigations" [ref=e58]:
+              - img [ref=e59]
+              - generic [ref=e62]: Investigations
+              - img [ref=e63]
+          - listitem [ref=e65]:
+            - link "Minor Procedures" [ref=e66] [cursor=pointer]:
+              - /url: /minor-procedures
+              - img [ref=e67]
+              - generic [ref=e69]: Minor Procedures
+          - listitem [ref=e70]:
+            - button "Pharmacy" [ref=e71]:
+              - img [ref=e72]
+              - generic [ref=e75]: Pharmacy
+              - img [ref=e76]
+          - listitem [ref=e78]:
+            - button "Billing" [ref=e79]:
+              - img [ref=e80]
+              - generic [ref=e82]: Billing
+              - img [ref=e83]
+          - listitem [ref=e85]:
+            - button "Insurance" [expanded] [ref=e86]:
+              - img [ref=e87]
+              - generic [ref=e89]: Insurance
+              - img [ref=e90]
+            - list [ref=e93]:
+              - listitem [ref=e94]:
+                - link "Providers" [ref=e95] [cursor=pointer]:
+                  - /url: /admin/insurance/providers
+                  - img [ref=e96]
+                  - generic [ref=e99]: Providers
+              - listitem [ref=e100]:
+                - link "Plans" [ref=e101] [cursor=pointer]:
+                  - /url: /admin/insurance/plans
+                  - img [ref=e102]
+                  - generic [ref=e105]: Plans
+              - listitem [ref=e106]:
+                - link "Claims" [ref=e107] [cursor=pointer]:
+                  - /url: /admin/insurance/claims
+                  - img [ref=e108]
+                  - generic [ref=e110]: Claims
+              - listitem [ref=e111]:
+                - link "Batches" [ref=e112] [cursor=pointer]:
+                  - /url: /admin/insurance/batches
+                  - img [ref=e113]
+                  - generic [ref=e119]: Batches
+              - listitem [ref=e120]:
+                - link "Analytics" [ref=e121] [cursor=pointer]:
+                  - /url: /admin/insurance/reports
+                  - img [ref=e122]
+                  - generic [ref=e124]: Analytics
+              - listitem [ref=e125]:
+                - link "NHIS Tariffs" [ref=e126] [cursor=pointer]:
+                  - /url: /admin/nhis-tariffs
+                  - img [ref=e127]
+                  - generic [ref=e129]: NHIS Tariffs
+              - listitem [ref=e130]:
+                - link "NHIS Mappings" [ref=e131] [cursor=pointer]:
+                  - /url: /admin/nhis-mappings
+                  - img [ref=e132]
+                  - generic [ref=e135]: NHIS Mappings
+              - listitem [ref=e136]:
+                - link "G-DRG Tariffs" [ref=e137] [cursor=pointer]:
+                  - /url: /admin/gdrg-tariffs
+                  - img [ref=e138]
+                  - generic [ref=e140]: G-DRG Tariffs
+          - listitem [ref=e141]:
+            - link "Departments" [ref=e142] [cursor=pointer]:
+              - /url: /departments
+              - img [ref=e143]
+              - generic [ref=e147]: Departments
+          - listitem [ref=e148]:
+            - link "Backups" [ref=e149] [cursor=pointer]:
+              - /url: /admin/backups
+              - img [ref=e150]
+              - generic [ref=e154]: Backups
+          - listitem [ref=e155]:
+            - button "Administration" [ref=e156]:
+              - img [ref=e157]
+              - generic [ref=e160]: Administration
+              - img [ref=e161]
+      - generic [ref=e164]:
+        - generic:
+          - list
+    - main [ref=e165]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - button "Toggle Sidebar" [ref=e169]:
+            - img
+            - generic [ref=e170]: Toggle Sidebar
+          - navigation "breadcrumb" [ref=e171]:
+            - list [ref=e172]:
+              - listitem [ref=e173]:
+                - link "Admin" [ref=e174] [cursor=pointer]:
+                  - /url: /admin
+              - listitem [ref=e175]:
+                - img [ref=e176]
+              - listitem [ref=e178]:
+                - link "Insurance" [ref=e179] [cursor=pointer]:
+                  - /url: /admin/insurance
+              - listitem [ref=e180]:
+                - img [ref=e181]
+              - listitem [ref=e183]:
+                - link "Claims" [disabled] [ref=e184]
+        - generic [ref=e185]:
+          - button "Toggle theme" [ref=e187]:
+            - img
+            - generic [ref=e188]: Toggle theme
+          - button "AU Admin User" [ref=e189]:
+            - generic [ref=e191]: AU
+            - generic [ref=e192]: Admin User
+            - img [ref=e193]
+      - generic [ref=e195]:
+        - generic [ref=e197]:
+          - heading "Insurance Claims" [level=1] [ref=e198]:
+            - img [ref=e199]
+            - text: Insurance Claims
+          - paragraph [ref=e202]: Review and vet insurance claims for submission
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - img [ref=e206]
+            - generic [ref=e209]:
+              - generic [ref=e210]: Total Claims
+              - generic [ref=e212]: "3919"
+          - generic [ref=e213]:
+            - img [ref=e215]
+            - generic [ref=e218]:
+              - generic [ref=e219]: Pending Vetting
+              - generic [ref=e221]: "1483"
+          - generic [ref=e222]:
+            - img [ref=e224]
+            - generic [ref=e228]:
+              - generic [ref=e229]: Vetted
+              - generic [ref=e231]: "2436"
+          - generic [ref=e232]:
+            - img [ref=e234]
+            - generic [ref=e237]:
+              - generic [ref=e238]: Submitted
+              - generic [ref=e240]: "0"
+        - generic [ref=e241]:
+          - generic [ref=e243]:
+            - img [ref=e244]
+            - text: Claims (1483)
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - generic [ref=e250]:
+                - img [ref=e251]
+                - textbox "Search by claim code, patient name..." [ref=e254]
+              - generic [ref=e255]:
+                - generic [ref=e256]: Show
+                - combobox [ref=e257]:
+                  - option "5" [selected]
+                  - option "10"
+                  - option "25"
+                  - option "50"
+              - combobox [ref=e258]:
+                - generic: Pending Vetting
+                - img
+              - combobox [ref=e259]:
+                - generic: All Types
+                - img
+              - combobox [ref=e261]:
+                - generic: Filter by date
+                - img
+              - button "Columns" [ref=e262]:
+                - text: Columns
+                - img
+            - table [ref=e265]:
+              - rowgroup [ref=e266]:
+                - row "Claim Code Patient Folder No. Date of Attendance Service Type Status" [ref=e267]:
+                  - columnheader "Claim Code" [ref=e268]:
+                    - button "Claim Code" [ref=e269]:
+                      - text: Claim Code
+                      - img
+                  - columnheader "Patient" [ref=e270]:
+                    - button "Patient" [ref=e271]:
+                      - text: Patient
+                      - img
+                  - columnheader "Folder No." [ref=e272]
+                  - columnheader "Date of Attendance" [ref=e273]:
+                    - button "Date of Attendance" [ref=e274]:
+                      - text: Date of Attendance
+                      - img
+                  - columnheader "Service Type" [ref=e275]
+                  - columnheader "Status" [ref=e276]
+                  - columnheader [ref=e277]
+              - rowgroup [ref=e278]:
+                - row "71038 AGYEIWAA NAOMI AKUA 42755857 32/2025 04 Jan 2026 OPD Pending Vetting Vet claim 71038 View claim 71038 Delete claim 71038" [ref=e279]:
+                  - cell "71038" [ref=e280]:
+                    - generic [ref=e281]: "71038"
+                  - cell "AGYEIWAA NAOMI AKUA 42755857" [ref=e282]:
+                    - generic [ref=e283]:
+                      - generic [ref=e284]: AGYEIWAA NAOMI AKUA
+                      - generic [ref=e285]: "42755857"
+                  - cell "32/2025" [ref=e286]:
+                    - generic [ref=e287]: 32/2025
+                  - cell "04 Jan 2026" [ref=e288]:
+                    - generic [ref=e289]:
+                      - img [ref=e290]
+                      - text: 04 Jan 2026
+                  - cell "OPD" [ref=e292]:
+                    - generic [ref=e293]: OPD
+                  - cell "Pending Vetting" [ref=e294]:
+                    - generic [ref=e295]: Pending Vetting
+                  - cell "Vet claim 71038 View claim 71038 Delete claim 71038" [ref=e296]:
+                    - generic [ref=e297]:
+                      - button "Vet claim 71038" [ref=e298]:
+                        - img
+                        - text: Vet
+                      - button "View claim 71038" [ref=e299]:
+                        - img
+                      - button "Delete claim 71038" [ref=e300]:
+                        - img
+                - row "27457 ALI JIBRIL 17459627 616/2025 30 Jan 2026 IPD Pending Vetting Vet claim 27457 View claim 27457 Delete claim 27457" [ref=e301]:
+                  - cell "27457" [ref=e302]:
+                    - generic [ref=e303]: "27457"
+                  - cell "ALI JIBRIL 17459627" [ref=e304]:
+                    - generic [ref=e305]:
+                      - generic [ref=e306]: ALI JIBRIL
+                      - generic [ref=e307]: "17459627"
+                  - cell "616/2025" [ref=e308]:
+                    - generic [ref=e309]: 616/2025
+                  - cell "30 Jan 2026" [ref=e310]:
+                    - generic [ref=e311]:
+                      - img [ref=e312]
+                      - text: 30 Jan 2026
+                  - cell "IPD" [ref=e314]:
+                    - generic [ref=e315]: IPD
+                  - cell "Pending Vetting" [ref=e316]:
+                    - generic [ref=e317]: Pending Vetting
+                  - cell "Vet claim 27457 View claim 27457 Delete claim 27457" [ref=e318]:
+                    - generic [ref=e319]:
+                      - button "Vet claim 27457" [ref=e320]:
+                        - img
+                        - text: Vet
+                      - button "View claim 27457" [ref=e321]:
+                        - img
+                      - button "Delete claim 27457" [ref=e322]:
+                        - img
+                - row "92804 OFORI ELIZABETH 36323623 3033/2025 31 Jan 2026 IPD Pending Vetting Vet claim 92804 View claim 92804 Delete claim 92804" [ref=e323]:
+                  - cell "92804" [ref=e324]:
+                    - generic [ref=e325]: "92804"
+                  - cell "OFORI ELIZABETH 36323623" [ref=e326]:
+                    - generic [ref=e327]:
+                      - generic [ref=e328]: OFORI ELIZABETH
+                      - generic [ref=e329]: "36323623"
+                  - cell "3033/2025" [ref=e330]:
+                    - generic [ref=e331]: 3033/2025
+                  - cell "31 Jan 2026" [ref=e332]:
+                    - generic [ref=e333]:
+                      - img [ref=e334]
+                      - text: 31 Jan 2026
+                  - cell "IPD" [ref=e336]:
+                    - generic [ref=e337]: IPD
+                  - cell "Pending Vetting" [ref=e338]:
+                    - generic [ref=e339]: Pending Vetting
+                  - cell "Vet claim 92804 View claim 92804 Delete claim 92804" [ref=e340]:
+                    - generic [ref=e341]:
+                      - button "Vet claim 92804" [ref=e342]:
+                        - img
+                        - text: Vet
+                      - button "View claim 92804" [ref=e343]:
+                        - img
+                      - button "Delete claim 92804" [ref=e344]:
+                        - img
+                - row "45681 KOLOGO ABENA 20276483 0510/2026 18 Feb 2026 IPD Pending Vetting Vet claim 45681 View claim 45681 Delete claim 45681" [ref=e345]:
+                  - cell "45681" [ref=e346]:
+                    - generic [ref=e347]: "45681"
+                  - cell "KOLOGO ABENA 20276483" [ref=e348]:
+                    - generic [ref=e349]:
+                      - generic [ref=e350]: KOLOGO ABENA
+                      - generic [ref=e351]: "20276483"
+                  - cell "0510/2026" [ref=e352]:
+                    - generic [ref=e353]: 0510/2026
+                  - cell "18 Feb 2026" [ref=e354]:
+                    - generic [ref=e355]:
+                      - img [ref=e356]
+                      - text: 18 Feb 2026
+                  - cell "IPD" [ref=e358]:
+                    - generic [ref=e359]: IPD
+                  - cell "Pending Vetting" [ref=e360]:
+                    - generic [ref=e361]: Pending Vetting
+                  - cell "Vet claim 45681 View claim 45681 Delete claim 45681" [ref=e362]:
+                    - generic [ref=e363]:
+                      - button "Vet claim 45681" [ref=e364]:
+                        - img
+                        - text: Vet
+                      - button "View claim 45681" [ref=e365]:
+                        - img
+                      - button "Delete claim 45681" [ref=e366]:
+                        - img
+                - row "38329 EKOW ASIRIFI HORACE 31686457 2903/2023 01 Mar 2026 IPD Pending Vetting Vet claim 38329 View claim 38329 Delete claim 38329" [ref=e367]:
+                  - cell "38329" [ref=e368]:
+                    - generic [ref=e369]: "38329"
+                  - cell "EKOW ASIRIFI HORACE 31686457" [ref=e370]:
+                    - generic [ref=e371]:
+                      - generic [ref=e372]: EKOW ASIRIFI HORACE
+                      - generic [ref=e373]: "31686457"
+                  - cell "2903/2023" [ref=e374]:
+                    - generic [ref=e375]: 2903/2023
+                  - cell "01 Mar 2026" [ref=e376]:
+                    - generic [ref=e377]:
+                      - img [ref=e378]
+                      - text: 01 Mar 2026
+                  - cell "IPD" [ref=e380]:
+                    - generic [ref=e381]: IPD
+                  - cell "Pending Vetting" [ref=e382]:
+                    - generic [ref=e383]: Pending Vetting
+                  - cell "Vet claim 38329 View claim 38329 Delete claim 38329" [ref=e384]:
+                    - generic [ref=e385]:
+                      - button "Vet claim 38329" [ref=e386]:
+                        - img
+                        - text: Vet
+                      - button "View claim 38329" [ref=e387]:
+                        - img
+                      - button "Delete claim 38329" [ref=e388]:
+                        - img
+            - generic [ref=e389]:
+              - generic [ref=e390]: Showing 1 to 5 of 1483 claim(s)
+              - generic [ref=e391]:
+                - button "Previous" [disabled]
+                - button "1" [ref=e392]
+                - button "2" [ref=e393]
+                - button "3" [ref=e394]
+                - button "4" [ref=e395]
+                - button "5" [ref=e396]
+                - button "6" [ref=e397]
+                - button "7" [ref=e398]
+                - button "8" [ref=e399]
+                - button "9" [ref=e400]
+                - button "10" [ref=e401]
+                - button "..." [disabled]
+                - button "296" [ref=e402]
+                - button "297" [ref=e403]
+                - button "Next" [ref=e404]
+  - region "Notifications alt+T"
