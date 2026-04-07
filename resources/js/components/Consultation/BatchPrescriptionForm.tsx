@@ -91,6 +91,7 @@ interface Props {
     headerExtra?: React.ReactNode;
     previousPrescriptions?: PreviousPrescription[];
     consultationId?: number;
+    refillUrl?: string;
 }
 
 interface PreviousPrescription {
@@ -102,12 +103,17 @@ interface PreviousPrescription {
     instructions?: string;
     status: string;
     drug?: Drug;
-    consultation: {
+    consultation?: {
         id: number;
         started_at: string;
         doctor: { id: number; name: string };
         patient_checkin: { department: { id: number; name: string } };
     };
+    source_type?: 'ward_round' | 'consultation';
+    source_date?: string;
+    source_doctor_name?: string;
+    prescribable_id?: number;
+    consultation_id?: number;
 }
 
 // Helper to extract pack size from drug name
@@ -195,6 +201,7 @@ export default function BatchPrescriptionForm({
     headerExtra,
     previousPrescriptions = [],
     consultationId,
+    refillUrl,
 }: Props) {
     // Pending prescriptions (not yet saved to server)
     const [pendingPrescriptions, setPendingPrescriptions] = useState<PendingPrescription[]>([]);
@@ -829,6 +836,7 @@ export default function BatchPrescriptionForm({
                     onOpenChange={setShowRefillModal}
                     previousPrescriptions={previousPrescriptions}
                     consultationId={consultationId}
+                    refillUrl={refillUrl}
                 />
             )}
         </div>

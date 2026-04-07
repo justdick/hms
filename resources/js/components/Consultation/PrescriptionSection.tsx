@@ -72,6 +72,7 @@ interface Props {
     // Card wrapper control
     withCard?: boolean;
     cardTitle?: string;
+    refillUrl?: string;
 }
 
 export default function PrescriptionSection({
@@ -96,6 +97,7 @@ export default function PrescriptionSection({
     roundDatetime,
     withCard = false,
     cardTitle = 'Prescriptions',
+    refillUrl,
 }: Props) {
     const [batchMode, setBatchMode] = useState(false);
     const canEdit = isEditable ?? consultationStatus === 'in_progress';
@@ -131,6 +133,7 @@ export default function PrescriptionSection({
             headerExtra={modeToggle}
             previousPrescriptions={previousPrescriptions}
             consultationId={consultationId}
+            refillUrl={refillUrl}
         />
     ) : (
         <PrescriptionFormSection
@@ -150,6 +153,7 @@ export default function PrescriptionSection({
             consultationStatus={consultationStatus}
             previousPrescriptions={previousPrescriptions}
             headerExtra={modeToggle}
+            refillUrl={refillUrl}
         />
     );
 

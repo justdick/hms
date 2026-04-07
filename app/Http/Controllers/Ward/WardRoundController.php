@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Ward;
 use App\Events\LabTestOrdered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lab\StoreBatchLabOrdersRequest;
+use App\Http\Requests\Prescription\RefillPrescriptionsRequest;
 use App\Http\Requests\Prescription\StoreBatchPrescriptionsRequest;
 use App\Http\Requests\Prescription\StorePrescriptionRequest;
 use App\Http\Requests\StoreWardRoundRequest;
 use App\Models\LabService;
 use App\Models\MinorProcedureType;
 use App\Models\PatientAdmission;
+use App\Models\Prescription;
 use App\Models\WardRound;
 use Inertia\Inertia;
 
@@ -119,15 +121,35 @@ class WardRoundController extends Controller
                 ->orderBy('round_datetime', 'desc')
                 ->limit(10)
                 ->get(),
-            'previousPrescriptions' => \App\Models\Prescription::with('prescribable')
+            'previousPrescriptions' => \App\Models\Prescription::with(['drug', 'prescribable.doctor:id,name'])
                 ->where('prescribable_type', WardRound::class)
                 ->whereHasMorph('prescribable', [WardRound::class], function ($query) use ($admission, $wardRound) {
                     $query->where('patient_admission_id', $admission->id)
                         ->where('id', '!=', $wardRound->id);
                 })
                 ->orderBy('created_at', 'desc')
-                ->limit(20)
-                ->get(),
+                ->limit(50)
+                ->get()
+                ->map(function ($prescription) {
+                    $prescription->source_type = 'ward_round';
+                    $prescription->source_date = $prescription->prescribable?->round_datetime;
+                    $prescription->source_doctor_name = $prescription->prescribable?->doctor?->name;
+
+                    return $prescription;
+                }),
+            'consultationPrescriptions' => $admission->consultation_id
+                ? \App\Models\Prescription::with(['drug', 'consultation.doctor:id,name'])
+                    ->where('consultation_id', $admission->consultation_id)
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->map(function ($prescription) {
+                        $prescription->source_type = 'consultation';
+                        $prescription->source_date = $prescription->consultation?->started_at;
+                        $prescription->source_doctor_name = $prescription->consultation?->doctor?->name;
+
+                        return $prescription;
+                    })
+                : collect(),
             'allergies' => [],
         ];
 
@@ -364,6 +386,78 @@ class WardRoundController extends Controller
         $prescription->delete();
 
         return back();
+    }
+
+    public function refillPrescriptions(RefillPrescriptionsRequest $request, PatientAdmission $admission, WardRound $wardRound)
+    {
+        $this->authorize('update', $wardRound);
+
+        if ($wardRound->status !== 'in_progress') {
+            return back()->with('error', 'Cannot update completed ward round.');
+        }
+
+        $prescriptionIds = $request->prescription_ids;
+        $patient = $admission->patient;
+
+        // Fetch original prescriptions - from any source for this patient
+        $originalPrescriptions = Prescription::with('drug')
+            ->whereIn('id', $prescriptionIds)
+            ->where(function ($query) use ($admission) {
+                // Prescriptions from ward rounds of this admission
+                $query->where(function ($q) use ($admission) {
+                    $q->where('prescribable_type', WardRound::class)
+                        ->whereHasMorph('prescribable', [WardRound::class], function ($q2) use ($admission) {
+                            $q2->where('patient_admission_id', $admission->id);
+                        });
+                })
+                // Or prescriptions from the initial consultation
+                    ->orWhere(function ($q) use ($admission) {
+                        $q->whereNotNull('consultation_id')
+                            ->where('consultation_id', $admission->consultation_id);
+                    });
+            })
+            ->get();
+
+        if ($originalPrescriptions->isEmpty()) {
+            return back()->with('error', 'No valid prescriptions found to refill.');
+        }
+
+        $refillCount = 0;
+        $skippedDrugs = [];
+
+        foreach ($originalPrescriptions as $original) {
+            if ($original->drug && ! $original->drug->is_active) {
+                $skippedDrugs[] = $original->medication_name;
+
+                continue;
+            }
+
+            $wardRound->prescriptions()->create([
+                'refilled_from_prescription_id' => $original->id,
+                'drug_id' => $original->drug_id,
+                'medication_name' => $original->medication_name,
+                'dose_quantity' => $original->dose_quantity,
+                'frequency' => $original->frequency,
+                'duration' => $original->duration,
+                'quantity' => $original->quantity_to_dispense ?? $original->quantity,
+                'quantity_to_dispense' => $original->quantity_to_dispense ?? $original->quantity,
+                'instructions' => $original->instructions,
+                'status' => 'prescribed',
+                'prescribed_at' => $wardRound->round_datetime ?? now(),
+            ]);
+
+            $refillCount++;
+        }
+
+        $message = $refillCount === 1
+            ? '1 prescription refilled successfully.'
+            : "{$refillCount} prescriptions refilled successfully.";
+
+        if (! empty($skippedDrugs)) {
+            $message .= ' Skipped inactive drugs: '.implode(', ', $skippedDrugs);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function addLabOrder(PatientAdmission $admission, WardRound $wardRound)

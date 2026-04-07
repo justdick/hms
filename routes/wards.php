@@ -112,6 +112,7 @@ Route::middleware(['auth'])->prefix('admissions')->name('admissions.')->group(fu
 
     Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions', [WardRoundController::class, 'addPrescription'])->name('ward-rounds.prescriptions.store');
     Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions/batch', [WardRoundController::class, 'addBatchPrescriptions'])->name('ward-rounds.prescriptions.store-batch');
+    Route::post('/{admission}/ward-rounds/{wardRound}/prescriptions/refill', [WardRoundController::class, 'refillPrescriptions'])->name('ward-rounds.prescriptions.refill');
     Route::delete('/{admission}/ward-rounds/{wardRound}/prescriptions/{prescription}', [WardRoundController::class, 'removePrescription'])->name('ward-rounds.prescriptions.destroy');
 
     Route::post('/{admission}/ward-rounds/{wardRound}/lab-orders', [WardRoundController::class, 'addLabOrder'])->name('ward-rounds.lab-orders.store');

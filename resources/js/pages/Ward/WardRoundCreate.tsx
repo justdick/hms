@@ -237,7 +237,8 @@ interface Props {
     };
     patientHistory?: {
         previousWardRounds?: WardRound[];
-        previousPrescriptions?: Prescription[];
+        previousPrescriptions?: any[];
+        consultationPrescriptions?: any[];
         allergies?: string[];
     };
 }
@@ -295,6 +296,12 @@ export default function WardRoundCreate({
     const admissionDate = admission.admission_date
         ? new Date(admission.admission_date).toISOString().split('T')[0]
         : '';
+
+    // Merge previous prescriptions from ward rounds and initial consultation for refill
+    const allPreviousPrescriptions = [
+        ...(patientHistory?.previousPrescriptions || []),
+        ...(patientHistory?.consultationPrescriptions || []),
+    ];
 
     // Main form data for ward round - matching consultation structure
     const { data, setData, patch, processing } = useForm({
@@ -1122,6 +1129,8 @@ export default function WardRoundCreate({
                             processing={prescriptionProcessing}
                             consultationId={wardRound.id}
                             consultationStatus={wardRound.status}
+                            previousPrescriptions={allPreviousPrescriptions}
+                            refillUrl={`/admissions/${admission.id}/ward-rounds/${wardRound.id}/prescriptions/refill`}
                             prescribableType="ward_round"
                             prescribableId={wardRound.id}
                             admissionId={admission.id}

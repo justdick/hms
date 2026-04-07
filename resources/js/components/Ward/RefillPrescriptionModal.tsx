@@ -23,7 +23,7 @@ interface Drug {
     bottle_size?: number;
 }
 
-interface PreviousPrescription {
+export interface WardRoundPreviousPrescription {
     id: number;
     medication_name: string;
     dose_quantity?: string;
@@ -32,22 +32,7 @@ interface PreviousPrescription {
     instructions?: string;
     status: string;
     drug?: Drug;
-    consultation?: {
-        id: number;
-        started_at: string;
-        doctor: {
-            id: number;
-            name: string;
-        };
-        patient_checkin: {
-            department: {
-                id: number;
-                name: string;
-            };
-        };
-    };
-    // Ward round source fields (used when prescription comes from ward round context)
-    source_type?: 'ward_round' | 'consultation';
+    source_type: 'ward_round' | 'consultation';
     source_date?: string;
     source_doctor_name?: string;
     prescribable_id?: number;
@@ -57,88 +42,64 @@ interface PreviousPrescription {
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    consultationId: number;
-    previousPrescriptions: PreviousPrescription[];
-    refillUrl?: string;
+    admissionId: number;
+    wardRoundId: number;
+    previousPrescriptions: WardRoundPreviousPrescription[];
 }
 
-interface GroupedVisit {
-    consultationId: number;
+interface GroupedSource {
+    key: string;
+    label: string;
+    sourceType: 'ward_round' | 'consultation';
     date: string;
     doctorName: string;
-    departmentName?: string;
-    label?: string;
-    prescriptions: PreviousPrescription[];
+    prescriptions: WardRoundPreviousPrescription[];
 }
 
-export function RefillPrescriptionModal({
+export function WardRoundRefillModal({
     open,
     onOpenChange,
-    consultationId,
+    admissionId,
+    wardRoundId,
     previousPrescriptions,
-    refillUrl,
 }: Props) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Group prescriptions by visit source
-    const groupedVisits = useMemo(() => {
-        const visitMap = new Map<string, GroupedVisit>();
+    // Group prescriptions by source (ward round or consultation)
+    const groupedSources = useMemo(() => {
+        const sourceMap = new Map<string, GroupedSource>();
 
         previousPrescriptions.forEach((prescription) => {
-            // Determine grouping key based on available data
-            let key: string;
-            let date: string;
-            let doctorName: string;
-            let departmentName: string | undefined;
-            let label: string | undefined;
+            const key =
+                prescription.source_type === 'consultation'
+                    ? `consultation-${prescription.consultation_id}`
+                    : `ward_round-${prescription.prescribable_id}`;
 
-            if (prescription.consultation) {
-                // OPD: group by consultation
-                key = `consultation-${prescription.consultation.id}`;
-                date = prescription.consultation.started_at;
-                doctorName = prescription.consultation.doctor.name;
-                departmentName =
-                    prescription.consultation.patient_checkin?.department?.name;
-            } else if (prescription.source_type) {
-                // IPD: group by source
-                key =
-                    prescription.source_type === 'consultation'
-                        ? `consultation-${prescription.consultation_id}`
-                        : `ward_round-${prescription.prescribable_id}`;
-                date = prescription.source_date || '';
-                doctorName = prescription.source_doctor_name || 'Unknown';
-                label =
-                    prescription.source_type === 'consultation'
-                        ? 'Initial Consultation'
-                        : 'Ward Round';
-            } else {
-                return;
-            }
-
-            if (!visitMap.has(key)) {
-                visitMap.set(key, {
-                    consultationId: 0,
-                    date,
-                    doctorName,
-                    departmentName,
-                    label,
+            if (!sourceMap.has(key)) {
+                sourceMap.set(key, {
+                    key,
+                    label:
+                        prescription.source_type === 'consultation'
+                            ? 'Initial Consultation'
+                            : 'Ward Round',
+                    sourceType: prescription.source_type,
+                    date: prescription.source_date || '',
+                    doctorName: prescription.source_doctor_name || 'Unknown',
                     prescriptions: [],
                 });
             }
-            visitMap.get(key)!.prescriptions.push(prescription);
+            sourceMap.get(key)!.prescriptions.push(prescription);
         });
 
-        // Sort by date descending and take last 5 visits
-        return Array.from(visitMap.values())
-            .sort(
-                (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime(),
-            )
-            .slice(0, 5);
+        return Array.from(sourceMap.values()).sort(
+            (a, b) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
     }, [previousPrescriptions]);
 
     const formatDate = (dateString: string) => {
+        if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -154,20 +115,16 @@ export function RefillPrescriptionModal({
         );
     };
 
-    const handleToggleVisit = (visit: GroupedVisit) => {
-        const visitPrescriptionIds = visit.prescriptions.map((p) => p.id);
-        const allSelected = visitPrescriptionIds.every((id) =>
-            selectedIds.includes(id),
-        );
+    const handleToggleGroup = (group: GroupedSource) => {
+        const groupIds = group.prescriptions.map((p) => p.id);
+        const allSelected = groupIds.every((id) => selectedIds.includes(id));
 
         if (allSelected) {
             setSelectedIds((prev) =>
-                prev.filter((id) => !visitPrescriptionIds.includes(id)),
+                prev.filter((id) => !groupIds.includes(id)),
             );
         } else {
-            setSelectedIds((prev) => [
-                ...new Set([...prev, ...visitPrescriptionIds]),
-            ]);
+            setSelectedIds((prev) => [...new Set([...prev, ...groupIds])]);
         }
     };
 
@@ -176,7 +133,7 @@ export function RefillPrescriptionModal({
 
         setIsSubmitting(true);
         router.post(
-            refillUrl || `/consultation/${consultationId}/prescriptions/refill`,
+            `/admissions/${admissionId}/ward-rounds/${wardRoundId}/prescriptions/refill`,
             { prescription_ids: selectedIds },
             {
                 preserveScroll: true,
@@ -205,35 +162,37 @@ export function RefillPrescriptionModal({
                         Refill from Previous Prescriptions
                     </DialogTitle>
                     <DialogDescription>
-                        Select prescriptions from previous visits to refill.
+                        Select prescriptions from previous ward rounds or the
+                        initial consultation to refill.
                     </DialogDescription>
                 </DialogHeader>
 
                 <ScrollArea className="max-h-[60vh]">
-                    {groupedVisits.length > 0 ? (
+                    {groupedSources.length > 0 ? (
                         <div className="space-y-6 pr-4">
-                            {groupedVisits.map((visit) => {
-                                const visitPrescriptionIds =
-                                    visit.prescriptions.map((p) => p.id);
-                                const allSelected = visitPrescriptionIds.every(
-                                    (id) => selectedIds.includes(id),
+                            {groupedSources.map((group) => {
+                                const groupIds = group.prescriptions.map(
+                                    (p) => p.id,
+                                );
+                                const allSelected = groupIds.every((id) =>
+                                    selectedIds.includes(id),
                                 );
                                 const someSelected =
                                     !allSelected &&
-                                    visitPrescriptionIds.some((id) =>
+                                    groupIds.some((id) =>
                                         selectedIds.includes(id),
                                     );
 
                                 return (
                                     <div
-                                        key={visit.consultationId}
+                                        key={group.key}
                                         className="rounded-lg border bg-gray-50 dark:bg-gray-900"
                                     >
-                                        {/* Visit Header */}
+                                        {/* Group Header */}
                                         <div
                                             className="flex cursor-pointer items-center gap-3 border-b p-3 hover:bg-gray-100 dark:hover:bg-gray-800"
                                             onClick={() =>
-                                                handleToggleVisit(visit)
+                                                handleToggleGroup(group)
                                             }
                                         >
                                             <Checkbox
@@ -249,30 +208,29 @@ export function RefillPrescriptionModal({
                                                     }
                                                 }}
                                                 onCheckedChange={() =>
-                                                    handleToggleVisit(visit)
+                                                    handleToggleGroup(group)
                                                 }
                                             />
                                             <div className="flex flex-1 items-center gap-4 text-sm">
                                                 <div className="flex items-center gap-1.5 font-medium">
                                                     <Calendar className="h-4 w-4 text-blue-600" />
-                                                    {formatDate(visit.date)}
+                                                    {formatDate(group.date)}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                                                     <User className="h-4 w-4" />
-                                                    Dr. {visit.doctorName}
+                                                    Dr. {group.doctorName}
                                                 </div>
                                                 <Badge
                                                     variant="outline"
                                                     className="text-xs"
                                                 >
-                                                    {visit.departmentName ||
-                                                        visit.label}
+                                                    {group.label}
                                                 </Badge>
                                             </div>
                                             <span className="text-xs text-gray-500">
-                                                {visit.prescriptions.length}{' '}
+                                                {group.prescriptions.length}{' '}
                                                 prescription
-                                                {visit.prescriptions.length !==
+                                                {group.prescriptions.length !==
                                                 1
                                                     ? 's'
                                                     : ''}
@@ -281,7 +239,7 @@ export function RefillPrescriptionModal({
 
                                         {/* Prescriptions */}
                                         <div className="divide-y">
-                                            {visit.prescriptions.map(
+                                            {group.prescriptions.map(
                                                 (prescription) => (
                                                     <label
                                                         key={prescription.id}
@@ -375,8 +333,8 @@ export function RefillPrescriptionModal({
                             <Pill className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                             <p>No previous prescriptions found</p>
                             <p className="mt-1 text-sm">
-                                This patient has no prescription history from
-                                previous visits.
+                                No prescription history from previous ward
+                                rounds or the initial consultation.
                             </p>
                         </div>
                     )}

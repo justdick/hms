@@ -94,7 +94,7 @@ interface PreviousPrescription {
     instructions?: string;
     status: string;
     drug?: Drug;
-    consultation: {
+    consultation?: {
         id: number;
         started_at: string;
         doctor: {
@@ -108,6 +108,11 @@ interface PreviousPrescription {
             };
         };
     };
+    source_type?: 'ward_round' | 'consultation';
+    source_date?: string;
+    source_doctor_name?: string;
+    prescribable_id?: number;
+    consultation_id?: number;
 }
 
 interface Props {
@@ -127,6 +132,7 @@ interface Props {
     consultationStatus?: string;
     previousPrescriptions?: PreviousPrescription[];
     headerExtra?: React.ReactNode;
+    refillUrl?: string;
 }
 
 // Helper function to parse frequency to get daily count
@@ -209,6 +215,7 @@ export default function PrescriptionFormSection({
     consultationStatus,
     previousPrescriptions = [],
     headerExtra,
+    refillUrl,
 }: Props) {
     // isEditable takes precedence (used by consultations with 24hr edit window)
     // consultationStatus is fallback for ward rounds (only in_progress is editable)
@@ -1370,6 +1377,7 @@ export default function PrescriptionFormSection({
                 onOpenChange={setShowRefillModal}
                 consultationId={consultationId}
                 previousPrescriptions={previousPrescriptions}
+                refillUrl={refillUrl}
             />
 
             {/* Right Column: Current Prescriptions */}
