@@ -281,7 +281,7 @@ class InsuranceClaimService
         InsuranceClaimItem::create([
             'insurance_claim_id' => $claim->id,
             'charge_id' => null,
-            'item_date' => $prescription->created_at ?? now(),
+            'item_date' => $prescription->prescribed_at ?? $prescription->created_at ?? now(),
             'item_type' => 'drug',
             'code' => $drug->drug_code,
             'description' => $drug->name,
@@ -312,7 +312,7 @@ class InsuranceClaimService
         $item = InsuranceClaimItem::create([
             'insurance_claim_id' => $claim->id,
             'charge_id' => null,
-            'item_date' => $prescription->created_at ?? now(),
+            'item_date' => $prescription->prescribed_at ?? $prescription->created_at ?? now(),
             'item_type' => 'drug',
             'code' => $drug->drug_code,
             'description' => "{$drug->name} (Pending quantity)",

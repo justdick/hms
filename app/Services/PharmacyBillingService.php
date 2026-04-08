@@ -53,7 +53,7 @@ class PharmacyBillingService
             'is_insurance_claim' => $coverageData['is_insurance_claim'],
             'insurance_covered_amount' => $coverageData['insurance_covered_amount'],
             'patient_copay_amount' => $coverageData['patient_copay_amount'],
-            'charged_at' => now(),
+            'charged_at' => $prescription->prescribed_at ?? now(),
             'created_by_type' => $user ? get_class($user) : null,
             'created_by_id' => $user?->id,
             'notes' => "Auto-generated from prescription #{$prescription->id}",
