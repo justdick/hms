@@ -111,24 +111,18 @@ class WardController extends Controller
         }
 
         // Apply insurance type filter
+        // Filter by actual claim existence on the check-in (not just patient insurance profile)
+        // This ensures only patients who were actually checked in with NHIA (CCC provided) are counted
         if ($insuranceType === 'nhia') {
-            $admissionsQuery->whereHas('patient', function ($q) {
-                $q->whereHas('activeInsurance', function ($q2) {
-                    $q2->whereHas('plan', function ($q3) {
-                        $q3->whereHas('provider', function ($q4) {
-                            $q4->where('is_nhis', true);
-                        });
-                    });
+            $admissionsQuery->whereHas('consultation.patientCheckin.insuranceClaim', function ($q) {
+                $q->whereHas('patientInsurance.plan.provider', function ($q2) {
+                    $q2->where('is_nhis', true);
                 });
             });
         } elseif ($insuranceType === 'non_nhia') {
-            $admissionsQuery->whereHas('patient', function ($q) {
-                $q->whereDoesntHave('activeInsurance', function ($q2) {
-                    $q2->whereHas('plan', function ($q3) {
-                        $q3->whereHas('provider', function ($q4) {
-                            $q4->where('is_nhis', true);
-                        });
-                    });
+            $admissionsQuery->whereDoesntHave('consultation.patientCheckin.insuranceClaim', function ($q) {
+                $q->whereHas('patientInsurance.plan.provider', function ($q2) {
+                    $q2->where('is_nhis', true);
                 });
             });
         }
@@ -159,7 +153,7 @@ class WardController extends Controller
         $allAdmissions = $ward->admissions()
             ->where('status', 'admitted')
             ->with([
-                'patient.activeInsurance.plan.provider',
+                'consultation.patientCheckin.insuranceClaim.patientInsurance.plan.provider',
                 'todayMedicationAdministrations' => function ($q) {
                     $q->whereDate('administered_at', today());
                 },
@@ -167,8 +161,9 @@ class WardController extends Controller
             ->get();
 
         // Calculate ward statistics from currently admitted patients
+        // Count NHIA based on actual claim existence, not just patient insurance profile
         $nhiaCount = $allAdmissions->filter(function ($admission) {
-            return $admission->patient?->activeInsurance?->plan?->provider?->is_nhis ?? false;
+            return $admission->consultation?->patientCheckin?->insuranceClaim?->patientInsurance?->plan?->provider?->is_nhis ?? false;
         })->count();
 
         $stats = [

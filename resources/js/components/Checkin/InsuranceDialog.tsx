@@ -1,13 +1,3 @@
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -154,9 +144,6 @@ export default function InsuranceDialog({
         enteredCcc: string;
     }>({ show: false, enteredCcc: '' });
 
-    // Cash confirmation state
-    const [showCashConfirm, setShowCashConfirm] = useState(false);
-
     // NHIS Extension hook
     const { isVerifying, cccData, startVerification, clearCccData } =
         useNhisExtension();
@@ -231,7 +218,6 @@ export default function InsuranceDialog({
             setIsSyncingDates(false);
             setIsSubmitting(false);
             setSameDayCcc(null);
-            setShowCashConfirm(false);
             setCccMismatchWarning({ show: false, enteredCcc: '' });
             clearCccData();
         }
@@ -385,13 +371,6 @@ export default function InsuranceDialog({
         if (isSubmitting) {
             return;
         }
-        setShowCashConfirm(true);
-    };
-
-    const handleCashConfirmed = () => {
-        setShowCashConfirm(false);
-        setClaimCheckCode('');
-        setError('');
         setIsSubmitting(true);
         onUseCash();
     };
@@ -715,57 +694,32 @@ export default function InsuranceDialog({
                         </Button>
                     </div>
 
-                    {/* Cash Payment Option */}
-                    <div className="rounded-lg border border-destructive/30 p-3">
-                        <h4 className="text-sm font-medium">Or Pay Cash</h4>
-                        <p className="mb-2 text-xs text-muted-foreground">
-                            Patient pays out-of-pocket instead.
-                        </p>
-                        <Button
-                            onClick={handleUseCash}
-                            variant="destructive"
-                            size="sm"
-                            className="w-full"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? (
-                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                            ) : (
-                                <AlertTriangle className="mr-2 h-3 w-3" />
-                            )}
-                            Proceed without Insurance
-                        </Button>
-                    </div>
-
-                    {/* Cash Payment Confirmation */}
-                    <AlertDialog
-                        open={showCashConfirm}
-                        onOpenChange={setShowCashConfirm}
-                    >
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                    Proceed without Insurance?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This patient has active insurance coverage (
-                                    {insurance.plan.provider.name} -{' '}
-                                    {insurance.plan.plan_name}). Proceeding
-                                    without insurance means the patient will pay
-                                    the full amount out-of-pocket.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Go Back</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={handleCashConfirmed}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                    Yes, Proceed as Cash
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    {/* Cash Payment Option - only shown when insurance is expired/unusable */}
+                    {!canUseInsurance && (
+                        <div className="rounded-lg border border-destructive/30 p-3">
+                            <h4 className="text-sm font-medium">
+                                Pay Cash
+                            </h4>
+                            <p className="mb-2 text-xs text-muted-foreground">
+                                Insurance is expired or inactive. Patient pays
+                                out-of-pocket.
+                            </p>
+                            <Button
+                                onClick={handleUseCash}
+                                variant="destructive"
+                                size="sm"
+                                className="w-full"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                ) : (
+                                    <AlertTriangle className="mr-2 h-3 w-3" />
+                                )}
+                                Proceed without Insurance
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Cancel Option */}
                     <div className="flex justify-end">
