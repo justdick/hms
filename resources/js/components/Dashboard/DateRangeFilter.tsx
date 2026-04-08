@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Calendar, CalendarDays, ChevronDown } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 export type DatePreset = 'today' | 'yesterday' | 'week' | 'month' | 'last_month' | 'year' | 'custom';
@@ -59,7 +54,28 @@ export function DateRangeFilter({
         }
         return undefined;
     });
-    const triggerRef = useRef<HTMLButtonElement>(null);
+    const calendarRef = useRef<HTMLDivElement>(null);
+
+    // Close calendar on outside click
+    useEffect(() => {
+        if (!isCalendarOpen) return;
+
+        const handlePointerDown = (e: PointerEvent) => {
+            if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+                setIsCalendarOpen(false);
+            }
+        };
+
+        // Delay attaching so the dropdown's closing pointer event doesn't immediately trigger it
+        const timer = setTimeout(() => {
+            document.addEventListener('pointerdown', handlePointerDown);
+        }, 100);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('pointerdown', handlePointerDown);
+        };
+    }, [isCalendarOpen]);
 
     const handlePresetChange = (preset: DatePreset) => {
         if (preset === 'custom') {
@@ -86,7 +102,10 @@ export function DateRangeFilter({
     const handleDateRangeSelect = (range: DateRange | undefined) => {
         setDateRange(range);
 
-        if (range?.from && range?.to) {
+        // Only submit once the user has selected two distinct dates (a real range).
+        // react-day-picker sets from === to on the first click, so we wait for
+        // the second click where from and to differ.
+        if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
             const startDate = format(range.from, 'yyyy-MM-dd');
             const endDate = format(range.to, 'yyyy-MM-dd');
 
@@ -121,7 +140,7 @@ export function DateRangeFilter({
     };
 
     return (
-        <div className={cn('flex items-center gap-2', className)}>
+        <div className={cn('relative flex items-center gap-2', className)}>
             {/* Preset dropdown */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -194,17 +213,11 @@ export function DateRangeFilter({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Calendar popover — rendered outside the dropdown so it doesn't get unmounted */}
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                    <button ref={triggerRef} className="sr-only" tabIndex={-1} aria-hidden>
-                        Open calendar
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className="w-auto p-0"
-                    align="end"
-                    side="bottom"
+            {/* Calendar panel — rendered as a positioned div to avoid Radix dismiss conflicts */}
+            {isCalendarOpen && (
+                <div
+                    ref={calendarRef}
+                    className="absolute right-0 top-full z-50 mt-2 rounded-md border border-slate-200 bg-white p-0 shadow-md dark:border-slate-800 dark:bg-slate-950"
                 >
                     <CalendarComponent
                         mode="range"
@@ -213,8 +226,8 @@ export function DateRangeFilter({
                         numberOfMonths={2}
                         defaultMonth={dateRange?.from || new Date()}
                     />
-                </PopoverContent>
-            </Popover>
+                </div>
+            )}
         </div>
     );
 }
