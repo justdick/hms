@@ -74,6 +74,7 @@ interface WardPatientsDataTableProps<TData, TValue> {
         date_from?: string;
         date_to?: string;
         date_preset?: string;
+        insurance_type?: string;
     };
 }
 
@@ -94,6 +95,7 @@ export function WardPatientsDataTable<TData, TValue>({
     const [rowSelection, setRowSelection] = React.useState({});
     const [search, setSearch] = React.useState(searchValue ?? '');
     const [statusFilter, setStatusFilter] = React.useState(filters.status ?? 'admitted');
+    const [insuranceTypeFilter, setInsuranceTypeFilter] = React.useState(filters.insurance_type ?? '');
 
     // Initialize date filter - default to this_month
     const [dateFilter, setDateFilter] = React.useState<DateFilterValue>(() => {
@@ -146,6 +148,7 @@ export function WardPatientsDataTable<TData, TValue>({
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
                 date_preset: dateFilter.preset || undefined,
+                insurance_type: insuranceTypeFilter || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -166,22 +169,23 @@ export function WardPatientsDataTable<TData, TValue>({
                 date_from: value.from || undefined,
                 date_to: value.to || undefined,
                 date_preset: value.preset || undefined,
+                insurance_type: insuranceTypeFilter || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
     };
 
     const handleStatusFilterChange = (value: string) => {
-        const newStatus = value === 'all' ? '' : value;
-        setStatusFilter(newStatus);
+        setStatusFilter(value);
         router.get(
             window.location.pathname,
             {
                 search: search || undefined,
-                status: newStatus || undefined,
+                status: value || undefined,
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
                 date_preset: dateFilter.preset || undefined,
+                insurance_type: insuranceTypeFilter || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -191,6 +195,23 @@ export function WardPatientsDataTable<TData, TValue>({
         if (url) {
             router.get(url, {}, { preserveState: true, preserveScroll: true });
         }
+    };
+
+    const handleInsuranceTypeFilterChange = (value: string) => {
+        const newType = value === 'all' ? '' : value;
+        setInsuranceTypeFilter(newType);
+        router.get(
+            window.location.pathname,
+            {
+                search: search || undefined,
+                status: statusFilter || undefined,
+                date_from: dateFilter.from || undefined,
+                date_to: dateFilter.to || undefined,
+                date_preset: dateFilter.preset || undefined,
+                insurance_type: newType || undefined,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const handlePerPageChange = (perPage: string) => {
@@ -203,6 +224,7 @@ export function WardPatientsDataTable<TData, TValue>({
                 date_from: dateFilter.from || undefined,
                 date_to: dateFilter.to || undefined,
                 date_preset: dateFilter.preset || undefined,
+                insurance_type: insuranceTypeFilter || undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -270,6 +292,24 @@ export function WardPatientsDataTable<TData, TValue>({
                         </Select>
                     </div>
 
+                    {/* Insurance Type Filter */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Insurance</span>
+                        <Select
+                            value={insuranceTypeFilter || 'all'}
+                            onValueChange={handleInsuranceTypeFilterChange}
+                        >
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="All Patients" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Patients</SelectItem>
+                                <SelectItem value="nhia">NHIA Only</SelectItem>
+                                <SelectItem value="non_nhia">Non-NHIA</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Date Filter */}
                     <DateFilterPresets
                         value={dateFilter}
@@ -329,13 +369,6 @@ export function WardPatientsDataTable<TData, TValue>({
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => {
-                                    const admission = row.original as any;
-                                    const hasOverdueVitals =
-                                        admission.vitals_schedule &&
-                                        calculateVitalsStatus(
-                                            admission.vitals_schedule,
-                                        ) === 'overdue';
-
                                     return (
                                         <TableRow
                                             key={row.id}
@@ -343,7 +376,7 @@ export function WardPatientsDataTable<TData, TValue>({
                                                 row.getIsSelected() &&
                                                 'selected'
                                             }
-                                            className={`cursor-pointer hover:bg-muted/50 ${hasOverdueVitals ? 'bg-red-50 dark:bg-red-950/20' : ''}`}
+                                            className="cursor-pointer hover:bg-muted/50"
                                         >
                                             {row
                                                 .getVisibleCells()
@@ -441,27 +474,4 @@ export function WardPatientsDataTable<TData, TValue>({
             </div>
         </TooltipProvider>
     );
-}
-
-/**
- * Calculate vitals status from schedule
- */
-function calculateVitalsStatus(schedule: {
-    next_due_at: string;
-}): 'upcoming' | 'due' | 'overdue' {
-    const now = new Date();
-    const nextDue = new Date(schedule.next_due_at);
-    const diffMinutes = Math.floor(
-        (nextDue.getTime() - now.getTime()) / (1000 * 60),
-    );
-
-    const GRACE_PERIOD_MINUTES = 15;
-
-    if (diffMinutes > GRACE_PERIOD_MINUTES) {
-        return 'upcoming';
-    } else if (diffMinutes >= -GRACE_PERIOD_MINUTES) {
-        return 'due';
-    } else {
-        return 'overdue';
-    }
 }

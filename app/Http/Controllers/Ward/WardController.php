@@ -72,6 +72,7 @@ class WardController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $datePreset = $request->input('date_preset');
+        $insuranceType = $request->input('insurance_type');
 
         // Default to this_month if no date filter provided
         if (! $dateFrom && ! $dateTo && ! $datePreset) {
@@ -89,16 +90,10 @@ class WardController extends Controller
                 'patient.activeAdmissions.ward:id,name',
                 'bed:id,bed_number',
                 'consultation.doctor:id,name',
-                'latestVitalSigns' => function ($q) {
-                    $q->latest('recorded_at')
-                        ->limit(1)
-                        ->with('recordedBy:id,name');
-                },
                 'todayMedicationAdministrations' => function ($q) {
                     $q->whereDate('administered_at', today())
                         ->with('prescription.drug');
                 },
-                'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
             ])
             ->withCount(['wardRounds', 'nursingNotes']);
 
@@ -113,6 +108,29 @@ class WardController extends Controller
         }
         if ($dateTo) {
             $admissionsQuery->whereDate('admitted_at', '<=', $dateTo);
+        }
+
+        // Apply insurance type filter
+        if ($insuranceType === 'nhia') {
+            $admissionsQuery->whereHas('patient', function ($q) {
+                $q->whereHas('activeInsurance', function ($q2) {
+                    $q2->whereHas('plan', function ($q3) {
+                        $q3->whereHas('provider', function ($q4) {
+                            $q4->where('is_nhis', true);
+                        });
+                    });
+                });
+            });
+        } elseif ($insuranceType === 'non_nhia') {
+            $admissionsQuery->whereHas('patient', function ($q) {
+                $q->whereDoesntHave('activeInsurance', function ($q2) {
+                    $q2->whereHas('plan', function ($q3) {
+                        $q3->whereHas('provider', function ($q4) {
+                            $q4->where('is_nhis', true);
+                        });
+                    });
+                });
+            });
         }
 
         // Apply search filter
@@ -132,54 +150,34 @@ class WardController extends Controller
         // Paginate admissions
         $paginatedAdmissions = $admissionsQuery->paginate($perPage)->withQueryString();
 
-        // Transform paginated data to include schedule status
+        // Transform paginated data
         $transformedData = collect($paginatedAdmissions->items())->map(function ($admission) {
-            $admissionArray = $admission->toArray();
-
-            if ($admission->activeVitalsSchedule) {
-                $schedule = $admission->activeVitalsSchedule;
-                $admissionArray['vitals_schedule_status'] = [
-                    'status' => $schedule->getCurrentStatus(),
-                    'next_due_at' => $schedule->next_due_at,
-                    'interval_minutes' => $schedule->interval_minutes,
-                    'time_until_due' => $schedule->getTimeUntilDue(),
-                    'time_overdue' => $schedule->getTimeOverdue(),
-                ];
-            } else {
-                $admissionArray['vitals_schedule_status'] = null;
-            }
-
-            return $admissionArray;
+            return $admission->toArray();
         });
 
         // Stats are always based on currently admitted patients (real-time operational data)
         $allAdmissions = $ward->admissions()
             ->where('status', 'admitted')
             ->with([
+                'patient.activeInsurance.plan.provider',
                 'todayMedicationAdministrations' => function ($q) {
                     $q->whereDate('administered_at', today());
                 },
-                'activeVitalsSchedule:id,patient_admission_id,interval_minutes,next_due_at,last_recorded_at,is_active',
             ])
             ->get();
 
         // Calculate ward statistics from currently admitted patients
+        $nhiaCount = $allAdmissions->filter(function ($admission) {
+            return $admission->patient?->activeInsurance?->plan?->provider?->is_nhis ?? false;
+        })->count();
+
         $stats = [
             'total_patients' => $allAdmissions->count(),
-            'meds_given_today' => $allAdmissions->sum(function ($admission) {
-                return $admission->todayMedicationAdministrations->where('status', 'given')->count();
+            'nhia_patients' => $nhiaCount,
+            'non_nhia_patients' => $allAdmissions->count() - $nhiaCount,
+            'pending_meds_count' => $allAdmissions->sum(function ($admission) {
+                return $admission->todayMedicationAdministrations->where('status', 'pending')->count();
             }),
-            'vitals_due_count' => $allAdmissions->filter(function ($admission) {
-                return $admission->activeVitalsSchedule
-                    && $admission->activeVitalsSchedule->getCurrentStatus() === 'due';
-            })->count(),
-            'vitals_overdue_count' => $allAdmissions->filter(function ($admission) {
-                return $admission->activeVitalsSchedule
-                    && $admission->activeVitalsSchedule->getCurrentStatus() === 'overdue';
-            })->count(),
-            'scheduled_vitals_count' => $allAdmissions->filter(function ($admission) {
-                return $admission->activeVitalsSchedule !== null;
-            })->count(),
         ];
 
         return Inertia::render('Ward/Show', [
@@ -201,6 +199,7 @@ class WardController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'date_preset' => $datePreset,
+                'insurance_type' => $insuranceType,
             ],
         ]);
     }

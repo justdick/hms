@@ -4,19 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BedAssignmentModal } from '@/components/Ward/BedAssignmentModal';
-import { useVitalsAlerts } from '@/hooks/use-vitals-alerts';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Activity,
-    AlertCircle,
     ArrowLeft,
     Bed,
     Edit,
     Hospital,
     Pill,
     Settings,
-    Thermometer,
+    Shield,
     User,
     UserCheck,
     Users,
@@ -68,9 +66,9 @@ interface Ward {
 
 interface WardStats {
     total_patients: number;
+    nhia_patients: number;
+    non_nhia_patients: number;
     pending_meds_count: number;
-    vitals_due_count: number;
-    vitals_overdue_count: number;
 }
 
 interface Props {
@@ -83,6 +81,7 @@ interface Props {
         date_from?: string;
         date_to?: string;
         date_preset?: string;
+        insurance_type?: string;
     };
 }
 
@@ -101,13 +100,6 @@ export default function WardShow({
     const [selectedAdmission, setSelectedAdmission] =
         useState<WardPatientData | null>(null);
     const [isChangingBed, setIsChangingBed] = useState(false);
-
-    // Fetch vitals alerts for this ward (toasts are handled globally in AppLayout)
-    useVitalsAlerts({
-        wardId: ward.id,
-        pollingInterval: 30000,
-        enabled: true,
-    });
 
     // Create columns with wardId and bed management flag
     const columns = createWardPatientsColumns(ward.id, bedManagementEnabled);
@@ -259,22 +251,22 @@ export default function WardShow({
                         variant="info"
                     />
                     <StatCard
+                        label="NHIA"
+                        value={stats.nhia_patients}
+                        icon={<Shield className="h-4 w-4" />}
+                        variant="success"
+                    />
+                    <StatCard
+                        label="Non-NHIA"
+                        value={stats.non_nhia_patients}
+                        icon={<User className="h-4 w-4" />}
+                        variant="default"
+                    />
+                    <StatCard
                         label="Pending Meds"
                         value={stats.pending_meds_count}
                         icon={<Pill className="h-4 w-4" />}
                         variant="warning"
-                    />
-                    <StatCard
-                        label="Vitals Due"
-                        value={stats.vitals_due_count}
-                        icon={<Thermometer className="h-4 w-4" />}
-                        variant="warning"
-                    />
-                    <StatCard
-                        label="Vitals Overdue"
-                        value={stats.vitals_overdue_count}
-                        icon={<AlertCircle className="h-4 w-4" />}
-                        variant="error"
                     />
                 </div>
 
@@ -423,6 +415,7 @@ export default function WardShow({
                                         date_from: filters.date_from,
                                         date_to: filters.date_to,
                                         date_preset: filters.date_preset,
+                                        insurance_type: filters.insurance_type,
                                     }}
                                 />
                             </CardContent>

@@ -9,11 +9,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { VitalsStatusBadge } from '@/components/Ward/VitalsStatusBadge';
 import { Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import {
-    AlertCircle,
     ArrowUpDown,
     Bed,
     Calendar,
@@ -120,34 +118,6 @@ const formatDateTime = (dateString: string) => {
         hour: '2-digit',
         minute: '2-digit',
     });
-};
-
-const isVitalsOverdue = (admission: WardPatientData) => {
-    const latestVital = admission.latest_vital_signs?.[0];
-    if (!latestVital) return true;
-    return (
-        new Date(latestVital.recorded_at) <
-        new Date(Date.now() - 4 * 60 * 60 * 1000)
-    );
-};
-
-const calculateVitalsStatus = (
-    schedule: VitalsSchedule,
-): 'upcoming' | 'due' | 'overdue' => {
-    const now = new Date();
-    const nextDue = new Date(schedule.next_due_at);
-    const diffMinutes = Math.floor(
-        (nextDue.getTime() - now.getTime()) / (1000 * 60),
-    );
-    const GRACE_PERIOD_MINUTES = 15;
-
-    if (diffMinutes > GRACE_PERIOD_MINUTES) {
-        return 'upcoming';
-    } else if (diffMinutes >= -GRACE_PERIOD_MINUTES) {
-        return 'due';
-    } else {
-        return 'overdue';
-    }
 };
 
 export const createWardPatientsColumns = (
@@ -348,30 +318,10 @@ export const createWardPatientsColumns = (
             },
         },
         {
-            accessorKey: 'vitals_schedule',
-            id: 'vitals_status',
-            header: 'Vitals Status',
-            cell: ({ row }) => {
-                const admission = row.original;
-                return admission.vitals_schedule ? (
-                    <VitalsStatusBadge
-                        schedule={admission.vitals_schedule}
-                        admissionId={admission.id}
-                        wardId={wardId}
-                    />
-                ) : (
-                    <span className="text-sm text-gray-400 dark:text-gray-600">
-                        No schedule
-                    </span>
-                );
-            },
-        },
-        {
             id: 'alerts',
             header: () => <div className="text-center">Alerts</div>,
             cell: ({ row }) => {
                 const admission = row.original;
-                const vitalsOverdue = isVitalsOverdue(admission);
                 const hasTodayMeds =
                     admission.today_medication_administrations &&
                     admission.today_medication_administrations.length > 0;
@@ -386,17 +336,6 @@ export const createWardPatientsColumns = (
                         className="block"
                     >
                         <div className="flex items-center justify-center gap-2">
-                            {vitalsOverdue && (
-                                <div
-                                    className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400"
-                                    title="Vitals overdue"
-                                >
-                                    <AlertCircle className="h-4 w-4" />
-                                    <span className="hidden xl:inline">
-                                        Vitals
-                                    </span>
-                                </div>
-                            )}
                             {hasTodayMeds && (
                                 <div
                                     className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
@@ -408,7 +347,7 @@ export const createWardPatientsColumns = (
                                     </span>
                                 </div>
                             )}
-                            {!vitalsOverdue && !hasTodayMeds && (
+                            {!hasTodayMeds && (
                                 <span className="text-xs text-gray-400 dark:text-gray-600">
                                     -
                                 </span>
