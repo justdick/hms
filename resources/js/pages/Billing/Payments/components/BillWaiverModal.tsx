@@ -132,7 +132,7 @@ export function BillWaiverModal({
                                 onChange={(e) =>
                                     setData('reason', e.target.value)
                                 }
-                                placeholder="Provide a detailed reason for waiving this charge (minimum 10 characters)..."
+                                placeholder="Provide a reason for waiving this charge (minimum 3 characters)..."
                                 rows={4}
                                 className={
                                     errors.reason ? 'border-destructive' : ''
@@ -140,7 +140,7 @@ export function BillWaiverModal({
                             />
                             <div className="flex items-center justify-between">
                                 <p className="text-xs text-muted-foreground">
-                                    {data.reason.trim().length}/10 characters
+                                    {data.reason.trim().length}/3 characters
                                     minimum
                                 </p>
                                 {isReasonValid && (

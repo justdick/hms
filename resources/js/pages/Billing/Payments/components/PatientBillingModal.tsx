@@ -184,7 +184,7 @@ export function PatientBillingModal({
 
     // Reset state when modal opens or patient changes
     useEffect(() => {
-        if (isOpen && patient) {
+        if (isOpen && patient && step !== 'success') {
             setStep('charges');
             // Expand first visit by default
             if (patient.visits.length > 0) {

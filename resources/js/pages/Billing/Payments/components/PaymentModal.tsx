@@ -95,7 +95,7 @@ export function PaymentModal({
 
     // Reset state when modal opens
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && step !== 'success') {
             setStep('summary');
             setPaymentMethod('cash');
             setAmountTendered(totalPatientOwes);

@@ -276,7 +276,7 @@ export function BillAdjustmentModal({
                                 onChange={(e) =>
                                     setData('reason', e.target.value)
                                 }
-                                placeholder="Provide a detailed reason for this adjustment (minimum 10 characters)..."
+                                placeholder="Provide a reason for this adjustment (minimum 3 characters)..."
                                 rows={3}
                                 className={
                                     errors.reason ? 'border-destructive' : ''
@@ -284,7 +284,7 @@ export function BillAdjustmentModal({
                             />
                             <div className="flex items-center justify-between">
                                 <p className="text-xs text-muted-foreground">
-                                    {data.reason.trim().length}/10 characters
+                                    {data.reason.trim().length}/3 characters
                                     minimum
                                 </p>
                                 {isReasonValid && (
