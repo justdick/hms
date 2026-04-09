@@ -64,7 +64,7 @@ export function BillWaiverModal({
         onClose();
     };
 
-    const isReasonValid = data.reason.trim().length >= 10;
+    const isReasonValid = data.reason.trim().length >= 3;
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>

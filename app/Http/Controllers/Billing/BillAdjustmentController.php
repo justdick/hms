@@ -24,7 +24,7 @@ class BillAdjustmentController extends Controller
         $this->authorize('waive', $charge);
 
         $validated = $request->validate([
-            'reason' => 'required|string|min:10|max:500',
+            'reason' => 'required|string|min:3|max:500',
         ]);
 
         // Validate charge status
@@ -96,7 +96,7 @@ class BillAdjustmentController extends Controller
         $validated = $request->validate([
             'adjustment_type' => 'required|in:discount_percentage,discount_fixed',
             'adjustment_value' => 'required|numeric|min:0',
-            'reason' => 'required|string|min:10|max:500',
+            'reason' => 'required|string|min:3|max:500',
         ]);
 
         // Validate charge status

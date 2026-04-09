@@ -91,7 +91,7 @@ export function BillAdjustmentModal({
         onClose();
     };
 
-    const isReasonValid = data.reason.trim().length >= 10;
+    const isReasonValid = data.reason.trim().length >= 3;
     const isAdjustmentValid =
         data.adjustment_value > 0 &&
         (data.adjustment_type === 'discount_percentage'
