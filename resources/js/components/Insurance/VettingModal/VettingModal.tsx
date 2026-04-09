@@ -166,7 +166,7 @@ export function VettingModal({
         [vettingData],
     );
 
-    // Focus management
+    // Focus management — only run when modal opens/closes, not on data changes
     useEffect(() => {
         if (isOpen) {
             previousFocusRef.current = document.activeElement as HTMLElement;
@@ -176,7 +176,7 @@ export function VettingModal({
         } else if (previousFocusRef.current) {
             previousFocusRef.current.focus();
         }
-    }, [isOpen, vettingData]);
+    }, [isOpen]);
 
     // Keyboard shortcuts
     useEffect(() => {
