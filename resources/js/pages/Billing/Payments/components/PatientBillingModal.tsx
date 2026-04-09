@@ -270,6 +270,8 @@ export function PatientBillingModal({
                 notes: notes || undefined,
             },
             {
+                preserveState: true,
+                preserveScroll: true,
                 onSuccess: () => {
                     setIsProcessing(false);
                     setStep('success');
@@ -540,7 +542,8 @@ export function PatientBillingModal({
                                                                 />
                                                             </div>
                                                             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
-                                                                {charge.service_type !== 'pharmacy' && (
+                                                                {charge.service_type !==
+                                                                    'pharmacy' && (
                                                                     <span>
                                                                         {formatServiceType(
                                                                             charge.service_type,
@@ -548,7 +551,9 @@ export function PatientBillingModal({
                                                                     </span>
                                                                 )}
                                                                 <span>
-                                                                    {charge.charged_at}
+                                                                    {
+                                                                        charge.charged_at
+                                                                    }
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -562,7 +567,8 @@ export function PatientBillingModal({
                                                                             )}
                                                                         </p>
                                                                         <p className="text-[10px] text-green-600">
-                                                                            Ins. pays{' '}
+                                                                            Ins.
+                                                                            pays{' '}
                                                                             {formatCurrency(
                                                                                 charge.insurance_covered_amount,
                                                                             )}
@@ -575,14 +581,28 @@ export function PatientBillingModal({
                                                                         )}
                                                                     </p>
                                                                 )}
-                                                                {charge.quantity != null && charge.quantity > 0 && (
-                                                                    <p className="text-[10px] text-muted-foreground">
-                                                                        {charge.quantity}
-                                                                        {charge.unit_price != null && (
-                                                                            <> × {formatCurrency(Number(charge.unit_price))}</>
-                                                                        )}
-                                                                    </p>
-                                                                )}
+                                                                {charge.quantity !=
+                                                                    null &&
+                                                                    charge.quantity >
+                                                                        0 && (
+                                                                        <p className="text-[10px] text-muted-foreground">
+                                                                            {
+                                                                                charge.quantity
+                                                                            }
+                                                                            {charge.unit_price !=
+                                                                                null && (
+                                                                                <>
+                                                                                    {' '}
+                                                                                    ×{' '}
+                                                                                    {formatCurrency(
+                                                                                        Number(
+                                                                                            charge.unit_price,
+                                                                                        ),
+                                                                                    )}
+                                                                                </>
+                                                                            )}
+                                                                        </p>
+                                                                    )}
                                                             </div>
                                                             {/* Waive/Adjust Actions */}
                                                             {(permissions.canWaiveCharges ||

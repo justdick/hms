@@ -222,21 +222,70 @@ export default function PaymentIndex({ permissions }: Props) {
         setReceiptPreviewOpen(true);
     };
 
-    const handleWaiverSuccess = () => {
+    const handleWaiverSuccess = async () => {
         setWaiverModalOpen(false);
-        searchPatients(searchQuery);
-        // Reopen billing modal if patient still selected
-        if (selectedPatient) {
-            setBillingModalOpen(true);
+        // Wait for search to complete before reopening modal with fresh data
+        if (searchQuery.length >= 2 && selectedPatient) {
+            setIsSearching(true);
+            try {
+                const response = await fetch(
+                    `/billing/patients/search?search=${encodeURIComponent(searchQuery)}`,
+                );
+                const result = await response.json();
+                const patients: PatientSearchResult[] = result.patients || [];
+                setSearchResults(patients);
+                // Update selectedPatient with fresh data
+                const updated = patients.find(
+                    (p) => p.patient_id === selectedPatient.patient_id,
+                );
+                if (
+                    updated &&
+                    updated.visits.some((v) => v.charges.length > 0)
+                ) {
+                    setSelectedPatient(updated);
+                    setBillingModalOpen(true);
+                } else {
+                    // No more pending charges — don't reopen
+                    setSelectedPatient(updated ?? null);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            } finally {
+                setIsSearching(false);
+            }
         }
     };
 
-    const handleAdjustmentSuccess = () => {
+    const handleAdjustmentSuccess = async () => {
         setAdjustmentModalOpen(false);
-        searchPatients(searchQuery);
-        // Reopen billing modal if patient still selected
-        if (selectedPatient) {
-            setBillingModalOpen(true);
+        // Wait for search to complete before reopening modal with fresh data
+        if (searchQuery.length >= 2 && selectedPatient) {
+            setIsSearching(true);
+            try {
+                const response = await fetch(
+                    `/billing/patients/search?search=${encodeURIComponent(searchQuery)}`,
+                );
+                const result = await response.json();
+                const patients: PatientSearchResult[] = result.patients || [];
+                setSearchResults(patients);
+                // Update selectedPatient with fresh data
+                const updated = patients.find(
+                    (p) => p.patient_id === selectedPatient.patient_id,
+                );
+                if (
+                    updated &&
+                    updated.visits.some((v) => v.charges.length > 0)
+                ) {
+                    setSelectedPatient(updated);
+                    setBillingModalOpen(true);
+                } else {
+                    setSelectedPatient(updated ?? null);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            } finally {
+                setIsSearching(false);
+            }
         }
     };
 

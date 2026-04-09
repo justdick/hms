@@ -128,6 +128,8 @@ export function PaymentModal({
                 notes: notes || undefined,
             },
             {
+                preserveState: true,
+                preserveScroll: true,
                 onSuccess: () => {
                     setIsProcessing(false);
                     setStep('success');
