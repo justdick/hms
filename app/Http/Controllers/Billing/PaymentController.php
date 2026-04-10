@@ -313,7 +313,8 @@ class PaymentController extends Controller
         });
 
         $totalAmount = $charges->sum('amount');
-        $amountPaid = $validated['amount_paid'];
+        $amountPaid = round((float) $validated['amount_paid'], 2);
+        $totalPatientOwes = round($totalPatientOwes, 2);
 
         if ($amountPaid > $totalPatientOwes) {
             return back()->withErrors([
