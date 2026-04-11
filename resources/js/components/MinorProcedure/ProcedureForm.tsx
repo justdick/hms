@@ -117,6 +117,15 @@ interface SelectedDiagnosis {
     icd_code: string;
 }
 
+interface ExistingProcedure {
+    id: number;
+    minor_procedure_type_id?: number;
+    procedure_notes: string | null;
+    procedure_type?: { id: number; name: string; code: string } | null;
+    diagnoses?: { id: number; diagnosis: string; code: string | null; icd_10: string | null }[];
+    supplies?: { id: number; drug_id: number; quantity: number; dispensed: boolean; drug: Drug }[];
+}
+
 interface Props {
     open: boolean;
     onClose: () => void;
@@ -124,6 +133,7 @@ interface Props {
     procedureTypes: ProcedureType[];
     availableDrugs: Drug[];
     onSuccess: () => void;
+    existingProcedure?: ExistingProcedure | null;
 }
 
 export default function ProcedureForm({
@@ -133,22 +143,43 @@ export default function ProcedureForm({
     procedureTypes,
     availableDrugs,
     onSuccess,
+    existingProcedure,
 }: Props) {
+    const isEditing = !!existingProcedure;
+
     const [procedureTypeOpen, setProcedureTypeOpen] = useState(false);
     const [selectedProcedureType, setSelectedProcedureType] = useState<
         number | null
-    >(null);
+    >(existingProcedure?.procedure_type?.id ?? existingProcedure?.minor_procedure_type_id ?? null);
 
     const [selectedDiagnosis, setSelectedDiagnosis] = useState<number | null>(
         null,
     );
     const [selectedDiagnoses, setSelectedDiagnoses] = useState<
         SelectedDiagnosis[]
-    >([]);
+    >(() => {
+        if (existingProcedure?.diagnoses?.length) {
+            return existingProcedure.diagnoses.map((d) => ({
+                id: d.id,
+                name: d.diagnosis,
+                icd_code: d.icd_10 || '',
+            }));
+        }
+        return [];
+    });
 
     const [supplyOpen, setSupplyOpen] = useState(false);
     const [selectedSupply, setSelectedSupply] = useState<number | null>(null);
-    const [supplies, setSupplies] = useState<Supply[]>([]);
+    const [supplies, setSupplies] = useState<Supply[]>(() => {
+        if (existingProcedure?.supplies?.length) {
+            return existingProcedure.supplies.map((s) => ({
+                drug_id: s.drug_id,
+                quantity: s.quantity,
+                drug: s.drug,
+            }));
+        }
+        return [];
+    });
     const [supplyQuantity, setSupplyQuantity] = useState<string>('1');
 
     const calculateAge = (dateOfBirth: string) => {
@@ -240,17 +271,17 @@ export default function ProcedureForm({
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="max-h-[90vh] max-w-5xl sm:max-w-5xl overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Perform Minor Procedure</DialogTitle>
+                    <DialogTitle>{isEditing ? 'Edit Minor Procedure' : 'Perform Minor Procedure'}</DialogTitle>
                     <DialogDescription>
-                        Record procedure details for{' '}
+                        {isEditing ? 'Update' : 'Record'} procedure details for{' '}
                         {patientCheckin.patient.first_name}{' '}
                         {patientCheckin.patient.last_name}
                     </DialogDescription>
                 </DialogHeader>
 
                 <Form
-                    action="/minor-procedures"
-                    method="post"
+                    action={isEditing ? `/minor-procedures/${existingProcedure.id}` : '/minor-procedures'}
+                    method={isEditing ? 'put' : 'post'}
                     onSuccess={onSuccess}
                 >
                     {({ errors, processing }) => (
@@ -487,6 +518,7 @@ export default function ProcedureForm({
                                 <Textarea
                                     id="procedure_notes"
                                     name="procedure_notes"
+                                    defaultValue={existingProcedure?.procedure_notes || ''}
                                     placeholder="Describe the procedure performed, findings, and any relevant details..."
                                     rows={4}
                                 />
@@ -502,7 +534,7 @@ export default function ProcedureForm({
                                 <div className="flex items-center justify-between">
                                     <h3 className="flex items-center gap-2 text-lg font-semibold">
                                         <FileText className="h-5 w-5 text-blue-600" />
-                                        Diagnoses (Optional)
+                                        Diagnoses *
                                         {selectedDiagnoses.length > 0 && (
                                             <Badge
                                                 variant="secondary"
@@ -581,6 +613,9 @@ export default function ProcedureForm({
                                             </div>
                                         ))}
                                     </div>
+                                )}
+                                {errors.diagnoses && (
+                                    <p className="text-sm text-destructive">{errors.diagnoses}</p>
                                 )}
                             </div>
 
@@ -831,8 +866,8 @@ export default function ProcedureForm({
                                     title={selectedSupply ? 'Please add or clear the selected supply first' : undefined}
                                 >
                                     {processing
-                                        ? 'Completing Procedure...'
-                                        : 'Complete Procedure'}
+                                        ? (isEditing ? 'Updating Procedure...' : 'Completing Procedure...')
+                                        : (isEditing ? 'Update Procedure' : 'Complete Procedure')}
                                 </Button>
                             </div>
                         </div>

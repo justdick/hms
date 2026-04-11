@@ -5,6 +5,7 @@ namespace App\Http\Controllers\MinorProcedure;
 use App\Events\MinorProcedurePerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMinorProcedureRequest;
+use App\Models\Department;
 use App\Models\Drug;
 use App\Models\MinorProcedure;
 use App\Models\MinorProcedureSupply;
@@ -21,72 +22,127 @@ class MinorProcedureController extends Controller
 
         $user = $request->user();
 
-        // Get Minor Procedures department
-        $minorProceduresDept = \App\Models\Department::where('code', 'ZOOM')->first();
-
-        // Get count of patients in Minor Procedures queue
-        // Users with minor-procedures permission can see all patients in this department
-        $queueCount = 0;
-        if ($minorProceduresDept) {
-            $queueCount = PatientCheckin::where('department_id', $minorProceduresDept->id)
-                ->whereNotIn('status', ['completed', 'cancelled'])
-                ->count();
-        }
-
-        return Inertia::render('MinorProcedure/Index', [
-            'queueCount' => $queueCount,
-            'procedureTypes' => MinorProcedureType::active()->orderBy('name')->get(),
-            'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
-            // Diagnoses loaded via async search - too many to load upfront
-            'canManageTypes' => $user->can('minor-procedures.view-types'),
-        ]);
-    }
-
-    public function search(Request $request)
-    {
-        $this->authorize('viewAny', MinorProcedure::class);
-
         $search = $request->input('search');
+        $queueSearch = $request->input('queue_search');
+        $completedSearch = $request->input('completed_search');
+        $perPage = $request->input('per_page', 5);
 
-        // Validate search input
-        if (! $search || strlen($search) < 2) {
-            return response()->json([
-                'patients' => [],
-            ]);
+        // Date filtering - default to today
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if (! $dateFrom && ! $dateTo) {
+            $dateFrom = now()->toDateString();
+            $dateTo = now()->toDateString();
         }
 
-        // Get Minor Procedures department ID
-        $minorProceduresDept = \App\Models\Department::where('code', 'ZOOM')->first();
+        // Get Minor Procedures department
+        $minorProceduresDept = Department::where('code', 'ZOOM')->first();
+        $deptId = $minorProceduresDept?->id;
 
-        if (! $minorProceduresDept) {
-            return response()->json([
-                'patients' => [],
-                'error' => 'Minor Procedures department not found',
-            ]);
-        }
-
-        // Search patients in Minor Procedures queue
-        // Users with minor-procedures permission can see all patients in this department
-        $patients = PatientCheckin::with([
+        // --- Queue: patients checked into Minor Procedures, not yet completed ---
+        $queueQuery = PatientCheckin::with([
             'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patient.activeInsurance.plan.provider:id,name,code',
             'department:id,name',
-            'vitalSigns' => function ($query) {
-                $query->latest()->limit(1);
-            },
+            'vitalSigns' => fn ($q) => $q->latest()->limit(1),
         ])
-            ->where('department_id', $minorProceduresDept->id)
-            ->whereNotIn('status', ['completed', 'cancelled'])
-            ->whereHas('patient', function ($query) use ($search) {
+            ->when($deptId, fn ($q) => $q->where('department_id', $deptId))
+            ->whereNotIn('status', ['completed', 'cancelled']);
+
+        // Apply date filter to queue
+        if ($dateFrom) {
+            $queueQuery->whereDate('service_date', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $queueQuery->whereDate('service_date', '<=', $dateTo);
+        }
+
+        // Apply search filter (search tab)
+        if ($search && strlen($search) >= 2) {
+            $queueQuery->whereHas('patient', function ($query) use ($search) {
                 $query->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('patient_number', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%");
-            })
-            ->orderBy('checked_in_at')
-            ->get();
+            });
+        }
 
-        return response()->json([
-            'patients' => $patients,
+        // Apply queue search filter (queue tab)
+        if ($queueSearch && strlen($queueSearch) >= 2) {
+            $queueQuery->whereHas('patient', function ($query) use ($queueSearch) {
+                $query->where('first_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('last_name', 'like', "%{$queueSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$queueSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$queueSearch}%");
+            });
+        }
+
+        $queuePatients = $queueQuery->orderBy('checked_in_at')
+            ->paginate($perPage, ['*'], 'queue_page')
+            ->withQueryString();
+
+        // --- Completed: minor procedures that are done ---
+        $completedQuery = MinorProcedure::with([
+            'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
+            'patientCheckin.department:id,name',
+            'patientCheckin.vitalSigns' => fn ($q) => $q->latest()->limit(1),
+            'nurse:id,name',
+            'procedureType:id,name,code',
+            'diagnoses:id,diagnosis,code,icd_10',
+            'supplies.drug:id,name,generic_name,brand_name,drug_code,form,strength,unit_price,unit_type',
+        ])
+            ->accessibleTo($user)
+            ->where('status', 'completed');
+
+        // Apply date filter to completed
+        if ($dateFrom) {
+            $completedQuery->whereDate('performed_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $completedQuery->whereDate('performed_at', '<=', $dateTo);
+        }
+
+        // Apply search filter (search tab)
+        if ($search && strlen($search) >= 2) {
+            $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply completed search filter (completed tab)
+        if ($completedSearch && strlen($completedSearch) >= 2) {
+            $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($completedSearch) {
+                $query->where('first_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('last_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$completedSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$completedSearch}%");
+            });
+        }
+
+        $completedProcedures = $completedQuery->orderBy('performed_at', 'desc')
+            ->paginate($perPage, ['*'], 'completed_page')
+            ->withQueryString();
+
+        return Inertia::render('MinorProcedure/Index', [
+            'queuePatients' => $queuePatients,
+            'completedProcedures' => $completedProcedures,
+            'totalQueueCount' => $queuePatients->total(),
+            'totalCompletedCount' => $completedProcedures->total(),
+            'procedureTypes' => MinorProcedureType::active()->orderBy('name')->get(),
+            'availableDrugs' => Drug::active()->orderBy('name')->get(['id', 'name', 'generic_name', 'brand_name', 'drug_code', 'form', 'strength', 'unit_price', 'unit_type']),
+            'canManageTypes' => $user->can('minor-procedures.view-types'),
+            'filters' => [
+                'search' => $search,
+                'queue_search' => $queueSearch,
+                'completed_search' => $completedSearch,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'per_page' => (int) $perPage,
+            ],
         ]);
     }
 
@@ -162,5 +218,36 @@ class MinorProcedureController extends Controller
         return Inertia::render('MinorProcedure/Show', [
             'procedure' => $minorProcedure,
         ]);
+    }
+
+    public function update(StoreMinorProcedureRequest $request, MinorProcedure $minorProcedure)
+    {
+        $this->authorize('view', $minorProcedure);
+
+        $validated = $request->validated();
+
+        $minorProcedure->update([
+            'minor_procedure_type_id' => $validated['minor_procedure_type_id'],
+            'procedure_notes' => $validated['procedure_notes'],
+        ]);
+
+        // Sync diagnoses
+        $minorProcedure->diagnoses()->sync($validated['diagnoses'] ?? []);
+
+        // Sync supplies: remove old, add new
+        $minorProcedure->supplies()->delete();
+        if (! empty($validated['supplies'])) {
+            foreach ($validated['supplies'] as $supply) {
+                MinorProcedureSupply::create([
+                    'minor_procedure_id' => $minorProcedure->id,
+                    'drug_id' => $supply['drug_id'],
+                    'quantity' => $supply['quantity'],
+                    'dispensed' => false,
+                ]);
+            }
+        }
+
+        return redirect()->route('minor-procedures.index')
+            ->with('success', 'Procedure updated successfully.');
     }
 }

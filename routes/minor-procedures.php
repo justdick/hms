@@ -24,8 +24,8 @@ Route::middleware(['auth'])->prefix('minor-procedures')->name('minor-procedures.
 
     // Minor Procedures management
     Route::get('/', [MinorProcedureController::class, 'index'])->name('index');
-    Route::get('/search', [MinorProcedureController::class, 'search'])->name('search');
     Route::post('/', [MinorProcedureController::class, 'store'])->name('store');
+    Route::put('/{minorProcedure}', [MinorProcedureController::class, 'update'])->name('update');
     Route::get('/{minorProcedure}', [MinorProcedureController::class, 'show'])->name('show');
 
 });
