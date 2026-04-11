@@ -197,7 +197,7 @@ class MinorProcedureController extends Controller
             'status' => 'completed',
         ]);
 
-        return redirect()->route('minor-procedures.index')
+        return redirect()->back()
             ->with('success', 'Procedure completed successfully.');
     }
 
@@ -247,7 +247,7 @@ class MinorProcedureController extends Controller
             }
         }
 
-        return redirect()->route('minor-procedures.index')
+        return redirect()->back()
             ->with('success', 'Procedure updated successfully.');
     }
 }
