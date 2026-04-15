@@ -102,7 +102,7 @@ class ClaimVettingService
             'name' => $patient->full_name ?? "{$claim->patient_other_names} {$claim->patient_surname}",
             'surname' => $claim->patient_surname,
             'other_names' => $claim->patient_other_names,
-            'date_of_birth' => $claim->patient_dob,
+            'date_of_birth' => $patient->date_of_birth ?? $claim->patient_dob,
             'gender' => $claim->patient_gender,
             'folder_number' => $claim->folder_id,
             'nhis_member_id' => $claim->membership_id ?? $patientInsurance?->membership_id,
