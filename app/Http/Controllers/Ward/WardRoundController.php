@@ -93,14 +93,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        // Only allow editing in-progress ward rounds
-        if ($wardRound->status !== 'in_progress') {
-            return redirect()->route('admissions.ward-rounds.show', [
-                'admission' => $admission->id,
-                'wardRound' => $wardRound->id,
-            ])->with('error', 'Cannot edit a completed ward round.');
-        }
-
         $admission->load([
             'patient',
             'ward',
@@ -188,11 +180,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        // Only allow auto-save for in-progress ward rounds
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
-
         $validated = $request->validated();
 
         // Only update round_datetime if the date portion actually changed
@@ -255,10 +242,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
-
         // Sync round date in case user changed it but auto-save hasn't fired yet
         $this->syncRoundDateIfChanged($wardRound);
 
@@ -289,10 +272,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
-
         $diagnosis = $admission->diagnoses()
             ->where('id', $diagnosisId)
             ->where('source_type', WardRound::class)
@@ -307,10 +286,6 @@ class WardRoundController extends Controller
     public function addPrescription(StorePrescriptionRequest $request, PatientAdmission $admission, WardRound $wardRound)
     {
         $this->authorize('update', $wardRound);
-
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
 
         // Sync round date in case user changed it but auto-save hasn't fired yet
         $this->syncRoundDateIfChanged($wardRound);
@@ -337,10 +312,6 @@ class WardRoundController extends Controller
     public function addBatchPrescriptions(StoreBatchPrescriptionsRequest $request, PatientAdmission $admission, WardRound $wardRound)
     {
         $this->authorize('update', $wardRound);
-
-        if ($wardRound->status !== 'in_progress') {
-            return back()->with('error', 'Cannot update completed ward round');
-        }
 
         // Sync round date in case user changed it but auto-save hasn't fired yet
         $this->syncRoundDateIfChanged($wardRound);
@@ -375,10 +346,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
-
         $prescription = $wardRound->prescriptions()
             ->where('id', $prescriptionId)
             ->firstOrFail();
@@ -391,10 +358,6 @@ class WardRoundController extends Controller
     public function refillPrescriptions(RefillPrescriptionsRequest $request, PatientAdmission $admission, WardRound $wardRound)
     {
         $this->authorize('update', $wardRound);
-
-        if ($wardRound->status !== 'in_progress') {
-            return back()->with('error', 'Cannot update completed ward round.');
-        }
 
         $prescriptionIds = $request->prescription_ids;
         $patient = $admission->patient;
@@ -464,10 +427,6 @@ class WardRoundController extends Controller
     {
         $this->authorize('update', $wardRound);
 
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
-
         // Sync round date in case user changed it but auto-save hasn't fired yet
         $this->syncRoundDateIfChanged($wardRound);
 
@@ -497,10 +456,6 @@ class WardRoundController extends Controller
     public function addBatchLabOrders(StoreBatchLabOrdersRequest $request, PatientAdmission $admission, WardRound $wardRound)
     {
         $this->authorize('update', $wardRound);
-
-        if ($wardRound->status !== 'in_progress') {
-            return back()->with('error', 'Cannot update completed ward round');
-        }
 
         // Sync round date in case user changed it but auto-save hasn't fired yet
         $this->syncRoundDateIfChanged($wardRound);
@@ -558,10 +513,6 @@ class WardRoundController extends Controller
     public function removeLabOrder(PatientAdmission $admission, WardRound $wardRound, $labOrderId)
     {
         $this->authorize('update', $wardRound);
-
-        if ($wardRound->status !== 'in_progress') {
-            return response()->json(['error' => 'Cannot update completed ward round'], 403);
-        }
 
         $labOrder = $wardRound->labOrders()
             ->where('id', $labOrderId)

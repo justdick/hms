@@ -900,9 +900,7 @@ export function PatientMedicalHistoryModal({
                                                                             >
                                                                                 <div className="mb-2 flex items-center justify-between">
                                                                                     <span className="text-sm font-medium">
-                                                                                        Day{' '}
-                                                                                        {wr.day_number ||
-                                                                                            '—'}
+                                                                                        Ward Round
                                                                                         {wr.round_type &&
                                                                                             ` (${wr.round_type})`}
                                                                                     </span>

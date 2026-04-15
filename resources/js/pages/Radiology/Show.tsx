@@ -404,7 +404,7 @@ export default function RadiologyShow({ labOrder, patient, context }: Props) {
                                         <p className="text-sm text-muted-foreground">
                                             {context.type === 'consultation'
                                                 ? `${context.department}`
-                                                : `Ward Round Day ${context.day_number}`}
+                                                : `Ward Round`}
                                         </p>
                                     )}
                                 </div>

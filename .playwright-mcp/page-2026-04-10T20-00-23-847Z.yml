@@ -1,0 +1,333 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /dashboard
+                    - generic:
+                      - img
+                    - generic:
+                      - generic: ROYAL GATE FAMILY HOSPITAL
+            - generic:
+              - generic:
+                - generic: Platform
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: /dashboard
+                      - img
+                      - generic: Dashboard
+                  - listitem:
+                    - link:
+                      - /url: /checkin
+                      - img
+                      - generic: Check-in
+                  - listitem:
+                    - link:
+                      - /url: /patients
+                      - img
+                      - generic: Patients
+                  - listitem:
+                    - link:
+                      - /url: /consultation
+                      - img
+                      - generic: Consultation
+                  - listitem:
+                    - link:
+                      - /url: /wards
+                      - img
+                      - generic: Wards
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Investigations
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: /minor-procedures
+                      - img
+                      - generic: Minor Procedures
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Pharmacy
+                      - img
+                  - listitem:
+                    - button [expanded]:
+                      - img
+                      - generic: Billing
+                      - img
+                    - generic:
+                      - list:
+                        - listitem:
+                          - link:
+                            - /url: /billing
+                            - img
+                            - generic: Payments
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts
+                            - img
+                            - generic: Dashboard
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reconciliation
+                            - img
+                            - generic: Reconciliation
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/history
+                            - img
+                            - generic: History
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reports/outstanding
+                            - img
+                            - generic: Outstanding
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reports/revenue
+                            - img
+                            - generic: Revenue
+                        - listitem:
+                          - link:
+                            - /url: /billing/patient-accounts
+                            - img
+                            - generic: Patient Accounts
+                        - listitem:
+                          - link:
+                            - /url: /billing/configuration
+                            - img
+                            - generic: Configuration
+                        - listitem:
+                          - link:
+                            - /url: /admin/pricing-dashboard
+                            - img
+                            - generic: Pricing Dashboard
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Insurance
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: /departments
+                      - img
+                      - generic: Departments
+                  - listitem:
+                    - link:
+                      - /url: /admin/backups
+                      - img
+                      - generic: Backups
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Administration
+                      - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - button:
+                - img
+                - generic: Toggle Sidebar
+              - navigation:
+                - list:
+                  - listitem:
+                    - link [disabled]: Billing
+            - generic:
+              - generic:
+                - button:
+                  - img
+                  - generic: Toggle theme
+              - button:
+                - generic:
+                  - generic: AU
+                - generic: Admin User
+                - img
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Billing & Payments
+              - paragraph: Search for patients and manage payments
+            - generic:
+              - button:
+                - img
+                - text: Configuration
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - generic:
+                - generic: My Collections Today · 0 transactions
+                - generic:
+                  - generic: GH₵0.00
+          - generic:
+            - generic:
+              - generic: Search Patient
+            - generic:
+              - generic:
+                - text: Search by name, patient number, or phone
+                - generic:
+                  - img
+                  - textbox:
+                    - /placeholder: Enter patient name, number, or phone...
+                    - text: 2437/2024
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: ELIZABETH SERWAA
+                        - paragraph: 2437/2024
+                        - paragraph: "0548804488"
+                        - paragraph: 6 visits with charges
+                      - generic:
+                        - generic:
+                          - generic: "Patient Owes: GH₵4,781.30"
+                          - generic:
+                            - img
+                            - text: "Insurance: GH₵81.49"
+                        - generic: 18 charges
+    - region "Notifications alt+T"
+  - dialog "Patient Billing" [ref=e249]:
+    - generic [ref=e250]:
+      - heading "Patient Billing" [level=2] [ref=e251]
+      - paragraph [ref=e252]: Select charges and process payment
+    - generic [ref=e254]:
+      - generic [ref=e255]:
+        - generic [ref=e256]:
+          - img [ref=e258]
+          - generic [ref=e261]:
+            - heading "ELIZABETH SERWAA" [level=3] [ref=e262]
+            - paragraph [ref=e263]: 2437/2024
+            - paragraph [ref=e264]:
+              - img [ref=e265]
+              - text: "0548804488"
+        - generic [ref=e267]:
+          - generic [ref=e268]:
+            - img [ref=e269]
+            - text: Insured
+          - paragraph [ref=e271]: NHIA - STANDARD
+      - generic [ref=e272]:
+        - generic [ref=e273]:
+          - paragraph [ref=e274]: Patient Owes
+          - paragraph [ref=e275]: GH₵4,781.30
+        - generic [ref=e276]:
+          - paragraph [ref=e277]: Insurance Covers
+          - paragraph [ref=e278]: GH₵81.49
+      - generic [ref=e279]:
+        - generic [ref=e280]:
+          - checkbox "18 of 18 charges selected" [checked] [active] [ref=e281]:
+            - generic:
+              - img
+          - generic [ref=e282] [cursor=pointer]: 18 of 18 charges selected
+        - generic [ref=e283]: 6 visits
+      - generic [ref=e284]:
+        - generic [ref=e285]:
+          - 'button "Obstetrics and Gynaecology Apr 9, 2026 • 2 charges GH₵8.40 Ins: GH₵10.29" [expanded] [ref=e286]':
+            - generic [ref=e287]:
+              - img [ref=e288]
+              - generic [ref=e290]:
+                - paragraph [ref=e291]: Obstetrics and Gynaecology
+                - paragraph [ref=e292]: Apr 9, 2026 • 2 charges
+            - generic [ref=e293]:
+              - paragraph [ref=e294]: GH₵8.40
+              - paragraph [ref=e295]: "Ins: GH₵10.29"
+          - generic [ref=e297]:
+            - generic [ref=e298]:
+              - checkbox [checked] [ref=e299]:
+                - generic:
+                  - img
+              - generic [ref=e300]:
+                - generic [ref=e301]:
+                  - generic [ref=e302]: Metronidazole Tablet, 400 mg Tablet (21 tablet)
+                  - generic [ref=e303]:
+                    - img
+                    - text: Partially Covered
+                - generic [ref=e305]: Apr 9, 2026
+              - generic [ref=e306]:
+                - generic [ref=e307]:
+                  - paragraph [ref=e308]: GH₵4.20
+                  - paragraph [ref=e309]: Ins. pays GH₵5.25
+                  - paragraph [ref=e310]: 21 × GH₵0.50
+                - generic [ref=e311]:
+                  - button "Waive" [ref=e312]
+                  - button "Adjust" [ref=e313]
+            - generic [ref=e314]:
+              - checkbox [checked] [ref=e315]:
+                - generic:
+                  - img
+              - generic [ref=e316]:
+                - generic [ref=e317]:
+                  - generic [ref=e318]: Paracetamol Tablet, 500 mg Tablet (42 tablet)
+                  - generic [ref=e319]:
+                    - img
+                    - text: Partially Covered
+                - generic [ref=e321]: Apr 9, 2026
+              - generic [ref=e322]:
+                - generic [ref=e323]:
+                  - paragraph [ref=e324]: GH₵4.20
+                  - paragraph [ref=e325]: Ins. pays GH₵5.04
+                  - paragraph [ref=e326]: 42 × GH₵0.30
+                - generic [ref=e327]:
+                  - button "Waive" [ref=e328]
+                  - button "Adjust" [ref=e329]
+        - 'button "Antenatal/Postnatal Care Mar 30, 2026 • 2 charges GH₵40.70 Ins: GH₵0.35" [ref=e331]':
+          - generic [ref=e332]:
+            - img [ref=e333]
+            - generic [ref=e335]:
+              - paragraph [ref=e336]: Antenatal/Postnatal Care
+              - paragraph [ref=e337]: Mar 30, 2026 • 2 charges
+          - generic [ref=e338]:
+            - paragraph [ref=e339]: GH₵40.70
+            - paragraph [ref=e340]: "Ins: GH₵0.35"
+        - 'button "Antenatal/Postnatal Care Mar 26, 2026 • 3 charges GH₵51.20 Ins: GH₵0.35" [ref=e342]':
+          - generic [ref=e343]:
+            - img [ref=e344]
+            - generic [ref=e346]:
+              - paragraph [ref=e347]: Antenatal/Postnatal Care
+              - paragraph [ref=e348]: Mar 26, 2026 • 3 charges
+          - generic [ref=e349]:
+            - paragraph [ref=e350]: GH₵51.20
+            - paragraph [ref=e351]: "Ins: GH₵0.35"
+        - 'button "Antenatal/Postnatal Care Mar 16, 2026 • 2 charges GH₵40.00 Ins: GH₵30.00" [ref=e353]':
+          - generic [ref=e354]:
+            - img [ref=e355]
+            - generic [ref=e357]:
+              - paragraph [ref=e358]: Antenatal/Postnatal Care
+              - paragraph [ref=e359]: Mar 16, 2026 • 2 charges
+          - generic [ref=e360]:
+            - paragraph [ref=e361]: GH₵40.00
+            - paragraph [ref=e362]: "Ins: GH₵30.00"
+        - 'button "Antenatal/Postnatal Care Feb 16, 2026 • 5 charges GH₵91.00 Ins: GH₵24.60" [ref=e364]':
+          - generic [ref=e365]:
+            - img [ref=e366]
+            - generic [ref=e368]:
+              - paragraph [ref=e369]: Antenatal/Postnatal Care
+              - paragraph [ref=e370]: Feb 16, 2026 • 5 charges
+          - generic [ref=e371]:
+            - paragraph [ref=e372]: GH₵91.00
+            - paragraph [ref=e373]: "Ins: GH₵24.60"
+        - 'button "Antenatal/Postnatal Care Jan 19, 2026 • 4 charges GH₵4,550.00 Ins: GH₵15.90" [ref=e375]':
+          - generic [ref=e376]:
+            - img [ref=e377]
+            - generic [ref=e379]:
+              - paragraph [ref=e380]: Antenatal/Postnatal Care
+              - paragraph [ref=e381]: Jan 19, 2026 • 4 charges
+          - generic [ref=e382]:
+            - paragraph [ref=e383]: GH₵4,550.00
+            - paragraph [ref=e384]: "Ins: GH₵15.90"
+    - generic [ref=e385]:
+      - button "Cancel" [ref=e386]
+      - button "Pay GH₵4,781.30" [ref=e387]:
+        - img
+        - text: Pay GH₵4,781.30
+    - button "Close" [ref=e388]:
+      - img
+      - generic [ref=e389]: Close

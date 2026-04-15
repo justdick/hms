@@ -1,0 +1,255 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /dashboard
+                    - generic:
+                      - img
+                    - generic:
+                      - generic: ROYAL GATE FAMILY HOSPITAL
+            - generic:
+              - generic:
+                - generic: Platform
+                - list:
+                  - listitem:
+                    - link:
+                      - /url: /dashboard
+                      - img
+                      - generic: Dashboard
+                  - listitem:
+                    - link:
+                      - /url: /checkin
+                      - img
+                      - generic: Check-in
+                  - listitem:
+                    - link:
+                      - /url: /patients
+                      - img
+                      - generic: Patients
+                  - listitem:
+                    - link:
+                      - /url: /consultation
+                      - img
+                      - generic: Consultation
+                  - listitem:
+                    - link:
+                      - /url: /wards
+                      - img
+                      - generic: Wards
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Investigations
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: /minor-procedures
+                      - img
+                      - generic: Minor Procedures
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Pharmacy
+                      - img
+                  - listitem:
+                    - button [expanded]:
+                      - img
+                      - generic: Billing
+                      - img
+                    - generic:
+                      - list:
+                        - listitem:
+                          - link:
+                            - /url: /billing
+                            - img
+                            - generic: Payments
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts
+                            - img
+                            - generic: Dashboard
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reconciliation
+                            - img
+                            - generic: Reconciliation
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/history
+                            - img
+                            - generic: History
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reports/outstanding
+                            - img
+                            - generic: Outstanding
+                        - listitem:
+                          - link:
+                            - /url: /billing/accounts/reports/revenue
+                            - img
+                            - generic: Revenue
+                        - listitem:
+                          - link:
+                            - /url: /billing/patient-accounts
+                            - img
+                            - generic: Patient Accounts
+                        - listitem:
+                          - link:
+                            - /url: /billing/configuration
+                            - img
+                            - generic: Configuration
+                        - listitem:
+                          - link:
+                            - /url: /admin/pricing-dashboard
+                            - img
+                            - generic: Pricing Dashboard
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Insurance
+                      - img
+                  - listitem:
+                    - link:
+                      - /url: /departments
+                      - img
+                      - generic: Departments
+                  - listitem:
+                    - link:
+                      - /url: /admin/backups
+                      - img
+                      - generic: Backups
+                  - listitem:
+                    - button:
+                      - img
+                      - generic: Administration
+                      - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - button:
+                - img
+                - generic: Toggle Sidebar
+              - navigation:
+                - list:
+                  - listitem:
+                    - link [disabled]: Billing
+            - generic:
+              - generic:
+                - button:
+                  - img
+                  - generic: Toggle theme
+              - button:
+                - generic:
+                  - generic: AU
+                - generic: Admin User
+                - img
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Billing & Payments
+              - paragraph: Search for patients and manage payments
+            - generic:
+              - button:
+                - img
+                - text: Configuration
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - generic:
+                - generic: My Collections Today · 0 transactions
+                - generic:
+                  - generic: GH₵0.00
+          - generic:
+            - generic:
+              - generic: Search Patient
+            - generic:
+              - generic:
+                - text: Search by name, patient number, or phone
+                - generic:
+                  - img
+                  - textbox:
+                    - /placeholder: Enter patient name, number, or phone...
+                    - text: 2437/2024
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: ELIZABETH SERWAA
+                        - paragraph: 2437/2024
+                        - paragraph: "0548804488"
+                        - paragraph: 6 visits with charges
+                      - generic:
+                        - generic:
+                          - generic: "Patient Owes: GH₵4,781.30"
+                          - generic:
+                            - img
+                            - text: "Insurance: GH₵81.49"
+                        - generic: 18 charges
+    - region "Notifications alt+T"
+  - dialog "Process Payment" [active] [ref=e390]:
+    - generic [ref=e250]:
+      - heading "Process Payment" [level=2] [ref=e391]
+      - paragraph [ref=e252]: Complete the payment transaction
+    - generic [ref=e392]:
+      - generic [ref=e393]:
+        - paragraph [ref=e394]: Amount to Collect
+        - paragraph [ref=e395]: GH₵4,781.30
+        - paragraph [ref=e396]: 18 charges selected
+      - generic [ref=e397]:
+        - text: Payment Method
+        - combobox [ref=e398]:
+          - generic:
+            - generic:
+              - img
+              - text: Cash
+          - img
+      - generic [ref=e399]:
+        - generic [ref=e400]:
+          - generic [ref=e401]:
+            - img [ref=e402]
+            - text: Amount Tendered by Patient
+          - spinbutton "Amount Tendered by Patient" [ref=e404]: "4781.3"
+          - paragraph [ref=e405]: Enter the cash amount received from the patient
+        - generic [ref=e407]:
+          - generic [ref=e408]:
+            - generic [ref=e409]: "Amount Tendered:"
+            - generic [ref=e410]: GH₵4,781.30
+          - generic [ref=e411]:
+            - generic [ref=e412]:
+              - img [ref=e413]
+              - text: "Amount Due:"
+            - generic [ref=e414]: GH₵4,781.30
+          - generic [ref=e416]:
+            - generic [ref=e417]:
+              - img [ref=e418]
+              - text: "Change to Return:"
+            - generic [ref=e420]: GH₵0.00
+        - alert [ref=e421]:
+          - img [ref=e422]
+          - generic [ref=e425]: Exact amount received - no change required
+        - generic [ref=e426]:
+          - 'button "Exact: GH₵4,781.30" [ref=e427]'
+          - 'button "Round Up: GH₵4,790.00" [ref=e428]'
+          - 'button "Round Up 50: GH₵4,800.00" [ref=e429]'
+          - 'button "Round Up 100: GH₵4,800.00" [ref=e430]'
+      - generic [ref=e431]:
+        - text: Notes (Optional)
+        - textbox "Notes (Optional)" [ref=e432]:
+          - /placeholder: Payment reference or notes...
+    - generic [ref=e385]:
+      - button "Back" [ref=e433]
+      - button "Complete Payment" [ref=e434]:
+        - img
+        - text: Complete Payment
+    - button "Close" [ref=e388]:
+      - img
+      - generic [ref=e389]: Close

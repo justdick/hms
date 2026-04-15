@@ -215,7 +215,7 @@ it('skips inactive drugs during ward round refill', function () {
     expect($newPrescriptions)->toHaveCount(0);
 });
 
-it('cannot refill on a completed ward round', function () {
+it('can refill on a completed ward round within 24 hours', function () {
     $previousRound = WardRound::factory()->completed()->create([
         'patient_admission_id' => $this->admission->id,
         'doctor_id' => $this->doctor->id,
@@ -241,5 +241,5 @@ it('cannot refill on a completed ward round', function () {
         ]);
 
     $response->assertRedirect();
-    $response->assertSessionHas('error');
+    $response->assertSessionHas('success');
 });

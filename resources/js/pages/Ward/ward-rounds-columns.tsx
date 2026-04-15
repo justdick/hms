@@ -69,29 +69,6 @@ export const wardRoundsColumns = (
     canUpdateWardRound?: boolean,
 ): ColumnDef<WardRound>[] => [
     {
-        accessorKey: 'day_number',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Day
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            return (
-                <div className="text-center font-semibold text-gray-900 dark:text-gray-100">
-                    Day {row.getValue('day_number')}
-                </div>
-            );
-        },
-    },
-    {
         accessorKey: 'round_datetime',
         header: ({ column }) => {
             return (
@@ -179,6 +156,15 @@ export const wardRoundsColumns = (
                                 href={`/admissions/${admissionId}/ward-rounds/${wardRound.id}/edit`}
                             >
                                 Continue
+                            </Link>
+                        </Button>
+                    )}
+                    {!isInProgress && canUpdateWardRound && (
+                        <Button size="sm" variant="outline" asChild>
+                            <Link
+                                href={`/admissions/${admissionId}/ward-rounds/${wardRound.id}/edit`}
+                            >
+                                Edit
                             </Link>
                         </Button>
                     )}

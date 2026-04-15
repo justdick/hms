@@ -351,7 +351,7 @@ export default function WardRoundCreate({
 
     // Auto-save function
     const autoSave = useCallback(() => {
-        if (!hasUnsavedChanges || wardRound.status !== 'in_progress') {
+        if (!hasUnsavedChanges) {
             return;
         }
 
@@ -1101,6 +1101,7 @@ export default function WardRoundCreate({
                                         })
                                     }
                                     processing={false}
+                                    isEditable={true}
                                     consultationStatus={wardRound.status}
                                 />
                             </CardContent>
@@ -1128,6 +1129,7 @@ export default function WardRoundCreate({
                             editingPrescription={editingPrescription}
                             processing={prescriptionProcessing}
                             consultationId={wardRound.id}
+                            isEditable={true}
                             consultationStatus={wardRound.status}
                             previousPrescriptions={allPreviousPrescriptions}
                             refillUrl={`/admissions/${admission.id}/ward-rounds/${wardRound.id}/prescriptions/refill`}
@@ -1143,7 +1145,7 @@ export default function WardRoundCreate({
                     <TabsContent value="orders">
                         <LabOrdersSection
                             labOrders={wardRound.lab_orders || []}
-                            isEditable={wardRound.status === 'in_progress'}
+                            isEditable={true}
                             showDialog={showLabOrderDialog}
                             setShowDialog={setShowLabOrderDialog}
                             selectedService={selectedLabService}

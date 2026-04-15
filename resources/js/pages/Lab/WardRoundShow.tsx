@@ -154,7 +154,7 @@ export default function WardRoundShow({ wardRound, labOrders, hospital }: Props)
             breadcrumbs={[
                 { title: 'Laboratory', href: lab.index.url() },
                 {
-                    title: `Ward Round - Day ${wardRound.day_number}`,
+                    title: `Ward Round`,
                     href: '#',
                 },
             ]}
@@ -181,7 +181,7 @@ export default function WardRoundShow({ wardRound, labOrders, hospital }: Props)
                             </h1>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <span>
-                                    Ward Round Day {wardRound.day_number} •{' '}
+                                    Ward Round •{' '}
                                     {ward.name} • {labOrders.length} test
                                     {labOrders.length !== 1 ? 's' : ''} ordered
                                 </span>

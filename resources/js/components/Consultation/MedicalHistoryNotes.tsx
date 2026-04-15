@@ -502,6 +502,17 @@ export default function MedicalHistoryNotes({
                                     : 'Save Consultation Notes'}
                             </Button>
                         )}
+                        {status === 'completed' && (
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="mt-6 w-full"
+                            >
+                                {processing
+                                    ? 'Saving...'
+                                    : 'Update Consultation Notes'}
+                            </Button>
+                        )}
                     </form>
                 </CardContent>
             </Card>
