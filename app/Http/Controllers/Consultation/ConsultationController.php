@@ -440,14 +440,25 @@ class ConsultationController extends Controller
             'presenting_complaint' => $request->presenting_complaint,
         ];
 
-        // Retry on duplicate key error caused by auto-increment desync after MySQL restart
-        try {
-            $consultation = Consultation::create($consultationData);
-        } catch (UniqueConstraintViolationException $e) {
-            // Fix the auto-increment counter and retry once
-            $maxId = Consultation::max('id') ?? 0;
-            DB::statement('ALTER TABLE consultations AUTO_INCREMENT = '.($maxId + 1));
-            $consultation = Consultation::create($consultationData);
+        // Retry on duplicate key error caused by auto-increment desync after MySQL restart.
+        // When WAMP/MySQL restarts after a power outage, the auto-increment counter resets
+        // to MAX(id)+1, which can collide with existing IDs if records were deleted.
+        $maxRetries = 3;
+        $consultation = null;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $consultation = Consultation::create($consultationData);
+
+                break;
+            } catch (UniqueConstraintViolationException) {
+                if ($attempt === $maxRetries) {
+                    throw new \RuntimeException('Unable to create consultation after fixing auto-increment. Please try again.');
+                }
+
+                // Fix the auto-increment counter and retry
+                DB::statement('ALTER TABLE consultations AUTO_INCREMENT = '.(Consultation::max('id') + 1));
+            }
         }
 
         // Update patient check-in status
