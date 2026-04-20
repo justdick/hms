@@ -614,10 +614,13 @@ export default function ConsultationIndex({
         });
     };
 
+    const [isStarting, setIsStarting] = useState(false);
+
     const handleConfirm = () => {
-        if (!confirmDialog.data) return;
+        if (!confirmDialog.data || isStarting) return;
 
         if (confirmDialog.type === 'start') {
+            setIsStarting(true);
             const checkin = confirmDialog.data as PatientCheckin;
             router.post(
                 '/consultation',
@@ -627,6 +630,9 @@ export default function ConsultationIndex({
                 {
                     onSuccess: () => {
                         setConfirmDialog({ open: false, type: 'start' });
+                    },
+                    onFinish: () => {
+                        setIsStarting(false);
                     },
                 },
             );
@@ -1779,9 +1785,9 @@ export default function ConsultationIndex({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirm}>
-                            Confirm & Proceed
+                        <AlertDialogCancel disabled={isStarting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirm} disabled={isStarting}>
+                            {isStarting ? 'Processing...' : 'Confirm & Proceed'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

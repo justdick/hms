@@ -16,7 +16,9 @@ use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\User;
 use App\Models\Ward;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ConsultationController extends Controller
@@ -394,6 +396,15 @@ class ConsultationController extends Controller
 
         $patientCheckin = PatientCheckin::findOrFail($request->patient_checkin_id);
 
+        // Prevent duplicate consultations from double-clicks / concurrent requests
+        $existingConsultation = Consultation::where('patient_checkin_id', $patientCheckin->id)
+            ->where('status', 'in_progress')
+            ->first();
+
+        if ($existingConsultation) {
+            return redirect()->route('consultation.show', $existingConsultation);
+        }
+
         $request->validate([
             'patient_checkin_id' => 'required|exists:patient_checkins,id',
             'presenting_complaint' => 'nullable|string',
@@ -420,14 +431,24 @@ class ConsultationController extends Controller
             ?? $patientCheckin->service_date?->toDateString()
             ?? now()->toDateString();
 
-        $consultation = Consultation::create([
+        $consultationData = [
             'patient_checkin_id' => $patientCheckin->id,
             'doctor_id' => $request->user()->id,
             'started_at' => now(),
             'service_date' => $serviceDate,
             'status' => 'in_progress',
             'presenting_complaint' => $request->presenting_complaint,
-        ]);
+        ];
+
+        // Retry on duplicate key error caused by auto-increment desync after MySQL restart
+        try {
+            $consultation = Consultation::create($consultationData);
+        } catch (UniqueConstraintViolationException $e) {
+            // Fix the auto-increment counter and retry once
+            $maxId = Consultation::max('id') ?? 0;
+            DB::statement('ALTER TABLE consultations AUTO_INCREMENT = '.($maxId + 1));
+            $consultation = Consultation::create($consultationData);
+        }
 
         // Update patient check-in status
         $patientCheckin->update([
