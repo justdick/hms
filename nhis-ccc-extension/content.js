@@ -45,29 +45,31 @@
         }
     } else if (currentUrlLower.includes('/home/membershipcheck')) {
         // Main page - click "Generate New Claims Code"
-        await sleep(800);
-        // The button is: <a id="newclaimsCode1" class="btn btn-generate">
-        const generateBtn = document.querySelector('#newclaimsCode1') ||
-                           document.querySelector('a.btn-generate') ||
-                           findElementByText('Generate New Claims Code');
+        const generateBtn = await waitForElement(
+            () => document.querySelector('#newclaimsCode1') ||
+                  document.querySelector('a.btn-generate') ||
+                  findElementByText('Generate New Claims Code'),
+            'Generate New Claims Code button'
+        );
         if (generateBtn) {
             console.log('HMS NHIS Extension: Clicking Generate New Claims Code');
             generateBtn.click();
-        } else {
-            console.log('HMS NHIS Extension: Generate button not found');
         }
     } else if (currentUrlLower.includes('/home/cardtype')) {
         // Card type selection - click NHIS Card or Ghana Card based on idType
-        await sleep(500);
         const idType = pending.idType || 'nhis';
         if (idType === 'ghanacard') {
-            // Ghana Card is the second option
-            await waitAndClick('#ghanaCard', true);
-            console.log('HMS NHIS Extension: Selected Ghana Card');
+            const ghanaCardBtn = await waitForElement(() => document.querySelector('#ghanaCard'), 'Ghana Card button');
+            if (ghanaCardBtn) {
+                ghanaCardBtn.click();
+                console.log('HMS NHIS Extension: Selected Ghana Card');
+            }
         } else {
-            // NHIS Card is the default/first option
-            await waitAndClick('#nhiaCard', true);
-            console.log('HMS NHIS Extension: Selected NHIS Card');
+            const nhiaCardBtn = await waitForElement(() => document.querySelector('#nhiaCard'), 'NHIS Card button');
+            if (nhiaCardBtn) {
+                nhiaCardBtn.click();
+                console.log('HMS NHIS Extension: Selected NHIS Card');
+            }
         }
     } else if (currentUrlLower.includes('/home/cardnumber')) {
         // Card number entry - fill and submit
@@ -77,144 +79,177 @@
         await extractAndSendCcc();
     }
 
-    // Helper: Handle login
+    // Helper: Wait for an element to appear in the DOM by polling.
+    // finderFn should return the element or null/undefined.
+    // Returns the element, or null if not found within the timeout.
+    async function waitForElement(finderFn, label, timeoutMs = 15000, intervalMs = 500) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            const el = finderFn();
+            if (el) {
+                console.log('HMS NHIS Extension: Found', label, 'after', Date.now() - start, 'ms');
+                return el;
+            }
+            await sleep(intervalMs);
+        }
+        console.log('HMS NHIS Extension:', label, 'not found after', timeoutMs, 'ms');
+        return null;
+    }
+
+    // Helper: Simulate realistic typing into an input field.
+    // Sets value via nativeInputValueSetter to work with JS frameworks,
+    // then dispatches the full event sequence a real keystroke would produce.
+    function setNativeValue(input, value) {
+        // Use the native setter to bypass framework getters/setters
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value'
+        ).set;
+        nativeInputValueSetter.call(input, value);
+
+        // Dispatch events that frameworks listen for
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        // Some frameworks also listen for keyup
+        input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+    }
+
+    // Helper: Handle login with retry logic
     async function handleLogin(creds) {
-        await sleep(800);
+        console.log('HMS NHIS Extension: Waiting for login form...');
 
-        console.log('HMS NHIS Extension: Looking for login form...');
+        // Wait for both username and password inputs to appear (up to 15 seconds)
+        const inputs = await waitForElement(() => {
+            const username = document.querySelector(
+                'input[type="text"], input[placeholder*="Mobile"], input[placeholder*="User"], input[name*="user" i], input[name*="mobile" i]',
+            );
+            const password = document.querySelector(
+                'input[type="password"], input[placeholder*="Password"], input[name*="pass" i]',
+            );
+            if (username && password) {
+                return { username, password };
+            }
+            return null;
+        }, 'login form inputs', 15000, 500);
 
-        const usernameInput = document.querySelector(
-            'input[type="text"], input[placeholder*="Mobile"], input[placeholder*="User"]',
-        );
-        const passwordInput = document.querySelector(
-            'input[type="password"], input[placeholder*="Password"]',
-        );
+        if (!inputs) {
+            console.log('HMS NHIS Extension: Login form inputs not found after waiting');
+            return;
+        }
 
-        console.log('HMS NHIS Extension: Found inputs', { usernameInput, passwordInput });
+        const { username: usernameInput, password: passwordInput } = inputs;
+        console.log('HMS NHIS Extension: Auto-filling login credentials');
 
-        if (usernameInput && passwordInput) {
-            console.log('HMS NHIS Extension: Auto-filling login credentials');
+        // Clear and fill username using native setter
+        usernameInput.focus();
+        usernameInput.value = '';
+        setNativeValue(usernameInput, creds.username);
 
-            // Clear and fill username
-            usernameInput.focus();
+        await sleep(300);
+
+        // Clear and fill password using native setter
+        passwordInput.focus();
+        passwordInput.value = '';
+        setNativeValue(passwordInput, creds.password);
+
+        await sleep(500);
+
+        // Verify the values actually stuck (some frameworks reset them)
+        if (usernameInput.value !== creds.username || passwordInput.value !== creds.password) {
+            console.log('HMS NHIS Extension: Values were reset by framework, retrying with direct assignment');
             usernameInput.value = creds.username;
             usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
             usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
-
             await sleep(200);
-
-            // Clear and fill password
-            passwordInput.focus();
             passwordInput.value = creds.password;
             passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
             passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
-
             await sleep(300);
+        }
 
-            // Find and click login button - it's an <a> tag with id="submit"
-            await sleep(300);
-            
-            // The login button is: <a id="submit" class="btn btn-login">LOGIN</a>
-            let loginBtn = document.querySelector('#submit') ||
-                           document.querySelector('a.btn-login') ||
-                           document.querySelector('a[class*="login"]');
+        // Wait for login button to be available
+        let loginBtn = await waitForElement(() => {
+            // Try specific selectors first
+            let btn = document.querySelector('#submit') ||
+                      document.querySelector('a.btn-login') ||
+                      document.querySelector('a[class*="login"]') ||
+                      document.querySelector('button[type="submit"]');
             
             // Fallback: find by text
-            if (!loginBtn) {
-                const allLinks = document.querySelectorAll('a');
-                for (const link of allLinks) {
-                    if (link.textContent.trim() === 'LOGIN') {
-                        loginBtn = link;
-                        break;
-                    }
-                }
-            }
-
-            if (loginBtn) {
-                console.log('HMS NHIS Extension: Found login button', loginBtn.outerHTML);
-                loginBtn.click();
-            } else {
-                console.log('HMS NHIS Extension: Login button not found');
-            }
-        } else {
-            console.log('HMS NHIS Extension: Login form inputs not found');
-        }
-    }
-
-    // Helper: Wait for element and click
-    async function waitAndClick(selector, isId = false) {
-        await sleep(500);
-
-        let element;
-        if (isId) {
-            element = document.querySelector(selector);
-        } else {
-            // Find by text content
-            element = findElementByText(selector);
-        }
-
-        if (element) {
-            console.log('HMS NHIS Extension: Clicking', selector);
-            element.click();
-        } else {
-            console.log('HMS NHIS Extension: Element not found', selector);
-        }
-    }
-
-    // Helper: Fill card number form
-    async function fillCardNumber(number) {
-        await sleep(800);
-
-        console.log('HMS NHIS Extension: Looking for card number inputs...');
-
-        // Find the input fields
-        const inputs = document.querySelectorAll('input[type="text"], input:not([type])');
-        console.log('HMS NHIS Extension: Found', inputs.length, 'inputs');
-
-        if (inputs.length >= 2) {
-            // Fill membership number in both fields
-            inputs[0].focus();
-            inputs[0].value = number;
-            inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-            inputs[0].dispatchEvent(new Event('change', { bubbles: true }));
-
-            await sleep(200);
-
-            inputs[1].focus();
-            inputs[1].value = number;
-            inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
-            inputs[1].dispatchEvent(new Event('change', { bubbles: true }));
-
-            console.log('HMS NHIS Extension: Filled membership number', number);
-
-            // Wait a moment then click submit
-            await sleep(500);
-
-            // Submit button is likely: <a id="submit" class="btn btn-...">SUBMIT</a>
-            const submitBtn = document.querySelector('#submit') ||
-                              document.querySelector('a.btn-login') ||
-                              document.querySelector('a[class*="submit"]');
-            
-            // Fallback: find <a> by text
-            let btn = submitBtn;
             if (!btn) {
-                const allLinks = document.querySelectorAll('a');
+                const allLinks = document.querySelectorAll('a, button');
                 for (const link of allLinks) {
-                    if (link.textContent.trim() === 'SUBMIT') {
+                    if (link.textContent.trim().toUpperCase() === 'LOGIN') {
                         btn = link;
                         break;
                     }
                 }
             }
+            return btn;
+        }, 'login button', 5000, 300);
 
-            if (btn) {
-                console.log('HMS NHIS Extension: Clicking submit', btn.outerHTML);
-                btn.click();
-            } else {
-                console.log('HMS NHIS Extension: Submit button not found');
-            }
+        if (loginBtn) {
+            console.log('HMS NHIS Extension: Found login button, clicking');
+            loginBtn.click();
         } else {
-            console.log('HMS NHIS Extension: Not enough input fields found');
+            console.log('HMS NHIS Extension: Login button not found');
+        }
+    }
+
+    // Helper: Fill card number form
+    async function fillCardNumber(number) {
+        console.log('HMS NHIS Extension: Waiting for card number inputs...');
+
+        // Wait for at least 2 text inputs to appear
+        const inputs = await waitForElement(() => {
+            const found = document.querySelectorAll('input[type="text"], input:not([type])');
+            return found.length >= 2 ? found : null;
+        }, 'card number inputs', 15000, 500);
+
+        if (!inputs) {
+            console.log('HMS NHIS Extension: Not enough input fields found after waiting');
+            return;
+        }
+
+        console.log('HMS NHIS Extension: Found', inputs.length, 'inputs');
+
+        // Fill membership number in both fields using native setter
+        inputs[0].focus();
+        setNativeValue(inputs[0], number);
+
+        await sleep(200);
+
+        inputs[1].focus();
+        setNativeValue(inputs[1], number);
+
+        console.log('HMS NHIS Extension: Filled membership number', number);
+
+        // Wait for submit button
+        await sleep(300);
+
+        let btn = await waitForElement(() => {
+            let found = document.querySelector('#submit') ||
+                        document.querySelector('a.btn-login') ||
+                        document.querySelector('a[class*="submit"]') ||
+                        document.querySelector('button[type="submit"]');
+            
+            if (!found) {
+                const allLinks = document.querySelectorAll('a, button');
+                for (const link of allLinks) {
+                    if (link.textContent.trim().toUpperCase() === 'SUBMIT') {
+                        found = link;
+                        break;
+                    }
+                }
+            }
+            return found;
+        }, 'submit button', 5000, 300);
+
+        if (btn) {
+            console.log('HMS NHIS Extension: Clicking submit');
+            btn.click();
+        } else {
+            console.log('HMS NHIS Extension: Submit button not found');
         }
     }
 

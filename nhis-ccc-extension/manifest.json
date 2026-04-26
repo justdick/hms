@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HMS NHIS CCC Auto-Verification",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Automatically verifies NHIS membership and captures CCC for HMS",
   "permissions": [
     "activeTab",
