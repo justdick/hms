@@ -6,10 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Charge;
+use App\Models\Consultation;
+use App\Models\ConsultationProcedure;
+use App\Models\Department;
 use App\Models\InsuranceClaim;
+use App\Models\InsurancePlan;
+use App\Models\LabOrder;
+use App\Models\MinorProcedure;
+use App\Models\NhisSettings;
 use App\Models\Patient;
+use App\Models\PatientCheckin;
 use App\Models\PatientInsurance;
+use App\Models\PaymentMethod;
+use App\Models\Prescription;
+use App\Models\ServiceAccessOverride;
+use App\Models\SystemConfiguration;
+use App\Models\WardRound;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
@@ -169,7 +185,7 @@ class PatientController extends Controller
         });
 
         // Get active departments for check-in modal
-        $departments = \App\Models\Department::active()
+        $departments = Department::active()
             ->orderBy('name')
             ->get()
             ->map(function ($department) {
@@ -182,7 +198,7 @@ class PatientController extends Controller
             });
 
         // Get insurance plans for registration modal
-        $insurancePlans = \App\Models\InsurancePlan::with('provider')
+        $insurancePlans = InsurancePlan::with('provider')
             ->where('is_active', true)
             ->orderBy('plan_name')
             ->get()
@@ -201,7 +217,7 @@ class PatientController extends Controller
             });
 
         // Get NHIS settings for registration modal
-        $nhisSettings = \App\Models\NhisSettings::getInstance();
+        $nhisSettings = NhisSettings::getInstance();
         $nhisCredentials = null;
         if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
             try {
@@ -209,7 +225,7 @@ class PatientController extends Controller
                     'username' => $nhisSettings->nhia_username,
                     'password' => $nhisSettings->nhia_password,
                 ];
-            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            } catch (DecryptException $e) {
                 // Password was encrypted with different APP_KEY, ignore
             }
         }
@@ -243,7 +259,7 @@ class PatientController extends Controller
         ]);
 
         // Get active departments for check-in modal
-        $departments = \App\Models\Department::active()
+        $departments = Department::active()
             ->orderBy('name')
             ->get()
             ->map(function ($department) {
@@ -333,13 +349,13 @@ class PatientController extends Controller
             ],
             'departments' => $departments,
             'can_edit' => auth()->user()->can('update', $patient),
-            'can_checkin' => auth()->user()->can('create', \App\Models\PatientCheckin::class),
+            'can_checkin' => auth()->user()->can('create', PatientCheckin::class),
             'can_view_medical_history' => $canViewMedicalHistory,
             'medical_history' => $medicalHistory,
             'billing_summary' => $billingSummary,
             'can_process_payment' => auth()->user()->can('billing.create'),
             'can_manage_credit' => auth()->user()->can('billing.manage-credit'),
-            'payment_methods' => \App\Models\PaymentMethod::where('is_active', true)->get(),
+            'payment_methods' => PaymentMethod::where('is_active', true)->get(),
             'account_summary' => $this->getAccountSummary($patient),
             'active_checkin_without_insurance' => $this->getActiveCheckinWithoutInsurance($patient),
             'nhis_settings' => $this->getNhisSettings(),
@@ -353,7 +369,7 @@ class PatientController extends Controller
         $patient->load(['activeInsurance.plan']);
 
         // Get insurance plans
-        $insurancePlans = \App\Models\InsurancePlan::with('provider')
+        $insurancePlans = InsurancePlan::with('provider')
             ->where('is_active', true)
             ->orderBy('plan_name')
             ->get()
@@ -544,7 +560,7 @@ class PatientController extends Controller
             ->take(5);
 
         // Check for active overrides
-        $hasActiveOverrides = \App\Models\ServiceAccessOverride::whereIn(
+        $hasActiveOverrides = ServiceAccessOverride::whereIn(
             'patient_checkin_id',
             $checkins->pluck('id')
         )
@@ -589,7 +605,7 @@ class PatientController extends Controller
     /**
      * Get patient medical history as JSON (for modal display in consultation/ward round pages).
      */
-    public function medicalHistoryJson(Patient $patient): \Illuminate\Http\JsonResponse
+    public function medicalHistoryJson(Patient $patient): JsonResponse
     {
         $this->authorize('view', $patient);
 
@@ -645,6 +661,8 @@ class PatientController extends Controller
                             'day_number' => $latest->day_number,
                             'round_type' => $latest->round_type,
                             'presenting_complaint' => $latest->presenting_complaint,
+                            'history_presenting_complaint' => $latest->history_presenting_complaint,
+                            'on_direct_questioning' => $latest->on_direct_questioning,
                             'examination_findings' => $latest->examination_findings,
                             'assessment_notes' => $latest->assessment_notes,
                             'plan_notes' => $latest->plan_notes,
@@ -705,7 +723,7 @@ class PatientController extends Controller
     private function getMedicalHistory(Patient $patient): array
     {
         // Get consultations with all related data including vitals from the check-in
-        $consultations = \App\Models\Consultation::with([
+        $consultations = Consultation::with([
             'doctor:id,name',
             'patientCheckin:id,department_id,checked_in_at',
             'patientCheckin.department:id,name',
@@ -731,6 +749,7 @@ class PatientController extends Controller
                     'department' => $consultation->patientCheckin?->department?->name,
                     'presenting_complaint' => $consultation->presenting_complaint,
                     'history_presenting_complaint' => $consultation->history_presenting_complaint,
+                    'on_direct_questioning' => $consultation->on_direct_questioning,
                     'examination_findings' => $consultation->examination_findings,
                     'assessment_notes' => $consultation->assessment_notes,
                     'plan_notes' => $consultation->plan_notes,
@@ -815,6 +834,12 @@ class PatientController extends Controller
                 'bed:id,bed_number',
                 'consultation.doctor:id,name',
                 'diagnoses',
+                'wardRounds' => fn ($q) => $q->with([
+                    'doctor:id,name',
+                    'prescriptions.drug:id,name,generic_name,form,strength',
+                    'labOrders.labService:id,name,code,is_imaging,test_parameters',
+                    'procedures.procedureType:id,name,code',
+                ])->orderByDesc('round_datetime'),
             ])
             ->orderByDesc('admitted_at')
             ->limit(20)
@@ -836,20 +861,73 @@ class PatientController extends Controller
                     'description' => $d->diagnosis_name,
                     'is_active' => $d->is_active,
                 ]),
+                'ward_rounds' => $a->wardRounds
+                    ->groupBy(fn ($wr) => $wr->day_number.'-'.$wr->doctor_id.'-'.$wr->round_datetime?->format('Y-m-d'))
+                    ->map(function ($group) {
+                        $latest = $group->sortByDesc('id')->first();
+                        $allPrescriptions = $group->flatMap(fn ($wr) => $wr->prescriptions)->unique('id');
+                        $allLabOrders = $group->flatMap(fn ($wr) => $wr->labOrders)->unique('id');
+                        $allProcedures = $group->flatMap(fn ($wr) => $wr->procedures)->unique('id');
+
+                        return [
+                            'id' => $latest->id,
+                            'date' => $latest->round_datetime?->format('Y-m-d H:i'),
+                            'doctor' => $latest->doctor?->name,
+                            'day_number' => $latest->day_number,
+                            'round_type' => $latest->round_type,
+                            'presenting_complaint' => $latest->presenting_complaint,
+                            'history_presenting_complaint' => $latest->history_presenting_complaint,
+                            'on_direct_questioning' => $latest->on_direct_questioning,
+                            'examination_findings' => $latest->examination_findings,
+                            'assessment_notes' => $latest->assessment_notes,
+                            'plan_notes' => $latest->plan_notes,
+                            'patient_status' => $latest->patient_status,
+                            'prescriptions' => $allPrescriptions->values()->map(fn ($p) => [
+                                'drug_name' => $p->drug?->name ?? $p->medication_name,
+                                'generic_name' => $p->drug?->generic_name,
+                                'form' => $p->drug?->form ?? $p->dosage_form,
+                                'strength' => $p->drug?->strength,
+                                'dose_quantity' => $p->dose_quantity,
+                                'frequency' => $p->frequency,
+                                'duration' => $p->duration,
+                                'quantity' => $p->quantity,
+                                'instructions' => $p->instructions,
+                                'status' => $p->status,
+                            ]),
+                            'lab_orders' => $allLabOrders->values()->map(fn ($l) => [
+                                'id' => $l->id,
+                                'service_name' => $l->labService?->name,
+                                'code' => $l->labService?->code,
+                                'is_imaging' => $l->labService?->is_imaging,
+                                'test_parameters' => $l->labService?->test_parameters,
+                                'status' => $l->status,
+                                'result_values' => $l->result_values,
+                                'result_notes' => $l->result_notes,
+                                'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                                'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                            ]),
+                            'procedures' => $allProcedures->values()->map(fn ($p) => [
+                                'name' => $p->procedureType?->name,
+                                'code' => $p->procedureType?->code,
+                                'notes' => $p->comments,
+                            ]),
+                        ];
+                    })
+                    ->values(),
             ]);
 
         // Get all prescriptions (including from ward rounds)
-        $allPrescriptions = \App\Models\Prescription::with([
+        $allPrescriptions = Prescription::with([
             'drug:id,name,generic_name,form,strength',
             'prescribable',
         ])
             ->where(function ($query) use ($patient) {
                 // Prescriptions from consultations
-                $query->whereHasMorph('prescribable', [\App\Models\Consultation::class], function ($q) use ($patient) {
+                $query->whereHasMorph('prescribable', [Consultation::class], function ($q) use ($patient) {
                     $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patient->id));
                 })
                 // Prescriptions from ward rounds
-                    ->orWhereHasMorph('prescribable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                    ->orWhereHasMorph('prescribable', [WardRound::class], function ($q) use ($patient) {
                         $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patient->id));
                     });
             })
@@ -859,9 +937,9 @@ class PatientController extends Controller
             ->map(function ($p) {
                 // Get the actual date from the consultation or ward round
                 $date = null;
-                if ($p->prescribable instanceof \App\Models\Consultation) {
+                if ($p->prescribable instanceof Consultation) {
                     $date = $p->prescribable->started_at ?? $p->prescribable->created_at;
-                } elseif ($p->prescribable instanceof \App\Models\WardRound) {
+                } elseif ($p->prescribable instanceof WardRound) {
                     $date = $p->prescribable->round_date ?? $p->prescribable->created_at;
                 } else {
                     $date = $p->created_at;
@@ -884,15 +962,15 @@ class PatientController extends Controller
             });
 
         // Get all lab results
-        $allLabResults = \App\Models\LabOrder::with([
+        $allLabResults = LabOrder::with([
             'labService:id,name,code,is_imaging,test_parameters',
             'orderedBy:id,name',
         ])
             ->where(function ($query) use ($patient) {
-                $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patient) {
+                $query->whereHasMorph('orderable', [Consultation::class], function ($q) use ($patient) {
                     $q->whereHas('patientCheckin', fn ($sq) => $sq->where('patient_id', $patient->id));
                 })
-                    ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                    ->orWhereHasMorph('orderable', [WardRound::class], function ($q) use ($patient) {
                         $q->whereHas('patientAdmission', fn ($sq) => $sq->where('patient_id', $patient->id));
                     });
             })
@@ -927,9 +1005,9 @@ class PatientController extends Controller
     /**
      * Get theatre/surgical procedures for a patient
      */
-    private function getTheatreProcedures(Patient $patient): \Illuminate\Support\Collection
+    private function getTheatreProcedures(Patient $patient): Collection
     {
-        return \App\Models\ConsultationProcedure::with([
+        return ConsultationProcedure::with([
             'procedureType:id,name,code,category',
             'doctor:id,name',
             'consultation.patientCheckin.department:id,name',
@@ -960,9 +1038,9 @@ class PatientController extends Controller
             ]);
     }
 
-    private function getMinorProceduresHistory(Patient $patient): \Illuminate\Support\Collection
+    private function getMinorProceduresHistory(Patient $patient): Collection
     {
-        return \App\Models\MinorProcedure::with([
+        return MinorProcedure::with([
             'patientCheckin:id,department_id,checked_in_at',
             'patientCheckin.department:id,name',
             'patientCheckin.vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
@@ -1014,12 +1092,12 @@ class PatientController extends Controller
     private function generatePatientNumber(): string
     {
         // Get configuration from system settings
-        $format = \App\Models\SystemConfiguration::get('patient_number_format', 'prefix_year_number');
-        $prefix = \App\Models\SystemConfiguration::get('patient_number_prefix', 'PAT');
-        $yearFormat = \App\Models\SystemConfiguration::get('patient_number_year_format', 'YYYY');
-        $separator = \App\Models\SystemConfiguration::get('patient_number_separator', '');
-        $padding = (int) \App\Models\SystemConfiguration::get('patient_number_padding', 6);
-        $resetPolicy = \App\Models\SystemConfiguration::get('patient_number_reset', 'never');
+        $format = SystemConfiguration::get('patient_number_format', 'prefix_year_number');
+        $prefix = SystemConfiguration::get('patient_number_prefix', 'PAT');
+        $yearFormat = SystemConfiguration::get('patient_number_year_format', 'YYYY');
+        $separator = SystemConfiguration::get('patient_number_separator', '');
+        $padding = (int) SystemConfiguration::get('patient_number_padding', 6);
+        $resetPolicy = SystemConfiguration::get('patient_number_reset', 'never');
 
         // Generate year based on format
         $year = $yearFormat === 'YYYY' ? date('Y') : date('y');
@@ -1093,7 +1171,7 @@ class PatientController extends Controller
     {
         $today = now()->toDateString();
 
-        $checkin = \App\Models\PatientCheckin::where('patient_id', $patient->id)
+        $checkin = PatientCheckin::where('patient_id', $patient->id)
             ->whereNull('claim_check_code')
             ->where(function ($query) use ($today) {
                 // OPD statuses - always eligible
@@ -1134,7 +1212,7 @@ class PatientController extends Controller
      */
     private function getNhisSettings(): array
     {
-        $nhisSettings = \App\Models\NhisSettings::getInstance();
+        $nhisSettings = NhisSettings::getInstance();
         $nhisCredentials = null;
 
         if ($nhisSettings->verification_mode === 'extension' && $nhisSettings->nhia_username) {
@@ -1143,7 +1221,7 @@ class PatientController extends Controller
                     'username' => $nhisSettings->nhia_username,
                     'password' => $nhisSettings->nhia_password,
                 ];
-            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            } catch (DecryptException $e) {
                 // Password was encrypted with different APP_KEY, ignore
             }
         }

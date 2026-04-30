@@ -136,6 +136,7 @@ interface MedicalHistoryData {
         department: string | null;
         presenting_complaint: string | null;
         history_presenting_complaint: string | null;
+        on_direct_questioning: string | null;
         examination_findings: string | null;
         assessment_notes: string | null;
         plan_notes: string | null;
@@ -204,6 +205,57 @@ interface MedicalHistoryData {
             code: string | null;
             description: string | null;
             is_active: boolean;
+        }>;
+        ward_rounds?: Array<{
+            id: number;
+            date: string | null;
+            doctor: string | null;
+            day_number: number | null;
+            round_type: string | null;
+            presenting_complaint: string | null;
+            history_presenting_complaint: string | null;
+            on_direct_questioning: string | null;
+            examination_findings: string | null;
+            assessment_notes: string | null;
+            plan_notes: string | null;
+            patient_status: string | null;
+            prescriptions: Array<{
+                drug_name: string | null;
+                generic_name: string | null;
+                form: string | null;
+                strength: string | null;
+                dose_quantity: string | null;
+                frequency: string | null;
+                duration: string | null;
+                quantity: number | null;
+                instructions: string | null;
+                status: string;
+            }>;
+            lab_orders: Array<{
+                id: number;
+                service_name: string | null;
+                code: string | null;
+                is_imaging: boolean;
+                test_parameters?: {
+                    parameters: Array<{
+                        name: string;
+                        label: string;
+                        type: string;
+                        unit?: string;
+                        normal_range?: { min?: number; max?: number };
+                    }>;
+                } | null;
+                status: string;
+                result_values: Record<string, unknown> | null;
+                result_notes: string | null;
+                ordered_at: string | null;
+                result_entered_at: string | null;
+            }>;
+            procedures: Array<{
+                name: string | null;
+                code: string | null;
+                notes: string | null;
+            }>;
         }>;
     }>;
     prescriptions: Array<{

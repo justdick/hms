@@ -8,6 +8,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -18,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Beaker,
     Calendar,
+    ChevronRight,
     ClipboardList,
     Eye,
     FileText,
@@ -104,6 +110,7 @@ interface Consultation {
     department: string | null;
     presenting_complaint: string | null;
     history_presenting_complaint: string | null;
+    on_direct_questioning: string | null;
     examination_findings: string | null;
     assessment_notes: string | null;
     plan_notes: string | null;
@@ -121,6 +128,8 @@ interface WardRound {
     day_number: number | null;
     round_type: string | null;
     presenting_complaint: string | null;
+    history_presenting_complaint: string | null;
+    on_direct_questioning: string | null;
     examination_findings: string | null;
     assessment_notes: string | null;
     plan_notes: string | null;
@@ -257,7 +266,7 @@ export function PatientMedicalHistoryModal({
                         Medical History
                         {data && (
                             <span className="text-muted-foreground font-normal">
-                                — {data.patient_name}
+                                â€” {data.patient_name}
                             </span>
                         )}
                     </DialogTitle>
@@ -442,354 +451,180 @@ export function PatientMedicalHistoryModal({
                                 >
                                     {data.medical_history.consultations.length >
                                     0 ? (
-                                        data.medical_history.consultations.map(
-                                            (c) => (
-                                                <Card key={c.id}>
-                                                    <CardHeader className="pb-3">
-                                                        <div className="flex items-start justify-between">
-                                                            <div>
-                                                                <CardTitle className="text-base">
-                                                                    {c.department ||
-                                                                        'Consultation'}
-                                                                </CardTitle>
-                                                                <CardDescription className="mt-1 flex items-center gap-2">
-                                                                    <Calendar className="h-3.5 w-3.5" />
-                                                                    {formatDateTime(
-                                                                        c.date,
-                                                                    )}
-                                                                    {c.doctor && (
-                                                                        <span>
-                                                                            •
-                                                                            Dr.{' '}
-                                                                            {
-                                                                                c.doctor
-                                                                            }
-                                                                        </span>
-                                                                    )}
-                                                                </CardDescription>
-                                                            </div>
-                                                        </div>
-                                                    </CardHeader>
-                                                    <CardContent className="space-y-4">
-                                                        {/* Vitals */}
-                                                        {c.vitals && (
-                                                            <div className="rounded-lg bg-muted/50 p-3">
-                                                                <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
-                                                                    <Thermometer className="h-3.5 w-3.5" />
-                                                                    Vitals
-                                                                </h4>
-                                                                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                                                                    {c.vitals
-                                                                        .blood_pressure && (
-                                                                        <div>
-                                                                            <span className="text-muted-foreground">
-                                                                                BP:
-                                                                            </span>{' '}
-                                                                            <span className="font-medium">
-                                                                                {
-                                                                                    c
-                                                                                        .vitals
-                                                                                        .blood_pressure
-                                                                                }
+                                        <div className="space-y-3">
+                                            {data.medical_history.consultations.map(
+                                                (c) => (
+                                                    <Collapsible key={c.id}>
+                                                        <div className="rounded-lg border">
+                                                            <CollapsibleTrigger className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors">
+                                                                <div className="flex items-center gap-3">
+                                                                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]_&]:rotate-90" />
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-sm font-semibold">
+                                                                                {c.department || 'Consultation'}
                                                                             </span>
-                                                                        </div>
-                                                                    )}
-                                                                    {c.vitals
-                                                                        .temperature && (
-                                                                        <div>
-                                                                            <span className="text-muted-foreground">
-                                                                                Temp:
-                                                                            </span>{' '}
-                                                                            <span className="font-medium">
-                                                                                {
-                                                                                    c
-                                                                                        .vitals
-                                                                                        .temperature
-                                                                                }
-                                                                                °C
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                    {c.vitals
-                                                                        .pulse_rate && (
-                                                                        <div>
-                                                                            <span className="text-muted-foreground">
-                                                                                Pulse:
-                                                                            </span>{' '}
-                                                                            <span className="font-medium">
-                                                                                {
-                                                                                    c
-                                                                                        .vitals
-                                                                                        .pulse_rate
-                                                                                }
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                    {c.vitals
-                                                                        .oxygen_saturation && (
-                                                                        <div>
-                                                                            <span className="text-muted-foreground">
-                                                                                SpO2:
-                                                                            </span>{' '}
-                                                                            <span className="font-medium">
-                                                                                {
-                                                                                    c
-                                                                                        .vitals
-                                                                                        .oxygen_saturation
-                                                                                }
-                                                                                %
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                    {c.vitals
-                                                                        .blood_sugar && (
-                                                                        <div>
-                                                                            <span className="text-muted-foreground">
-                                                                                BS:
-                                                                            </span>{' '}
-                                                                            <span className="font-medium">
-                                                                                {
-                                                                                    c
-                                                                                        .vitals
-                                                                                        .blood_sugar
-                                                                                }
-                                                                                {' '}mmol/L
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Diagnoses */}
-                                                        {c.diagnoses.length >
-                                                            0 && (
-                                                            <div>
-                                                                <h4 className="mb-2 text-sm font-medium">
-                                                                    Diagnoses
-                                                                </h4>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {c.diagnoses.map(
-                                                                        (
-                                                                            d,
-                                                                            idx,
-                                                                        ) => (
-                                                                            <Badge
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                                variant={
-                                                                                    d.type ===
-                                                                                    'principal'
-                                                                                        ? 'default'
-                                                                                        : 'secondary'
-                                                                                }
-                                                                            >
-                                                                                {d.code &&
-                                                                                    `${d.code}: `}
-                                                                                {
-                                                                                    d.description
-                                                                                }
-                                                                            </Badge>
-                                                                        ),
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* SOAP Notes */}
-                                                        <div className="grid gap-3 text-sm">
-                                                            {c.presenting_complaint && (
-                                                                <div>
-                                                                    <span className="text-muted-foreground font-medium">
-                                                                        Presenting
-                                                                        Complaint:
-                                                                    </span>
-                                                                    <p className="mt-1">
-                                                                        {
-                                                                            c.presenting_complaint
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                            {c.examination_findings && (
-                                                                <div>
-                                                                    <span className="text-muted-foreground font-medium">
-                                                                        Examination:
-                                                                    </span>
-                                                                    <p className="mt-1">
-                                                                        {
-                                                                            c.examination_findings
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                            {c.assessment_notes && (
-                                                                <div>
-                                                                    <span className="text-muted-foreground font-medium">
-                                                                        Assessment:
-                                                                    </span>
-                                                                    <p className="mt-1">
-                                                                        {
-                                                                            c.assessment_notes
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                            {c.plan_notes && (
-                                                                <div>
-                                                                    <span className="text-muted-foreground font-medium">
-                                                                        Plan:
-                                                                    </span>
-                                                                    <p className="mt-1">
-                                                                        {
-                                                                            c.plan_notes
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Prescriptions */}
-                                                        {c.prescriptions
-                                                            .length > 0 && (
-                                                            <div>
-                                                                <h4 className="mb-2 text-sm font-medium">
-                                                                    Prescriptions
-                                                                </h4>
-                                                                <div className="space-y-1">
-                                                                    {c.prescriptions.map(
-                                                                        (
-                                                                            p,
-                                                                            idx,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                                className="flex items-center gap-2 text-sm"
-                                                                            >
-                                                                                <Pill className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                <span>
-                                                                                    {
-                                                                                        p.drug_name
-                                                                                    }
-                                                                                    {p.strength &&
-                                                                                        ` ${p.strength}`}
-                                                                                    {p.dose_quantity &&
-                                                                                        ` - ${p.dose_quantity}`}
-                                                                                    {p.frequency &&
-                                                                                        ` ${p.frequency}`}
-                                                                                    {p.duration &&
-                                                                                        ` x ${p.duration}`}
-                                                                                </span>
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Lab Orders */}
-                                                        {c.lab_orders.length >
-                                                            0 && (
-                                                            <div>
-                                                                <h4 className="mb-2 text-sm font-medium">
-                                                                    Lab /
-                                                                    Imaging
-                                                                    Orders
-                                                                </h4>
-                                                                <div className="space-y-1">
-                                                                    {c.lab_orders.map(
-                                                                        (
-                                                                            l,
-                                                                            idx,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                                className="flex items-center gap-2 text-sm"
-                                                                            >
-                                                                                <Beaker className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                <span>
-                                                                                    {
-                                                                                        l.service_name
-                                                                                    }
-                                                                                </span>
-                                                                                <Badge
-                                                                                    variant={
-                                                                                        l.status ===
-                                                                                        'completed'
-                                                                                            ? 'default'
-                                                                                            : 'secondary'
-                                                                                    }
-                                                                                    className="text-xs"
-                                                                                >
-                                                                                    {
-                                                                                        l.status
-                                                                                    }
+                                                                            {c.diagnoses.length > 0 && (
+                                                                                <Badge variant="secondary" className="text-xs">
+                                                                                    {c.diagnoses.length} dx
                                                                                 </Badge>
-                                                                                {l.status === 'completed' && l.result_values && (
-                                                                                    <Button
-                                                                                        variant="ghost"
-                                                                                        size="sm"
-                                                                                        className="h-6 px-2 text-xs"
-                                                                                        onClick={() => setSelectedLabResult(l)}
-                                                                                    >
-                                                                                        <Eye className="mr-1 h-3 w-3" />
-                                                                                        View Results
-                                                                                    </Button>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                                                            <Calendar className="h-3 w-3" />
+                                                                            {formatDateTime(c.date)}
+                                                                            {c.doctor && ` â€¢ Dr. ${c.doctor}`}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </CollapsibleTrigger>
+                                                            <CollapsibleContent>
+                                                                <div className="border-t p-4 space-y-4">
+                                                                    {/* Vitals */}
+                                                                    {c.vitals && (
+                                                                        <div className="rounded-lg bg-muted/50 p-3">
+                                                                            <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
+                                                                                <Thermometer className="h-3.5 w-3.5" />
+                                                                                Vitals
+                                                                            </h4>
+                                                                            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                                                {c.vitals.blood_pressure && (
+                                                                                    <div><span className="text-muted-foreground">BP:</span> <span className="font-medium">{c.vitals.blood_pressure}</span></div>
+                                                                                )}
+                                                                                {c.vitals.temperature && (
+                                                                                    <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium">{c.vitals.temperature}Â°C</span></div>
+                                                                                )}
+                                                                                {c.vitals.pulse_rate && (
+                                                                                    <div><span className="text-muted-foreground">Pulse:</span> <span className="font-medium">{c.vitals.pulse_rate}</span></div>
+                                                                                )}
+                                                                                {c.vitals.oxygen_saturation && (
+                                                                                    <div><span className="text-muted-foreground">SpO2:</span> <span className="font-medium">{c.vitals.oxygen_saturation}%</span></div>
+                                                                                )}
+                                                                                {c.vitals.blood_sugar && (
+                                                                                    <div><span className="text-muted-foreground">BS:</span> <span className="font-medium">{c.vitals.blood_sugar} mmol/L</span></div>
                                                                                 )}
                                                                             </div>
-                                                                        ),
+                                                                        </div>
                                                                     )}
-                                                                </div>
-                                                            </div>
-                                                        )}
 
-                                                        {/* Procedures */}
-                                                        {c.procedures.length >
-                                                            0 && (
-                                                            <div>
-                                                                <h4 className="mb-2 text-sm font-medium">
-                                                                    Procedures
-                                                                </h4>
-                                                                <div className="space-y-1">
-                                                                    {c.procedures.map(
-                                                                        (
-                                                                            p,
-                                                                            idx,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                                className="flex items-center gap-2 text-sm"
-                                                                            >
-                                                                                <Scissors className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                <span>
-                                                                                    {
-                                                                                        p.name
-                                                                                    }
-                                                                                </span>
+                                                                    {/* Diagnoses */}
+                                                                    {c.diagnoses.length > 0 && (
+                                                                        <div>
+                                                                            <h4 className="mb-2 text-sm font-medium">Diagnoses</h4>
+                                                                            <div className="flex flex-wrap gap-2">
+                                                                                {c.diagnoses.map((d, idx) => (
+                                                                                    <Badge key={idx} variant={d.type === 'principal' ? 'default' : 'secondary'}>
+                                                                                        {d.code && `${d.code}: `}{d.description}
+                                                                                    </Badge>
+                                                                                ))}
                                                                             </div>
-                                                                        ),
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Clinical Notes */}
+                                                                    <div className="grid gap-3 text-sm">
+                                                                        {c.presenting_complaint && (
+                                                                            <div>
+                                                                                <span className="font-medium text-blue-700 dark:text-blue-400">Presenting Complaint:</span>
+                                                                                <p className="mt-1">{c.presenting_complaint}</p>
+                                                                            </div>
+                                                                        )}
+                                                                        {c.history_presenting_complaint && (
+                                                                            <div>
+                                                                                <span className="font-medium text-teal-700 dark:text-teal-400">History of PC:</span>
+                                                                                <p className="mt-1">{c.history_presenting_complaint}</p>
+                                                                            </div>
+                                                                        )}
+                                                                        {c.on_direct_questioning && (
+                                                                            <div>
+                                                                                <span className="font-medium text-cyan-700 dark:text-cyan-400">On Direct Questioning:</span>
+                                                                                <p className="mt-1">{c.on_direct_questioning}</p>
+                                                                            </div>
+                                                                        )}
+                                                                        {c.examination_findings && (
+                                                                            <div>
+                                                                                <span className="font-medium text-amber-700 dark:text-amber-400">Examination:</span>
+                                                                                <p className="mt-1">{c.examination_findings}</p>
+                                                                            </div>
+                                                                        )}
+                                                                        {c.assessment_notes && (
+                                                                            <div>
+                                                                                <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>
+                                                                                <p className="mt-1">{c.assessment_notes}</p>
+                                                                            </div>
+                                                                        )}
+                                                                        {c.plan_notes && (
+                                                                            <div>
+                                                                                <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>
+                                                                                <p className="mt-1">{c.plan_notes}</p>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Prescriptions */}
+                                                                    {c.prescriptions.length > 0 && (
+                                                                        <div>
+                                                                            <h4 className="mb-2 text-sm font-medium">Prescriptions</h4>
+                                                                            <div className="space-y-1">
+                                                                                {c.prescriptions.map((p, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                        <Pill className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                        <span>{p.drug_name}{p.strength && ` ${p.strength}`}{p.dose_quantity && ` - ${p.dose_quantity}`}{p.frequency && ` ${p.frequency}`}{p.duration && ` x ${p.duration}`}</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Lab Orders */}
+                                                                    {c.lab_orders.length > 0 && (
+                                                                        <div>
+                                                                            <h4 className="mb-2 text-sm font-medium">Lab / Imaging Orders</h4>
+                                                                            <div className="space-y-1">
+                                                                                {c.lab_orders.map((l, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                        <Beaker className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                        <span>{l.service_name}</span>
+                                                                                        <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">{l.status}</Badge>
+                                                                                        {l.status === 'completed' && l.result_values && (
+                                                                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
+                                                                                                <Eye className="mr-1 h-3 w-3" />
+                                                                                                View Results
+                                                                                            </Button>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Procedures */}
+                                                                    {c.procedures.length > 0 && (
+                                                                        <div>
+                                                                            <h4 className="mb-2 text-sm font-medium">Procedures</h4>
+                                                                            <div className="space-y-1">
+                                                                                {c.procedures.map((p, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                        <Scissors className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                        <span>{p.name}</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </CardContent>
-                                                </Card>
-                                            ),
-                                        )
+                                                            </CollapsibleContent>
+                                                        </div>
+                                                    </Collapsible>
+                                                ),
+                                            )}
+                                        </div>
                                     ) : (
                                         <div className="py-12 text-center text-gray-500">
                                             No consultation records found
                                         </div>
                                     )}
                                 </TabsContent>
-
                                 {/* Admissions Tab */}
                                 <TabsContent
                                     value="admissions"
@@ -797,310 +632,196 @@ export function PatientMedicalHistoryModal({
                                 >
                                     {data.medical_history.admissions.length >
                                     0 ? (
-                                        data.medical_history.admissions.map(
-                                            (a) => (
-                                                <Card key={a.id}>
-                                                    <CardHeader className="pb-3">
-                                                        <CardTitle className="text-base">
-                                                            {a.ward || 'Ward'}{' '}
-                                                            {a.bed &&
-                                                                `- Bed ${a.bed}`}
-                                                        </CardTitle>
-                                                        <CardDescription className="flex items-center gap-2">
-                                                            <Calendar className="h-3.5 w-3.5" />
-                                                            {formatDateTime(
-                                                                a.admitted_at,
-                                                            )}
-                                                            {a.discharged_at &&
-                                                                ` → ${formatDateTime(a.discharged_at)}`}
-                                                            {a.admitting_doctor && (
-                                                                <span>
-                                                                    • Dr.{' '}
-                                                                    {
-                                                                        a.admitting_doctor
-                                                                    }
-                                                                </span>
-                                                            )}
-                                                        </CardDescription>
-                                                    </CardHeader>
-                                                    <CardContent className="space-y-3">
-                                                        <Badge
-                                                            variant={
-                                                                a.status ===
-                                                                'discharged'
-                                                                    ? 'outline'
-                                                                    : 'secondary'
-                                                            }
-                                                        >
-                                                            {a.status}
-                                                        </Badge>
-                                                        {a.admission_reason && (
-                                                            <div className="text-sm">
-                                                                <span className="text-muted-foreground font-medium">
-                                                                    Reason:
-                                                                </span>
-                                                                <p className="mt-1">
-                                                                    {
-                                                                        a.admission_reason
-                                                                    }
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                        {a.diagnoses.length >
-                                                            0 && (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {a.diagnoses.map(
-                                                                    (
-                                                                        d,
-                                                                        idx,
-                                                                    ) => (
-                                                                        <Badge
-                                                                            key={
-                                                                                idx
-                                                                            }
-                                                                            variant="secondary"
-                                                                        >
-                                                                            {d.code &&
-                                                                                `${d.code}: `}
-                                                                            {
-                                                                                d.description
-                                                                            }
-                                                                        </Badge>
-                                                                    ),
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {/* Ward Rounds */}
-                                                        {a.ward_rounds &&
-                                                            a.ward_rounds
-                                                                .length >
-                                                                0 && (
-                                                                <div className="mt-4 space-y-3">
-                                                                    <h4 className="flex items-center gap-2 text-sm font-medium">
-                                                                        <Stethoscope className="h-3.5 w-3.5" />
-                                                                        Ward
-                                                                        Rounds (
-                                                                        {
-                                                                            a
-                                                                                .ward_rounds
-                                                                                .length
-                                                                        }
-                                                                        )
-                                                                    </h4>
-                                                                    {a.ward_rounds.map(
-                                                                        (
-                                                                            wr,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    wr.id
-                                                                                }
-                                                                                className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                                        <div className="space-y-3">
+                                            {data.medical_history.admissions.map(
+                                                (a) => (
+                                                    <Collapsible key={a.id}>
+                                                        <div className="rounded-lg border">
+                                                            <CollapsibleTrigger className="flex w-full items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors">
+                                                                <div className="flex items-center gap-3">
+                                                                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]_&]:rotate-90" />
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-sm font-semibold">
+                                                                                {a.admission_number}
+                                                                            </span>
+                                                                            <Badge
+                                                                                variant={a.status === 'discharged' ? 'outline' : 'secondary'}
+                                                                                className="text-xs"
                                                                             >
-                                                                                <div className="mb-2 flex items-center justify-between">
-                                                                                    <span className="text-sm font-medium">
-                                                                                        Ward Round
-                                                                                        {wr.round_type &&
-                                                                                            ` (${wr.round_type})`}
-                                                                                    </span>
-                                                                                    <span className="text-muted-foreground text-xs">
-                                                                                        {formatDateTime(
-                                                                                            wr.date,
-                                                                                        )}
-                                                                                        {wr.doctor &&
-                                                                                            ` • Dr. ${wr.doctor}`}
-                                                                                    </span>
-                                                                                </div>
+                                                                                {a.status}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                                                                            <Calendar className="h-3 w-3" />
+                                                                            {formatDateTime(a.admitted_at)}
+                                                                            {a.discharged_at && ` â†’ ${formatDateTime(a.discharged_at)}`}
+                                                                            {a.ward && ` â€¢ ${a.ward}`}
+                                                                            {a.bed && ` (Bed ${a.bed})`}
+                                                                            {a.admitting_doctor && ` â€¢ Dr. ${a.admitting_doctor}`}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {a.ward_rounds && a.ward_rounds.length > 0 && (
+                                                                    <Badge variant="secondary" className="text-xs">
+                                                                        {a.ward_rounds.length} round{a.ward_rounds.length !== 1 ? 's' : ''}
+                                                                    </Badge>
+                                                                )}
+                                                            </CollapsibleTrigger>
+                                                            <CollapsibleContent>
+                                                                <div className="border-t p-4 space-y-4">
+                                                                    {a.admission_reason && (
+                                                                        <div className="text-sm">
+                                                                            <span className="text-muted-foreground font-medium">Reason:</span>
+                                                                            <p className="mt-1">{a.admission_reason}</p>
+                                                                        </div>
+                                                                    )}
 
-                                                                                {/* SOAP notes */}
-                                                                                <div className="grid gap-2 text-sm">
-                                                                                    {wr.presenting_complaint && (
-                                                                                        <div>
-                                                                                            <span className="text-muted-foreground font-medium">
-                                                                                                S:
-                                                                                            </span>{' '}
-                                                                                            {
-                                                                                                wr.presenting_complaint
-                                                                                            }
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {wr.examination_findings && (
-                                                                                        <div>
-                                                                                            <span className="text-muted-foreground font-medium">
-                                                                                                O:
-                                                                                            </span>{' '}
-                                                                                            {
-                                                                                                wr.examination_findings
-                                                                                            }
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {wr.assessment_notes && (
-                                                                                        <div>
-                                                                                            <span className="text-muted-foreground font-medium">
-                                                                                                A:
-                                                                                            </span>{' '}
-                                                                                            {
-                                                                                                wr.assessment_notes
-                                                                                            }
-                                                                                        </div>
-                                                                                    )}
-                                                                                    {wr.plan_notes && (
-                                                                                        <div>
-                                                                                            <span className="text-muted-foreground font-medium">
-                                                                                                P:
-                                                                                            </span>{' '}
-                                                                                            {
-                                                                                                wr.plan_notes
-                                                                                            }
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-
-                                                                                {/* Prescriptions */}
-                                                                                {wr
-                                                                                    .prescriptions
-                                                                                    .length >
-                                                                                    0 && (
-                                                                                    <div className="mt-2">
-                                                                                        <h5 className="mb-1 text-xs font-medium text-gray-500">
-                                                                                            Prescriptions
-                                                                                        </h5>
-                                                                                        <div className="space-y-0.5">
-                                                                                            {wr.prescriptions.map(
-                                                                                                (
-                                                                                                    p,
-                                                                                                    idx,
-                                                                                                ) => (
-                                                                                                    <div
-                                                                                                        key={
-                                                                                                            idx
-                                                                                                        }
-                                                                                                        className="flex items-center gap-2 text-sm"
-                                                                                                    >
-                                                                                                        <Pill className="text-muted-foreground h-3 w-3" />
-                                                                                                        <span>
-                                                                                                            {
-                                                                                                                p.drug_name
-                                                                                                            }
-                                                                                                            {p.strength &&
-                                                                                                                ` ${p.strength}`}
-                                                                                                            {p.dose_quantity &&
-                                                                                                                ` - ${p.dose_quantity}`}
-                                                                                                            {p.frequency &&
-                                                                                                                ` ${p.frequency}`}
-                                                                                                            {p.duration &&
-                                                                                                                ` x ${p.duration}`}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                ),
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
-
-                                                                                {/* Lab Orders */}
-                                                                                {wr
-                                                                                    .lab_orders
-                                                                                    .length >
-                                                                                    0 && (
-                                                                                    <div className="mt-2">
-                                                                                        <h5 className="mb-1 text-xs font-medium text-gray-500">
-                                                                                            Lab
-                                                                                            /
-                                                                                            Imaging
-                                                                                        </h5>
-                                                                                        <div className="space-y-0.5">
-                                                                                            {wr.lab_orders.map(
-                                                                                                (
-                                                                                                    l,
-                                                                                                    idx,
-                                                                                                ) => (
-                                                                                                    <div
-                                                                                                        key={
-                                                                                                            idx
-                                                                                                        }
-                                                                                                        className="flex items-center gap-2 text-sm"
-                                                                                                    >
-                                                                                                        <Beaker className="text-muted-foreground h-3 w-3" />
-                                                                                                        <span>
-                                                                                                            {
-                                                                                                                l.service_name
-                                                                                                            }
-                                                                                                        </span>
-                                                                                                        <Badge
-                                                                                                            variant={
-                                                                                                                l.status ===
-                                                                                                                'completed'
-                                                                                                                    ? 'default'
-                                                                                                                    : 'secondary'
-                                                                                                            }
-                                                                                                            className="text-xs"
-                                                                                                        >
-                                                                                                            {
-                                                                                                                l.status
-                                                                                                            }
-                                                                                                        </Badge>
-                                                                                                        {l.status === 'completed' && l.result_values && (
-                                                                                                            <Button
-                                                                                                                variant="ghost"
-                                                                                                                size="sm"
-                                                                                                                className="h-6 px-2 text-xs"
-                                                                                                                onClick={() => setSelectedLabResult(l)}
-                                                                                                            >
-                                                                                                                <Eye className="mr-1 h-3 w-3" />
-                                                                                                                View Results
-                                                                                                            </Button>
-                                                                                                        )}
-                                                                                                    </div>
-                                                                                                ),
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
-
-                                                                                {/* Procedures */}
-                                                                                {wr
-                                                                                    .procedures
-                                                                                    .length >
-                                                                                    0 && (
-                                                                                    <div className="mt-2">
-                                                                                        <h5 className="mb-1 text-xs font-medium text-gray-500">
-                                                                                            Procedures
-                                                                                        </h5>
-                                                                                        <div className="space-y-0.5">
-                                                                                            {wr.procedures.map(
-                                                                                                (
-                                                                                                    p,
-                                                                                                    idx,
-                                                                                                ) => (
-                                                                                                    <div
-                                                                                                        key={
-                                                                                                            idx
-                                                                                                        }
-                                                                                                        className="flex items-center gap-2 text-sm"
-                                                                                                    >
-                                                                                                        <Scissors className="text-muted-foreground h-3 w-3" />
-                                                                                                        <span>
-                                                                                                            {
-                                                                                                                p.name
-                                                                                                            }
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                ),
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
+                                                                    {a.diagnoses.length > 0 && (
+                                                                        <div>
+                                                                            <span className="text-sm text-muted-foreground font-medium">Diagnoses:</span>
+                                                                            <div className="mt-1 flex flex-wrap gap-2">
+                                                                                {a.diagnoses.map((d, idx) => (
+                                                                                    <Badge key={idx} variant="secondary">
+                                                                                        {d.code && `${d.code}: `}
+                                                                                        {d.description}
+                                                                                    </Badge>
+                                                                                ))}
                                                                             </div>
-                                                                        ),
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Ward Rounds */}
+                                                                    {a.ward_rounds && a.ward_rounds.length > 0 && (
+                                                                        <div className="space-y-3">
+                                                                            <h4 className="flex items-center gap-2 text-sm font-medium">
+                                                                                <Stethoscope className="h-3.5 w-3.5" />
+                                                                                Ward Rounds
+                                                                            </h4>
+                                                                            {a.ward_rounds.map((wr) => (
+                                                                                <div key={wr.id} className="rounded-lg border border-gray-200 overflow-hidden dark:border-gray-700">
+                                                                                    {/* Colored header */}
+                                                                                    <div className="flex items-center justify-between bg-violet-50 px-3 py-2 dark:bg-violet-950">
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <Stethoscope className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                                                                                            <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
+                                                                                                {wr.round_type || 'Ward Round'}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <span className="text-xs text-violet-600 dark:text-violet-400">
+                                                                                            {formatDateTime(wr.date)}
+                                                                                            {wr.doctor && ` â€¢ Dr. ${wr.doctor}`}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    {/* Content */}
+                                                                                    <div className="p-3 space-y-3">
+                                                                                        <div className="grid gap-2 text-sm">
+                                                                                            {wr.presenting_complaint && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-blue-700 dark:text-blue-400">PC:</span>{' '}
+                                                                                                    {wr.presenting_complaint}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {wr.history_presenting_complaint && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-teal-700 dark:text-teal-400">HPC:</span>{' '}
+                                                                                                    {wr.history_presenting_complaint}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {wr.on_direct_questioning && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-cyan-700 dark:text-cyan-400">ODQ:</span>{' '}
+                                                                                                    {wr.on_direct_questioning}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {wr.examination_findings && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-amber-700 dark:text-amber-400">Exam:</span>{' '}
+                                                                                                    {wr.examination_findings}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {wr.assessment_notes && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>{' '}
+                                                                                                    {wr.assessment_notes}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {wr.plan_notes && (
+                                                                                                <div>
+                                                                                                    <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>{' '}
+                                                                                                    {wr.plan_notes}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+
+                                                                                        {wr.prescriptions.length > 0 && (
+                                                                                            <div>
+                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Prescriptions</h5>
+                                                                                                <div className="space-y-0.5">
+                                                                                                    {wr.prescriptions.map((p, idx) => (
+                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                                            <Pill className="text-muted-foreground h-3 w-3" />
+                                                                                                            <span>
+                                                                                                                {p.drug_name}
+                                                                                                                {p.strength && ` ${p.strength}`}
+                                                                                                                {p.dose_quantity && ` - ${p.dose_quantity}`}
+                                                                                                                {p.frequency && ` ${p.frequency}`}
+                                                                                                                {p.duration && ` x ${p.duration}`}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        {wr.lab_orders.length > 0 && (
+                                                                                            <div>
+                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Lab / Imaging</h5>
+                                                                                                <div className="space-y-0.5">
+                                                                                                    {wr.lab_orders.map((l, idx) => (
+                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                                            <Beaker className="text-muted-foreground h-3 w-3" />
+                                                                                                            <span>{l.service_name}</span>
+                                                                                                            <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                                                                                                                {l.status}
+                                                                                                            </Badge>
+                                                                                                            {l.status === 'completed' && l.result_values && (
+                                                                                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
+                                                                                                                    <Eye className="mr-1 h-3 w-3" />
+                                                                                                                    View Results
+                                                                                                                </Button>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        {wr.procedures.length > 0 && (
+                                                                                            <div>
+                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Procedures</h5>
+                                                                                                <div className="space-y-0.5">
+                                                                                                    {wr.procedures.map((p, idx) => (
+                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                                            <Scissors className="text-muted-foreground h-3 w-3" />
+                                                                                                            <span>{p.name}</span>
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                            )}
-                                                    </CardContent>
-                                                </Card>
-                                            ),
-                                        )
+                                                            </CollapsibleContent>
+                                                        </div>
+                                                    </Collapsible>
+                                                ),
+                                            )}
+                                        </div>
                                     ) : (
                                         <div className="py-12 text-center text-gray-500">
                                             No admission records found
@@ -1132,7 +853,7 @@ export function PatientMedicalHistoryModal({
                                                                     )}
                                                                     {mp.nurse && (
                                                                         <span>
-                                                                            •{' '}
+                                                                            â€¢{' '}
                                                                             {
                                                                                 mp.nurse
                                                                             }
@@ -1178,7 +899,7 @@ export function PatientMedicalHistoryModal({
                                                                                         .vitals
                                                                                         .temperature
                                                                                 }
-                                                                                °C
+                                                                                Â°C
                                                                             </span>
                                                                         </div>
                                                                     )}
