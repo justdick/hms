@@ -37,6 +37,7 @@ import {
     Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import AdmissionDetailView from '@/pages/Patients/components/AdmissionDetailView';
 
 interface Diagnosis {
     type: string;
@@ -266,7 +267,7 @@ export function PatientMedicalHistoryModal({
                         Medical History
                         {data && (
                             <span className="text-muted-foreground font-normal">
-                                â€” {data.patient_name}
+                                — {data.patient_name}
                             </span>
                         )}
                     </DialogTitle>
@@ -298,10 +299,10 @@ export function PatientMedicalHistoryModal({
                                 defaultValue="consultations"
                                 className="space-y-4"
                             >
-                                <TabsList className="grid w-full grid-cols-4">
+                                <TabsList className="grid w-full grid-cols-4 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                                     <TabsTrigger
                                         value="background"
-                                        className="gap-1.5 text-xs"
+                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-slate-50 text-xs text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300"
                                     >
                                         <FileText className="h-3.5 w-3.5" />
                                         <span className="hidden sm:inline">
@@ -310,7 +311,7 @@ export function PatientMedicalHistoryModal({
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="consultations"
-                                        className="gap-1.5 text-xs"
+                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
                                     >
                                         <Stethoscope className="h-3.5 w-3.5" />
                                         <span className="hidden sm:inline">
@@ -328,7 +329,7 @@ export function PatientMedicalHistoryModal({
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="admissions"
-                                        className="gap-1.5 text-xs"
+                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-blue-50 text-xs text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
                                     >
                                         <Hospital className="h-3.5 w-3.5" />
                                         <span className="hidden sm:inline">
@@ -346,7 +347,7 @@ export function PatientMedicalHistoryModal({
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="minor-procedures"
-                                        className="gap-1.5 text-xs"
+                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-amber-50 text-xs text-amber-700 shadow-none transition-all hover:bg-amber-100 data-[state=active]:border-amber-600 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:shadow-none dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-900 dark:data-[state=active]:border-amber-400 dark:data-[state=active]:bg-amber-900 dark:data-[state=active]:text-amber-300"
                                     >
                                         <Scissors className="h-3.5 w-3.5" />
                                         <span className="hidden sm:inline">
@@ -473,145 +474,173 @@ export function PatientMedicalHistoryModal({
                                                                         <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                                             <Calendar className="h-3 w-3" />
                                                                             {formatDateTime(c.date)}
-                                                                            {c.doctor && ` â€¢ Dr. ${c.doctor}`}
+                                                                            {c.doctor && ` • Dr. ${c.doctor}`}
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </CollapsibleTrigger>
                                                             <CollapsibleContent>
                                                                 <div className="border-t p-4 space-y-4">
-                                                                    {/* Vitals */}
-                                                                    {c.vitals && (
-                                                                        <div className="rounded-lg bg-muted/50 p-3">
-                                                                            <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
+                                                                    <Tabs defaultValue="notes" className="space-y-3">
+                                                                        <TabsList className="grid w-full grid-cols-5 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
+                                                                            <TabsTrigger value="notes" className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300">
+                                                                                <Stethoscope className="h-3.5 w-3.5" />
+                                                                                Notes
+                                                                            </TabsTrigger>
+                                                                            <TabsTrigger value="diagnoses" className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-slate-50 text-xs text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300">
+                                                                                <ClipboardList className="h-3.5 w-3.5" />
+                                                                                Dx
+                                                                            </TabsTrigger>
+                                                                            <TabsTrigger value="vitals" className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-rose-50 text-xs text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300">
                                                                                 <Thermometer className="h-3.5 w-3.5" />
                                                                                 Vitals
-                                                                            </h4>
-                                                                            <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                                                                                {c.vitals.blood_pressure && (
-                                                                                    <div><span className="text-muted-foreground">BP:</span> <span className="font-medium">{c.vitals.blood_pressure}</span></div>
-                                                                                )}
-                                                                                {c.vitals.temperature && (
-                                                                                    <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium">{c.vitals.temperature}Â°C</span></div>
-                                                                                )}
-                                                                                {c.vitals.pulse_rate && (
-                                                                                    <div><span className="text-muted-foreground">Pulse:</span> <span className="font-medium">{c.vitals.pulse_rate}</span></div>
-                                                                                )}
-                                                                                {c.vitals.oxygen_saturation && (
-                                                                                    <div><span className="text-muted-foreground">SpO2:</span> <span className="font-medium">{c.vitals.oxygen_saturation}%</span></div>
-                                                                                )}
-                                                                                {c.vitals.blood_sugar && (
-                                                                                    <div><span className="text-muted-foreground">BS:</span> <span className="font-medium">{c.vitals.blood_sugar} mmol/L</span></div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
+                                                                            </TabsTrigger>
+                                                                            <TabsTrigger value="prescriptions" className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-green-50 text-xs text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300">
+                                                                                <Pill className="h-3.5 w-3.5" />
+                                                                                Rx
+                                                                            </TabsTrigger>
+                                                                            <TabsTrigger value="labs" className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-teal-50 text-xs text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300">
+                                                                                <Beaker className="h-3.5 w-3.5" />
+                                                                                Labs
+                                                                            </TabsTrigger>
+                                                                        </TabsList>
 
-                                                                    {/* Diagnoses */}
-                                                                    {c.diagnoses.length > 0 && (
-                                                                        <div>
-                                                                            <h4 className="mb-2 text-sm font-medium">Diagnoses</h4>
-                                                                            <div className="flex flex-wrap gap-2">
-                                                                                {c.diagnoses.map((d, idx) => (
-                                                                                    <Badge key={idx} variant={d.type === 'principal' ? 'default' : 'secondary'}>
-                                                                                        {d.code && `${d.code}: `}{d.description}
-                                                                                    </Badge>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Clinical Notes */}
-                                                                    <div className="grid gap-3 text-sm">
-                                                                        {c.presenting_complaint && (
-                                                                            <div>
-                                                                                <span className="font-medium text-blue-700 dark:text-blue-400">Presenting Complaint:</span>
-                                                                                <p className="mt-1">{c.presenting_complaint}</p>
-                                                                            </div>
-                                                                        )}
-                                                                        {c.history_presenting_complaint && (
-                                                                            <div>
-                                                                                <span className="font-medium text-teal-700 dark:text-teal-400">History of PC:</span>
-                                                                                <p className="mt-1">{c.history_presenting_complaint}</p>
-                                                                            </div>
-                                                                        )}
-                                                                        {c.on_direct_questioning && (
-                                                                            <div>
-                                                                                <span className="font-medium text-cyan-700 dark:text-cyan-400">On Direct Questioning:</span>
-                                                                                <p className="mt-1">{c.on_direct_questioning}</p>
-                                                                            </div>
-                                                                        )}
-                                                                        {c.examination_findings && (
-                                                                            <div>
-                                                                                <span className="font-medium text-amber-700 dark:text-amber-400">Examination:</span>
-                                                                                <p className="mt-1">{c.examination_findings}</p>
-                                                                            </div>
-                                                                        )}
-                                                                        {c.assessment_notes && (
-                                                                            <div>
-                                                                                <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>
-                                                                                <p className="mt-1">{c.assessment_notes}</p>
-                                                                            </div>
-                                                                        )}
-                                                                        {c.plan_notes && (
-                                                                            <div>
-                                                                                <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>
-                                                                                <p className="mt-1">{c.plan_notes}</p>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {/* Prescriptions */}
-                                                                    {c.prescriptions.length > 0 && (
-                                                                        <div>
-                                                                            <h4 className="mb-2 text-sm font-medium">Prescriptions</h4>
-                                                                            <div className="space-y-1">
-                                                                                {c.prescriptions.map((p, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Pill className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                        <span>{p.drug_name}{p.strength && ` ${p.strength}`}{p.dose_quantity && ` - ${p.dose_quantity}`}{p.frequency && ` ${p.frequency}`}{p.duration && ` x ${p.duration}`}</span>
+                                                                        <TabsContent value="notes" className="space-y-3">
+                                                                            <div className="grid gap-3 text-sm">
+                                                                                {c.presenting_complaint && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-blue-700 dark:text-blue-400">Presenting Complaint:</span>
+                                                                                        <p className="mt-1">{c.presenting_complaint}</p>
                                                                                     </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Lab Orders */}
-                                                                    {c.lab_orders.length > 0 && (
-                                                                        <div>
-                                                                            <h4 className="mb-2 text-sm font-medium">Lab / Imaging Orders</h4>
-                                                                            <div className="space-y-1">
-                                                                                {c.lab_orders.map((l, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Beaker className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                        <span>{l.service_name}</span>
-                                                                                        <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">{l.status}</Badge>
-                                                                                        {l.status === 'completed' && l.result_values && (
-                                                                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
-                                                                                                <Eye className="mr-1 h-3 w-3" />
-                                                                                                View Results
-                                                                                            </Button>
-                                                                                        )}
+                                                                                )}
+                                                                                {c.history_presenting_complaint && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-teal-700 dark:text-teal-400">History of PC:</span>
+                                                                                        <p className="mt-1">{c.history_presenting_complaint}</p>
                                                                                     </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Procedures */}
-                                                                    {c.procedures.length > 0 && (
-                                                                        <div>
-                                                                            <h4 className="mb-2 text-sm font-medium">Procedures</h4>
-                                                                            <div className="space-y-1">
-                                                                                {c.procedures.map((p, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Scissors className="text-muted-foreground h-3.5 w-3.5" />
-                                                                                        <span>{p.name}</span>
+                                                                                )}
+                                                                                {c.on_direct_questioning && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-cyan-700 dark:text-cyan-400">On Direct Questioning:</span>
+                                                                                        <p className="mt-1">{c.on_direct_questioning}</p>
                                                                                     </div>
-                                                                                ))}
+                                                                                )}
+                                                                                {c.examination_findings && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-amber-700 dark:text-amber-400">Examination:</span>
+                                                                                        <p className="mt-1">{c.examination_findings}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {c.assessment_notes && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>
+                                                                                        <p className="mt-1">{c.assessment_notes}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {c.plan_notes && (
+                                                                                    <div>
+                                                                                        <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>
+                                                                                        <p className="mt-1">{c.plan_notes}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {!c.presenting_complaint && !c.history_presenting_complaint && !c.on_direct_questioning && !c.examination_findings && !c.assessment_notes && !c.plan_notes && (
+                                                                                    <p className="text-sm text-muted-foreground py-4 text-center">No clinical notes recorded</p>
+                                                                                )}
                                                                             </div>
-                                                                        </div>
-                                                                    )}
+                                                                        </TabsContent>
+
+                                                                        <TabsContent value="diagnoses">
+                                                                            {c.diagnoses.length > 0 ? (
+                                                                                <div className="flex flex-wrap gap-2">
+                                                                                    {c.diagnoses.map((d, idx) => (
+                                                                                        <Badge key={idx} variant={d.type === 'principal' ? 'default' : 'secondary'}>
+                                                                                            {d.code && `${d.code}: `}{d.description}
+                                                                                        </Badge>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <p className="text-sm text-muted-foreground py-4 text-center">No diagnoses recorded</p>
+                                                                            )}
+                                                                            {c.procedures.length > 0 && (
+                                                                                <div className="mt-3">
+                                                                                    <h5 className="mb-1 text-xs font-medium text-gray-500">Procedures</h5>
+                                                                                    <div className="space-y-0.5">
+                                                                                        {c.procedures.map((p, idx) => (
+                                                                                            <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                                <Scissors className="text-muted-foreground h-3 w-3" />
+                                                                                                <span>{p.name}</span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </TabsContent>
+
+                                                                        <TabsContent value="vitals">
+                                                                            {c.vitals ? (
+                                                                                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                                                    {c.vitals.blood_pressure && (
+                                                                                        <div><span className="text-muted-foreground">BP:</span> <span className="font-medium">{c.vitals.blood_pressure}</span></div>
+                                                                                    )}
+                                                                                    {c.vitals.temperature && (
+                                                                                        <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium">{c.vitals.temperature}°C</span></div>
+                                                                                    )}
+                                                                                    {c.vitals.pulse_rate && (
+                                                                                        <div><span className="text-muted-foreground">Pulse:</span> <span className="font-medium">{c.vitals.pulse_rate}</span></div>
+                                                                                    )}
+                                                                                    {c.vitals.oxygen_saturation && (
+                                                                                        <div><span className="text-muted-foreground">SpO2:</span> <span className="font-medium">{c.vitals.oxygen_saturation}%</span></div>
+                                                                                    )}
+                                                                                    {c.vitals.blood_sugar && (
+                                                                                        <div><span className="text-muted-foreground">BS:</span> <span className="font-medium">{c.vitals.blood_sugar} mmol/L</span></div>
+                                                                                    )}
+                                                                                    {c.vitals.weight && (
+                                                                                        <div><span className="text-muted-foreground">Wt:</span> <span className="font-medium">{c.vitals.weight}kg</span></div>
+                                                                                    )}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <p className="text-sm text-muted-foreground py-4 text-center">No vitals recorded</p>
+                                                                            )}
+                                                                        </TabsContent>
+
+                                                                        <TabsContent value="prescriptions">
+                                                                            {c.prescriptions.length > 0 ? (
+                                                                                <div className="space-y-1">
+                                                                                    {c.prescriptions.map((p, idx) => (
+                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                            <Pill className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                            <span>{p.drug_name}{p.strength && ` ${p.strength}`}{p.dose_quantity && ` - ${p.dose_quantity}`}{p.frequency && ` ${p.frequency}`}{p.duration && ` x ${p.duration}`}</span>
+                                                                                            <Badge variant="outline" className="text-xs">{p.status}</Badge>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <p className="text-sm text-muted-foreground py-4 text-center">No prescriptions</p>
+                                                                            )}
+                                                                        </TabsContent>
+
+                                                                        <TabsContent value="labs">
+                                                                            {c.lab_orders.length > 0 ? (
+                                                                                <div className="space-y-1">
+                                                                                    {c.lab_orders.map((l, idx) => (
+                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                                            <Beaker className="text-muted-foreground h-3.5 w-3.5" />
+                                                                                            <span>{l.service_name}</span>
+                                                                                            <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">{l.status}</Badge>
+                                                                                            {l.status === 'completed' && l.result_values && (
+                                                                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
+                                                                                                    <Eye className="mr-1 h-3 w-3" />
+                                                                                                    View Results
+                                                                                                </Button>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <p className="text-sm text-muted-foreground py-4 text-center">No lab orders</p>
+                                                                            )}
+                                                                        </TabsContent>
+                                                                    </Tabs>
                                                                 </div>
                                                             </CollapsibleContent>
                                                         </div>
@@ -655,10 +684,10 @@ export function PatientMedicalHistoryModal({
                                                                         <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                                             <Calendar className="h-3 w-3" />
                                                                             {formatDateTime(a.admitted_at)}
-                                                                            {a.discharged_at && ` â†’ ${formatDateTime(a.discharged_at)}`}
-                                                                            {a.ward && ` â€¢ ${a.ward}`}
+                                                                            {a.discharged_at && ` → ${formatDateTime(a.discharged_at)}`}
+                                                                            {a.ward && ` • ${a.ward}`}
                                                                             {a.bed && ` (Bed ${a.bed})`}
-                                                                            {a.admitting_doctor && ` â€¢ Dr. ${a.admitting_doctor}`}
+                                                                            {a.admitting_doctor && ` • Dr. ${a.admitting_doctor}`}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -691,129 +720,12 @@ export function PatientMedicalHistoryModal({
                                                                         </div>
                                                                     )}
 
-                                                                    {/* Ward Rounds */}
-                                                                    {a.ward_rounds && a.ward_rounds.length > 0 && (
-                                                                        <div className="space-y-3">
-                                                                            <h4 className="flex items-center gap-2 text-sm font-medium">
-                                                                                <Stethoscope className="h-3.5 w-3.5" />
-                                                                                Ward Rounds
-                                                                            </h4>
-                                                                            {a.ward_rounds.map((wr) => (
-                                                                                <div key={wr.id} className="rounded-lg border border-gray-200 overflow-hidden dark:border-gray-700">
-                                                                                    {/* Colored header */}
-                                                                                    <div className="flex items-center justify-between bg-violet-50 px-3 py-2 dark:bg-violet-950">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <Stethoscope className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
-                                                                                            <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
-                                                                                                {wr.round_type || 'Ward Round'}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <span className="text-xs text-violet-600 dark:text-violet-400">
-                                                                                            {formatDateTime(wr.date)}
-                                                                                            {wr.doctor && ` â€¢ Dr. ${wr.doctor}`}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    {/* Content */}
-                                                                                    <div className="p-3 space-y-3">
-                                                                                        <div className="grid gap-2 text-sm">
-                                                                                            {wr.presenting_complaint && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-blue-700 dark:text-blue-400">PC:</span>{' '}
-                                                                                                    {wr.presenting_complaint}
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {wr.history_presenting_complaint && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-teal-700 dark:text-teal-400">HPC:</span>{' '}
-                                                                                                    {wr.history_presenting_complaint}
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {wr.on_direct_questioning && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-cyan-700 dark:text-cyan-400">ODQ:</span>{' '}
-                                                                                                    {wr.on_direct_questioning}
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {wr.examination_findings && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-amber-700 dark:text-amber-400">Exam:</span>{' '}
-                                                                                                    {wr.examination_findings}
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {wr.assessment_notes && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>{' '}
-                                                                                                    {wr.assessment_notes}
-                                                                                                </div>
-                                                                                            )}
-                                                                                            {wr.plan_notes && (
-                                                                                                <div>
-                                                                                                    <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>{' '}
-                                                                                                    {wr.plan_notes}
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-
-                                                                                        {wr.prescriptions.length > 0 && (
-                                                                                            <div>
-                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Prescriptions</h5>
-                                                                                                <div className="space-y-0.5">
-                                                                                                    {wr.prescriptions.map((p, idx) => (
-                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                                            <Pill className="text-muted-foreground h-3 w-3" />
-                                                                                                            <span>
-                                                                                                                {p.drug_name}
-                                                                                                                {p.strength && ` ${p.strength}`}
-                                                                                                                {p.dose_quantity && ` - ${p.dose_quantity}`}
-                                                                                                                {p.frequency && ` ${p.frequency}`}
-                                                                                                                {p.duration && ` x ${p.duration}`}
-                                                                                                            </span>
-                                                                                                        </div>
-                                                                                                    ))}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        )}
-
-                                                                                        {wr.lab_orders.length > 0 && (
-                                                                                            <div>
-                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Lab / Imaging</h5>
-                                                                                                <div className="space-y-0.5">
-                                                                                                    {wr.lab_orders.map((l, idx) => (
-                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                                            <Beaker className="text-muted-foreground h-3 w-3" />
-                                                                                                            <span>{l.service_name}</span>
-                                                                                                            <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                                                                                                                {l.status}
-                                                                                                            </Badge>
-                                                                                                            {l.status === 'completed' && l.result_values && (
-                                                                                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
-                                                                                                                    <Eye className="mr-1 h-3 w-3" />
-                                                                                                                    View Results
-                                                                                                                </Button>
-                                                                                                            )}
-                                                                                                        </div>
-                                                                                                    ))}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        )}
-
-                                                                                        {wr.procedures.length > 0 && (
-                                                                                            <div>
-                                                                                                <h5 className="mb-1 text-xs font-medium text-gray-500">Procedures</h5>
-                                                                                                <div className="space-y-0.5">
-                                                                                                    {wr.procedures.map((p, idx) => (
-                                                                                                        <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                                            <Scissors className="text-muted-foreground h-3 w-3" />
-                                                                                                            <span>{p.name}</span>
-                                                                                                        </div>
-                                                                                                    ))}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
+                                                                    {/* Inline Admission Detail */}
+                                                                    {patientId && (
+                                                                        <AdmissionDetailView
+                                                                            patientId={patientId}
+                                                                            admissionId={a.id}
+                                                                        />
                                                                     )}
                                                                 </div>
                                                             </CollapsibleContent>
@@ -853,7 +765,7 @@ export function PatientMedicalHistoryModal({
                                                                     )}
                                                                     {mp.nurse && (
                                                                         <span>
-                                                                            â€¢{' '}
+                                                                            •{' '}
                                                                             {
                                                                                 mp.nurse
                                                                             }
@@ -899,7 +811,7 @@ export function PatientMedicalHistoryModal({
                                                                                         .vitals
                                                                                         .temperature
                                                                                 }
-                                                                                Â°C
+                                                                                °C
                                                                             </span>
                                                                         </div>
                                                                     )}
@@ -947,6 +859,22 @@ export function PatientMedicalHistoryModal({
                                                                                         .blood_sugar
                                                                                 }
                                                                                 {' '}mmol/L
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .weight && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                Wt:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .weight
+                                                                                }
+                                                                                kg
                                                                             </span>
                                                                         </div>
                                                                     )}

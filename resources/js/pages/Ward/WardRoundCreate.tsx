@@ -78,6 +78,7 @@ interface VitalSigns {
     blood_pressure_diastolic: number;
     pulse_rate: number;
     respiratory_rate: number;
+    weight?: number;
     recorded_at: string;
 }
 
@@ -759,6 +760,17 @@ export default function WardRoundCreate({
                                         {latestVitals.temperature}°C
                                     </span>
                                 </div>
+                                {latestVitals.weight && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Activity className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                                        <span className="text-green-700 dark:text-green-300">
+                                            Wt:{' '}
+                                        </span>
+                                        <span className="font-medium text-green-900 dark:text-green-100">
+                                            {latestVitals.weight}kg
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -933,6 +945,20 @@ export default function WardRoundCreate({
                                                     /min • Normal: 12-20
                                                 </p>
                                             </div>
+                                            {latestVitals.weight && (
+                                                <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 transition-all hover:shadow-md dark:border-amber-800 dark:bg-amber-950">
+                                                    <div className="mb-3 flex items-center justify-between">
+                                                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                                                            Weight
+                                                        </p>
+                                                        <Activity className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                                    </div>
+                                                    <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+                                                        {latestVitals.weight}
+                                                        <span className="ml-1 text-lg font-normal">kg</span>
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="py-16 text-center text-gray-500 dark:text-gray-400">
@@ -1034,6 +1060,19 @@ export default function WardRoundCreate({
                                                                         /min
                                                                     </p>
                                                                 </div>
+                                                                {vitals.weight && (
+                                                                    <div>
+                                                                        <p className="text-gray-500 dark:text-gray-400">
+                                                                            Weight
+                                                                        </p>
+                                                                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                                            {
+                                                                                vitals.weight
+                                                                            }
+                                                                            kg
+                                                                        </p>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     ))}

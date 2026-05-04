@@ -50,16 +50,6 @@ interface VitalSign {
     recorded_by?: User;
 }
 
-interface Prescription {
-    id: number;
-    drug: Drug;
-    medication_name: string;
-    dosage?: string;
-    frequency?: string;
-    duration?: string;
-    route?: string;
-}
-
 interface MedicationAdministration {
     id: number;
     prescription_id: number;
@@ -188,35 +178,45 @@ interface Props {
 }
 
 export function OverviewTab({ admission, onNavigateToTab }: Props) {
-    // Compute latest diagnosis from consultation or most recent ward round
-    const latestDiagnosis = useMemo(() => {
-        // Get ward round diagnoses
-        const wardRoundDiagnoses = admission.ward_rounds
-            ?.flatMap((round) => round.diagnoses || [])
-            .sort((a, b) => b.id - a.id);
-
-        // If there are ward round diagnoses, use the most recent one
-        if (wardRoundDiagnoses && wardRoundDiagnoses.length > 0) {
-            return wardRoundDiagnoses[0];
-        }
-
-        // Fall back to consultation diagnoses (principal first, then provisional)
-        const consultationDiagnoses = admission.consultation?.diagnoses || [];
-        const principalDiagnosis = consultationDiagnoses.find(
-            (d) => d.type === 'principal',
-        );
-        const firstDiagnosis = principalDiagnosis || consultationDiagnoses[0];
-
-        if (firstDiagnosis?.diagnosis) {
-            return {
-                diagnosis_name: firstDiagnosis.diagnosis.diagnosis,
-                icd_code: firstDiagnosis.diagnosis.icd_10 || null,
-                diagnosis_type: firstDiagnosis.type,
+    // Compute all diagnoses from consultation and ward rounds
+    const allDiagnoses = useMemo(() => {
+        // Get consultation diagnoses, normalized to common shape
+        const consultationDiagnoses = (
+            admission.consultation?.diagnoses || []
+        )
+            .filter((d) => d.diagnosis)
+            .map((d) => ({
+                diagnosis_name: d.diagnosis!.diagnosis,
+                icd_code: d.diagnosis!.icd_10 || null,
+                diagnosis_type: d.type,
                 diagnosed_by: admission.consultation?.doctor,
-            };
-        }
+            }));
 
-        return null;
+        // Get ward round diagnoses (already in the right shape)
+        const wardRoundDiagnoses = (
+            admission.ward_rounds?.flatMap((round) => round.diagnoses || []) ||
+            []
+        ).map((d) => ({
+            diagnosis_name: d.diagnosis_name,
+            icd_code: d.icd_code || null,
+            diagnosis_type: d.diagnosis_type,
+            diagnosed_by: d.diagnosed_by,
+        }));
+
+        // Deduplicate by diagnosis name (keep the first occurrence — ward round diagnoses take priority)
+        const seen = new Set<string>();
+        const merged = [...wardRoundDiagnoses, ...consultationDiagnoses].filter(
+            (d) => {
+                const key = d.diagnosis_name.toLowerCase();
+                if (seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            },
+        );
+
+        return merged;
     }, [admission]);
 
     // Compute all prescriptions from consultation and ward rounds
@@ -240,8 +240,6 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
                 new Date(a.recorded_at).getTime(),
         );
     }, [admission]);
-
-    const latestVital = allVitals[0];
 
     // Calculate today's medication administrations
     const todayMedications = useMemo(() => {
@@ -290,7 +288,7 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
             {/* Summary Cards Grid - 2x2 on desktop, stacked on mobile */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <DiagnosisSummaryCard
-                    diagnosis={latestDiagnosis}
+                    diagnoses={allDiagnoses}
                     onClick={() => onNavigateToTab('rounds')}
                 />
                 <PrescriptionsSummaryCard
@@ -298,7 +296,7 @@ export function OverviewTab({ admission, onNavigateToTab }: Props) {
                     onClick={() => onNavigateToTab('medications')}
                 />
                 <VitalsSummaryCard
-                    latestVital={latestVital}
+                    vitals={allVitals}
                     vitalsSchedule={admission.vitals_schedule}
                     onClick={() => onNavigateToTab('vitals')}
                 />

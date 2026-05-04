@@ -84,6 +84,7 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                         <TableHead>RR (/min)</TableHead>
                         <TableHead>SpO₂ (%)</TableHead>
                         <TableHead>BS (mmol/L)</TableHead>
+                        <TableHead>Wt (kg)</TableHead>
                         <TableHead>Recorded By</TableHead>
                         {onEdit && (
                             <TableHead className="w-16">Actions</TableHead>
@@ -162,6 +163,17 @@ export function VitalsTable({ vitals, onEdit }: Props) {
                                 {vital.blood_sugar ? (
                                     <span className="font-mono">
                                         {vital.blood_sugar}
+                                    </span>
+                                ) : (
+                                    <span className="text-gray-400 dark:text-gray-500">
+                                        -
+                                    </span>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {vital.weight ? (
+                                    <span className="font-mono">
+                                        {vital.weight}
                                     </span>
                                 ) : (
                                     <span className="text-gray-400 dark:text-gray-500">

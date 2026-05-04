@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
-import { Activity, AlertCircle, Heart, Thermometer, Wind } from 'lucide-react';
+import { AlertCircle, Heart } from 'lucide-react';
 
 interface User {
     id: number;
@@ -30,16 +30,25 @@ interface VitalsSchedule {
 }
 
 interface Props {
-    latestVital: VitalSign | null;
+    vitals: VitalSign[];
     vitalsSchedule?: VitalsSchedule;
     onClick: () => void;
 }
 
+function formatBP(vital: VitalSign): string | null {
+    if (vital.blood_pressure_systolic && vital.blood_pressure_diastolic) {
+        return `${Math.round(vital.blood_pressure_systolic)}/${Math.round(vital.blood_pressure_diastolic)}`;
+    }
+    return null;
+}
+
 export function VitalsSummaryCard({
-    latestVital,
+    vitals,
     vitalsSchedule,
     onClick,
 }: Props) {
+    const latestVital = vitals[0] ?? null;
+
     const isOverdue =
         latestVital &&
         new Date(latestVital.recorded_at) <
@@ -72,93 +81,86 @@ export function VitalsSummaryCard({
                 </div>
             </CardHeader>
             <CardContent>
-                {latestVital ? (
-                    <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                            {latestVital.temperature && (
-                                <div className="flex items-center gap-2">
-                                    <Thermometer className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                    <div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                {vitals.length > 0 ? (
+                    <div className="space-y-2">
+                        {/* Scrollable table with all readings */}
+                        <div className="max-h-52 overflow-auto rounded-lg border dark:border-gray-700">
+                            <table className="w-full text-xs">
+                                <thead className="sticky top-0 z-10">
+                                    <tr className="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
+                                            When
+                                        </th>
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
                                             Temp
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {latestVital.temperature}°C
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                            {latestVital.blood_pressure_systolic &&
-                                latestVital.blood_pressure_diastolic && (
-                                    <div className="flex items-center gap-2">
-                                        <Heart className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                BP
-                                            </p>
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {Math.round(
-                                                    latestVital.blood_pressure_systolic,
-                                                )}
-                                                /
-                                                {Math.round(
-                                                    latestVital.blood_pressure_diastolic,
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            {latestVital.pulse_rate && (
-                                <div className="flex items-center gap-2">
-                                    <Activity className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                    <div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                        </th>
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
+                                            BP
+                                        </th>
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
                                             Pulse
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {latestVital.pulse_rate} bpm
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                            {latestVital.respiratory_rate && (
-                                <div className="flex items-center gap-2">
-                                    <Wind className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                    <div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                                            Resp
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {latestVital.respiratory_rate}/min
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                            {latestVital.blood_sugar && (
-                                <div className="flex items-center gap-2">
-                                    <Activity className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                    <div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                                            Blood Sugar
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            {latestVital.blood_sugar} mmol/L
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                                        </th>
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
+                                            SpO₂
+                                        </th>
+                                        <th className="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">
+                                            Wt
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {vitals.map((vital, index) => (
+                                        <tr
+                                            key={vital.id}
+                                            className={
+                                                index !== vitals.length - 1
+                                                    ? 'border-b dark:border-gray-700'
+                                                    : ''
+                                            }
+                                        >
+                                            <td className="whitespace-nowrap px-2 py-1.5 text-gray-600 dark:text-gray-400">
+                                                {formatDistanceToNow(
+                                                    new Date(vital.recorded_at),
+                                                    { addSuffix: true },
+                                                )
+                                                    .replace('about ', '~')
+                                                    .replace(' minutes', 'm')
+                                                    .replace(' minute', 'm')
+                                                    .replace(' hours', 'h')
+                                                    .replace(' hour', 'h')
+                                                    .replace(' days', 'd')
+                                                    .replace(' day', 'd')}
+                                            </td>
+                                            <td className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                                {vital.temperature
+                                                    ? `${vital.temperature}°`
+                                                    : '—'}
+                                            </td>
+                                            <td className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                                {formatBP(vital) ?? '—'}
+                                            </td>
+                                            <td className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                                {vital.pulse_rate ?? '—'}
+                                            </td>
+                                            <td className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                                {vital.oxygen_saturation
+                                                    ? `${vital.oxygen_saturation}%`
+                                                    : '—'}
+                                            </td>
+                                            <td className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                                {vital.weight
+                                                    ? `${vital.weight}kg`
+                                                    : '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                            Recorded{' '}
-                            {formatDistanceToNow(
-                                new Date(latestVital.recorded_at),
-                                { addSuffix: true },
-                            )}
-                        </p>
                         {vitalsSchedule && vitalsSchedule.is_active && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Schedule: Every{' '}
-                                {vitalsSchedule.interval_minutes} minutes
+                                {vitalsSchedule.interval_minutes} min
                             </p>
                         )}
                     </div>

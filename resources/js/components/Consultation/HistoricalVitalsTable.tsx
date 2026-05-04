@@ -16,6 +16,8 @@ interface VitalSign {
     blood_pressure_diastolic: number;
     pulse_rate: number;
     respiratory_rate: number;
+    oxygen_saturation?: number;
+    weight?: number;
     recorded_at: string;
     recorded_by?: {
         id: number;
@@ -78,6 +80,8 @@ export function HistoricalVitalsTable({ vitals }: Props) {
                                 <TableHead>Blood Pressure</TableHead>
                                 <TableHead>Heart Rate</TableHead>
                                 <TableHead>Respiratory Rate</TableHead>
+                                <TableHead>SpO₂</TableHead>
+                                <TableHead>Weight</TableHead>
                                 <TableHead>Recorded By</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -112,6 +116,28 @@ export function HistoricalVitalsTable({ vitals }: Props) {
                                         <span className="font-mono">
                                             {vital.respiratory_rate}/min
                                         </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        {vital.oxygen_saturation ? (
+                                            <span className="font-mono">
+                                                {vital.oxygen_saturation}%
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400 dark:text-gray-500">
+                                                -
+                                            </span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {vital.weight ? (
+                                            <span className="font-mono">
+                                                {vital.weight} kg
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400 dark:text-gray-500">
+                                                -
+                                            </span>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-sm text-gray-600 dark:text-gray-400">
                                         {vital.recorded_by?.name || 'N/A'}

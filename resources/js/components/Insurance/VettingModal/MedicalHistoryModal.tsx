@@ -535,6 +535,22 @@ export function MedicalHistoryModal({
                                                                             </span>
                                                                         </div>
                                                                     )}
+                                                                    {c.vitals
+                                                                        .weight && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                Wt:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    c
+                                                                                        .vitals
+                                                                                        .weight
+                                                                                }
+                                                                                kg
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         )}
@@ -1134,6 +1150,22 @@ export function MedicalHistoryModal({
                                                                                         .oxygen_saturation
                                                                                 }
                                                                                 %
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {mp.vitals
+                                                                        .weight && (
+                                                                        <div>
+                                                                            <span className="text-muted-foreground">
+                                                                                Wt:
+                                                                            </span>{' '}
+                                                                            <span className="font-medium">
+                                                                                {
+                                                                                    mp
+                                                                                        .vitals
+                                                                                        .weight
+                                                                                }
+                                                                                kg
                                                                             </span>
                                                                         </div>
                                                                     )}

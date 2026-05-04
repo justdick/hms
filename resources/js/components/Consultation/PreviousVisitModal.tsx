@@ -30,6 +30,7 @@ interface VitalSigns {
     blood_pressure_diastolic: number | null;
     pulse_rate: number | null;
     respiratory_rate: number | null;
+    weight?: number | null;
     recorded_at: string;
 }
 
@@ -391,6 +392,22 @@ export function PreviousVisitModal({ visit, open, onOpenChange }: Props) {
                                             </p>
                                         </CardContent>
                                     </Card>
+
+                                    {latestVitals.weight && (
+                                        <Card className="dark:border-gray-800 dark:bg-gray-900">
+                                            <CardHeader className="pb-3">
+                                                <CardTitle className="text-sm dark:text-gray-200">
+                                                    Weight
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                                                    {latestVitals.weight}
+                                                    <span className="ml-1 text-sm font-normal">kg</span>
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="py-12 text-center text-gray-500 dark:text-gray-400">

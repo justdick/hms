@@ -19,6 +19,7 @@ interface VitalSigns {
     blood_pressure_diastolic: number;
     heart_rate: number;
     respiratory_rate: number;
+    weight?: number;
     recorded_at: string;
 }
 
