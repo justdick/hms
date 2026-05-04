@@ -764,7 +764,7 @@ export default function ConsultationIndex({
                         </TabsList>
 
                         {activeTab === 'queue' && (
-                            <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/50">
+                            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/50">
                                 <div className="relative">
                                     <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input
@@ -831,7 +831,7 @@ export default function ConsultationIndex({
                         )}
 
                         {activeTab === 'completed' && (
-                            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/50">
+                            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/50">
                                 <div className="relative">
                                     <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                     <Input

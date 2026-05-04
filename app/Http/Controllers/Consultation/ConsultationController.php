@@ -10,12 +10,16 @@ use App\Http\Requests\Prescription\UpdatePrescriptionRequest;
 use App\Models\Charge;
 use App\Models\Consultation;
 use App\Models\Department;
+use App\Models\DepartmentBilling;
 use App\Models\Drug;
+use App\Models\LabOrder;
+use App\Models\MinorProcedure;
 use App\Models\MinorProcedureType;
 use App\Models\PatientCheckin;
 use App\Models\Prescription;
 use App\Models\User;
 use App\Models\Ward;
+use App\Models\WardRound;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,11 +61,7 @@ class ConsultationController extends Controller
         // If user doesn't have permission, $dateFrom and $dateTo remain null
         // The queries will use the original behavior (no filter for awaiting/active, last 24h for completed)
 
-        // Exclude Minor Procedures department from consultation queue
-        $minorProceduresDept = Department::where('code', 'ZOOM')->first();
-        $excludeDeptId = $minorProceduresDept?->id;
-
-        // Base query for awaiting consultation
+        // Base query for awaiting consultation (includes all departments including Minor Procedures)
         $awaitingQuery = PatientCheckin::with([
             'patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
             'patient.activeInsurance.plan.provider:id,name,code',
@@ -71,8 +71,7 @@ class ConsultationController extends Controller
             },
         ])
             ->accessibleTo($user)
-            ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation'])
-            ->when($excludeDeptId, fn ($q) => $q->where('department_id', '!=', $excludeDeptId));
+            ->whereIn('status', ['checked_in', 'vitals_taken', 'awaiting_consultation']);
 
         // Apply date filter to awaiting queue only if user has permission and filter is set
         if ($canFilterByDate && ($dateFrom || $dateTo)) {
@@ -212,10 +211,9 @@ class ConsultationController extends Controller
             ->paginate($perPage, ['*'], 'completed_page')
             ->withQueryString();
 
-        // Get departments for filter dropdown (only departments user has access to)
+        // Get departments for filter dropdown (all OPD departments including Minor Procedures)
         $departments = Department::active()
             ->opd()
-            ->when($excludeDeptId, fn ($q) => $q->where('id', '!=', $excludeDeptId))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
@@ -291,7 +289,7 @@ class ConsultationController extends Controller
                 ->orderBy('started_at', 'desc')
                 ->limit(10)
                 ->get(),
-            'previousMinorProcedures' => \App\Models\MinorProcedure::with([
+            'previousMinorProcedures' => MinorProcedure::with([
                 'nurse:id,name',
                 'procedureType:id,name,code',
                 'patientCheckin.department:id,name',
@@ -325,7 +323,7 @@ class ConsultationController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get(),
             // Separate imaging history - includes both internal and external imaging studies
-            'previousImagingStudies' => \App\Models\LabOrder::with([
+            'previousImagingStudies' => LabOrder::with([
                 'labService:id,name,code,category,modality,is_imaging',
                 'orderedBy:id,name',
                 'imagingAttachments' => function ($query) {
@@ -335,13 +333,13 @@ class ConsultationController extends Controller
                 ->imaging() // Only imaging orders
                 ->where(function ($query) use ($patient, $consultation) {
                     // Include orders from consultations
-                    $query->whereHasMorph('orderable', [\App\Models\Consultation::class], function ($q) use ($patient, $consultation) {
+                    $query->whereHasMorph('orderable', [Consultation::class], function ($q) use ($patient, $consultation) {
                         $q->whereHas('patientCheckin', function ($checkinQuery) use ($patient) {
                             $checkinQuery->where('patient_id', $patient->id);
                         })->where('id', '!=', $consultation->id);
                     })
                     // Also include orders from ward rounds
-                        ->orWhereHasMorph('orderable', [\App\Models\WardRound::class], function ($q) use ($patient) {
+                        ->orWhereHasMorph('orderable', [WardRound::class], function ($q) use ($patient) {
                             $q->whereHas('patientAdmission', function ($admissionQuery) use ($patient) {
                                 $admissionQuery->where('patient_id', $patient->id);
                             });
@@ -760,7 +758,7 @@ class ConsultationController extends Controller
         // Charges are automatically created via events (LabTestOrdered, etc.)
         // For consultation charge, create it here if not already exists
 
-        $existingCharge = \App\Models\Charge::where('patient_checkin_id', $consultation->patientCheckin->id)
+        $existingCharge = Charge::where('patient_checkin_id', $consultation->patientCheckin->id)
             ->where('service_type', 'consultation')
             ->first();
 
@@ -772,14 +770,14 @@ class ConsultationController extends Controller
         $department = $consultation->patientCheckin->department;
 
         // Get consultation billing configuration using department ID
-        $departmentBilling = \App\Models\DepartmentBilling::getForDepartment($department->id);
+        $departmentBilling = DepartmentBilling::getForDepartment($department->id);
 
         if (! $departmentBilling || ! $departmentBilling->consultation_fee) {
             return; // No billing configured for this department
         }
 
         // Create consultation charge
-        \App\Models\Charge::create([
+        Charge::create([
             'patient_checkin_id' => $consultation->patientCheckin->id,
             'service_type' => 'consultation',
             'service_code' => 'CONSULT',
