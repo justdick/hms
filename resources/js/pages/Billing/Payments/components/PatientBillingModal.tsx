@@ -291,6 +291,7 @@ export function PatientBillingModal({
         if (step === 'success') {
             onPaymentSuccess?.(Array.from(selectedCharges));
         }
+        setStep('charges');
         onClose();
     };
 
