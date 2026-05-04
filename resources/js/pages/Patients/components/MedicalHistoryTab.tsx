@@ -35,6 +35,8 @@ import {
     Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import AdmissionDetailView from './AdmissionDetailView';
+
 
 interface Diagnosis {
     type: string;
@@ -225,11 +227,13 @@ interface MinorProcedureRecord {
 }
 
 interface Props {
+    patientId: number;
     backgroundHistory: BackgroundHistory;
     medicalHistory: MedicalHistory | null;
 }
 
 export default function MedicalHistoryTab({
+    patientId,
     backgroundHistory,
     medicalHistory,
 }: Props) {
@@ -283,24 +287,39 @@ export default function MedicalHistoryTab({
 
     return (
         <Tabs defaultValue="consultations" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="background" className="gap-1.5 text-xs">
+            <TabsList className="grid w-full grid-cols-5 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
+                <TabsTrigger
+                    value="background"
+                    className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-slate-50 text-xs text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300"
+                >
                     <FileText className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Background</span>
                 </TabsTrigger>
-                <TabsTrigger value="consultations" className="gap-1.5 text-xs">
+                <TabsTrigger
+                    value="consultations"
+                    className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
+                >
                     <Stethoscope className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Consultations</span>
                 </TabsTrigger>
-                <TabsTrigger value="minor-procedures" className="gap-1.5 text-xs">
+                <TabsTrigger
+                    value="minor-procedures"
+                    className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-amber-50 text-xs text-amber-700 shadow-none transition-all hover:bg-amber-100 data-[state=active]:border-amber-600 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 data-[state=active]:shadow-none dark:bg-amber-950 dark:text-amber-300 dark:hover:bg-amber-900 dark:data-[state=active]:border-amber-400 dark:data-[state=active]:bg-amber-900 dark:data-[state=active]:text-amber-300"
+                >
                     <Scissors className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Minor Procedures</span>
                 </TabsTrigger>
-                <TabsTrigger value="theatre" className="gap-1.5 text-xs">
+                <TabsTrigger
+                    value="theatre"
+                    className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-rose-50 text-xs text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
+                >
                     <Scissors className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Theatre</span>
                 </TabsTrigger>
-                <TabsTrigger value="admissions" className="gap-1.5 text-xs">
+                <TabsTrigger
+                    value="admissions"
+                    className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-blue-50 text-xs text-blue-700 shadow-none transition-all hover:bg-blue-100 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900 dark:data-[state=active]:border-blue-400 dark:data-[state=active]:bg-blue-900 dark:data-[state=active]:text-blue-300"
+                >
                     <Hospital className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Admissions</span>
                 </TabsTrigger>
@@ -407,141 +426,202 @@ export default function MedicalHistoryTab({
                                                 <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                     <Calendar className="h-3 w-3" />
                                                     {formatDateTime(consultation.date)}
-                                                    {consultation.doctor && ` â€¢ Dr. ${consultation.doctor}`}
+                                                    {consultation.doctor && ` • Dr. ${consultation.doctor}`}
                                                 </div>
                                             </div>
                                         </div>
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
                                         <div className="border-t p-4 space-y-4">
-                                            {/* Vitals */}
-                                            {consultation.vitals && (
-                                                <div className="rounded-lg bg-muted/50 p-3">
-                                                    <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
+                                            <Tabs defaultValue="notes" className="space-y-3">
+                                                <TabsList className="grid w-full grid-cols-5 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
+                                                    <TabsTrigger
+                                                        value="notes"
+                                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
+                                                    >
+                                                        <Stethoscope className="h-3.5 w-3.5" />
+                                                        Notes
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="diagnoses"
+                                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-slate-50 text-xs text-slate-700 shadow-none transition-all hover:bg-slate-100 data-[state=active]:border-slate-600 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-700 data-[state=active]:shadow-none dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[state=active]:border-slate-400 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-slate-300"
+                                                    >
+                                                        <ClipboardList className="h-3.5 w-3.5" />
+                                                        Diagnoses
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="vitals"
+                                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-rose-50 text-xs text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
+                                                    >
                                                         <Thermometer className="h-3.5 w-3.5" />
-                                                        Vitals at Visit
-                                                    </h4>
-                                                    <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                                                        {consultation.vitals.blood_pressure && (
-                                                            <div><span className="text-muted-foreground">BP:</span> <span className="font-medium">{consultation.vitals.blood_pressure}</span></div>
-                                                        )}
-                                                        {consultation.vitals.temperature && (
-                                                            <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium">{consultation.vitals.temperature}Â°C</span></div>
-                                                        )}
-                                                        {consultation.vitals.pulse_rate && (
-                                                            <div><span className="text-muted-foreground">Pulse:</span> <span className="font-medium">{consultation.vitals.pulse_rate}</span></div>
-                                                        )}
-                                                        {consultation.vitals.respiratory_rate && (
-                                                            <div><span className="text-muted-foreground">RR:</span> <span className="font-medium">{consultation.vitals.respiratory_rate}</span></div>
-                                                        )}
-                                                        {consultation.vitals.oxygen_saturation && (
-                                                            <div><span className="text-muted-foreground">SpO2:</span> <span className="font-medium">{consultation.vitals.oxygen_saturation}%</span></div>
-                                                        )}
-                                                        {consultation.vitals.weight && (
-                                                            <div><span className="text-muted-foreground">Weight:</span> <span className="font-medium">{consultation.vitals.weight}kg</span></div>
-                                                        )}
-                                                        {consultation.vitals.height && (
-                                                            <div><span className="text-muted-foreground">Height:</span> <span className="font-medium">{consultation.vitals.height}cm</span></div>
-                                                        )}
-                                                        {consultation.vitals.bmi && (
-                                                            <div><span className="text-muted-foreground">BMI:</span> <span className="font-medium">{consultation.vitals.bmi}</span></div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
+                                                        Vitals
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="prescriptions"
+                                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-green-50 text-xs text-green-700 shadow-none transition-all hover:bg-green-100 data-[state=active]:border-green-600 data-[state=active]:bg-green-100 data-[state=active]:text-green-700 data-[state=active]:shadow-none dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900 dark:data-[state=active]:border-green-400 dark:data-[state=active]:bg-green-900 dark:data-[state=active]:text-green-300"
+                                                    >
+                                                        <Pill className="h-3.5 w-3.5" />
+                                                        Rx
+                                                    </TabsTrigger>
+                                                    <TabsTrigger
+                                                        value="labs"
+                                                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-teal-50 text-xs text-teal-700 shadow-none transition-all hover:bg-teal-100 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 data-[state=active]:shadow-none dark:bg-teal-950 dark:text-teal-300 dark:hover:bg-teal-900 dark:data-[state=active]:border-teal-400 dark:data-[state=active]:bg-teal-900 dark:data-[state=active]:text-teal-300"
+                                                    >
+                                                        <Beaker className="h-3.5 w-3.5" />
+                                                        Labs
+                                                    </TabsTrigger>
+                                                </TabsList>
 
-                                            {/* Diagnoses */}
-                                            {consultation.diagnoses.length > 0 && (
-                                                <div>
-                                                    <h4 className="mb-2 text-sm font-medium">Diagnoses</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {consultation.diagnoses.map((d, idx) => (
-                                                            <Badge key={idx} variant={d.type === 'principal' ? 'default' : 'secondary'}>
-                                                                {d.code && `${d.code}: `}{d.description}
-                                                            </Badge>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Clinical Notes */}
-                                            <div className="grid gap-3 text-sm">
-                                                {consultation.presenting_complaint && (
-                                                    <div>
-                                                        <span className="font-medium text-blue-700 dark:text-blue-400">Presenting Complaint:</span>
-                                                        <p className="mt-1">{consultation.presenting_complaint}</p>
-                                                    </div>
-                                                )}
-                                                {consultation.history_presenting_complaint && (
-                                                    <div>
-                                                        <span className="font-medium text-teal-700 dark:text-teal-400">History of PC:</span>
-                                                        <p className="mt-1">{consultation.history_presenting_complaint}</p>
-                                                    </div>
-                                                )}
-                                                {consultation.on_direct_questioning && (
-                                                    <div>
-                                                        <span className="font-medium text-cyan-700 dark:text-cyan-400">On Direct Questioning:</span>
-                                                        <p className="mt-1">{consultation.on_direct_questioning}</p>
-                                                    </div>
-                                                )}
-                                                {consultation.examination_findings && (
-                                                    <div>
-                                                        <span className="font-medium text-amber-700 dark:text-amber-400">Examination:</span>
-                                                        <p className="mt-1">{consultation.examination_findings}</p>
-                                                    </div>
-                                                )}
-                                                {consultation.assessment_notes && (
-                                                    <div>
-                                                        <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>
-                                                        <p className="mt-1">{consultation.assessment_notes}</p>
-                                                    </div>
-                                                )}
-                                                {consultation.plan_notes && (
-                                                    <div>
-                                                        <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>
-                                                        <p className="mt-1">{consultation.plan_notes}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Prescriptions */}
-                                            {consultation.prescriptions.length > 0 && (
-                                                <div>
-                                                    <h4 className="mb-2 text-sm font-medium">Prescriptions</h4>
-                                                    <div className="space-y-1">
-                                                        {consultation.prescriptions.map((p, idx) => (
-                                                            <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                <Pill className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                <span>
-                                                                    {p.drug_name}{p.strength && ` ${p.strength}`}{p.dose_quantity && ` - ${p.dose_quantity}`}{p.frequency && ` ${p.frequency}`}{p.duration && ` x ${p.duration}`}
-                                                                </span>
+                                                {/* Clinical Notes Tab */}
+                                                <TabsContent value="notes" className="space-y-3">
+                                                    <div className="grid gap-3 text-sm">
+                                                        {consultation.presenting_complaint && (
+                                                            <div>
+                                                                <span className="font-medium text-blue-700 dark:text-blue-400">Presenting Complaint:</span>
+                                                                <p className="mt-1">{consultation.presenting_complaint}</p>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Lab orders */}
-                                            {consultation.lab_orders.length > 0 && (
-                                                <div>
-                                                    <h4 className="mb-2 text-sm font-medium">Lab / Imaging Orders</h4>
-                                                    <div className="space-y-1">
-                                                        {consultation.lab_orders.map((l, idx) => (
-                                                            <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                <Beaker className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                <span>{l.service_name}</span>
-                                                                <Badge variant={getStatusBadgeVariant(l.status || '')} className="text-xs">{l.status}</Badge>
-                                                                {l.status === 'completed' && l.result_values && (
-                                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
-                                                                        <Eye className="mr-1 h-3 w-3" />
-                                                                        View Results
-                                                                    </Button>
-                                                                )}
+                                                        )}
+                                                        {consultation.history_presenting_complaint && (
+                                                            <div>
+                                                                <span className="font-medium text-teal-700 dark:text-teal-400">History of PC:</span>
+                                                                <p className="mt-1">{consultation.history_presenting_complaint}</p>
                                                             </div>
-                                                        ))}
+                                                        )}
+                                                        {consultation.on_direct_questioning && (
+                                                            <div>
+                                                                <span className="font-medium text-cyan-700 dark:text-cyan-400">On Direct Questioning:</span>
+                                                                <p className="mt-1">{consultation.on_direct_questioning}</p>
+                                                            </div>
+                                                        )}
+                                                        {consultation.examination_findings && (
+                                                            <div>
+                                                                <span className="font-medium text-amber-700 dark:text-amber-400">Examination:</span>
+                                                                <p className="mt-1">{consultation.examination_findings}</p>
+                                                            </div>
+                                                        )}
+                                                        {consultation.assessment_notes && (
+                                                            <div>
+                                                                <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>
+                                                                <p className="mt-1">{consultation.assessment_notes}</p>
+                                                            </div>
+                                                        )}
+                                                        {consultation.plan_notes && (
+                                                            <div>
+                                                                <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>
+                                                                <p className="mt-1">{consultation.plan_notes}</p>
+                                                            </div>
+                                                        )}
+                                                        {!consultation.presenting_complaint && !consultation.history_presenting_complaint && !consultation.on_direct_questioning && !consultation.examination_findings && !consultation.assessment_notes && !consultation.plan_notes && (
+                                                            <p className="text-sm text-muted-foreground py-4 text-center">No clinical notes recorded</p>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            )}
+                                                </TabsContent>
+
+                                                {/* Diagnoses Tab */}
+                                                <TabsContent value="diagnoses">
+                                                    {consultation.diagnoses.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {consultation.diagnoses.map((d, idx) => (
+                                                                <Badge key={idx} variant={d.type === 'principal' ? 'default' : 'secondary'}>
+                                                                    {d.code && `${d.code}: `}{d.description}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground py-4 text-center">No diagnoses recorded</p>
+                                                    )}
+                                                    {consultation.procedures.length > 0 && (
+                                                        <div className="mt-3">
+                                                            <h5 className="mb-1 text-xs font-medium text-gray-500">Procedures</h5>
+                                                            <div className="space-y-0.5">
+                                                                {consultation.procedures.map((p, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                        <Scissors className="h-3 w-3 text-muted-foreground" />
+                                                                        <span>{p.name}</span>
+                                                                        {p.code && <span className="text-xs text-muted-foreground">({p.code})</span>}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </TabsContent>
+
+                                                {/* Vitals Tab */}
+                                                <TabsContent value="vitals">
+                                                    {consultation.vitals ? (
+                                                        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                            {consultation.vitals.blood_pressure && (
+                                                                <div><span className="text-muted-foreground">BP:</span> <span className="font-medium">{consultation.vitals.blood_pressure}</span></div>
+                                                            )}
+                                                            {consultation.vitals.temperature && (
+                                                                <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium">{consultation.vitals.temperature}°C</span></div>
+                                                            )}
+                                                            {consultation.vitals.pulse_rate && (
+                                                                <div><span className="text-muted-foreground">Pulse:</span> <span className="font-medium">{consultation.vitals.pulse_rate}</span></div>
+                                                            )}
+                                                            {consultation.vitals.respiratory_rate && (
+                                                                <div><span className="text-muted-foreground">RR:</span> <span className="font-medium">{consultation.vitals.respiratory_rate}</span></div>
+                                                            )}
+                                                            {consultation.vitals.oxygen_saturation && (
+                                                                <div><span className="text-muted-foreground">SpO2:</span> <span className="font-medium">{consultation.vitals.oxygen_saturation}%</span></div>
+                                                            )}
+                                                            {consultation.vitals.weight && (
+                                                                <div><span className="text-muted-foreground">Weight:</span> <span className="font-medium">{consultation.vitals.weight}kg</span></div>
+                                                            )}
+                                                            {consultation.vitals.height && (
+                                                                <div><span className="text-muted-foreground">Height:</span> <span className="font-medium">{consultation.vitals.height}cm</span></div>
+                                                            )}
+                                                            {consultation.vitals.bmi && (
+                                                                <div><span className="text-muted-foreground">BMI:</span> <span className="font-medium">{consultation.vitals.bmi}</span></div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground py-4 text-center">No vitals recorded for this visit</p>
+                                                    )}
+                                                </TabsContent>
+
+                                                {/* Prescriptions Tab */}
+                                                <TabsContent value="prescriptions">
+                                                    {consultation.prescriptions.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            {consultation.prescriptions.map((p, idx) => (
+                                                                <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                    <Pill className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span>
+                                                                        {p.drug_name}{p.strength && ` ${p.strength}`}{p.dose_quantity && ` - ${p.dose_quantity}`}{p.frequency && ` ${p.frequency}`}{p.duration && ` x ${p.duration}`}
+                                                                    </span>
+                                                                    <Badge variant="outline" className="text-xs">{p.status}</Badge>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground py-4 text-center">No prescriptions</p>
+                                                    )}
+                                                </TabsContent>
+
+                                                {/* Labs Tab */}
+                                                <TabsContent value="labs">
+                                                    {consultation.lab_orders.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            {consultation.lab_orders.map((l, idx) => (
+                                                                <div key={idx} className="flex items-center gap-2 text-sm">
+                                                                    <Beaker className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span>{l.service_name}</span>
+                                                                    <Badge variant={getStatusBadgeVariant(l.status || '')} className="text-xs">{l.status}</Badge>
+                                                                    {l.status === 'completed' && l.result_values && (
+                                                                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
+                                                                            <Eye className="mr-1 h-3 w-3" />
+                                                                            View Results
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground py-4 text-center">No lab orders</p>
+                                                    )}
+                                                </TabsContent>
+                                            </Tabs>
                                         </div>
                                     </CollapsibleContent>
                                 </div>
@@ -574,7 +654,7 @@ export default function MedicalHistoryTab({
                                             <Calendar className="h-3.5 w-3.5" />
                                             {formatDateTime(mp.date)}
                                             {mp.nurse && (
-                                                <span>â€¢ {mp.nurse}</span>
+                                                <span>• {mp.nurse}</span>
                                             )}
                                         </CardDescription>
                                     </div>
@@ -598,7 +678,7 @@ export default function MedicalHistoryTab({
                                             {mp.vitals.temperature && (
                                                 <div>
                                                     <span className="text-muted-foreground">Temp:</span>{' '}
-                                                    <span className="font-medium">{mp.vitals.temperature}Â°C</span>
+                                                    <span className="font-medium">{mp.vitals.temperature}°C</span>
                                                 </div>
                                             )}
                                             {mp.vitals.pulse_rate && (
@@ -706,7 +786,7 @@ export default function MedicalHistoryTab({
                                                 )}
                                                 {procedure.doctor && (
                                                     <span>
-                                                        â€¢ Dr. {procedure.doctor}
+                                                        • Dr. {procedure.doctor}
                                                     </span>
                                                 )}
                                             </CardDescription>
@@ -898,10 +978,10 @@ export default function MedicalHistoryTab({
                                                 <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                     <Calendar className="h-3 w-3" />
                                                     {formatDateTime(admission.admitted_at)}
-                                                    {admission.discharged_at && ` â†’ ${formatDateTime(admission.discharged_at)}`}
-                                                    {admission.ward && ` â€¢ ${admission.ward}`}
+                                                    {admission.discharged_at && ` → ${formatDateTime(admission.discharged_at)}`}
+                                                    {admission.ward && ` • ${admission.ward}`}
                                                     {admission.bed && ` (Bed ${admission.bed})`}
-                                                    {admission.admitting_doctor && ` â€¢ Dr. ${admission.admitting_doctor}`}
+                                                    {admission.admitting_doctor && ` • Dr. ${admission.admitting_doctor}`}
                                                 </div>
                                             </div>
                                         </div>
@@ -944,135 +1024,11 @@ export default function MedicalHistoryTab({
                                                 </div>
                                             )}
 
-                                            {/* Ward Rounds */}
-                                            {admission.ward_rounds &&
-                                                admission.ward_rounds.length > 0 && (
-                                                    <div className="space-y-3">
-                                                        <h4 className="flex items-center gap-2 text-sm font-medium">
-                                                            <Stethoscope className="h-3.5 w-3.5" />
-                                                            Ward Rounds
-                                                        </h4>
-                                                        {admission.ward_rounds.map((wr) => (
-                                                            <div key={wr.id} className="rounded-lg border border-gray-200 overflow-hidden dark:border-gray-700">
-                                                                {/* Colored header */}
-                                                                <div className="flex items-center justify-between bg-violet-50 px-3 py-2 dark:bg-violet-950">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Stethoscope className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
-                                                                        <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
-                                                                            {wr.round_type || 'Ward Round'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <span className="text-xs text-violet-600 dark:text-violet-400">
-                                                                        {formatDateTime(wr.date)}
-                                                                        {wr.doctor && ` â€¢ Dr. ${wr.doctor}`}
-                                                                    </span>
-                                                                </div>
-                                                                {/* Content */}
-                                                                <div className="p-3 space-y-3">
-                                                                    {/* Clinical notes */}
-                                                                    <div className="grid gap-2 text-sm">
-                                                                        {wr.presenting_complaint && (
-                                                                            <div>
-                                                                                <span className="font-medium text-blue-700 dark:text-blue-400">PC:</span>{' '}
-                                                                                {wr.presenting_complaint}
-                                                                            </div>
-                                                                        )}
-                                                                        {wr.history_presenting_complaint && (
-                                                                            <div>
-                                                                                <span className="font-medium text-teal-700 dark:text-teal-400">HPC:</span>{' '}
-                                                                                {wr.history_presenting_complaint}
-                                                                            </div>
-                                                                        )}
-                                                                        {wr.on_direct_questioning && (
-                                                                            <div>
-                                                                                <span className="font-medium text-cyan-700 dark:text-cyan-400">ODQ:</span>{' '}
-                                                                                {wr.on_direct_questioning}
-                                                                            </div>
-                                                                        )}
-                                                                        {wr.examination_findings && (
-                                                                            <div>
-                                                                                <span className="font-medium text-amber-700 dark:text-amber-400">Exam:</span>{' '}
-                                                                                {wr.examination_findings}
-                                                                            </div>
-                                                                        )}
-                                                                        {wr.assessment_notes && (
-                                                                            <div>
-                                                                                <span className="font-medium text-orange-700 dark:text-orange-400">Assessment:</span>{' '}
-                                                                                {wr.assessment_notes}
-                                                                            </div>
-                                                                        )}
-                                                                        {wr.plan_notes && (
-                                                                            <div>
-                                                                                <span className="font-medium text-emerald-700 dark:text-emerald-400">Plan:</span>{' '}
-                                                                                {wr.plan_notes}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {/* Prescriptions */}
-                                                                    {wr.prescriptions.length > 0 && (
-                                                                        <div>
-                                                                            <h5 className="mb-1 text-xs font-medium text-gray-500">Prescriptions</h5>
-                                                                            <div className="space-y-0.5">
-                                                                                {wr.prescriptions.map((p, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Pill className="h-3 w-3 text-muted-foreground" />
-                                                                                        <span>
-                                                                                            {p.drug_name}
-                                                                                            {p.strength && ` ${p.strength}`}
-                                                                                            {p.dose_quantity && ` - ${p.dose_quantity}`}
-                                                                                            {p.frequency && ` ${p.frequency}`}
-                                                                                            {p.duration && ` x ${p.duration}`}
-                                                                                        </span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Lab Orders */}
-                                                                    {wr.lab_orders.length > 0 && (
-                                                                        <div>
-                                                                            <h5 className="mb-1 text-xs font-medium text-gray-500">Lab / Imaging</h5>
-                                                                            <div className="space-y-0.5">
-                                                                                {wr.lab_orders.map((l, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Beaker className="h-3 w-3 text-muted-foreground" />
-                                                                                        <span>{l.service_name}</span>
-                                                                                        <Badge variant={l.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                                                                                            {l.status}
-                                                                                        </Badge>
-                                                                                        {l.status === 'completed' && l.result_values && (
-                                                                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setSelectedLabResult(l)}>
-                                                                                                <Eye className="mr-1 h-3 w-3" />
-                                                                                                View Results
-                                                                                            </Button>
-                                                                                        )}
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Procedures */}
-                                                                    {wr.procedures.length > 0 && (
-                                                                        <div>
-                                                                            <h5 className="mb-1 text-xs font-medium text-gray-500">Procedures</h5>
-                                                                            <div className="space-y-0.5">
-                                                                                {wr.procedures.map((p, idx) => (
-                                                                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                                                                        <Scissors className="h-3 w-3 text-muted-foreground" />
-                                                                                        <span>{p.name}</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                            {/* Inline Admission Detail (Ward Rounds, MAR, Vitals, Nursing Notes, Labs) */}
+                                            <AdmissionDetailView
+                                                patientId={patientId}
+                                                admissionId={admission.id}
+                                            />
                                         </div>
                                     </CollapsibleContent>
                                 </div>

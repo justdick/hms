@@ -15,6 +15,7 @@ use App\Models\LabOrder;
 use App\Models\MinorProcedure;
 use App\Models\NhisSettings;
 use App\Models\Patient;
+use App\Models\PatientAdmission;
 use App\Models\PatientCheckin;
 use App\Models\PatientInsurance;
 use App\Models\PaymentMethod;
@@ -714,6 +715,165 @@ class PatientController extends Controller
                 'admissions' => $admissions,
                 'minor_procedures' => $history['minor_procedures'],
             ],
+        ]);
+    }
+
+    /**
+     * Get detailed admission history for a specific admission (on-demand loading).
+     */
+    public function admissionDetail(Patient $patient, PatientAdmission $admission): JsonResponse
+    {
+        $this->authorize('view', $patient);
+
+        // Ensure the admission belongs to this patient
+        if ($admission->patient_id !== $patient->id) {
+            abort(404);
+        }
+
+        $admission->load([
+            'ward:id,name',
+            'bed:id,bed_number',
+            'consultation.doctor:id,name',
+            'diagnoses',
+            'wardRounds' => fn ($q) => $q->with([
+                'doctor:id,name',
+                'prescriptions.drug:id,name,generic_name,form,strength',
+                'labOrders.labService:id,name,code,is_imaging,test_parameters',
+                'procedures.procedureType:id,name,code',
+            ])->orderByDesc('round_datetime'),
+            'vitalSigns' => fn ($q) => $q->with('recordedBy:id,name')->orderByDesc('recorded_at'),
+            'medicationAdministrations' => fn ($q) => $q->with([
+                'prescription.drug:id,name,strength',
+                'administeredBy:id,name',
+            ])->orderByDesc('administered_at'),
+            'nursingNotes' => fn ($q) => $q->with('nurse:id,name')->orderByDesc('noted_at'),
+        ]);
+
+        // Get all prescriptions for this admission (from ward rounds)
+        $prescriptions = Prescription::with('drug:id,name,generic_name,form,strength')
+            ->whereHasMorph('prescribable', [WardRound::class], function ($q) use ($admission) {
+                $q->where('patient_admission_id', $admission->id);
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Get all lab orders for this admission (from ward rounds)
+        $labOrders = LabOrder::with('labService:id,name,code,is_imaging,test_parameters')
+            ->whereHasMorph('orderable', [WardRound::class], function ($q) use ($admission) {
+                $q->where('patient_admission_id', $admission->id);
+            })
+            ->orderByDesc('ordered_at')
+            ->get();
+
+        return response()->json([
+            'ward_rounds' => $admission->wardRounds->map(fn ($wr) => [
+                'id' => $wr->id,
+                'date' => $wr->round_datetime?->format('Y-m-d H:i'),
+                'doctor' => $wr->doctor?->name,
+                'round_type' => $wr->round_type,
+                'presenting_complaint' => $wr->presenting_complaint,
+                'history_presenting_complaint' => $wr->history_presenting_complaint,
+                'on_direct_questioning' => $wr->on_direct_questioning,
+                'examination_findings' => $wr->examination_findings,
+                'assessment_notes' => $wr->assessment_notes,
+                'plan_notes' => $wr->plan_notes,
+                'patient_status' => $wr->patient_status,
+                'prescriptions' => $wr->prescriptions->map(fn ($p) => [
+                    'drug_name' => $p->drug?->name ?? $p->medication_name,
+                    'generic_name' => $p->drug?->generic_name,
+                    'form' => $p->drug?->form ?? $p->dosage_form,
+                    'strength' => $p->drug?->strength,
+                    'dose_quantity' => $p->dose_quantity,
+                    'frequency' => $p->frequency,
+                    'duration' => $p->duration,
+                    'quantity' => $p->quantity,
+                    'instructions' => $p->instructions,
+                    'status' => $p->status,
+                ]),
+                'lab_orders' => $wr->labOrders->map(fn ($l) => [
+                    'id' => $l->id,
+                    'service_name' => $l->labService?->name,
+                    'code' => $l->labService?->code,
+                    'is_imaging' => $l->labService?->is_imaging,
+                    'test_parameters' => $l->labService?->test_parameters,
+                    'status' => $l->status,
+                    'result_values' => $l->result_values,
+                    'result_notes' => $l->result_notes,
+                    'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                    'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+                ]),
+                'procedures' => $wr->procedures->map(fn ($p) => [
+                    'name' => $p->procedureType?->name,
+                    'code' => $p->procedureType?->code,
+                    'notes' => $p->comments,
+                ]),
+            ]),
+            'vitals' => $admission->vitalSigns->map(fn ($v) => [
+                'id' => $v->id,
+                'recorded_at' => $v->recorded_at?->format('Y-m-d H:i'),
+                'recorded_by' => $v->recordedBy?->name,
+                'blood_pressure' => $v->blood_pressure,
+                'temperature' => $v->temperature,
+                'pulse_rate' => $v->pulse_rate,
+                'respiratory_rate' => $v->respiratory_rate,
+                'oxygen_saturation' => $v->oxygen_saturation,
+                'blood_sugar' => $v->blood_sugar,
+                'weight' => $v->weight,
+                'height' => $v->height,
+                'bmi' => $v->bmi,
+                'notes' => $v->notes,
+            ]),
+            'medication_administrations' => $admission->medicationAdministrations->map(fn ($ma) => [
+                'id' => $ma->id,
+                'prescription_id' => $ma->prescription_id,
+                'drug_name' => $ma->prescription?->drug?->name ?? 'Unknown',
+                'drug_strength' => $ma->prescription?->drug?->strength,
+                'administered_at' => $ma->administered_at?->format('Y-m-d H:i'),
+                'status' => $ma->status,
+                'dosage_given' => $ma->dosage_given,
+                'route' => $ma->route,
+                'administered_by' => $ma->administeredBy?->name,
+                'notes' => $ma->notes,
+            ]),
+            'nursing_notes' => $admission->nursingNotes->map(fn ($n) => [
+                'id' => $n->id,
+                'type' => $n->type,
+                'note' => $n->note,
+                'noted_at' => $n->noted_at?->format('Y-m-d H:i'),
+                'nurse' => $n->nurse?->name,
+            ]),
+            'diagnoses' => $admission->diagnoses->map(fn ($d) => [
+                'id' => $d->id,
+                'type' => $d->diagnosis_type,
+                'code' => $d->icd_code,
+                'description' => $d->diagnosis_name,
+                'is_active' => $d->is_active,
+            ]),
+            'prescriptions' => $prescriptions->map(fn ($p) => [
+                'id' => $p->id,
+                'drug_name' => $p->drug?->name ?? $p->medication_name,
+                'generic_name' => $p->drug?->generic_name,
+                'form' => $p->drug?->form ?? $p->dosage_form,
+                'strength' => $p->drug?->strength,
+                'dose_quantity' => $p->dose_quantity,
+                'frequency' => $p->frequency,
+                'duration' => $p->duration,
+                'quantity' => $p->quantity,
+                'instructions' => $p->instructions,
+                'status' => $p->status,
+            ]),
+            'lab_orders' => $labOrders->map(fn ($l) => [
+                'id' => $l->id,
+                'service_name' => $l->labService?->name,
+                'code' => $l->labService?->code,
+                'is_imaging' => $l->labService?->is_imaging,
+                'test_parameters' => $l->labService?->test_parameters,
+                'status' => $l->status,
+                'result_values' => $l->result_values,
+                'result_notes' => $l->result_notes,
+                'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
+                'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+            ]),
         ]);
     }
 

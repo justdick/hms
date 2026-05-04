@@ -31,7 +31,8 @@
       "command": "php",
       "args": [
         "artisan",
-        "boost:mcp"
+        "mcp:start",
+        "laravel-boost"
       ],
       "disabled": false,
       "autoApprove": [

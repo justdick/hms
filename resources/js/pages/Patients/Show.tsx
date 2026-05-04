@@ -1297,6 +1297,7 @@ export default function PatientsShow({
                     {can_view_medical_history && (
                         <TabsContent value="medical" className="space-y-6">
                             <MedicalHistoryTab
+                                patientId={patient.id}
                                 backgroundHistory={{
                                     past_medical_surgical_history:
                                         patient.past_medical_surgical_history,
