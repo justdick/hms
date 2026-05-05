@@ -23,6 +23,7 @@ use App\Models\Prescription;
 use App\Models\ServiceAccessOverride;
 use App\Models\SystemConfiguration;
 use App\Models\WardRound;
+use App\Models\WardRoundProcedure;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -765,6 +766,16 @@ class PatientController extends Controller
             ->orderByDesc('ordered_at')
             ->get();
 
+        // Get theatre procedures for this admission (from ward rounds)
+        $theatreProcedures = WardRoundProcedure::with([
+            'procedureType:id,name,code,category',
+            'doctor:id,name',
+            'wardRound:id,round_datetime',
+        ])
+            ->whereHas('wardRound', fn ($q) => $q->where('patient_admission_id', $admission->id))
+            ->orderByDesc('performed_at')
+            ->get();
+
         return response()->json([
             'ward_rounds' => $admission->wardRounds->map(fn ($wr) => [
                 'id' => $wr->id,
@@ -873,6 +884,25 @@ class PatientController extends Controller
                 'result_notes' => $l->result_notes,
                 'ordered_at' => $l->ordered_at?->format('Y-m-d H:i'),
                 'result_entered_at' => $l->result_entered_at?->format('Y-m-d H:i'),
+            ]),
+            'theatre_procedures' => $theatreProcedures->map(fn ($p) => [
+                'id' => $p->id,
+                'performed_at' => $p->performed_at?->format('Y-m-d H:i'),
+                'procedure_name' => $p->procedureType?->name,
+                'procedure_code' => $p->procedureType?->code,
+                'category' => $p->procedureType?->category,
+                'doctor' => $p->doctor?->name,
+                'indication' => $p->indication,
+                'assistant' => $p->assistant,
+                'anaesthetist' => $p->anaesthetist,
+                'anaesthesia_type' => $p->anaesthesia_type,
+                'procedure_subtype' => $p->procedure_subtype,
+                'procedure_steps' => $p->procedure_steps,
+                'findings' => $p->findings,
+                'plan' => $p->plan,
+                'comments' => $p->comments,
+                'estimated_gestational_age' => $p->estimated_gestational_age,
+                'parity' => $p->parity,
             ]),
         ]);
     }
@@ -1167,7 +1197,8 @@ class PatientController extends Controller
      */
     private function getTheatreProcedures(Patient $patient): Collection
     {
-        return ConsultationProcedure::with([
+        // Get procedures from consultations (OPD)
+        $consultationProcedures = ConsultationProcedure::with([
             'procedureType:id,name,code,category',
             'doctor:id,name',
             'consultation.patientCheckin.department:id,name',
@@ -1178,6 +1209,7 @@ class PatientController extends Controller
             ->get()
             ->map(fn ($p) => [
                 'id' => $p->id,
+                'source' => 'consultation',
                 'performed_at' => $p->performed_at?->format('Y-m-d H:i'),
                 'procedure_name' => $p->procedureType?->name,
                 'procedure_code' => $p->procedureType?->code,
@@ -1196,6 +1228,43 @@ class PatientController extends Controller
                 'estimated_gestational_age' => $p->estimated_gestational_age,
                 'parity' => $p->parity,
             ]);
+
+        // Get procedures from ward rounds (inpatient)
+        $wardRoundProcedures = WardRoundProcedure::with([
+            'procedureType:id,name,code,category',
+            'doctor:id,name',
+            'wardRound.patientAdmission.ward:id,name',
+        ])
+            ->whereHas('wardRound.patientAdmission', fn ($q) => $q->where('patient_id', $patient->id))
+            ->orderByDesc('performed_at')
+            ->limit(50)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'source' => 'ward_round',
+                'performed_at' => $p->performed_at?->format('Y-m-d H:i'),
+                'procedure_name' => $p->procedureType?->name,
+                'procedure_code' => $p->procedureType?->code,
+                'category' => $p->procedureType?->category,
+                'doctor' => $p->doctor?->name,
+                'department' => $p->wardRound?->patientAdmission?->ward?->name,
+                'indication' => $p->indication,
+                'assistant' => $p->assistant,
+                'anaesthetist' => $p->anaesthetist,
+                'anaesthesia_type' => $p->anaesthesia_type,
+                'procedure_subtype' => $p->procedure_subtype,
+                'procedure_steps' => $p->procedure_steps,
+                'findings' => $p->findings,
+                'plan' => $p->plan,
+                'comments' => $p->comments,
+                'estimated_gestational_age' => $p->estimated_gestational_age,
+                'parity' => $p->parity,
+            ]);
+
+        return $consultationProcedures->concat($wardRoundProcedures)
+            ->sortByDesc('performed_at')
+            ->values()
+            ->take(50);
     }
 
     private function getMinorProceduresHistory(Patient $patient): Collection

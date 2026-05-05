@@ -127,6 +127,26 @@ interface NursingNoteDetail {
     nurse: string | null;
 }
 
+interface TheatreProcedureDetail {
+    id: number;
+    performed_at: string | null;
+    procedure_name: string | null;
+    procedure_code: string | null;
+    category: string | null;
+    doctor: string | null;
+    indication: string | null;
+    assistant: string | null;
+    anaesthetist: string | null;
+    anaesthesia_type: string | null;
+    procedure_subtype: string | null;
+    procedure_steps: string | null;
+    findings: string | null;
+    plan: string | null;
+    comments: string | null;
+    estimated_gestational_age: string | null;
+    parity: string | null;
+}
+
 interface AdmissionDetailData {
     ward_rounds: WardRoundDetail[];
     vitals: VitalSignDetail[];
@@ -135,6 +155,7 @@ interface AdmissionDetailData {
     diagnoses: { id: number; type: string; code: string | null; description: string | null; is_active: boolean }[];
     prescriptions: PrescriptionDetail[];
     lab_orders: LabOrderDetail[];
+    theatre_procedures: TheatreProcedureDetail[];
 }
 
 interface Props {
@@ -247,7 +268,7 @@ export default function AdmissionDetailView({ patientId, admissionId }: Props) {
     return (
         <>
             <Tabs defaultValue="ward-rounds" className="space-y-3">
-                <TabsList className="grid w-full grid-cols-5 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
+                <TabsList className="grid w-full grid-cols-6 gap-1 rounded-none border-b border-gray-200 bg-transparent p-1 dark:border-gray-700">
                     <TabsTrigger
                         value="ward-rounds"
                         className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-violet-50 text-xs text-violet-700 shadow-none transition-all hover:bg-violet-100 data-[state=active]:border-violet-600 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700 data-[state=active]:shadow-none dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900 dark:data-[state=active]:border-violet-400 dark:data-[state=active]:bg-violet-900 dark:data-[state=active]:text-violet-300"
@@ -255,6 +276,13 @@ export default function AdmissionDetailView({ patientId, admissionId }: Props) {
                         <Stethoscope className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Ward Rounds</span>
                         <span className="sm:hidden">Rounds</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="theatre"
+                        className="flex items-center gap-1.5 rounded-md border-b-2 border-transparent bg-rose-50 text-xs text-rose-700 shadow-none transition-all hover:bg-rose-100 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-100 data-[state=active]:text-rose-700 data-[state=active]:shadow-none dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900 dark:data-[state=active]:border-rose-400 dark:data-[state=active]:bg-rose-900 dark:data-[state=active]:text-rose-300"
+                    >
+                        <Scissors className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Theatre</span>
                     </TabsTrigger>
                     <TabsTrigger
                         value="mar"
@@ -293,6 +321,14 @@ export default function AdmissionDetailView({ patientId, admissionId }: Props) {
                         wardRounds={data.ward_rounds}
                         formatDateTime={formatDateTime}
                         onViewLabResult={setSelectedLabResult}
+                    />
+                </TabsContent>
+
+                {/* Theatre Procedures Tab */}
+                <TabsContent value="theatre" className="space-y-3">
+                    <TheatreSection
+                        procedures={data.theatre_procedures || []}
+                        formatDateTime={formatDateTime}
                     />
                 </TabsContent>
 
@@ -870,6 +906,149 @@ function LabResultModal({
                 </div>
             </DialogContent>
         </Dialog>
+    );
+}
+
+// ─── Theatre Procedures Section ──────────────────────────────────────────────
+
+function TheatreSection({
+    procedures,
+    formatDateTime,
+}: {
+    procedures: TheatreProcedureDetail[];
+    formatDateTime: (d: string | null) => string;
+}) {
+    const [expandedId, setExpandedId] = useState<number | null>(null);
+
+    if (procedures.length === 0) {
+        return <EmptyState icon={Scissors} message="No theatre procedures recorded for this admission" />;
+    }
+
+    return (
+        <div className="space-y-3">
+            {procedures.map((proc) => (
+                <div key={proc.id} className="rounded-lg border bg-card">
+                    <button
+                        type="button"
+                        className="flex w-full items-center justify-between p-3 text-left hover:bg-muted/50"
+                        onClick={() => setExpandedId(expandedId === proc.id ? null : proc.id)}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900">
+                                <Scissors className="h-4 w-4 text-rose-600 dark:text-rose-300" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">
+                                    {proc.procedure_name || 'Theatre Procedure'}
+                                    {proc.procedure_code && (
+                                        <span className="ml-2 text-xs text-muted-foreground">({proc.procedure_code})</span>
+                                    )}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {formatDateTime(proc.performed_at)}
+                                    {proc.doctor && <span> • Dr. {proc.doctor}</span>}
+                                </p>
+                            </div>
+                        </div>
+                        {expandedId === proc.id ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                    </button>
+
+                    {expandedId === proc.id && (
+                        <div className="border-t px-4 py-3 space-y-3">
+                            {/* Procedure Team */}
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                {proc.doctor && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Surgeon</span>
+                                        <p className="text-sm">{proc.doctor}</p>
+                                    </div>
+                                )}
+                                {proc.assistant && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Assistant</span>
+                                        <p className="text-sm">{proc.assistant}</p>
+                                    </div>
+                                )}
+                                {proc.anaesthetist && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Anaesthetist</span>
+                                        <p className="text-sm">{proc.anaesthetist}</p>
+                                    </div>
+                                )}
+                                {proc.anaesthesia_type && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Anaesthesia</span>
+                                        <p className="text-sm capitalize">{proc.anaesthesia_type}</p>
+                                    </div>
+                                )}
+                                {proc.procedure_subtype && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Subtype</span>
+                                        <p className="text-sm">{proc.procedure_subtype}</p>
+                                    </div>
+                                )}
+                                {proc.estimated_gestational_age && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">EGA</span>
+                                        <p className="text-sm">{proc.estimated_gestational_age}</p>
+                                    </div>
+                                )}
+                                {proc.parity && (
+                                    <div>
+                                        <span className="text-xs font-medium text-muted-foreground">Parity</span>
+                                        <p className="text-sm">{proc.parity}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Indication */}
+                            {proc.indication && (
+                                <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Indication</span>
+                                    <p className="mt-0.5 text-sm whitespace-pre-wrap">{proc.indication}</p>
+                                </div>
+                            )}
+
+                            {/* Procedure Steps */}
+                            {proc.procedure_steps && (
+                                <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Procedure Steps</span>
+                                    <p className="mt-0.5 text-sm whitespace-pre-wrap">{proc.procedure_steps}</p>
+                                </div>
+                            )}
+
+                            {/* Findings */}
+                            {proc.findings && (
+                                <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Findings</span>
+                                    <p className="mt-0.5 text-sm whitespace-pre-wrap">{proc.findings}</p>
+                                </div>
+                            )}
+
+                            {/* Plan */}
+                            {proc.plan && (
+                                <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Plan</span>
+                                    <p className="mt-0.5 text-sm whitespace-pre-wrap">{proc.plan}</p>
+                                </div>
+                            )}
+
+                            {/* Comments */}
+                            {proc.comments && (
+                                <div>
+                                    <span className="text-xs font-medium text-muted-foreground">Comments</span>
+                                    <p className="mt-0.5 text-sm whitespace-pre-wrap">{proc.comments}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
     );
 }
 
