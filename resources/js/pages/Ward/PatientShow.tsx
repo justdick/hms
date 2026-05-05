@@ -46,7 +46,7 @@ import { MedicationHistoryTab } from '@/components/Ward/MedicationHistoryTab';
 import { NursingNotesModal } from '@/components/Ward/NursingNotesModal';
 import { OverviewTab } from '@/components/Ward/OverviewTab';
 import { RecordVitalsModal } from '@/components/Ward/RecordVitalsModal';
-import { VitalsChart } from '@/components/Ward/VitalsChart';
+import { VitalsTrendChart } from '@/components/Patient/VitalsTrendChart';
 import { VitalsScheduleModal } from '@/components/Ward/VitalsScheduleModal';
 import {
     VitalsSchedule,
@@ -1316,15 +1316,8 @@ export default function WardPatientShow({
                                 </CardContent>
                             </Card>
 
-                            {/* Vitals Charts - 2 columns */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Vitals Trends</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <VitalsChart vitals={allVitals} />
-                                </CardContent>
-                            </Card>
+                            {/* Vitals Trends - Tabbed Chart */}
+                            <VitalsTrendChart vitals={allVitals} />
                         </div>
                     </TabsContent>
 

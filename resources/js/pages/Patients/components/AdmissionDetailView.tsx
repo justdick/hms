@@ -29,6 +29,7 @@ import {
     Thermometer,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { VitalsTrendChart } from '@/components/Patient/VitalsTrendChart';
 
 // Types
 interface WardRoundDetail {
@@ -629,7 +630,12 @@ function VitalsSection({
     }
 
     return (
-        <div className="overflow-x-auto">
+        <div className="space-y-4">
+            {/* Vitals Trend Chart */}
+            <VitalsTrendChart vitals={vitals} />
+
+            {/* Vitals Table */}
+            <div className="overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -664,6 +670,7 @@ function VitalsSection({
                     ))}
                 </TableBody>
             </Table>
+            </div>
         </div>
     );
 }
