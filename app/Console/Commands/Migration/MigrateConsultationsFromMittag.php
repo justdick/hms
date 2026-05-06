@@ -155,7 +155,7 @@ class MigrateConsultationsFromMittag extends Command
                 'status' => 'completed',
                 'presenting_complaint' => $this->cleanText($old->pc),
                 'history_presenting_complaint' => $this->cleanText($old->hpc),
-                'on_direct_questioning' => $this->buildOnDirectQuestioning($old),
+                'on_direct_questioning' => $this->cleanText($old->odq ?? '') ?? $this->buildOnDirectQuestioning($old),
                 'examination_findings' => $this->cleanText($old->oe),
                 'assessment_notes' => $this->extractDiagnoses($old),
                 'plan_notes' => $this->cleanText($old->plan),
