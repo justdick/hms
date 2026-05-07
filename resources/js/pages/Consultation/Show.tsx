@@ -1166,7 +1166,7 @@ export default function ConsultationShow({
                                             <Button
                                                 onClick={() =>
                                                     router.visit(
-                                                        `/wards/${admission.ward.id}`,
+                                                        `/wards/${admission.ward.id}/patients/${admission.id}`,
                                                     )
                                                 }
                                                 variant="outline"

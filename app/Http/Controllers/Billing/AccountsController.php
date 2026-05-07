@@ -75,7 +75,7 @@ class AccountsController extends Controller
         $collections = Charge::whereBetween('paid_at', [$startDate->startOfDay(), $endDate->copy()->endOfDay()])
             ->whereIn('status', ['paid', 'partial'])
             ->selectRaw("
-                COALESCE(metadata->>'payment_method', 'cash') as payment_method,
+                COALESCE(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.payment_method')), 'cash') as payment_method,
                 SUM(paid_amount) as total_amount,
                 COUNT(*) as transaction_count
             ")
