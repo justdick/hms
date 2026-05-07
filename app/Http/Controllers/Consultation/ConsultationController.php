@@ -22,6 +22,7 @@ use App\Models\Ward;
 use App\Models\WardRound;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -166,6 +167,16 @@ class ConsultationController extends Controller
             ->accessibleTo($user)
             ->where('status', 'completed');
 
+        // Query for completed minor procedures
+        $completedProceduresQuery = MinorProcedure::with([
+            'patientCheckin.patient:id,patient_number,first_name,last_name,date_of_birth,phone_number',
+            'patientCheckin.patient.activeInsurance.plan.provider:id,name,code',
+            'patientCheckin.department:id,name',
+            'nurse:id,name',
+        ])
+            ->accessibleTo($user)
+            ->where('status', 'completed');
+
         // Apply date filter to completed consultations
         if ($canFilterByDate && ($dateFrom || $dateTo)) {
             // User has permission and filter is set - filter by service_date
@@ -177,19 +188,35 @@ class ConsultationController extends Controller
                     $q->whereDate('service_date', '<=', $dateTo);
                 }
             });
+            $completedProceduresQuery->whereHas('patientCheckin', function ($q) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $q->whereDate('service_date', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('service_date', '<=', $dateTo);
+                }
+            });
         } else {
             // User doesn't have permission - use original behavior (last 24 hours)
             $completedQuery->where('completed_at', '>=', now()->subHours(24));
+            $completedProceduresQuery->where('performed_at', '>=', now()->subHours(24));
         }
 
         // Apply department filter if provided
         if ($departmentFilter) {
             $completedQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
+            $completedProceduresQuery->whereHas('patientCheckin', fn ($q) => $q->where('department_id', $departmentFilter));
         }
 
         // Apply search filter if provided (for search tab)
         if ($search && strlen($search) >= 2) {
             $completedQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('patient_number', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+            $completedProceduresQuery->whereHas('patientCheckin.patient', function ($query) use ($search) {
                 $query->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('patient_number', 'like', "%{$search}%")
@@ -205,11 +232,66 @@ class ConsultationController extends Controller
                     ->orWhere('patient_number', 'like', "%{$completedSearch}%")
                     ->orWhere('phone_number', 'like', "%{$completedSearch}%");
             });
+            $completedProceduresQuery->whereHas('patientCheckin.patient', function ($query) use ($completedSearch) {
+                $query->where('first_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('last_name', 'like', "%{$completedSearch}%")
+                    ->orWhere('patient_number', 'like', "%{$completedSearch}%")
+                    ->orWhere('phone_number', 'like', "%{$completedSearch}%");
+            });
         }
 
-        $completedConsultations = $completedQuery->orderBy('completed_at', 'desc')
-            ->paginate($perPage, ['*'], 'completed_page')
-            ->withQueryString();
+        // Get total counts for both
+        $completedConsultationsCount = $completedQuery->count();
+        $completedProceduresCount = $completedProceduresQuery->count();
+        $totalCompleted = $completedConsultationsCount + $completedProceduresCount;
+
+        // Merge both into a single collection, sorted by completed date, then paginate manually
+        $completedPage = $request->input('completed_page', 1);
+
+        $consultations = $completedQuery->orderBy('completed_at', 'desc')->get()->map(function ($consultation) {
+            return [
+                'id' => $consultation->id,
+                'type' => 'consultation',
+                'started_at' => $consultation->started_at,
+                'completed_at' => $consultation->completed_at,
+                'status' => $consultation->status,
+                'doctor' => $consultation->doctor,
+                'patient_checkin' => $consultation->patientCheckin,
+            ];
+        });
+
+        $procedures = $completedProceduresQuery->orderBy('performed_at', 'desc')->get()->map(function ($procedure) {
+            // Check if a consultation already exists for this check-in
+            $consultation = Consultation::where('patient_checkin_id', $procedure->patient_checkin_id)->first();
+
+            return [
+                'id' => $procedure->id,
+                'type' => 'minor_procedure',
+                'consultation_id' => $consultation?->id,
+                'consultation_status' => $consultation?->status,
+                'started_at' => $procedure->performed_at,
+                'completed_at' => $procedure->performed_at,
+                'status' => $procedure->status,
+                'doctor' => $procedure->nurse, // nurse displayed in doctor column
+                'patient_checkin' => $procedure->patientCheckin,
+            ];
+        });
+
+        $mergedCompleted = $consultations->concat($procedures)
+            ->sortByDesc('completed_at')
+            ->values();
+
+        // Manual pagination
+        $completedSlice = $mergedCompleted->forPage($completedPage, $perPage);
+
+        $completedConsultations = new LengthAwarePaginator(
+            $completedSlice->values(),
+            $totalCompleted,
+            $perPage,
+            $completedPage,
+            ['path' => $request->url(), 'pageName' => 'completed_page']
+        );
+        $completedConsultations->withQueryString();
 
         // Get departments for filter dropdown (all OPD departments including Minor Procedures)
         $departments = Department::active()
@@ -223,7 +305,7 @@ class ConsultationController extends Controller
             'completedConsultations' => $completedConsultations,
             'totalAwaitingCount' => $awaitingConsultation->total(),
             'totalActiveCount' => $activeConsultations->total(),
-            'totalCompletedCount' => $completedConsultations->total(),
+            'totalCompletedCount' => $totalCompleted,
             'departments' => $departments,
             'filters' => [
                 'search' => $search,

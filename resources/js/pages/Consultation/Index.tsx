@@ -125,11 +125,15 @@ interface ActiveConsultation {
 
 interface CompletedConsultation {
     id: number;
+    type?: 'consultation' | 'minor_procedure';
+    consultation_id?: number | null;
+    consultation_status?: string | null;
     started_at: string;
     completed_at: string;
     status: string;
     doctor?: Doctor;
     patient_checkin: {
+        id: number;
         patient: Pick<
             Patient,
             | 'id'
@@ -1575,7 +1579,7 @@ export default function ConsultationIndex({
                                             {completedConsultations.data.map(
                                                 (consultation) => (
                                                     <TableRow
-                                                        key={consultation.id}
+                                                        key={`${consultation.type || 'consultation'}-${consultation.id}`}
                                                     >
                                                         <TableCell className="font-medium">
                                                             {
@@ -1600,11 +1604,18 @@ export default function ConsultationIndex({
                                                             }
                                                         </TableCell>
                                                         <TableCell>
-                                                            {consultation
-                                                                .patient_checkin
-                                                                .department
-                                                                ?.name ??
-                                                                'Unknown'}
+                                                            <div className="flex items-center gap-1.5">
+                                                                {consultation
+                                                                    .patient_checkin
+                                                                    .department
+                                                                    ?.name ??
+                                                                    'Unknown'}
+                                                                {consultation.type === 'minor_procedure' && (
+                                                                    <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                                                                        Procedure
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             {consultation.doctor
@@ -1646,19 +1657,51 @@ export default function ConsultationIndex({
                                                             )}
                                                         </TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() =>
-                                                                    router.visit(
-                                                                        `/consultation/${consultation.id}`,
-                                                                    )
-                                                                }
-                                                                className="gap-1"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                                View
-                                                            </Button>
+                                                            {consultation.type === 'minor_procedure' ? (
+                                                                consultation.consultation_id ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            router.visit(
+                                                                                `/consultation/${consultation.consultation_id}`,
+                                                                            )
+                                                                        }
+                                                                        className="gap-1"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        View Consultation
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="default"
+                                                                        onClick={() =>
+                                                                            router.post('/consultation', {
+                                                                                patient_checkin_id: consultation.patient_checkin.id,
+                                                                            })
+                                                                        }
+                                                                        className="gap-1"
+                                                                    >
+                                                                        <Clock className="h-4 w-4" />
+                                                                        Start Consultation
+                                                                    </Button>
+                                                                )
+                                                            ) : (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() =>
+                                                                        router.visit(
+                                                                            `/consultation/${consultation.id}`,
+                                                                        )
+                                                                    }
+                                                                    className="gap-1"
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                    View
+                                                                </Button>
+                                                            )}
                                                         </TableCell>
                                                     </TableRow>
                                                 ),
