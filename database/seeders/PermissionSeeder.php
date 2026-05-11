@@ -2,7 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -103,6 +107,7 @@ class PermissionSeeder extends Seeder
             'billing.void' => 'Void payments',
             'billing.refund' => 'Process refunds',
             'billing.refund-deposits' => 'Refund advance deposits',
+            'billing.override-discharge-block' => 'Override discharge block for patients with outstanding balance',
 
             // Department Management
             'departments.view' => 'View departments',
@@ -265,29 +270,29 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $name => $description) {
-            \Spatie\Permission\Models\Permission::firstOrCreate([
+            Permission::firstOrCreate([
                 'name' => $name,
                 'guard_name' => 'web',
             ]);
         }
 
         // Create or get roles
-        $receptionist = \Spatie\Permission\Models\Role::firstOrCreate([
+        $receptionist = Role::firstOrCreate([
             'name' => 'Receptionist',
             'guard_name' => 'web',
         ]);
 
-        $nurse = \Spatie\Permission\Models\Role::firstOrCreate([
+        $nurse = Role::firstOrCreate([
             'name' => 'Nurse',
             'guard_name' => 'web',
         ]);
 
-        $doctor = \Spatie\Permission\Models\Role::firstOrCreate([
+        $doctor = Role::firstOrCreate([
             'name' => 'Doctor',
             'guard_name' => 'web',
         ]);
 
-        $admin = \Spatie\Permission\Models\Role::firstOrCreate([
+        $admin = Role::firstOrCreate([
             'name' => 'Admin',
             'guard_name' => 'web',
         ]);
@@ -379,7 +384,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Create Pharmacist role
-        $pharmacist = \Spatie\Permission\Models\Role::firstOrCreate([
+        $pharmacist = Role::firstOrCreate([
             'name' => 'Pharmacist',
             'guard_name' => 'web',
         ]);
@@ -408,7 +413,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Create Cashier role (Revenue Collector)
-        $cashier = \Spatie\Permission\Models\Role::firstOrCreate([
+        $cashier = Role::firstOrCreate([
             'name' => 'Cashier',
             'guard_name' => 'web',
         ]);
@@ -428,7 +433,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Create Finance Officer role (Accountant)
-        $financeOfficer = \Spatie\Permission\Models\Role::firstOrCreate([
+        $financeOfficer = Role::firstOrCreate([
             'name' => 'Finance Officer',
             'guard_name' => 'web',
         ]);
@@ -446,10 +451,11 @@ class PermissionSeeder extends Seeder
             'billing.void', // Void payments
             'billing.refund', // Process refunds
             'billing.view-audit-trail',
+            'billing.override-discharge-block', // Allow discharge despite outstanding balance
         ]);
 
         // Create Insurance Officer role
-        $insuranceOfficer = \Spatie\Permission\Models\Role::firstOrCreate([
+        $insuranceOfficer = Role::firstOrCreate([
             'name' => 'Insurance Officer',
             'guard_name' => 'web',
         ]);
@@ -477,7 +483,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Create Radiologist role
-        $radiologist = \Spatie\Permission\Models\Role::firstOrCreate([
+        $radiologist = Role::firstOrCreate([
             'name' => 'Radiologist',
             'guard_name' => 'web',
         ]);
@@ -492,7 +498,7 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Create Radiology Technician role
-        $radiologyTech = \Spatie\Permission\Models\Role::firstOrCreate([
+        $radiologyTech = Role::firstOrCreate([
             'name' => 'Radiology Technician',
             'guard_name' => 'web',
         ]);
@@ -506,29 +512,29 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Admin gets ALL permissions automatically
-        $admin->syncPermissions(\Spatie\Permission\Models\Permission::all());
+        $admin->syncPermissions(Permission::all());
 
         // Create Admin Support role - has all permissions except system admin and direct permission assignment
-        $adminSupport = \Spatie\Permission\Models\Role::firstOrCreate([
+        $adminSupport = Role::firstOrCreate([
             'name' => 'Admin Support',
             'guard_name' => 'web',
         ]);
 
         // Admin Support gets all permissions except system.admin and users.assign-direct-permissions
-        $adminSupportPermissions = \Spatie\Permission\Models\Permission::whereNotIn('name', [
+        $adminSupportPermissions = Permission::whereNotIn('name', [
             'system.admin',
             'users.assign-direct-permissions',
         ])->get();
         $adminSupport->syncPermissions($adminSupportPermissions);
 
         // Ensure admin user has admin role with all permissions
-        $adminUser = \App\Models\User::where('username', 'admin')->first();
+        $adminUser = User::where('username', 'admin')->first();
         if ($adminUser) {
             $adminUser->syncRoles(['Admin']);
-            $adminUser->syncPermissions(\Spatie\Permission\Models\Permission::all());
+            $adminUser->syncPermissions(Permission::all());
 
             // Assign all active departments to admin
-            $allDepartments = \App\Models\Department::where('is_active', true)->pluck('id');
+            $allDepartments = Department::where('is_active', true)->pluck('id');
             if ($allDepartments->isNotEmpty()) {
                 $adminUser->departments()->sync($allDepartments);
             }

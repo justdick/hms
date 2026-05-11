@@ -8,6 +8,7 @@ use App\Models\DeliveryRecord;
 use App\Models\PatientAdmission;
 use App\Models\VitalsSchedule;
 use App\Models\Ward as WardModel;
+use App\Services\DischargeService;
 use App\Services\VitalsScheduleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Inertia\Inertia;
 
 class WardPatientController extends Controller
 {
-    public function show(Request $request, WardModel $ward, PatientAdmission $admission, VitalsScheduleService $scheduleService)
+    public function show(Request $request, WardModel $ward, PatientAdmission $admission, VitalsScheduleService $scheduleService, DischargeService $dischargeService)
     {
         // Ensure the admission belongs to this ward
         if ($admission->ward_id !== $ward->id && $admission->bed?->ward_id !== $ward->id) {
@@ -143,14 +144,19 @@ class WardPatientController extends Controller
             'is_maternity_ward' => $isMaternityWard,
             'delivery_records' => $deliveryRecords,
             'delivery_modes' => DeliveryRecord::DELIVERY_MODES,
+            'discharge_state' => $dischargeService->evaluate($admission, $request->user()),
         ]);
     }
 
     /**
      * Discharge a patient from the ward.
      */
-    public function discharge(Request $request, WardModel $ward, PatientAdmission $admission): RedirectResponse
-    {
+    public function discharge(
+        Request $request,
+        WardModel $ward,
+        PatientAdmission $admission,
+        DischargeService $dischargeService,
+    ): RedirectResponse {
         // Check permission
         if (! $request->user()->can('admissions.discharge')) {
             abort(403, 'You do not have permission to discharge patients.');
@@ -168,15 +174,22 @@ class WardPatientController extends Controller
 
         $request->validate([
             'discharge_notes' => 'nullable|string|max:2000',
+            'discharge_ack_reason' => 'nullable|string|max:100',
+            'discharge_ack_note' => 'nullable|string|max:2000',
         ]);
 
         try {
-            $admission->markAsDischarged($request->user(), $request->discharge_notes);
+            $dischargeService->discharge(
+                admission: $admission,
+                user: $request->user(),
+                notes: $request->discharge_notes,
+                ackReason: $request->discharge_ack_reason,
+                ackNote: $request->discharge_ack_note,
+            );
 
             return redirect()->route('wards.show', $ward)
                 ->with('success', "Patient {$admission->patient->first_name} {$admission->patient->last_name} has been discharged successfully.");
-        } catch (\RuntimeException $e) {
-            // This catches the unpaid copays exception
+        } catch (\RuntimeException|\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['discharge' => $e->getMessage()]);
         }
     }

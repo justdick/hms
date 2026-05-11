@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             PaymentMethodSeeder::class,
             NhisConsultationFeeConfigSeeder::class,
+            DischargePolicyConfigSeeder::class,
         ]);
 
         // Test data only in local/dev environment

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PatientAdmissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PatientAdmission extends Model
 {
-    /** @use HasFactory<\Database\Factories\PatientAdmissionFactory> */
+    /** @use HasFactory<PatientAdmissionFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -31,6 +32,9 @@ class PatientAdmission extends Model
         'discharged_at',
         'discharge_notes',
         'discharged_by_id',
+        'discharge_outstanding_balance',
+        'discharge_ack_reason',
+        'discharge_ack_note',
         'migrated_from_mittag',
     ];
 
@@ -43,6 +47,7 @@ class PatientAdmission extends Model
             'bed_assigned_at' => 'datetime',
             'is_overflow_patient' => 'boolean',
             'status' => 'string',
+            'discharge_outstanding_balance' => 'decimal:2',
         ];
     }
 
@@ -250,21 +255,21 @@ class PatientAdmission extends Model
         return $this->getUnpaidCopayAmount();
     }
 
-    public function markAsDischarged(User $dischargedBy, ?string $notes = null): void
-    {
-        // Check for unpaid charges before allowing discharge
-        if ($this->hasOutstandingBalance()) {
-            $unpaidAmount = number_format($this->getOutstandingBalance(), 2);
-            throw new \RuntimeException(
-                "Cannot discharge patient with outstanding balance. Amount owed: GHS {$unpaidAmount}. Please collect payment at billing before discharge."
-            );
-        }
-
+    public function markAsDischarged(
+        User $dischargedBy,
+        ?string $notes = null,
+        ?float $outstandingBalance = null,
+        ?string $ackReason = null,
+        ?string $ackNote = null,
+    ): void {
         $this->update([
             'status' => 'discharged',
             'discharged_at' => now(),
             'discharged_by_id' => $dischargedBy->id,
             'discharge_notes' => $notes,
+            'discharge_outstanding_balance' => $outstandingBalance,
+            'discharge_ack_reason' => $ackReason,
+            'discharge_ack_note' => $ackNote,
         ]);
 
         if ($this->bed) {

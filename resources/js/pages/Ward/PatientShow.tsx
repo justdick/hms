@@ -419,6 +419,14 @@ interface Props {
         updated_at: string;
     }>;
     delivery_modes?: Record<string, string>;
+    discharge_state?: {
+        policy: 'allow' | 'warn' | 'block';
+        outstanding_balance: number;
+        has_balance: boolean;
+        blocked: boolean;
+        requires_acknowledgement: boolean;
+        can_override: boolean;
+    };
 }
 
 const NOTE_TYPES = [
@@ -452,6 +460,7 @@ export default function WardPatientShow({
     is_maternity_ward = false,
     delivery_records = [],
     delivery_modes = {},
+    discharge_state,
 }: Props) {
     const { auth, features } = usePage<SharedData>().props;
     const canDischarge = auth.permissions?.admissions?.discharge ?? false;
@@ -489,6 +498,9 @@ export default function WardPatientShow({
     // Discharge modal
     const [dischargeModalOpen, setDischargeModalOpen] = useState(false);
     const [dischargeNotes, setDischargeNotes] = useState('');
+    const [dischargeAckReason, setDischargeAckReason] = useState('');
+    const [dischargeAckNote, setDischargeAckNote] = useState('');
+    const [dischargeAckConfirmed, setDischargeAckConfirmed] = useState(false);
     const [isDischarging, setIsDischarging] = useState(false);
 
     // Note: Vitals alerts are now handled globally in AppLayout
@@ -714,12 +726,19 @@ export default function WardPatientShow({
         setIsDischarging(true);
         router.post(
             `/wards/${admission.ward?.id}/patients/${admission.id}/discharge`,
-            { discharge_notes: dischargeNotes },
+            {
+                discharge_notes: dischargeNotes,
+                discharge_ack_reason: dischargeAckReason || undefined,
+                discharge_ack_note: dischargeAckNote || undefined,
+            },
             {
                 onSuccess: () => {
                     toast.success('Patient discharged successfully');
                     setDischargeModalOpen(false);
                     setDischargeNotes('');
+                    setDischargeAckReason('');
+                    setDischargeAckNote('');
+                    setDischargeAckConfirmed(false);
                 },
                 onError: (errors: any) => {
                     const errorMessage =
@@ -2003,6 +2022,9 @@ export default function WardPatientShow({
                         if (!open) {
                             setDischargeModalOpen(false);
                             setDischargeNotes('');
+                            setDischargeAckReason('');
+                            setDischargeAckNote('');
+                            setDischargeAckConfirmed(false);
                         }
                     }}
                 >
@@ -2021,23 +2043,157 @@ export default function WardPatientShow({
                                 admission.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <div className="py-4">
-                            <label
-                                htmlFor="discharge-notes"
-                                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+
+                        {discharge_state?.has_balance && (
+                            <div
+                                className={`rounded-md border p-3 text-sm ${
+                                    discharge_state.blocked
+                                        ? 'border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200'
+                                        : 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                                }`}
                             >
-                                Discharge Notes (optional)
-                            </label>
-                            <textarea
-                                id="discharge-notes"
-                                value={dischargeNotes}
-                                onChange={(e) =>
-                                    setDischargeNotes(e.target.value)
-                                }
-                                placeholder="Enter any discharge notes..."
-                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-gray-800"
-                                rows={3}
-                            />
+                                <div className="flex items-start gap-2">
+                                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                                    <div className="space-y-1">
+                                        <p className="font-medium">
+                                            Outstanding balance: GHS{' '}
+                                            {discharge_state.outstanding_balance.toFixed(
+                                                2,
+                                            )}
+                                        </p>
+                                        {discharge_state.blocked ? (
+                                            <p>
+                                                Discharge is blocked by policy.
+                                                Collect payment at billing or
+                                                ask a user with override
+                                                permission to proceed.
+                                            </p>
+                                        ) : discharge_state.policy ===
+                                          'block' ? (
+                                            <p>
+                                                Policy blocks this discharge
+                                                but you have override
+                                                permission. Provide a reason
+                                                to proceed.
+                                            </p>
+                                        ) : (
+                                            <p>
+                                                Policy allows discharge with
+                                                acknowledgement. Provide a
+                                                reason to proceed.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-4 py-4">
+                            {discharge_state?.requires_acknowledgement && (
+                                <>
+                                    <div>
+                                        <label
+                                            htmlFor="discharge-ack-reason"
+                                            className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Reason{' '}
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
+                                        </label>
+                                        <select
+                                            id="discharge-ack-reason"
+                                            value={dischargeAckReason}
+                                            onChange={(e) =>
+                                                setDischargeAckReason(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                                        >
+                                            <option value="">
+                                                Select a reason...
+                                            </option>
+                                            <option value="follow_up_arrangement">
+                                                Follow-up payment arrangement
+                                            </option>
+                                            <option value="insurance_pending">
+                                                Insurance settlement pending
+                                            </option>
+                                            <option value="hardship_waiver">
+                                                Hardship / approved waiver
+                                            </option>
+                                            <option value="medical_necessity">
+                                                Medical necessity / against
+                                                medical advice
+                                            </option>
+                                            <option value="other">
+                                                Other (explain in note)
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="discharge-ack-note"
+                                            className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Acknowledgement note (optional)
+                                        </label>
+                                        <textarea
+                                            id="discharge-ack-note"
+                                            value={dischargeAckNote}
+                                            onChange={(e) =>
+                                                setDischargeAckNote(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Additional context for the outstanding balance..."
+                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                                            rows={2}
+                                        />
+                                    </div>
+                                    <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={dischargeAckConfirmed}
+                                            onChange={(e) =>
+                                                setDischargeAckConfirmed(
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="mt-0.5"
+                                        />
+                                        <span>
+                                            I acknowledge this patient is being
+                                            discharged with an outstanding
+                                            balance of GHS{' '}
+                                            {discharge_state!.outstanding_balance.toFixed(
+                                                2,
+                                            )}{' '}
+                                            and confirm the reason above.
+                                        </span>
+                                    </label>
+                                </>
+                            )}
+
+                            <div>
+                                <label
+                                    htmlFor="discharge-notes"
+                                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    Discharge Notes (optional)
+                                </label>
+                                <textarea
+                                    id="discharge-notes"
+                                    value={dischargeNotes}
+                                    onChange={(e) =>
+                                        setDischargeNotes(e.target.value)
+                                    }
+                                    placeholder="Enter any discharge notes..."
+                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                                    rows={3}
+                                />
+                            </div>
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel disabled={isDischarging}>
@@ -2045,7 +2201,14 @@ export default function WardPatientShow({
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDischarge}
-                                disabled={isDischarging}
+                                disabled={
+                                    isDischarging ||
+                                    discharge_state?.blocked ||
+                                    (discharge_state?.requires_acknowledgement
+                                        ? !dischargeAckReason ||
+                                          !dischargeAckConfirmed
+                                        : false)
+                                }
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                                 {isDischarging

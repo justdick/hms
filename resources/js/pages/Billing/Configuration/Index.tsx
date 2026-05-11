@@ -847,14 +847,28 @@ export default function BillingConfigurationIndex({
                                                             <div className="text-sm">
                                                                 Current:{' '}
                                                                 <span className="font-medium">
-                                                                    {typeof config.value ===
-                                                                    'boolean'
-                                                                        ? config.value
-                                                                            ? 'Yes'
-                                                                            : 'No'
-                                                                        : String(
+                                                                    {config.key ===
+                                                                    'admission.discharge_policy'
+                                                                        ? {
+                                                                              allow: 'Allow (no check)',
+                                                                              warn: 'Warn (acknowledgement required)',
+                                                                              block: 'Block (override required)',
+                                                                          }[
+                                                                              String(
+                                                                                  config.value,
+                                                                              )
+                                                                          ] ??
+                                                                          String(
                                                                               config.value,
-                                                                          )}
+                                                                          )
+                                                                        : typeof config.value ===
+                                                                            'boolean'
+                                                                          ? config.value
+                                                                              ? 'Yes'
+                                                                              : 'No'
+                                                                          : String(
+                                                                                config.value,
+                                                                            )}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1564,10 +1578,35 @@ function EditConfigModal({
     };
 
     const isBooleanValue = typeof config?.value === 'boolean';
+    const isDischargePolicy = config?.key === 'admission.discharge_policy';
+    const dischargePolicyOptions: Array<{
+        value: 'allow' | 'warn' | 'block';
+        label: string;
+        description: string;
+    }> = [
+        {
+            value: 'allow',
+            label: 'Allow',
+            description:
+                'Discharge freely. No balance check. Patient may leave regardless of outstanding charges.',
+        },
+        {
+            value: 'warn',
+            label: 'Warn',
+            description:
+                'Allow discharge but require the user to pick a reason and acknowledge the outstanding balance. Balance is recorded on the admission.',
+        },
+        {
+            value: 'block',
+            label: 'Block',
+            description:
+                'Disallow discharge when there is an outstanding balance. Users with the "Override discharge block" permission can still discharge with a reason.',
+        },
+    ];
 
     return (
         <Dialog open={!!config} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[400px]">
+            <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
                     <DialogTitle>Edit Configuration</DialogTitle>
                     <DialogDescription>
@@ -1582,7 +1621,52 @@ function EditConfigModal({
                             </p>
                         )}
 
-                        {isBooleanValue ? (
+                        {isDischargePolicy ? (
+                            <div className="space-y-2">
+                                <Label>Policy</Label>
+                                <div className="space-y-2">
+                                    {dischargePolicyOptions.map((opt) => (
+                                        <label
+                                            key={opt.value}
+                                            className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm transition ${
+                                                form.data.configs[0].value ===
+                                                opt.value
+                                                    ? 'border-primary bg-primary/5'
+                                                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="discharge_policy"
+                                                value={opt.value}
+                                                checked={
+                                                    form.data.configs[0]
+                                                        .value === opt.value
+                                                }
+                                                onChange={() =>
+                                                    form.setData('configs', [
+                                                        {
+                                                            ...form.data
+                                                                .configs[0],
+                                                            value: opt.value,
+                                                        },
+                                                    ])
+                                                }
+                                                className="mt-0.5"
+                                            />
+                                            <div className="space-y-0.5">
+                                                <div className="font-medium">
+                                                    {opt.label}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {opt.description}
+                                                </div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : isBooleanValue ? (
                             <div className="flex items-center space-x-2">
                                 <Switch
                                     id="config_value"
